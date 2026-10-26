@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { StdBadge } from "../components/common";
 import { namingFields, roleCodes, suitabilityCodes, typeCodes } from "../../../shared/data/iso19650";
 
 const RULES: Record<string, RegExp> = {
@@ -22,8 +21,7 @@ export default function NamingTool() {
 
   return (
     <>
-      <StdBadge std="iso19650" />
-      <h1>Naming convention & status codes</h1>
+      <h2 style={{ marginTop: 4 }}>Naming convention & status codes</h2>
       <p className="muted">Build and validate information container names using the BS EN ISO 19650-2 UK National Annex field structure. Adjust rules to your project information standard.</p>
 
       <div className="card">

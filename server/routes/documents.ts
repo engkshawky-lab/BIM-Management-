@@ -36,6 +36,7 @@ r.post(P + "/documents", requireProject("editor"), h(async (req, res) => {
   const body = parse(z.object({ templateId: z.string(), title: z.string().trim().max(255).optional(), containerName: z.string().trim().max(120).default("") }), req.body, res); if (!body) return;
   const t = templateById(body.templateId);
   if (!t) return res.status(400).json({ error: "Unknown template." });
+  if (t.generatedFrom) return res.status(409).json({ error: `${t.code} is generated from the ${t.generatedFrom.label}. Use "Generate" there instead of creating it by hand.` });
   const pid = req.params.projectId;
   const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, pid));
   const id = newId(); const now = new Date(); const uid = req.user!.id;

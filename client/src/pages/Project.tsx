@@ -14,7 +14,18 @@ import Coordination from "./Coordination";
 
 export interface ProjectData { project: Project; members: Member[]; invitations: Invitation[]; role: Project["role"] }
 
-const TABS: [string, string][] = [["overview", "Overview"], ["documents", "Documents"], ["files", "Files (CDE)"], ["delivery", "Delivery plan"], ["validation", "Validation"], ["coordination", "Coordination"], ["quality", "Quality"], ["workflow", "Workflow"], ["team", "Team"], ["activity", "Activity"], ["settings", "Settings"]];
+// Six hubs replace the old flat tab list; each hub groups related views behind one sub-navigation.
+interface Hub { key: string; label: string; subs: [path: string, label: string][]; manageOnly?: string[] }
+export const HUBS: Hub[] = [
+  { key: "overview", label: "Overview", subs: [["overview", "Summary"], ["activity", "Activity"]] },
+  { key: "information", label: "Information (CDE)", subs: [["documents", "Documents"], ["files", "Files"]] },
+  { key: "delivery", label: "Delivery", subs: [["delivery/plan", "MIDP / TIDP"], ["delivery/setup", "Teams & milestones"], ["delivery/responsibility", "Responsibility"], ["delivery/loin", "LOIN"], ["workflow", "Process gates"], ["delivery/risks", "Risks"], ["delivery/handover", "Handover"]] },
+  { key: "model", label: "Model & coordination", subs: [["validation", "Validation"], ["coordination/issues", "Issues"], ["coordination/clash", "Clash matrix"]] },
+  { key: "quality", label: "Quality", subs: [["quality", "Quality report"]] },
+  { key: "team", label: "Team & settings", subs: [["team", "Team"], ["settings", "Project settings"]], manageOnly: ["settings"] },
+];
+const DEFAULT_SUB: Record<string, string> = { delivery: "plan", coordination: "issues" };
+const pathOf = (tab: string, sub?: string) => (DEFAULT_SUB[tab] ? `${tab}/${sub && !/^[0-9a-f-]{36}$/.test(sub) ? sub : DEFAULT_SUB[tab]}` : tab);
 
 export default function ProjectPage({ projectId, tab, sub }: { projectId: string; tab: string; sub?: string }) {
   const [data, setData] = useState<ProjectData | null>(null);
@@ -28,6 +39,8 @@ export default function ProjectPage({ projectId, tab, sub }: { projectId: string
   const { project } = data;
 
   if (tab === "documents" && sub) return <DocumentEditor data={data} docId={sub} />;
+  const current = pathOf(tab, sub);
+  const hub = HUBS.find((hb) => hb.subs.some(([p]) => p === current)) ?? HUBS[0];
 
   return (
     <>
@@ -38,9 +51,12 @@ export default function ProjectPage({ projectId, tab, sub }: { projectId: string
           <p className="muted">{[project.appointingParty, project.location, project.stage].filter(Boolean).join(" · ")}</p>
         </div>
       </div>
-      <div className="tabs">{TABS.filter(([k]) => k !== "settings" || canManage(data.role)).map(([k, label]) => (
-        <button key={k} className={tab === k ? "on" : ""} onClick={() => navigate(`/projects/${projectId}/${k}`)}>{label}</button>
+      <div className="tabs">{HUBS.map((hb) => (
+        <button key={hb.key} className={hb === hub ? "on" : ""} onClick={() => navigate(`/projects/${projectId}/${hb.subs[0][0]}`)}>{hb.label}</button>
       ))}</div>
+      {hub.subs.length > 1 && <div className="seg sub-nav">{hub.subs.filter(([p]) => !hub.manageOnly?.includes(p) || canManage(data.role)).map(([p, label]) => (
+        <button key={p} className={p === current ? "on" : ""} onClick={() => navigate(`/projects/${projectId}/${p}`)}>{label}</button>
+      ))}</div>}
       {tab === "overview" && <Overview data={data} />}
       {tab === "documents" && <Documents data={data} />}
       {tab === "files" && <Files data={data} />}
@@ -51,7 +67,8 @@ export default function ProjectPage({ projectId, tab, sub }: { projectId: string
       {tab === "workflow" && <ProjectWorkflow data={data} />}
       {tab === "team" && <Team data={data} reload={reload} />}
       {tab === "activity" && <Activity projectId={projectId} />}
-      {tab === "settings" && <Settings data={data} reload={reload} />}
+      {tab === "settings" && !canManage(data.role) && <div className="card muted">Only project managers can change settings.</div>}
+      {tab === "settings" && canManage(data.role) && <Settings data={data} reload={reload} />}
     </>
   );
 }
@@ -73,9 +90,9 @@ function Overview({ data }: { data: ProjectData }) {
         <div className="row" style={{ marginTop: 12 }}>
           <a className="btn primary" href={`#/projects/${project.id}/documents`}>📄 Documents</a>
           <a className="btn" href={`#/projects/${project.id}/files`}>📁 Files</a>
-          <a className="btn" href={`#/projects/${project.id}/delivery`}>📅 Delivery plan</a>
+          <a className="btn" href={`#/projects/${project.id}/delivery/plan`}>📅 Delivery</a>
+          <a className="btn" href={`#/projects/${project.id}/validation`}>🔍 Model & coordination</a>
           <a className="btn" href={`#/projects/${project.id}/quality`}>✅ Quality</a>
-          <a className="btn" href={`#/projects/${project.id}/workflow`}>🔀 Workflow</a>
         </div>
       </div>
       <div className="grid" style={{ alignContent: "start" }}>

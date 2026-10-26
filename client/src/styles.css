@@ -231,3 +231,6 @@ textarea.cell-input { min-height: 34px; resize: vertical; }
 .heat div { aspect-ratio: 1.6; display: grid; place-items: center; border-radius: 4px; font-size: 12px; font-weight: 700; }
 tr.done-row td { opacity: .65; }
 .diff-del { background: rgba(220,38,38,.1); text-decoration: line-through; } .diff-add { background: rgba(22,163,74,.12); }
+.sub-nav { margin: -6px 0 16px; }
+.sub-nav button { font-size: 13px; padding: 6px 12px; }
+.plan-summary.bad { border-left: 4px solid var(--danger); } .plan-summary.warn { border-left: 4px solid var(--warn); } .plan-summary.good { border-left: 4px solid var(--ok); }

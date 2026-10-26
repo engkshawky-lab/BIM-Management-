@@ -7,6 +7,7 @@ import { containerName } from "../../../shared/naming";
 import { changeImpact } from "../../../shared/impact";
 import { api, canEdit, type Member } from "../lib/api";
 import { exportCsv, parseTabular } from "../lib/export";
+import { Handover, Risks } from "./Coordination";
 import type { ProjectData } from "./Project";
 
 interface RespRow { id: string; item: string; stage: string; loin: string; cells: Record<string, string>; sortOrder: number }
@@ -51,6 +52,18 @@ function useDelivery(pid: string) {
     catch (e) { toast((e as Error).message, "error"); }
   }, [pid, reload, toast]);
   return { data, reload, call };
+}
+
+/** One-line plan health; the full list lives in the Quality hub so it is not duplicated here. */
+function PlanCheckSummary({ findings, projectId }: { findings: Finding[]; projectId: string }) {
+  const e = findings.filter((f) => f.severity === "error").length, w = findings.filter((f) => f.severity === "warning").length;
+  const first = findings.find((f) => f.severity === "error") ?? findings.find((f) => f.severity === "warning");
+  return (
+    <div className={"card row spread plan-summary " + (e ? "bad" : w ? "warn" : "good")} style={{ marginTop: 12 }}>
+      <span>{e || w ? <><b>{e ? `⛔ ${e} errors` : ""}{e && w ? " · " : ""}{w ? `⚠ ${w} warnings` : ""}</b> in the plan{first && <span className="small muted"> — e.g. {first.ref ? `${first.ref}: ` : ""}{first.message}</span>}</> : <b>✔ The delivery plan passes all checks.</b>}</span>
+      <a className="small nowrap" href={`#/projects/${projectId}/quality`}>See all in Quality →</a>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------- planner
@@ -225,7 +238,7 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
           </table>
         </div>
       )}
-      <div className="card" style={{ marginTop: 12 }}><b>Plan checks</b> <span className="small muted">(ISO 19650-2 5.4.4 / 5.4.5)</span><FindingList findings={d.findings} empty="The delivery plan has no issues." /></div>
+      <PlanCheckSummary findings={d.findings} projectId={project.id} />
 
       {edit && <DeliverableDialog initial={edit === "new" ? undefined : edit} data={d} members={members} projectCode={project.code} onClose={() => setEdit(null)}
         onSave={async (row) => { const { id: _id, ...rest } = row as Deliverable; const r = edit === "new" ? await call("deliverables", "POST", rest, "Container added") : await call(`deliverables/${(edit as Deliverable).id}`, "PUT", rest, "Container updated"); if (r) setEdit(null); }} />}
@@ -414,21 +427,20 @@ function Loin({ d, role, call }: { d: DeliveryData; role: ProjectData["role"]; c
 
 // ---------------------------------------------------------------- page
 
-const SUBTABS: [string, string][] = [["plan", "MIDP / TIDP planner"], ["setup", "Task teams & milestones"], ["responsibility", "Responsibility matrix"], ["loin", "Level of information need"]];
+const SUBTABS = ["plan", "setup", "responsibility", "loin", "risks", "handover"];
 
 export default function Delivery({ data, sub }: { data: ProjectData; sub?: string }) {
   const { data: d, call } = useDelivery(data.project.id);
-  const tab = SUBTABS.some(([k]) => k === sub) ? sub! : "plan";
+  const tab = SUBTABS.includes(sub ?? "") ? sub! : "plan";
   if (!d) return <p className="muted">Loading…</p>;
   return (
     <>
-      <div className="seg" style={{ marginBottom: 14 }}>
-        {SUBTABS.map(([k, label]) => <button key={k} className={tab === k ? "on" : ""} onClick={() => navigate(`/projects/${data.project.id}/delivery/${k}`)}>{label}</button>)}
-      </div>
       {tab === "plan" && <Planner d={d} project={data.project} members={data.members} role={data.role} call={call} />}
       {tab === "setup" && <Setup d={d} members={data.members} role={data.role} call={call} />}
       {tab === "responsibility" && <Responsibility d={d} project={data.project} role={data.role} call={call} />}
       {tab === "loin" && <Loin d={d} role={data.role} call={call} />}
+      {tab === "risks" && <Risks data={data} />}
+      {tab === "handover" && <Handover data={data} />}
     </>
   );
 }

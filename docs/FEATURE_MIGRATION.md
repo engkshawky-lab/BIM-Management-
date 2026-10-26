@@ -2,6 +2,25 @@
 
 Every feature from the old platform is kept, but reviewed and rebuilt for real project use. Old tools that were stand-alone pages become parts of the project workspace, reading and writing real project data instead of throw-away forms.
 
+## Navigation: hubs, not tabs
+
+The old platform exposed ~100 separate pages, many doing the same job (e.g. MIDP generator, TIDP generator, planner and MPDT generator; CDE guide, CDE simulator and CDE game; chat, expert chat, project consultant and project advisor). The new portal groups everything into **6 project hubs** and **1 knowledge hub**:
+
+| Hub | Contains |
+|---|---|
+| Overview | Summary · Activity |
+| Information (CDE) | Documents · Files |
+| Delivery | MIDP/TIDP · Teams & milestones · Responsibility · LOIN · Process gates · Risks · Handover |
+| Model & coordination | Validation · Issues (BCF) · Clash matrix |
+| Quality | One report for documents, plan, document set (single place for all findings) |
+| Team & settings | Team · Project settings |
+| Knowledge hub (global) | ISO 19650 / ISO/IEC 42001 → Library · Templates · Naming & codes · References |
+
+**No-duplication rules**
+- Each feature has exactly one home; other places link to it instead of repeating it (e.g. the planner shows a one-line plan-check summary and links to Quality for the full list).
+- Data is entered once. Documents that summarise structured data (MIDP, TIDP, responsibility matrix, risk register) are **generated** from it; the server refuses hand-made copies of these templates.
+- New legacy features are added to an existing hub before a new hub is considered.
+
 Legend — **Status**: ✅ done · 🔜 next phase · ⏳ later phase. **Phase** refers to the roadmap at the bottom.
 
 ## 1. Project information management (ISO 19650)
@@ -15,13 +34,13 @@ Legend — **Status**: ✅ done · 🔜 next phase · ⏳ later phase. **Phase**
 | `lod` | Delivery plan → LOIN matrix | LOIN per element/milestone (ISO 7817-1); LOD/LOI explainer moves to Learn | ✅ |
 | `cde-guide`, `cde-simulator`, `cde-game` | Files (CDE) + Learn | Real CDE with states, suitability, versions. Simulator/game become an interactive lesson in Learn | ✅ / ⏳6 |
 | `suitability`, `flow-builder` (naming) | Naming & status tool | Generator, validator, used by planner and quality checks | ✅ |
-| `process`, `process-map`, `workflow-diagram`, `timeline` | Workflow tab | Stage-gated workflows per project; add a visual process map view | ✅ / ⏳4 |
-| `quality-hub`, `health`, `audit`, `project-readiness`, `progress` | Quality tab | One automated quality report; add trend over time and audit evidence pack export | ✅ / ⏳5 |
-| `risk` | Project → Risk register | Information-delivery risk register as structured data (likelihood × impact heat-map, owners, actions) instead of a template only | ✅ |
+| `process`, `process-map`, `workflow-diagram`, `timeline` | Delivery hub → Process gates | Stage-gated workflows per project; add a visual process map view | ✅ / ⏳4 |
+| `quality-hub`, `health`, `audit`, `project-readiness`, `progress` | Quality hub | One automated quality report; add trend over time and audit evidence pack export | ✅ / ⏳5 |
+| `risk` | Delivery hub → Risks | Information-delivery risk register as structured data (likelihood × impact heat-map, owners, actions) instead of a template only | ✅ |
 | `version` | Document → Compare revisions | Field-by-field diff between any two revisions (replaces BEP version compare) | ✅ |
 | `change-impact` | Delivery plan → Change impact | Select a container/milestone change → see dependent containers, milestones and documents affected | ✅ |
 | `traceability` | Requirements traceability | EIR requirement → BEP response → MIDP container → delivered file, with coverage gaps | ⏳4 |
-| `tracker` (PIM→AIM), `handover-guide`, `aim-guide` | Handover module | Handover checklist driven by AIR, COBie validation, O&M file completeness, AIM transfer record | ✅ |
+| `tracker` (PIM→AIM), `handover-guide`, `aim-guide` | Delivery hub → Handover | Handover checklist driven by AIR, COBie validation, O&M file completeness, AIM transfer record | ✅ |
 | `part5-sec`, `part3`, `cases-ext` (Part 6) | Security & H&S tools | ISO 19650-5 sensitivity assessment & security triage as a guided form; Part 6 H&S information register | ⏳4 |
 | `clause`, `parts`, `all-parts`, `glossary` | Knowledge library | Done; add cross-links from every tool to the clause it implements | ✅ |
 | `updates`, `news-feed` | Knowledge → Standards updates | Curated list of standard editions/amendments with dates | ⏳6 |

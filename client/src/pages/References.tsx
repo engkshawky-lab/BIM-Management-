@@ -17,15 +17,8 @@ function List({ refs, std }: { refs: Reference[]; std: StandardId }) {
   );
 }
 
-export default function References() {
-  return (
-    <>
-      <h1>References</h1>
-      <p className="muted">Standards and guidance referenced across the portal. Standards must be purchased from ISO or your national standards body; links point to freely available resources only.</p>
-      <h2>ISO 19650 and related BIM standards</h2>
-      <List refs={references19650} std="iso19650" />
-      <h2>ISO/IEC 42001 and related AI standards</h2>
-      <List refs={references42001} std="iso42001" />
-    </>
-  );
+export default function References({ std }: { std: StandardId }) {
+  return std === "iso19650"
+    ? <><h2>ISO 19650 and related BIM standards</h2><List refs={references19650} std="iso19650" /></>
+    : <><h2>ISO/IEC 42001 and related AI standards</h2><List refs={references42001} std="iso42001" /></>;
 }

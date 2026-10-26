@@ -1,14 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { api, type Notification, type User } from "./lib/api";
 import Home from "./pages/Home";
-import Library from "./pages/Library";
+import Knowledge from "./pages/Knowledge";
 import Login from "./pages/Login";
-import NamingTool from "./pages/NamingTool";
 import ProfilePage from "./pages/Profile";
 import ProjectPage from "./pages/Project";
 import NewProject from "./pages/NewProject";
-import References from "./pages/References";
-import Templates from "./pages/Templates";
 
 interface Session { user: User; setUser: (u: User | null) => void; toast: (msg: string, kind?: "ok" | "error") => void }
 const Ctx = createContext<Session>(null!);
@@ -29,9 +26,7 @@ function useRoute() {
 
 const NAV: { group: string; items: [string, string][] }[] = [
   { group: "Workspace", items: [["/", "My projects"], ["/projects/new", "New project"], ["/profile", "My profile"]] },
-  { group: "ISO 19650 — BIM", items: [["/library/iso19650", "Knowledge library"], ["/templates/iso19650", "Templates"], ["/naming", "Naming & status codes"]] },
-  { group: "ISO/IEC 42001 — AI", items: [["/library/iso42001", "Knowledge library"], ["/templates/iso42001", "Templates"]] },
-  { group: "Resources", items: [["/references", "References"]] },
+  { group: "Knowledge hub", items: [["/knowledge/iso19650/library", "ISO 19650 — BIM"], ["/knowledge/iso42001/library", "ISO/IEC 42001 — AI"]] },
 ];
 
 function Bell() {
@@ -79,10 +74,10 @@ export default function App() {
   let view;
   if (parts[0] === "projects" && parts[1] === "new") view = <NewProject />;
   else if (parts[0] === "projects" && parts[1]) view = <ProjectPage projectId={parts[1]} tab={parts[2] ?? "overview"} sub={parts[3]} />;
-  else if (parts[0] === "library") view = <Library std={parts[1] === "iso42001" ? "iso42001" : "iso19650"} />;
-  else if (parts[0] === "templates") view = <Templates std={parts[1] === "iso42001" ? "iso42001" : parts[1] === "iso19650" ? "iso19650" : undefined} />;
-  else if (parts[0] === "naming") view = <NamingTool />;
-  else if (parts[0] === "references") view = <References />;
+  else if (parts[0] === "knowledge") view = <Knowledge std={parts[1] === "iso42001" ? "iso42001" : "iso19650"} section={parts[2]} />;
+  // legacy links into the separate knowledge pages
+  else if (["library", "templates"].includes(parts[0])) view = <Knowledge std={parts[1] === "iso42001" ? "iso42001" : "iso19650"} section={parts[0]} />;
+  else if (["naming", "references"].includes(parts[0])) view = <Knowledge std="iso19650" section={parts[0]} />;
   else if (parts[0] === "profile") view = <ProfilePage />;
   else view = <Home />;
 
@@ -97,7 +92,7 @@ export default function App() {
             {NAV.map((g) => (
               <div key={g.group}>
                 <div className="nav-group">{g.group}</div>
-                {g.items.map(([href, label]) => <a key={href} href={"#" + href} className={route === href ? "active" : ""}>{label}</a>)}
+                {g.items.map(([href, label]) => <a key={href} href={"#" + href} className={route === href || (href.startsWith("/knowledge/") && route.startsWith(href.replace("/library", ""))) ? "active" : ""}>{label}</a>)}
               </div>
             ))}
           </nav>

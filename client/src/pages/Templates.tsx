@@ -4,6 +4,7 @@ import { StdBadge } from "../components/common";
 import { templates } from "../../../shared/data/templates";
 import type { DocTemplate, StandardId } from "../../../shared/data/types";
 import { api, canEdit, type Project } from "../lib/api";
+import { GeneratedNotice } from "./Documents";
 
 function UseDialog({ t, onClose }: { t: DocTemplate; onClose: () => void }) {
   const { toast } = useSession();
@@ -28,7 +29,8 @@ function UseDialog({ t, onClose }: { t: DocTemplate; onClose: () => void }) {
       ) : <>
         <label>Project</label>
         <select value={pid} onChange={(e) => setPid(e.target.value)}>{projects.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}</select>
-        <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button><button className="primary" onClick={create}>Create document</button></div>
+        {t.generatedFrom ? <GeneratedNotice projectId={pid} t={t} onClose={onClose} />
+          : <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button><button className="primary" onClick={create}>Create document</button></div>}
       </>}
     </div></div>
   );
@@ -43,8 +45,7 @@ export default function Templates({ std }: { std?: StandardId }) {
 
   return (
     <>
-      {std && <StdBadge std={std} />}
-      <h1>Template library</h1>
+      <h2 style={{ marginTop: 4 }}>Template library</h2>
       <p className="muted">Structured templates with guidance, worked examples and clause references. Use one in a project to create a controlled document your team can edit, review and publish.</p>
       <input placeholder="Search templates…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 420, margin: "8px 0 4px" }} />
       {categories.map((c) => (
@@ -57,6 +58,7 @@ export default function Templates({ std }: { std?: StandardId }) {
                 <h3>{t.title}</h3>
                 <p className="small muted" style={{ flex: 1 }}>{t.purpose}</p>
                 <div className="small muted">{t.clauseRefs.join(" · ")} · {t.sections.length} sections</div>
+                {t.generatedFrom && <div className="tiny" style={{ color: "var(--accent)" }}>⚙ Generated from the {t.generatedFrom.label}</div>}
                 {open === t.id && <ol className="small" style={{ paddingLeft: 18 }}>{t.sections.map((s) => <li key={s.id}><b>{s.title}</b> — {s.fields.map((f) => f.label).join(", ")}</li>)}</ol>}
                 <div className="row" style={{ marginTop: 10 }}>
                   <button className="primary" onClick={() => setUse(t)}>Use in project…</button>

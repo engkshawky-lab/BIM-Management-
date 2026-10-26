@@ -143,7 +143,7 @@ r.post(P + "/deliverables-import", requireProject("editor"), h(async (req, res) 
 
 // ---------- generate controlled documents from the planner ----------
 r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) => {
-  const body = parse(z.object({ kind: z.enum(["midp", "tidp", "resp-matrix"]), taskTeamId: z.string().optional() }), req.body, res); if (!body) return;
+  const body = parse(z.object({ kind: z.enum(["midp", "tidp", "resp-matrix", "risk-register"]), taskTeamId: z.string().optional() }), req.body, res); if (!body) return;
   const pid = req.params.projectId; const uid = req.user!.id;
   const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, pid));
   const b = await bundle(pid);
@@ -166,6 +166,10 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
       d.containerName, d.title, d.loin, d.startDate && d.dueDate ? String(Math.max(0, Math.round((Date.parse(d.dueDate) - Date.parse(d.startDate)) / 864e5))) : "",
       d.dependsOn.map((x) => byId.get(x)?.containerName || byId.get(x)?.title).filter(Boolean).join(", "), d.dueDate, ms.get(d.milestoneId ?? "")?.name ?? "",
     ]);
+  } else if (body.kind === "risk-register") {
+    const risks = await db.select().from(schema.risks).where(eq(schema.risks.projectId, pid)).orderBy(asc(schema.risks.number));
+    const names = new Map((await db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users)).map((u) => [u.id, u.name]));
+    values.risks = risks.filter((x) => x.status !== "Closed").map((x) => [`R${String(x.number).padStart(2, "0")}`, x.title, String(x.likelihood), String(x.impact), String(x.likelihood * x.impact), x.mitigation, names.get(x.ownerId ?? "") ?? ""]);
   } else {
     // ISO 19650 detailed responsibility matrix: R/A/C/I per task team flattened into columns
     const nameOf = (code: string, row: typeof b.responsibility[number]) => Object.entries(row.cells).filter(([, v]) => v.includes(code)).map(([k]) => team.get(k)?.name).filter(Boolean).join(", ");
@@ -179,14 +183,14 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
   if (existing) {
     const lockedByOther = existing.lockedBy && existing.lockedBy !== uid && existing.lockedAt && now.getTime() - existing.lockedAt.getTime() < 90_000;
     if (lockedByOther) return res.status(423).json({ error: "Someone is editing that document right now. Try again shortly." });
-    const generatedKeys = body.kind === "midp" ? ["milestones", "plan"] : body.kind === "tidp" ? ["taskTeam", "containers"] : ["matrix"];
+    const generatedKeys = body.kind === "midp" ? ["milestones", "plan"] : body.kind === "tidp" ? ["taskTeam", "containers"] : body.kind === "risk-register" ? ["risks"] : ["matrix"];
     const merged = { ...(existing.values as object), ...Object.fromEntries(generatedKeys.map((k) => [k, values[k]])) };
     await db.update(schema.documents).set({ values: merged, updatedAt: now }).where(eq(schema.documents.id, existing.id));
     await logActivity(pid, uid, "document.generated", `Regenerated ${title} from the delivery planner`, `/projects/${pid}/documents/${existing.id}`);
     return res.json({ id: existing.id, updated: true });
   }
   const id = newId();
-  const container = `${project.code}-${(body.taskTeamId && team.get(body.taskTeamId)?.originatorCode) || "XXX"}-ZZ-ZZ-SH-Z-${body.kind === "midp" ? "0001" : body.kind === "tidp" ? "0002" : "0003"}`;
+  const container = `${project.code}-${(body.taskTeamId && team.get(body.taskTeamId)?.originatorCode) || "XXX"}-ZZ-ZZ-SH-Z-${({ midp: "0001", tidp: "0002", "resp-matrix": "0003", "risk-register": "0004" } as const)[body.kind]}`;
   await db.insert(schema.documents).values({ id, projectId: pid, templateId: t.id, title, containerName: container, revision: "P01.01", state: "WIP", suitability: "S0", authorId: uid, values, createdAt: now, updatedAt: now });
   await db.insert(schema.documentRevisions).values({ id: newId(), documentId: id, revision: "P01.01", state: "WIP", suitability: "S0", note: "Generated from the delivery planner", values, authorId: uid, createdAt: now });
   await logActivity(pid, uid, "document.generated", `Generated ${title} from the delivery planner`, `/projects/${pid}/documents/${id}`);

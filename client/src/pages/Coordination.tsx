@@ -242,20 +242,9 @@ function ClashImport({ data, teams, onClose }: { data: ProjectData; teams: TaskT
   );
 }
 
-const SUBTABS: [string, string][] = [["issues", "Issues (BCF)"], ["clash", "Clash matrix"], ["risks", "Risk register"], ["handover", "Handover"]];
-
 export default function Coordination({ data, sub }: { data: ProjectData; sub?: string }) {
   const teams = useTeams(data.project.id);
-  const tab = SUBTABS.some(([k]) => k === sub) ? sub! : "issues";
-  return (
-    <>
-      <div className="seg" style={{ marginBottom: 14 }}>{SUBTABS.map(([k, label]) => <button key={k} className={tab === k ? "on" : ""} onClick={() => navigate(`/projects/${data.project.id}/coordination/${k}`)}>{label}</button>)}</div>
-      {tab === "issues" && <Issues data={data} teams={teams} />}
-      {tab === "clash" && <ClashMatrix data={data} teams={teams} />}
-      {tab === "risks" && <Risks data={data} />}
-      {tab === "handover" && <Handover data={data} />}
-    </>
-  );
+  return sub === "clash" ? <ClashMatrix data={data} teams={teams} /> : <Issues data={data} teams={teams} />;
 }
 
 // ---------------------------------------------------------------- risk register
@@ -264,7 +253,7 @@ interface Risk { id: string; number: number; title: string; category: string; ca
 const riskTone = (s: number) => (s >= 15 ? "#dc2626" : s >= 8 ? "#d97706" : "#16a34a");
 const RISK_CATEGORIES = ["Information delivery", "Technology / CDE", "Resources & capability", "Programme", "Security (19650-5)", "Commercial", "AI (42001)"];
 
-function Risks({ data }: { data: ProjectData }) {
+export function Risks({ data }: { data: ProjectData }) {
   const { toast } = useSession();
   const pid = data.project.id;
   const [risks, setRisks] = useState<Risk[]>([]);
@@ -294,7 +283,8 @@ function Risks({ data }: { data: ProjectData }) {
           <b>Summary</b>
           <p className="small">{open.length} open · {open.filter((r) => r.likelihood * r.impact >= 15).length} high · {risks.filter((r) => r.reviewDate && r.reviewDate < today() && r.status !== "Closed").length} past review date</p>
           <p className="small muted">ISO 19650-2 5.3.6 requires the delivery team to keep a risk register for the timely delivery of information. Residual scores show the effect of mitigation.</p>
-          {canEdit(data.role) && <button className="primary" onClick={() => setEdit("new")}>+ Risk</button>}
+          {canEdit(data.role) && <><button className="primary" onClick={() => setEdit("new")}>+ Risk</button>
+            <button onClick={async () => { try { const r = await api<{ id: string }>(`/projects/${pid}/delivery/generate`, { body: { kind: "risk-register" } }); navigate(`/projects/${pid}/documents/${r.id}`); } catch (e) { toast((e as Error).message, "error"); } }}>📄 Generate register document</button></>}
           <button onClick={() => exportCsv(`${data.project.code}-risk-register`, ["Ref", "Risk", "Category", "Cause", "L", "I", "Score", "Mitigation", "Residual", "Owner", "Status", "Review"], risks.map((r) => [`R${String(r.number).padStart(2, "0")}`, r.title, r.category, r.cause, String(r.likelihood), String(r.impact), String(r.likelihood * r.impact), r.mitigation, r.residualLikelihood && r.residualImpact ? String(r.residualLikelihood * r.residualImpact) : "", member(r.ownerId), r.status, r.reviewDate]))}>⬇ CSV</button>
         </div>
       </div>
@@ -347,7 +337,7 @@ function RiskDialog({ data, initial, onSave, onDelete, onClose }: { data: Projec
 
 interface HandoverItem { id: string; category: string; title: string; clause: string; status: string; ownerId: string | null; fileId: string | null; notes: string }
 
-function Handover({ data }: { data: ProjectData }) {
+export function Handover({ data }: { data: ProjectData }) {
   const { toast } = useSession();
   const pid = data.project.id;
   const [items, setItems] = useState<HandoverItem[]>([]);

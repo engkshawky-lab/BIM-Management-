@@ -28,8 +28,8 @@ r.post(P + "/risks", requireProject("editor"), h(async (req, res) => {
   const [{ n }] = await db.select({ n: max(schema.risks.number) }).from(schema.risks).where(eq(schema.risks.projectId, pid));
   const id = newId(); const now = new Date();
   await db.insert(schema.risks).values({ ...body, id, projectId: pid, number: (n ?? 0) + 1, createdAt: now, updatedAt: now });
-  await logActivity(pid, req.user!.id, "risk.created", `Added risk R${String((n ?? 0) + 1).padStart(2, "0")}: ${body.title}`, `/projects/${pid}/coordination/risks`);
-  if (body.ownerId) await notify(pid, req.user!.id, `You own a new risk: ${body.title}`, `/projects/${pid}/coordination/risks`, body.ownerId);
+  await logActivity(pid, req.user!.id, "risk.created", `Added risk R${String((n ?? 0) + 1).padStart(2, "0")}: ${body.title}`, `/projects/${pid}/delivery/risks`);
+  if (body.ownerId) await notify(pid, req.user!.id, `You own a new risk: ${body.title}`, `/projects/${pid}/delivery/risks`, body.ownerId);
   res.status(201).json({ id });
 }));
 
@@ -98,7 +98,7 @@ r.put(P + "/handover/:id", requireProject("editor"), h(async (req, res) => {
     if (!f) return res.status(400).json({ error: "Unknown file." });
   }
   await db.update(schema.handoverItems).set({ ...body, updatedAt: new Date() }).where(and(eq(schema.handoverItems.id, req.params.id), eq(schema.handoverItems.projectId, pid)));
-  if (body.status === "Complete") await logActivity(pid, req.user!.id, "handover.item", `Handover item completed`, `/projects/${pid}/coordination/handover`);
+  if (body.status === "Complete") await logActivity(pid, req.user!.id, "handover.item", `Handover item completed`, `/projects/${pid}/delivery/handover`);
   res.json({ ok: true });
 }));
 

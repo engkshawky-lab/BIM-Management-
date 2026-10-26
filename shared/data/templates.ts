@@ -180,7 +180,7 @@ export const templates: DocTemplate[] = [
     ],
   },
   {
-    id: "resp-matrix", standard: "iso19650", code: "DRM", category: "Plans", title: "Detailed Responsibility Matrix",
+    id: "resp-matrix", standard: "iso19650", generatedFrom: { kind: "resp-matrix", hubPath: "delivery/responsibility", label: "Responsibility matrix" }, code: "DRM", category: "Plans", title: "Detailed Responsibility Matrix",
     purpose: "Defines who produces which information, when and to what level of information need.",
     clauseRefs: ["19650-2 §5.4.2"],
     sections: [projectInfo, sec("matrix", "Matrix", "One row per deliverable / element per milestone.", [
@@ -188,7 +188,7 @@ export const templates: DocTemplate[] = [
     ])],
   },
   {
-    id: "tidp", standard: "iso19650", code: "TIDP", category: "Plans", title: "Task Information Delivery Plan",
+    id: "tidp", standard: "iso19650", generatedFrom: { kind: "tidp", hubPath: "delivery/plan", label: "MIDP / TIDP planner" }, code: "TIDP", category: "Plans", title: "Task Information Delivery Plan",
     purpose: "Task team schedule of information containers, durations and dependencies.",
     clauseRefs: ["19650-2 §5.4.4"],
     sections: [projectInfo, sec("team", "Task team", "Identify the task team.", [text("taskTeam", "Task team"), text("manager", "Task team manager")]),
@@ -197,7 +197,7 @@ export const templates: DocTemplate[] = [
       ])],
   },
   {
-    id: "midp", standard: "iso19650", code: "MIDP", category: "Plans", title: "Master Information Delivery Plan",
+    id: "midp", standard: "iso19650", generatedFrom: { kind: "midp", hubPath: "delivery/plan", label: "MIDP / TIDP planner" }, code: "MIDP", category: "Plans", title: "Master Information Delivery Plan",
     purpose: "Aggregates all TIDPs into one plan aligned with delivery milestones.",
     clauseRefs: ["19650-2 §5.4.5"],
     sections: [projectInfo, sec("milestones", "Milestones", "Delivery milestones from the EIR.", [table("milestones", "Milestones", ["Milestone", "Date", "Purpose"])]),
@@ -221,7 +221,7 @@ export const templates: DocTemplate[] = [
     ])],
   },
   {
-    id: "risk-register", standard: "iso19650", code: "RR", category: "Tender", title: "Information Delivery Risk Register",
+    id: "risk-register", standard: "iso19650", generatedFrom: { kind: "risk-register", hubPath: "delivery/risks", label: "Risk register" }, code: "RR", category: "Tender", title: "Information Delivery Risk Register",
     purpose: "Risks to timely delivery of information and their mitigation.",
     clauseRefs: ["19650-2 §5.3.6"],
     sections: [projectInfo, sec("risks", "Risks", "Score likelihood and impact 1–5.", [

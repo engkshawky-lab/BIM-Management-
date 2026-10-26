@@ -2,10 +2,29 @@ import { useEffect, useMemo, useState } from "react";
 import { navigate, useSession } from "../App";
 import { StateTag, StdBadge } from "../components/common";
 import { templateById, templates } from "../../../shared/data/templates";
+import type { DocTemplate } from "../../../shared/data/types";
 import { api, canEdit, fmtDate, type DocRow } from "../lib/api";
 import type { ProjectData } from "./Project";
 
 const REVIEW_LABEL: Record<string, string> = { requested: "🕓 review requested", approved: "✔ review approved", changes: "✎ changes requested" };
+
+/** Templates fed by structured data are generated, never typed twice. */
+export function GeneratedNotice({ projectId, t, onClose }: { projectId: string; t: DocTemplate; onClose: () => void }) {
+  const { toast } = useSession();
+  const g = t.generatedFrom!;
+  return (
+    <div className="banner info">
+      <b>{t.code} is generated from the {g.label}.</b> Keep the data there and generate the document, so the plan and the document never disagree.
+      <div className="row" style={{ marginTop: 8 }}>
+        <button className="primary" onClick={() => { onClose(); navigate(`/projects/${projectId}/${g.hubPath}`); }}>Open {g.label}</button>
+        {g.kind !== "tidp" && <button onClick={async () => {
+          try { const r = await api<{ id: string }>(`/projects/${projectId}/delivery/generate`, { body: { kind: g.kind } }); onClose(); navigate(`/projects/${projectId}/documents/${r.id}`); }
+          catch (e) { toast((e as Error).message, "error"); }
+        }}>Generate {t.code} now</button>}
+      </div>
+    </div>
+  );
+}
 
 export function NewDocumentDialog({ data, initialTemplate, onClose }: { data: ProjectData; initialTemplate?: string; onClose: () => void }) {
   const { toast } = useSession();
@@ -37,10 +56,12 @@ export function NewDocumentDialog({ data, initialTemplate, onClose }: { data: Pr
           ))}
         </select>
         {t && <p className="small muted">{t.purpose} <br />{t.clauseRefs.join(" · ")} · {t.sections.length} sections. Project details are filled in automatically.</p>}
+        {t?.generatedFrom ? <GeneratedNotice projectId={project.id} t={t} onClose={onClose} /> : <>
         <label>Title</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t?.title} />
         <label>Container name / document number</label><input value={container} onChange={(e) => setContainer(e.target.value.toUpperCase())} />
-        <p className="small muted">Replace XXX with your originator code. See the <a href="#/naming" target="_blank">naming tool</a>.</p>
+        <p className="small muted">Replace XXX with your originator code. See the <a href="#/knowledge/iso19650/naming" target="_blank">naming tool</a>.</p>
         <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button><button className="primary" onClick={create}>Create document</button></div>
+        </>}
       </div>
     </div>
   );

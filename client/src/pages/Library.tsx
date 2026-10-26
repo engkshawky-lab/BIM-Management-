@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StateTag, StdBadge } from "../components/common";
+import { StateTag } from "../components/common";
 import { cdeStates, glossary19650, parts19650, process19650, suitabilityCodes } from "../../../shared/data/iso19650";
 import { aiInBimUseCases, annexA42001, clauses42001, glossary42001 } from "../../../shared/data/iso42001";
 import type { Clause, GlossaryTerm, StandardId } from "../../../shared/data/types";
@@ -57,15 +57,14 @@ export default function Library({ std }: { std: StandardId }) {
 
   return (
     <>
-      <StdBadge std={std} />
-      <h1>{std === "iso19650" ? "ISO 19650 knowledge library" : "ISO/IEC 42001 knowledge library"}</h1>
+      <h2 style={{ marginTop: 4 }}>{std === "iso19650" ? "ISO 19650 knowledge library" : "ISO/IEC 42001 knowledge library"}</h2>
       <p className="muted">
         {std === "iso19650"
           ? "Information management using building information modelling across the asset life cycle."
           : "Requirements for establishing, implementing, maintaining and improving an AI management system (AIMS)."}
         {" "}Summaries are paraphrased for guidance; always refer to the licensed standard.
       </p>
-      <div className="tabs no-print">{tabs.map((x, i) => <button key={x} className={i === t ? "on" : ""} onClick={() => setTab(i)}>{x}</button>)}</div>
+      <div className="seg sub-nav no-print">{tabs.map((x, i) => <button key={x} className={i === t ? "on" : ""} onClick={() => setTab(i)}>{x}</button>)}</div>
       <input placeholder="Search this section…" value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 12, maxWidth: 420 }} />
 
       {std === "iso19650" && t === 0 && (
@@ -91,7 +90,7 @@ export default function Library({ std }: { std: StandardId }) {
               <tbody>{suitabilityCodes.filter((c) => match(q, c.code, c.desc)).map((c) => <tr key={c.code}><td><b>{c.code}</b></td><td><StateTag state={c.state} /></td><td>{c.desc}</td></tr>)}</tbody>
             </table>
           </div>
-          <p className="small muted">Check: approve for sharing (5.6.4) → authorize (5.7.2) → accept (5.7.4). See <a href="#/naming">naming & status tool</a>.</p>
+          <p className="small muted">Check: approve for sharing (5.6.4) → authorize (5.7.2) → accept (5.7.4). See <a href="#/knowledge/iso19650/naming">naming & status tool</a>.</p>
         </>
       )}
       {std === "iso19650" && t === 3 && <Glossary terms={glossary19650} q={q} />}
@@ -99,7 +98,7 @@ export default function Library({ std }: { std: StandardId }) {
       {std === "iso42001" && t === 0 && <ClauseTree clauses={clauses42001} q={q} />}
       {std === "iso42001" && t === 1 && (
         <>
-          <p className="muted small">38 controls across 9 objectives. Determine applicability in the <a href="#/templates/iso42001">Statement of Applicability template</a>.</p>
+          <p className="muted small">38 controls across 9 objectives. Determine applicability in the <a href="#/knowledge/iso42001/templates">Statement of Applicability template</a>.</p>
           {annexA42001.map((g) => {
             const cs = g.controls.filter((c) => match(q, c.id, c.title, c.objective, g.title));
             if (!cs.length) return null;

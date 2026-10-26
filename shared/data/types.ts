@@ -82,4 +82,6 @@ export interface DocTemplate {
   clauseRefs: string[];
   category: string;
   sections: TemplateSection[];
+  /** Produced from structured project data (single source of truth) instead of typed by hand. */
+  generatedFrom?: { kind: "midp" | "tidp" | "resp-matrix" | "risk-register"; hubPath: string; label: string };
 }
