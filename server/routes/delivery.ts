@@ -1,6 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { Router } from "express";
 import { INFO_USES, useByCode } from "../../shared/data/infoUses";
+import { LODS, MRM_STARTER } from "../../shared/mrm";
 import { z } from "zod";
 import { templateById } from "../../shared/data/templates";
 import { analysePlan, planStats, qualityScore, type Deliverable } from "../../shared/delivery";
@@ -16,14 +17,15 @@ const today = () => new Date().toISOString().slice(0, 10);
 const date = z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, "use YYYY-MM-DD");
 
 async function bundle(pid: string) {
-  const [teams, milestones, deliverables, responsibility, loin] = await Promise.all([
+  const [teams, milestones, deliverables, responsibility, loin, mrm] = await Promise.all([
     db.select().from(schema.taskTeams).where(eq(schema.taskTeams.projectId, pid)).orderBy(asc(schema.taskTeams.name)),
     db.select().from(schema.milestones).where(eq(schema.milestones.projectId, pid)).orderBy(asc(schema.milestones.date)),
     db.select().from(schema.deliverables).where(eq(schema.deliverables.projectId, pid)).orderBy(asc(schema.deliverables.dueDate), asc(schema.deliverables.containerName)),
     db.select().from(schema.responsibilityRows).where(eq(schema.responsibilityRows.projectId, pid)).orderBy(asc(schema.responsibilityRows.sortOrder), asc(schema.responsibilityRows.createdAt)),
     db.select().from(schema.loinRows).where(eq(schema.loinRows.projectId, pid)).orderBy(asc(schema.loinRows.ref)),
+    db.select().from(schema.mrmRows).where(eq(schema.mrmRows.projectId, pid)).orderBy(asc(schema.mrmRows.sortOrder), asc(schema.mrmRows.createdAt)),
   ]);
-  return { teams, milestones, deliverables: deliverables as (typeof deliverables[number] & Deliverable)[], responsibility, loin };
+  return { teams, milestones, deliverables: deliverables as (typeof deliverables[number] & Deliverable)[], responsibility, loin, mrm };
 }
 
 r.get(P + "/delivery", requireProject(), h(async (req, res) => {
@@ -34,7 +36,7 @@ r.get(P + "/delivery", requireProject(), h(async (req, res) => {
 }));
 
 // ---------- generic CRUD for the planning tables ----------
-type Table = typeof schema.taskTeams | typeof schema.milestones | typeof schema.deliverables | typeof schema.responsibilityRows | typeof schema.loinRows;
+type Table = typeof schema.taskTeams | typeof schema.milestones | typeof schema.deliverables | typeof schema.responsibilityRows | typeof schema.loinRows | typeof schema.mrmRows;
 
 function crud<S extends z.ZodObject>(path: string, table: Table, shape: S, label: (row: z.infer<S>) => string, hooks: {
   beforeDelete?: (pid: string, id: string) => Promise<string | void>;
@@ -128,6 +130,21 @@ crud("loin", schema.loinRows, z.object({
   geometry: z.string().max(1000).default(""), alphanumeric: z.string().max(1000).default(""), documentation: z.string().max(1000).default(""),
 }), (row) => `LOIN ${row.ref}`, { validate: sameProject });
 
+crud("mrm", schema.mrmRows, z.object({
+  discipline: z.string().trim().min(1).max(40), system: z.string().trim().max(80).default(""), element: z.string().trim().min(1).max(160),
+  cells: z.record(z.string(), z.object({ teamId: z.string().max(36), lod: z.enum(["", ...LODS]) })).default({}), sortOrder: z.number().int().default(0),
+}), (row) => `model element ${row.element}`);
+
+r.post(P + "/mrm-seed", requireProject("editor"), h(async (req, res) => {
+  const pid = req.params.projectId;
+  const have = await db.select({ id: schema.mrmRows.id }).from(schema.mrmRows).where(eq(schema.mrmRows.projectId, pid));
+  if (have.length) return res.status(409).json({ error: "The matrix already has rows." });
+  const now = new Date();
+  await db.insert(schema.mrmRows).values(MRM_STARTER.map((x, i) => ({ ...x, id: newId(), projectId: pid, cells: {}, sortOrder: i, createdAt: now })));
+  await logActivity(pid, req.user!.id, "mrm.seeded", `Added ${MRM_STARTER.length} starter elements to the model responsibility matrix`, `/projects/${pid}/delivery/mrm`);
+  res.status(201).json({ count: MRM_STARTER.length });
+}));
+
 // Bulk import (CSV paste) of deliverables.
 r.post(P + "/deliverables-import", requireProject("editor"), h(async (req, res) => {
   const body = parse(z.object({ rows: z.array(z.object({
@@ -162,7 +179,7 @@ r.put(P + "/info-uses", requireProject("editor"), h(async (req, res) => {
 
 // ---------- generate controlled documents from the planner ----------
 r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) => {
-  const body = parse(z.object({ kind: z.enum(["midp", "tidp", "resp-matrix", "risk-register", "info-uses"]), taskTeamId: z.string().optional() }), req.body, res); if (!body) return;
+  const body = parse(z.object({ kind: z.enum(["midp", "tidp", "resp-matrix", "risk-register", "info-uses", "mrm"]), taskTeamId: z.string().optional() }), req.body, res); if (!body) return;
   const pid = req.params.projectId; const uid = req.user!.id;
   const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, pid));
   const b = await bundle(pid);
@@ -189,6 +206,10 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
     const risks = await db.select().from(schema.risks).where(eq(schema.risks.projectId, pid)).orderBy(asc(schema.risks.number));
     const names = new Map((await db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users)).map((u) => [u.id, u.name]));
     values.risks = risks.filter((x) => x.status !== "Closed").map((x) => [`R${String(x.number).padStart(2, "0")}`, x.title, String(x.likelihood), String(x.impact), String(x.likelihood * x.impact), x.mitigation, names.get(x.ownerId ?? "") ?? ""]);
+  } else if (body.kind === "mrm") {
+    if (!b.mrm.length) return res.status(400).json({ error: "Add elements to the model responsibility matrix first." });
+    values.mrm = b.mrm.flatMap((row) => b.milestones.filter((m) => row.cells[m.id]?.lod || row.cells[m.id]?.teamId)
+      .map((m) => [row.discipline, row.system, row.element, m.name, team.get(row.cells[m.id].teamId)?.name ?? "", row.cells[m.id].lod ? `LOD ${row.cells[m.id].lod}` : ""]));
   } else if (body.kind === "info-uses") {
     const uses = project.infoUses ?? [];
     if (!uses.length) return res.status(400).json({ error: "Select the project's information uses first." });
@@ -206,14 +227,14 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
   if (existing) {
     const lockedByOther = existing.lockedBy && existing.lockedBy !== uid && existing.lockedAt && now.getTime() - existing.lockedAt.getTime() < 90_000;
     if (lockedByOther) return res.status(423).json({ error: "Someone is editing that document right now. Try again shortly." });
-    const generatedKeys = body.kind === "midp" ? ["milestones", "plan"] : body.kind === "tidp" ? ["taskTeam", "containers"] : body.kind === "risk-register" ? ["risks"] : body.kind === "info-uses" ? ["uses"] : ["matrix"];
+    const generatedKeys = body.kind === "midp" ? ["milestones", "plan"] : body.kind === "tidp" ? ["taskTeam", "containers"] : body.kind === "risk-register" ? ["risks"] : body.kind === "info-uses" ? ["uses"] : body.kind === "mrm" ? ["mrm"] : ["matrix"];
     const merged = { ...(existing.values as object), ...Object.fromEntries(generatedKeys.map((k) => [k, values[k]])) };
     await db.update(schema.documents).set({ values: merged, updatedAt: now }).where(eq(schema.documents.id, existing.id));
     await logActivity(pid, uid, "document.generated", `Regenerated ${title} from the delivery planner`, `/projects/${pid}/documents/${existing.id}`);
     return res.json({ id: existing.id, updated: true });
   }
   const id = newId();
-  const container = `${project.code}-${(body.taskTeamId && team.get(body.taskTeamId)?.originatorCode) || "XXX"}-ZZ-ZZ-SH-Z-${({ midp: "0001", tidp: "0002", "resp-matrix": "0003", "risk-register": "0004", "info-uses": "0005" } as const)[body.kind]}`;
+  const container = `${project.code}-${(body.taskTeamId && team.get(body.taskTeamId)?.originatorCode) || "XXX"}-ZZ-ZZ-SH-Z-${({ midp: "0001", tidp: "0002", "resp-matrix": "0003", "risk-register": "0004", "info-uses": "0005", mrm: "0006" } as const)[body.kind]}`;
   await db.insert(schema.documents).values({ id, projectId: pid, templateId: t.id, title, containerName: container, revision: "P01.01", state: "WIP", suitability: "S0", authorId: uid, values, createdAt: now, updatedAt: now });
   await db.insert(schema.documentRevisions).values({ id: newId(), documentId: id, revision: "P01.01", state: "WIP", suitability: "S0", note: "Generated from the delivery planner", values, authorId: uid, createdAt: now });
   await logActivity(pid, uid, "document.generated", `Generated ${title} from the delivery planner`, `/projects/${pid}/documents/${id}`);

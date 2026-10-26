@@ -5,6 +5,7 @@ import { roleCodes, typeCodes } from "../../../shared/data/iso19650";
 import { DELIVERABLE_STATUSES, addDays, daysBetween, type Deliverable, type DeliverableStatus, type Finding, type Milestone, type TaskTeam } from "../../../shared/delivery";
 import { containerName } from "../../../shared/naming";
 import { changeImpact } from "../../../shared/impact";
+import { LODS, LOD_MEANING, mrmFindings, type Lod, type MrmCell } from "../../../shared/mrm";
 import { api, canEdit, type Member } from "../lib/api";
 import { exportCsv, parseTabular } from "../lib/export";
 import { Handover, Risks } from "./Coordination";
@@ -13,8 +14,9 @@ import ProjectInfoUses from "./InfoUses";
 
 interface RespRow { id: string; item: string; stage: string; loin: string; cells: Record<string, string>; sortOrder: number }
 interface LoinRow { id: string; ref: string; element: string; ifcClass: string; milestoneId: string | null; purpose: string; geometry: string; alphanumeric: string; documentation: string }
+interface MrmRow { id: string; discipline: string; system: string; element: string; cells: Record<string, MrmCell>; sortOrder: number }
 interface DeliveryData {
-  teams: TaskTeam[]; milestones: Milestone[]; deliverables: (Deliverable & { updatedAt: string })[]; responsibility: RespRow[]; loin: LoinRow[];
+  teams: TaskTeam[]; milestones: Milestone[]; deliverables: (Deliverable & { updatedAt: string })[]; responsibility: RespRow[]; loin: LoinRow[]; mrm: MrmRow[];
   stats: { total: number; planned: number; inProgress: number; shared: number; published: number; overdue: number; progress: number };
   findings: Finding[];
 }
@@ -426,9 +428,61 @@ function Loin({ d, role, call }: { d: DeliveryData; role: ProjectData["role"]; c
   );
 }
 
+// ---------------------------------------------------------------- model responsibility matrix
+
+function Mrm({ d, project, role, call }: { d: DeliveryData; project: ProjectData["project"]; role: ProjectData["role"]; call: ReturnType<typeof useDelivery>["call"] }) {
+  const editor = canEdit(role);
+  const [filter, setFilter] = useState("");
+  const [row, setRow] = useState({ discipline: "", system: "", element: "" });
+  if (!d.teams.length || !d.milestones.length) return <div className="card muted">Add task teams and milestones first (Teams & milestones).</div>;
+  const disciplines = [...new Set(d.mrm.map((r) => r.discipline))];
+  const rows = d.mrm.filter((r) => !filter || r.discipline === filter);
+  const findings = mrmFindings(d.mrm, d.milestones.map((m) => m.id));
+  const setCell = (r: MrmRow, mid: string, p: Partial<MrmCell>) => call(`mrm/${r.id}`, "PUT", { cells: { ...r.cells, [mid]: { ...({ teamId: "", lod: "" } as MrmCell), ...r.cells[mid], ...p } } });
+  return (
+    <>
+      <div className="row spread" style={{ marginBottom: 10 }}>
+        <p className="small muted" style={{ margin: 0, maxWidth: 760 }}>For each model element and milestone, choose the task team that models it and its level of development. LOD should never go down between milestones. Hover an LOD for its meaning.</p>
+        <div className="row">
+          {disciplines.length > 1 && <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ width: "auto" }}><option value="">All disciplines</option>{disciplines.map((x) => <option key={x}>{x}</option>)}</select>}
+          <button onClick={() => exportCsv(`${project.code}-MRM`, ["Discipline", "System", "Element", ...d.milestones.flatMap((m) => [`${m.name} team`, `${m.name} LOD`])], d.mrm.map((r) => [r.discipline, r.system, r.element, ...d.milestones.flatMap((m) => [d.teams.find((t) => t.id === r.cells[m.id]?.teamId)?.name ?? "", r.cells[m.id]?.lod ?? ""])]))}>⬇ CSV</button>
+          {editor && d.mrm.length > 0 && <button onClick={async () => { const r = (await call("delivery/generate", "POST", { kind: "mrm" }, "MRM document generated")) as { id: string } | undefined; if (r) navigate(`/projects/${project.id}/documents/${r.id}`); }}>📄 Generate MRM document</button>}
+        </div>
+      </div>
+      <div className="card table-wrap">
+        <table className="data">
+          <thead><tr><th>Discipline</th><th>System</th><th>Element</th>{d.milestones.map((m) => <th key={m.id} className="center-cell">{m.name}</th>)}<th /></tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id}>
+                <td className="small">{r.discipline}</td><td className="small">{r.system}</td><td>{r.element}</td>
+                {d.milestones.map((m) => { const c = r.cells[m.id] ?? { teamId: "", lod: "" }; return (
+                  <td key={m.id} className="center-cell" style={{ minWidth: 150 }}>
+                    <select className="tiny" disabled={!editor} value={c.teamId} onChange={(e) => setCell(r, m.id, { teamId: e.target.value })}><option value="">—</option>{d.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
+                    <select className="tiny" disabled={!editor} value={c.lod} title={c.lod ? LOD_MEANING[c.lod as Lod] : ""} onChange={(e) => setCell(r, m.id, { lod: e.target.value as Lod })}><option value="">LOD</option>{LODS.map((l) => <option key={l} value={l} title={LOD_MEANING[l]}>{l}</option>)}</select>
+                  </td>); })}
+                <td>{editor && <button className="ghost tiny danger" onClick={() => call(`mrm/${r.id}`, "DELETE")}>✕</button>}</td>
+              </tr>
+            ))}
+            {!d.mrm.length && <tr><td colSpan={d.milestones.length + 4} className="muted">No elements yet.{editor && <> <button className="small" onClick={() => call("mrm-seed", "POST", {}, "Starter elements added")}>Add starter element list</button></>}</td></tr>}
+          </tbody>
+        </table>
+        {editor && <form className="row" style={{ marginTop: 10 }} onSubmit={async (e) => { e.preventDefault(); if (await call("mrm", "POST", { ...row, sortOrder: d.mrm.length })) setRow({ ...row, element: "" }); }}>
+          <input required placeholder="Discipline" value={row.discipline} onChange={(e) => setRow({ ...row, discipline: e.target.value })} style={{ maxWidth: 160 }} list="mrm-disc" />
+          <datalist id="mrm-disc">{disciplines.map((x) => <option key={x} value={x} />)}</datalist>
+          <input placeholder="System" value={row.system} onChange={(e) => setRow({ ...row, system: e.target.value })} style={{ maxWidth: 180 }} />
+          <input required placeholder="Element, e.g. Cable trays" value={row.element} onChange={(e) => setRow({ ...row, element: e.target.value })} style={{ maxWidth: 260 }} />
+          <button className="primary">+ Add element</button>
+        </form>}
+      </div>
+      {findings.length > 0 && <div className="card" style={{ marginTop: 12 }}>{findings.map((f) => <div key={f} className="finding warning">⚠ {f}</div>)}</div>}
+    </>
+  );
+}
+
 // ---------------------------------------------------------------- page
 
-const SUBTABS = ["plan", "setup", "uses", "responsibility", "loin", "risks", "handover"];
+const SUBTABS = ["plan", "setup", "uses", "responsibility", "mrm", "loin", "risks", "handover"];
 
 export default function Delivery({ data, sub }: { data: ProjectData; sub?: string }) {
   const { data: d, call } = useDelivery(data.project.id);
@@ -440,6 +494,7 @@ export default function Delivery({ data, sub }: { data: ProjectData; sub?: strin
       {tab === "setup" && <Setup d={d} members={data.members} role={data.role} call={call} />}
       {tab === "uses" && <ProjectInfoUses data={data} />}
       {tab === "responsibility" && <Responsibility d={d} project={data.project} role={data.role} call={call} />}
+      {tab === "mrm" && <Mrm d={d} project={data.project} role={data.role} call={call} />}
       {tab === "loin" && <Loin d={d} role={data.role} call={call} />}
       {tab === "risks" && <Risks data={data} />}
       {tab === "handover" && <Handover data={data} />}

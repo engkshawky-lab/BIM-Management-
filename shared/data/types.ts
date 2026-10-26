@@ -83,5 +83,5 @@ export interface DocTemplate {
   category: string;
   sections: TemplateSection[];
   /** Produced from structured project data (single source of truth) instead of typed by hand. */
-  generatedFrom?: { kind: "midp" | "tidp" | "resp-matrix" | "risk-register" | "info-uses"; hubPath: string; label: string };
+  generatedFrom?: { kind: "midp" | "tidp" | "resp-matrix" | "risk-register" | "info-uses" | "mrm"; hubPath: string; label: string };
 }

@@ -27,6 +27,7 @@ export const PROJECT_PAGES: NavItem[] = [
   p("p.setup", "Teams & milestones", "delivery/setup", "users", "Delivery"),
   p("p.uses", "Information uses", "delivery/uses", "target", "Delivery", "Why information is produced — drives LOIN & MIDP"),
   p("p.raci", "Responsibility matrix", "delivery/responsibility", "table", "Delivery", "RACI per task team"),
+  p("p.mrm", "Model responsibility (MRM)", "delivery/mrm", "grid", "Delivery", "Who models each element, LOD per milestone"),
   p("p.loin", "Level of information need", "delivery/loin", "layers", "Delivery", "LOIN per element & milestone"),
   p("p.gates", "Process gates", "workflow", "flow", "Delivery", "ISO 19650-2 / 42001 stage gates"),
   p("p.risks", "Risk register", "delivery/risks", "alert", "Delivery"),

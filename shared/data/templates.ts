@@ -237,6 +237,14 @@ export const templates: DocTemplate[] = [
     ])],
   },
   {
+    id: "mrm", standard: "iso19650", generatedFrom: { kind: "mrm", hubPath: "delivery/mrm", label: "Model responsibility matrix" }, code: "MRM", category: "Plans", title: "Model Responsibility Matrix",
+    purpose: "Which task team models each element, and to what level of development, at each milestone.",
+    clauseRefs: ["19650-2 §5.3.2", "§5.4.2", "§5.4.4"],
+    sections: [projectInfo, sec("mrm", "Model responsibility", "Generated from the project's model responsibility matrix.", [
+      table("mrm", "Model responsibility matrix", ["Discipline", "System", "Element", "Milestone", "Task team", "LOD"], []),
+    ])],
+  },
+  {
     id: "qa-checklist", standard: "iso19650", code: "QA", category: "Quality", title: "Information Container QA Checklist",
     purpose: "QA check before a container moves from WIP to Shared.",
     clauseRefs: ["19650-2 §5.6.3"],

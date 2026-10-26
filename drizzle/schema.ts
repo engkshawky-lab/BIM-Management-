@@ -365,3 +365,15 @@ export const modelReviews = mysqlTable("model_reviews", {
   createdAt: created(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 }, (t) => [index("model_reviews_project").on(t.projectId)]);
+
+export const mrmRows = mysqlTable("mrm_rows", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  discipline: varchar("discipline", { length: 40 }).notNull(),
+  system: varchar("system", { length: 80 }).notNull().default(""),
+  element: varchar("element", { length: 160 }).notNull(),
+  // milestone id -> { teamId, lod }
+  cells: json<Record<string, { teamId: string; lod: string }>>("cells").notNull(),
+  sortOrder: int("sort_order").notNull().default(0),
+  createdAt: created(),
+}, (t) => [index("mrm_project").on(t.projectId)]);
