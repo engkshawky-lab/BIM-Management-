@@ -507,3 +507,10 @@ export const notebooks = mysqlTable("notebooks", {
   createdAt: created(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 }, (t) => [index("notebooks_project").on(t.projectId)]);
+
+export const lessonProgress = mysqlTable("lesson_progress", {
+  userId: ref("user_id").notNull(),
+  courseId: varchar("course_id", { length: 40 }).notNull(),
+  lessonId: varchar("lesson_id", { length: 40 }).notNull(),
+  completedAt: datetime("completed_at", { mode: "date" }).notNull(),
+}, (t) => [primaryKey({ columns: [t.userId, t.courseId, t.lessonId] })]);

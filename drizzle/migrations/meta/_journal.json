@@ -127,6 +127,13 @@
       "when": 1793035638918,
       "tag": "0017_notebooks",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1793035879061,
+      "tag": "0018_lessons",
+      "breakpoints": true
     }
   ]
 }

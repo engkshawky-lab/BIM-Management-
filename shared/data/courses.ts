@@ -1,0 +1,29 @@
+// Built-in courses: short original lessons that link to the question bank by topic.
+// Administrators can attach a video URL to any lesson (stored in settings).
+
+export interface Lesson { id: string; title: string; minutes: number; body: string }
+export interface Course { id: string; title: string; level: "Foundation" | "Practitioner"; topic: string; summary: string; lessons: Lesson[] }
+
+const L = (id: string, title: string, minutes: number, body: string): Lesson => ({ id, title, minutes, body });
+
+export const COURSES: Course[] = [
+  { id: "foundations", title: "ISO 19650 foundations", level: "Foundation", topic: "Concepts & terms", summary: "Why information management matters, the key parties, and the information requirements hierarchy.", lessons: [
+    L("why", "Why manage information?", 6, "Projects fail on information more often than on design. Late, inconsistent or unusable information causes rework, claims and poor handover.\n\nISO 19650 sets out **how** information is specified, produced, checked, shared and handed over — so the right information reaches the right person at the right time.\n\n- It is a process standard, not a software standard.\n- It applies to buildings and infrastructure, design through operation.\n- It scales: apply it proportionately to the project size and risk."),
+    L("parties", "Parties and teams", 7, "Three roles appear throughout:\n\n- **Appointing party** — receives information (often the client).\n- **Lead appointed party** — coordinates information from a delivery team (e.g. the lead designer or main contractor).\n- **Appointed parties / task teams** — produce information.\n\nEach appointment carries its own information requirements and responsibilities."),
+    L("requirements", "The requirements hierarchy", 8, "Requirements flow from the organisation down to each appointment:\n\n1. **OIR** — what the organisation needs to run its business.\n2. **AIR** — what it needs about its assets for operation.\n3. **PIR** — what it needs to make project decisions.\n4. **EIR** — what each appointment must deliver, when and how.\n\nThe project information model (PIM) is produced during delivery; the asset information model (AIM) carries what operations need."),
+    L("loin", "Level of information need", 6, "LOIN describes how much information is needed for a purpose at a milestone — no more, no less:\n\n- **Geometry** — detail, dimensionality, location, appearance, parametric behaviour.\n- **Alphanumeric information** — properties and values.\n- **Documentation** — certificates, manuals, reports.\n\nOver-specifying wastes effort; under-specifying creates gaps."),
+  ] },
+  { id: "delivery", title: "The delivery process step by step", level: "Practitioner", topic: "Delivery process", summary: "From assessment and need to close-out, with the documents produced at each step.", lessons: [
+    L("before", "Before appointment", 9, "**Assessment and need** — appoint the information management function, set requirements, milestones, the information standard, methods, the CDE and the protocol.\n\n**Invitation to tender** — issue the EIR with reference information and evaluation criteria.\n\n**Tender response** — the bidder nominates roles, prepares a pre-appointment BEP, assesses capability and capacity, proposes mobilisation and records risks."),
+    L("appointment", "Appointment and mobilisation", 8, "At **appointment** the BEP is confirmed, the detailed responsibility matrix is agreed, each task team produces a TIDP and the lead appointed party aggregates them into the MIDP.\n\n**Mobilisation** gets people and IT ready and tests the methods — naming, federation, exchanges — before production starts."),
+    L("production", "Collaborative production and delivery", 9, "Teams produce information in WIP, run a **QA check**, **review** it, then share it. Coordination happens on shared information.\n\nAt each milestone the lead appointed party **authorises** the model and the appointing party **accepts** it against the EIR. At **close-out** the PIM is archived and lessons are captured."),
+  ] },
+  { id: "cde", title: "Running a common data environment", level: "Practitioner", topic: "CDE, naming & status", summary: "States, status codes, revisions and naming that make information trustworthy.", lessons: [
+    L("states", "CDE states", 6, "- **WIP** — visible to the task team only.\n- **Shared** — checked and visible to the delivery team for coordination.\n- **Published** — authorised for use (e.g. construction).\n- **Archived** — the record of everything superseded.\n\nInformation moves between states through checks and approvals, never by copying files around."),
+    L("naming", "Naming, status and revision", 7, "A field-based name makes every container unique and sortable: project, originator, volume/system, level/location, type, role and number.\n\nMetadata carries **status** (suitability, e.g. S1 for coordination) and **revision** (P01.01 during WIP, P01 when shared, C01 when contractual)."),
+  ] },
+  { id: "handover", title: "Asset information and handover", level: "Practitioner", topic: "Asset information & handover", summary: "Delivering asset data that operations can actually use.", lessons: [
+    L("air", "From AIR to COBie", 7, "Start from what operations need (AIR). Translate it into a schema — often COBie — with picklists, required fields per stage and an asset tagging standard.\n\nValidate early and often: the portal checks COBie against your client's standard at the chosen stage."),
+    L("staged", "Staged delivery and verification", 6, "Deliver asset information progressively: types and tags at design freeze, installed components during construction, complete data before handover.\n\nVerify a sample on site, link O&M documents to assets, and agree acceptance criteria before the final drop."),
+  ] },
+];

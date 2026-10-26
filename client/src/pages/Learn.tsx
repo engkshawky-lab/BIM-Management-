@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { QUESTIONS, SCENARIOS, TOPICS, type Question } from "../../../shared/data/learn";
 import { api, fmtDate } from "../lib/api";
+import { Courses, InterviewCoach, StandardsUpdates } from "./LearnExtras";
 
 interface Attempt { id: string; mode: string; topic: string; score: number; total: number; seconds: number; createdAt: string }
 const shuffle = <T,>(a: T[]) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
@@ -85,7 +86,10 @@ export default function Learn() {
 
   return (
     <>
-      <div className="page-head"><h1>Learn</h1><p className="muted">Practice questions by topic, a timed mock exam, and decision scenarios. Questions are written for learning and paraphrase the standards — always check the licensed editions.</p></div>
+      <div className="page-head"><h1>Learn</h1><p className="muted">Short courses, practice questions by topic, a timed mock exam, decision scenarios and an AI interview coach. Questions are written for learning and paraphrase the standards — always check the licensed editions.</p></div>
+      <h2 className="section-title">Courses</h2>
+      <Courses onPractise={(t) => setRun({ mode: "practice", topic: t, qs: shuffle(QUESTIONS.filter((q) => q.topic === t)) })} />
+      <h2 className="section-title">Practise & test</h2>
       <div className="grid g2">
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Practice by topic</h3>
@@ -110,6 +114,7 @@ export default function Learn() {
           <table className="data"><tbody>{hist.attempts.slice(0, 10).map((a) => <tr key={a.id}><td className="small">{fmtDate(a.createdAt)}</td><td className="small">{a.mode === "exam" ? "Mock exam" : a.topic}</td><td><b>{a.score}/{a.total}</b></td><td className="small muted">{Math.round(a.seconds / 60)} min</td></tr>)}</tbody></table>
         </div>
       </div>}
+      <div className="grid g2" style={{ marginTop: 14 }}><InterviewCoach /><StandardsUpdates /></div>
     </>
   );
 }
