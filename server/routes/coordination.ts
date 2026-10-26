@@ -31,7 +31,7 @@ async function nextNumber(pid: string) {
   return (n ?? 0) + 1;
 }
 
-async function createIssues(pid: string, uid: string, rows: (Partial<IssueInput> & { title: string; validationRunId?: string; bcfGuid?: string })[]) {
+export async function createIssues(pid: string, uid: string, rows: (Partial<IssueInput> & { title: string; validationRunId?: string; bcfGuid?: string })[]) {
   let n = await nextNumber(pid);
   const now = new Date();
   const values = rows.map((row) => ({

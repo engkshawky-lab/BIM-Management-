@@ -347,3 +347,21 @@ export const clientStandards = mysqlTable("client_standards", {
   createdAt: created(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 }, (t) => [index("standards_owner").on(t.ownerId)]);
+
+export const modelReviews = mysqlTable("model_reviews", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  number: int("number").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  discipline: varchar("discipline", { length: 40 }).notNull(),
+  taskTeamId: ref("task_team_id"),
+  fileId: ref("file_id"),
+  milestone: varchar("milestone", { length: 120 }).notNull().default(""),
+  reviewerId: ref("reviewer_id").notNull(),
+  results: json<Record<string, { grade: string; comment: string }>>("results").notNull(),
+  status: varchar("status", { length: 16 }).notNull().default("Draft"),
+  score: int("score").notNull().default(0),
+  grade: varchar("grade", { length: 2 }).notNull().default("—"),
+  createdAt: created(),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+}, (t) => [index("model_reviews_project").on(t.projectId)]);

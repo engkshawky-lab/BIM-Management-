@@ -32,6 +32,7 @@ export const PROJECT_PAGES: NavItem[] = [
   p("p.risks", "Risk register", "delivery/risks", "alert", "Delivery"),
   p("p.handover", "Handover", "delivery/handover", "handshake", "Delivery", "PIM → AIM checklist"),
   p("p.validation", "Model validation", "validation", "check", "Model & coordination", "IFC, COBie, LOIN & IDS checks"),
+  p("p.reviews", "Model QA/QC reviews", "reviews", "shield", "Model & coordination", "Graded discipline checklists A–D"),
   p("p.issues", "Issues (BCF)", "coordination/issues", "flag", "Model & coordination"),
   p("p.clash", "Clash matrix", "coordination/clash", "grid", "Model & coordination"),
   p("p.tags", "Asset tags", "tags", "check", "Model & coordination", "Build and check asset tags"),
