@@ -30,6 +30,11 @@ Stack (same as `iso19650_platform_deploy`): React + Vite client, Express server,
 | Learn | 40-question bank in 7 topics, practice with feedback, timed mock exam, results history, skill profile, decision scenarios. |
 | Admin | Admin console (usage, users, enable/disable, roles, password reset links, platform activity log, feedback queue), organisation branding on Word exports, "forgot password" flow, in-app feedback. |
 | Templates | 35+ templates incl. full BEP pre/post, capability assessment, handover strategy, BIM specification, security triage (19650-5), information uses schedule, MRM, minutes, progress report. |
+| Automation & email | Optional SMTP email (instant or daily digest per user), emailed reset links; background scheduler with daily health snapshots, quality trend charts, and project automations (overdue chaser, quality review, risk review) with run history. |
+| AI+ | AI clash triage (reviewer accepts suggestions), research notebook over pasted text, project documents and PDFs with citations, AI interview coach. |
+| 4D | Link programme activities to model elements by storey and IFC class; planned vs actual by date with timeline slider; unlinked and overlapping elements flagged. |
+| Careers & billing | Opt-in talent profiles with consent and view notifications, recruiter role; plans with project/member/storage/AI limits (BILLING=on), promo codes, admin plan assignment; saved fee and carbon estimates. |
+| Languages | English and Arabic (right-to-left) for navigation, menus, sign-in and profile. |
 | Knowledge | ISO 19650 parts, 19650-2 process 5.1–5.8, CDE states and status codes, ISO/IEC 42001 clauses 4–10 and all 38 Annex A controls, glossaries, naming tool, references. |
 
 ## Run locally

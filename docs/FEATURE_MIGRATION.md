@@ -106,7 +106,7 @@ Legend — **Status**: ✅ done · 🔜 next phase · ⏳ later phase. **Phase**
 2. ✅ Delivery — MIDP/TIDP, RACI, LOIN, quality report.
 3. ✅ **Validation & coordination** — IFC analyser + LOIN/IDS checks, COBie checker, issues (BCF), clash matrix, risk register, revision compare, change impact, handover module, new templates (BIM scope, MPDT).
 3b. ✅ **Client standards & delivery+** — client standards import, COBie v2, asset tags, information uses, MRM, QA/QC reviews, clash search sets, meetings & progress report, full BEP/CCA/handover/spec templates, MIDP Excel.
-4. ✅ **AI & requirements** — project AI assistant with citations, requirements traceability (with AI extraction), appointment review, ISO 19650-5 security triage. *Still open: scheduled AI agents, research notebook, AI clash triage.*
-5. ✅ **Dashboards & tools** — My Day, portfolio dashboard, BIM fee estimator, embodied carbon, maturity / digital-twin / scan-to-BIM assessments. *Still open: quality trends over time, 4D model linking, saved cost plans.*
-6. ✅ **Learn** — question bank, practice, timed mock exam, skill profile, scenarios. *Still open: video courses, interview coach, standards-updates feed.*
-7. ✅ **Admin** — admin console, users/roles/disable, reset links + forgot password, feedback, branding. *Still open: email delivery (SMTP), talent pool, plans & billing, Arabic UI.*
+4. ✅ **AI & requirements** — project AI assistant with citations, requirements traceability (with AI extraction), appointment review, ISO 19650-5 security triage. Scheduled automations, research notebook and AI clash triage ✅ (later batch).
+5. ✅ **Dashboards & tools** — My Day, portfolio dashboard, BIM fee estimator, embodied carbon, maturity / digital-twin / scan-to-BIM assessments. Quality trends, 4D planning and saved estimates ✅ (later batch).
+6. ✅ **Learn** — question bank, practice, timed mock exam, skill profile, scenarios. Courses with videos, interview coach and standards updates ✅ (later batch).
+7. ✅ **Admin** — admin console, users/roles/disable, reset links + forgot password, feedback, branding. Email (SMTP), talent pool, plans & billing and Arabic UI ✅ (later batch). *Still open: online card payments (needs a payment provider account), Arabic translation of page content beyond navigation.*
