@@ -47,6 +47,7 @@ export const PROJECT_PAGES: NavItem[] = [
 ];
 
 export const STANDARD_PAGES: NavItem[] = [
+  g("s.learn", "Learn: quizzes, mock exam, scenarios", "/learn", "sparkles", "Learn", "Practice questions, timed exam, skill profile"),
   g("s.19650.parts", "All parts (1–6)", "/knowledge/iso19650/library/0", "book", "ISO 19650"),
   g("s.19650.process", "Delivery process (19650-2)", "/knowledge/iso19650/library/1", "flow", "ISO 19650"),
   g("s.19650.cde", "CDE & status codes", "/knowledge/iso19650/library/2", "layers", "ISO 19650"),
@@ -93,7 +94,7 @@ export function sectionFor(route: string): string {
   if (route.startsWith("/projects")) return "projects";
   if (/^\/knowledge\/[^/]+\/templates/.test(route)) return "documents";
   if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|standards)/.test(route)) return "resources";
-  if (route.startsWith("/knowledge")) return "standards";
+  if (route.startsWith("/knowledge") || route.startsWith("/learn")) return "standards";
   return "home";
 }
 

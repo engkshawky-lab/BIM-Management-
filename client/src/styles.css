@@ -367,3 +367,7 @@ button.linklike:hover { color: var(--accent); }
 .stat-card { cursor: pointer; border: 1px solid var(--border); font: inherit; color: inherit; }
 .tabs a.tab { border-bottom: 2px solid transparent; padding: 8px 12px; white-space: nowrap; color: inherit; text-decoration: none; }
 .tabs a.tab.on { border-bottom-color: var(--accent); color: var(--accent); font-weight: 600; }
+button.choice { text-align: left; padding: 10px 12px; }
+button.choice.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); }
+button.choice.right { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 18%, transparent); }
+button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 18%, transparent); }

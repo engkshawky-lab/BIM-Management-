@@ -415,3 +415,16 @@ export const requirements = mysqlTable("requirements", {
   deliverableIds: json<string[]>("deliverable_ids").notNull(),
   createdAt: created(),
 }, (t) => [index("requirements_project").on(t.projectId)]);
+
+export const quizAttempts = mysqlTable("quiz_attempts", {
+  id: id(),
+  userId: ref("user_id").notNull(),
+  mode: varchar("mode", { length: 16 }).notNull(),
+  topic: varchar("topic", { length: 60 }).notNull().default(""),
+  score: int("score").notNull(),
+  total: int("total").notNull(),
+  // per-topic correct/total for the skill profile
+  byTopic: json<Record<string, [number, number]>>("by_topic").notNull(),
+  seconds: int("seconds").notNull().default(0),
+  createdAt: created(),
+}, (t) => [index("quiz_user").on(t.userId)]);
