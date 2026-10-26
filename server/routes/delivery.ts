@@ -62,6 +62,7 @@ function crud<S extends z.ZodObject>(path: string, table: Table, shape: S, label
     if (hooks.transform) body = await hooks.transform(body, req.params.projectId, req.params.id);
     const pid = req.params.projectId;
     const err = await hooks.validate?.(pid, body); if (err) return res.status(400).json({ error: err });
+    if (!Object.keys(body).length) return res.status(400).json({ error: "Nothing to change." });
     const result = await db.update(table).set(withTimestamps(body, false) as never).where(and(eq(table.id, req.params.id), eq(table.projectId, pid)));
     if (!result[0].affectedRows) return res.status(404).json({ error: "Not found." });
     res.json({ ok: true });

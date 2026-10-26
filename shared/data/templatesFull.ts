@@ -16,7 +16,6 @@ export function fullTemplates(projectInfo: TemplateSection): DocTemplate[] {
     sec("intro", "Introduction", "Purpose of this BEP, scope of the appointment and how the document is maintained.", [
       area("purpose", "Purpose and scope", undefined, `This ${post ? "post" : "pre"}-appointment BIM execution plan explains how the delivery team will manage and deliver information to meet the exchange information requirements (EIR) of the appointing party, in line with ISO 19650-2.`),
       table("references", "Reference documents", ["Document", "Reference", "Revision"], [["Exchange information requirements (EIR)", "", ""], ["Project information standard", "", ""], ["Project information production methods & procedures", "", ""], ["Information protocol", "", ""]]),
-      table("revisions", "Revision history", ["Revision", "Date", "Description", "Author"], [["P01", "", "First issue", ""]]),
     ]),
     sec("projectData", "Project data", "Project type, procurement route and the key information milestones (description and location are under Project information).", [
       text("projectType", "Project type"), text("contractForm", "Form of contract / procurement route"),

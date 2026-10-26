@@ -41,7 +41,9 @@ r.post(P, requireProject("editor"), h(async (req, res) => {
 
 r.put(P + "/:id", requireProject("editor"), h(async (req, res) => {
   const parsed = parse(reqSchema.partial(), req.body, res); if (!parsed) return;
-  await db.update(schema.requirements).set(sentKeys(parsed, req.body)).where(and(eq(schema.requirements.id, req.params.id), eq(schema.requirements.projectId, req.params.projectId)));
+  const body = sentKeys(parsed, req.body);
+  if (!Object.keys(body).length) return res.status(400).json({ error: "Nothing to change." });
+  await db.update(schema.requirements).set(body).where(and(eq(schema.requirements.id, req.params.id), eq(schema.requirements.projectId, req.params.projectId)));
   res.json({ ok: true });
 }));
 

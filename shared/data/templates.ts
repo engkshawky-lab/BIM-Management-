@@ -1,4 +1,5 @@
 import { fullTemplates } from "./templatesFull";
+import { requirementsTemplates } from "./templatesRequirements";
 import type { DocTemplate, TemplateField, TemplateSection } from "./types";
 import { allControls42001 } from "./iso42001";
 
@@ -27,131 +28,7 @@ const aimsInfo = sec("org", "Organization information", "Identify the organizati
 export const templates: DocTemplate[] = [
   // ---------------- ISO 19650 ----------------
   ...fullTemplates(projectInfo),
-  {
-    id: "oir", standard: "iso19650", code: "OIR", category: "Requirements", title: "Organizational Information Requirements",
-    purpose: "Captures the strategic information the appointing party needs to run its business and its asset portfolio.",
-    clauseRefs: ["19650-1 §5.2", "19650-3 §5.1"],
-    sections: [
-      aimsInfoAs19650(),
-      sec("objectives", "Strategic objectives", "List the organizational objectives information must support (e.g. asset performance, compliance, cost).", [
-        table("objectives", "Objectives", ["Objective", "Decision supported", "Information needed", "Owner"], [["Reduce operational cost", "Annual maintenance budgeting", "Asset condition and maintenance history", "FM Director"]]),
-      ]),
-      sec("functions", "Business functions", "Business functions that consume asset information.", [
-        area("functions", "Functions", undefined, "Strategic planning\nAsset management\nFinance & reporting\nHealth & safety\nRegulatory compliance"),
-      ]),
-    ],
-  },
-  {
-    id: "air", standard: "iso19650", code: "AIR", category: "Requirements", title: "Asset Information Requirements",
-    purpose: "Defines the managerial, commercial and technical information needed about assets, feeding the AIM.",
-    clauseRefs: ["19650-1 §5.3", "19650-3 §5.1.5"],
-    sections: [
-      projectInfo,
-      sec("assets", "Asset types and attributes", "For each asset type, define required attributes, format and source.", [
-        table("assetReqs", "Asset requirements", ["Asset type", "Attribute", "Format", "Source stage", "Purpose (OIR ref)"], [
-          ["AHU", "Manufacturer, model, serial no.", "COBie", "Construction", "Maintenance planning"],
-          ["Door", "Fire rating", "IFC Pset", "Design", "Compliance"],
-        ]),
-      ]),
-      sec("aimFormat", "AIM structure and handover", "Define the target CAFM/EAM system, structure and exchange format.", [
-        text("targetSystem", "Target CAFM / EAM system"),
-        select("exchangeFormat", "Exchange format", ["COBie (xlsx)", "IFC 4.3", "IFC 2x3", "Native + COBie", "Custom spreadsheet"]),
-        text("classification", "Classification system", undefined, "Uniclass 2015"),
-      ]),
-    ],
-  },
-  {
-    id: "eir", standard: "iso19650", code: "EIR", category: "Requirements", title: "Exchange Information Requirements",
-    purpose: "Sets out the appointing party's information requirements for an appointment: what, when, how and to what level of need.",
-    clauseRefs: ["19650-2 §5.2.1"],
-    sections: [
-      projectInfo,
-      sec("info-reqs", "Information requirements", "Requirements derived from OIR / AIR / PIR, including purposes and key decision points.", [
-        table("purposes", "Information purposes", ["Purpose", "Key decision point", "Information required", "LOIN reference"], [
-          ["Design coordination", "Stage 3 sign-off", "Federated discipline models", "LOIN-03"],
-          ["Cost planning", "Stage 2 / 3 / 4", "Quantities by element", "LOIN-02"],
-          ["Asset handover", "Practical completion", "COBie + O&M", "LOIN-06"],
-        ]),
-      ]),
-      sec("loin", "Level of information need", "Define geometry, alphanumeric information and documentation per milestone (ISO 7817-1).", [
-        table("loin", "LOIN matrix", ["Ref", "Milestone", "Geometry", "Alphanumeric", "Documentation"], [
-          ["LOIN-02", "Concept", "Massing, indicative", "Area, function", "Design statement"],
-          ["LOIN-03", "Spatial coordination", "Coordinated systems", "Type properties", "GA drawings"],
-          ["LOIN-06", "Handover", "As-built", "COBie complete", "O&M manuals"],
-        ]),
-      ]),
-      sec("milestones", "Information delivery milestones", "Align with the project programme and decision points.", [
-        table("milestones", "Milestones", ["Milestone", "Date", "Information deliverable", "Acceptance criteria"]),
-      ]),
-      sec("standards", "Information standard, methods and procedures", "Reference the project information standard and production methods.", [
-        text("naming", "Naming convention", undefined, "BS EN ISO 19650-2 UK NA field structure"),
-        text("cde", "CDE platform", "e.g. Autodesk Construction Cloud, Viewpoint, ProjectWise"),
-        select("format", "Primary exchange format", ["IFC 4.3", "IFC 4", "IFC 2x3", "Native + IFC"]),
-        text("units", "Units & coordinates", undefined, "Metric (mm), project base point per survey"),
-      ]),
-      sec("acceptance", "Acceptance criteria", "How the appointing party will review and accept each deliverable.", [
-        area("acceptanceCriteria", "Acceptance criteria", undefined, "Conforms to naming and metadata standard\nMeets LOIN for the milestone\nModel checked for clashes with zero critical issues\nCOBie validated without errors"),
-      ]),
-      sec("tender", "Tender response requirements", "What tenderers must submit and how it will be evaluated.", [
-        area("tenderReqs", "Required submissions", undefined, "Pre-appointment BEP\nCapability and capacity assessment\nMobilization plan\nInformation delivery risk register"),
-      ]),
-    ],
-  },
-  {
-    id: "info-standard", standard: "iso19650", code: "PIS", category: "Standards", title: "Project Information Standard",
-    purpose: "Defines naming, metadata, classification, formats and status codes for all information containers.",
-    clauseRefs: ["19650-2 §5.1.4", "UK NA"],
-    sections: [
-      projectInfo,
-      sec("naming", "Container naming convention", "Field codes for Project-Originator-Volume-Level-Type-Role-Number.", [
-        table("originators", "Originator codes", ["Code", "Organization"]),
-        table("volumes", "Volume / system codes", ["Code", "Description"], [["ZZ", "All volumes"], ["XX", "No volume applies"]]),
-        table("levels", "Level / location codes", ["Code", "Description"], [["00", "Ground floor"], ["01", "Level 1"], ["ZZ", "Multiple levels"], ["XX", "No level applies"]]),
-      ]),
-      sec("metadata", "Metadata", "Mandatory metadata on every container in the CDE.", [
-        table("metadataFields", "Metadata fields", ["Field", "Values", "Mandatory"], [["Status (suitability)", "S0–S7, A1–An, CR", "Yes"], ["Revision", "P01.01 / C01", "Yes"], ["Classification", "Uniclass", "Yes"]]),
-      ]),
-      sec("revision", "Revision convention", "Preliminary (P) and contractual (C) revisions with versions.", [
-        area("revisionRules", "Revision rules", undefined, "WIP versions: P01.01, P01.02 …\nShared: P01, P02 …\nPublished: C01, C02 …"),
-      ]),
-      sec("formats", "File formats and software", "Authoring tools, versions and exchange formats.", [
-        table("software", "Software schedule", ["Discipline", "Authoring tool", "Version", "Exchange format"]),
-      ]),
-    ],
-  },
-  {
-    id: "cde-procedure", standard: "iso19650", code: "CDE", category: "Standards", title: "CDE Workflow & Procedure",
-    purpose: "Defines CDE states, transitions, approvers and folder structure.",
-    clauseRefs: ["19650-1 §12", "19650-2 §5.1.7", "19650-4"],
-    sections: [
-      projectInfo,
-      sec("platform", "CDE solution", "Platform, administrator and access rules.", [
-        text("platform", "Platform"), text("admin", "CDE administrator"), area("access", "Access & permissions policy"),
-      ]),
-      sec("transitions", "State transitions", "Who checks, reviews and approves each transition.", [
-        table("transitions", "Transitions", ["From", "To", "Check / review", "Approver", "Suitability"], [
-          ["WIP", "Shared", "QA check + technical review", "Task team manager", "S1–S4"],
-          ["Shared", "Published", "Authorization + acceptance", "Lead appointed party / Appointing party", "A1–An"],
-          ["Published", "Archived", "Superseded", "Information manager", "—"],
-        ]),
-      ]),
-      sec("folders", "Folder structure", "Top-level folder structure in the CDE.", [
-        area("folderTree", "Folders", undefined, "00_WIP/<Task team>\n01_SHARED/<Discipline>\n02_PUBLISHED/<Stage>\n03_ARCHIVED\n04_CLIENT_INFORMATION\n05_REFERENCE"),
-      ]),
-    ],
-  },
-  {
-    id: "info-protocol", standard: "iso19650", code: "IP", category: "Contract", title: "Information Protocol",
-    purpose: "Defines obligations, licences and liabilities for information, incorporated into each appointment.",
-    clauseRefs: ["19650-2 §5.1.8"],
-    sections: [
-      projectInfo,
-      sec("obligations", "Obligations", "Obligations of the appointing party and appointed parties.", [area("appointingObl", "Appointing party obligations"), area("appointedObl", "Appointed party obligations")]),
-      sec("licences", "Licensing and use", "Permitted purposes and licence terms for information.", [area("licence", "Licence terms"), area("permittedUse", "Permitted purposes")]),
-      sec("security", "Security", "Requirements derived from the ISO 19650-5 security triage.", [select("sensitivity", "Sensitivity outcome", ["Not sensitive", "Sensitive — security-minded approach required"]), area("securityReqs", "Security requirements")]),
-      sec("liability", "Liability and IP", "Liability limits, intellectual property and retention.", [area("liabilityText", "Liability provisions")]),
-    ],
-  },
+  ...requirementsTemplates(projectInfo, aimsInfoAs19650()),
   {
     id: "resp-matrix", standard: "iso19650", generatedFrom: { kind: "resp-matrix", hubPath: "delivery/responsibility", label: "Responsibility matrix" }, code: "DRM", category: "Plans", title: "Detailed Responsibility Matrix",
     purpose: "Defines who produces which information, when and to what level of information need.",

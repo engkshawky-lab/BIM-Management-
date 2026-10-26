@@ -54,7 +54,8 @@ export async function startSession(res: Response, userId: string) {
   await db.insert(schema.sessions).values({ id, userId, createdAt: now, expiresAt: new Date(now.getTime() + TTL_SECONDS * 1000) });
   await db.update(schema.users).set({ lastLoginAt: now }).where(eq(schema.users.id, userId));
   res.cookie(SESSION_COOKIE, signSessionToken(id), {
-    httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: TTL_SECONDS * 1000, path: "/",
+    // Secure when the request arrived over HTTPS (directly or via a proxy), so plain-HTTP LAN installs still work
+    httpOnly: true, sameSite: "lax", secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === "true" : res.req.secure, maxAge: TTL_SECONDS * 1000, path: "/",
   });
 }
 

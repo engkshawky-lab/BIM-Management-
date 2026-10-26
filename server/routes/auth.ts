@@ -66,10 +66,16 @@ r.post("/auth/register", h(async (req, res) => {
   res.status(201).json({ user: toPublic(u) });
 }));
 
+// Failed sign-ins per address+email; 10 failures in 15 minutes locks that pair out for the rest of the window.
+const loginFails = new Map<string, number[]>();
 r.post("/auth/login", h(async (req, res) => {
   const body = parse(z.object({ email: z.string().trim().toLowerCase(), password: z.string() }), req.body, res); if (!body) return;
+  const key = `${req.ip}|${body.email}`; const now = Date.now();
+  const fails = (loginFails.get(key) ?? []).filter((t) => now - t < 15 * 60_000);
+  if (fails.length >= 10) return res.status(429).json({ error: "Too many failed sign-in attempts. Try again in 15 minutes or reset your password." });
   const [u] = await db.select().from(schema.users).where(eq(schema.users.email, body.email));
-  if (!u || !(await checkPassword(body.password, u.passwordHash))) return res.status(401).json({ error: "Incorrect email or password." });
+  if (!u || !(await checkPassword(body.password, u.passwordHash))) { loginFails.set(key, [...fails, now]); return res.status(401).json({ error: "Incorrect email or password." }); }
+  loginFails.delete(key);
   if (u.disabled) return res.status(403).json({ error: "This account is disabled. Contact your administrator." });
   await acceptInvitations(u.id, u.email);
   await startSession(res, u.id);
@@ -128,6 +134,7 @@ r.put("/profile", requireUser, h(async (req, res) => {
     emailPref: z.enum(["instant", "digest", "off"]),
     locale: z.enum(["en", "ar"]),
   }).partial(), req.body, res); if (!body) return;
+  if (!Object.keys(body).length) return res.status(400).json({ error: "Nothing to change." });
   await db.update(schema.users).set(body).where(eq(schema.users.id, req.user!.id));
   const [u] = await db.select().from(schema.users).where(eq(schema.users.id, req.user!.id));
   res.json({ user: toPublic(u) });
