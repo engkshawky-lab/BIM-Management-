@@ -5,7 +5,7 @@ import { INFO_USES, useByCode } from "../../shared/data/infoUses";
 import { LODS, MRM_STARTER } from "../../shared/mrm";
 import { z } from "zod";
 import { templateById } from "../../shared/data/templates";
-import { analysePlan, planStats, qualityScore, variance, type Deliverable } from "../../shared/delivery";
+import { analysePlan, planStats, qualityScore, variance, type Deliverable, progressPct } from "../../shared/delivery";
 import { initialValues } from "../../shared/documents";
 import { checkDocument, checkProjectSet } from "../../shared/quality";
 import { logActivity, requireProject } from "../access";
@@ -206,7 +206,7 @@ r.get(P + "/midp.xlsx", requireProject(), h(async (req, res) => {
     b.milestones.map((m) => { const list = rows.filter((d) => d.milestoneId === m.id); return { n: m.name, d: m.date, c: list.length, x: list.filter((d) => ["shared", "published"].includes(d.status)).length }; }));
   const st = planStats(rows, day);
   sheet("Summary", [{ header: "Measure", key: "k", width: 28 }, { header: "Value", key: "v", width: 14 }],
-    [["Project", `${project.code} ${project.name}`], ["Exported", day], ["Containers", st.total], ["Published", st.published], ["Shared", st.shared], ["In progress", st.inProgress], ["Not started", st.planned], ["Overdue", st.overdue], ["Progress", `${st.progress}%`]].map(([k, v]) => ({ k, v })));
+    [["Project", `${project.code} ${project.name}`], ["Exported", day], ["Containers", st.total], ["Published", st.published], ["Shared", st.shared], ["In progress", st.inProgress], ["Not started", st.planned], ["Overdue", st.overdue], ["Progress", `${progressPct(st.progress)}%`]].map(([k, v]) => ({ k, v })));
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
   res.setHeader("Content-Disposition", `attachment; filename="${project.code}-${teamId ? "TIDP" : "MIDP"}-${day}.xlsx"`);
   await wb.xlsx.write(res); res.end();
@@ -245,11 +245,19 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
   if (body.kind === "midp") {
     values.milestones = b.milestones.map((m) => [m.name, m.date, m.description]);
     values.plan = b.deliverables.map((d) => [team.get(d.taskTeamId)?.name ?? "", d.containerName || d.title, d.loin, d.dueDate, ms.get(d.milestoneId ?? "")?.name ?? "", d.status.replace("_", " ")]);
+    // risks to delivery: open register entries plus what the plan analysis finds
+    const openRisks = (await db.select().from(schema.risks).where(eq(schema.risks.projectId, pid))).filter((x) => x.status !== "Closed").sort((x, y) => y.likelihood * y.impact - x.likelihood * x.impact);
+    const planIssues = analysePlan({ deliverables: b.deliverables, milestones: b.milestones, teams: b.teams, projectCode: project.code, today: today() }).filter((f) => f.severity === "error");
+    values.risks = [
+      ...openRisks.slice(0, 8).map((x) => `R${String(x.number).padStart(2, "0")} ${x.title} (score ${x.likelihood * x.impact})${x.mitigation ? ` — mitigation: ${x.mitigation}` : ""}`),
+      ...planIssues.slice(0, 8).map((f) => `${f.ref ? `${f.ref}: ` : ""}${f.message}`),
+    ].join("\n") || "No open risks to information delivery were identified when the plan was aggregated.";
   } else if (body.kind === "tidp") {
     const tt = body.taskTeamId ? team.get(body.taskTeamId) : undefined;
     if (!tt) return res.status(400).json({ error: "Choose a task team." });
     title = `${t.title} — ${tt.name}`;
     values.taskTeam = tt.name;
+    if (tt.leadUserId) { const [lead] = await db.select({ name: schema.users.name }).from(schema.users).where(eq(schema.users.id, tt.leadUserId)); if (lead) values.manager = lead.name; }
     const byId = new Map(b.deliverables.map((d) => [d.id, d]));
     values.containers = b.deliverables.filter((d) => d.taskTeamId === tt.id).map((d) => [
       d.containerName, d.title, d.loin, d.startDate && d.dueDate ? String(Math.max(0, Math.round((Date.parse(d.dueDate) - Date.parse(d.startDate)) / 864e5))) : "",
@@ -264,7 +272,7 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
     if (!m) return res.status(400).json({ error: "Choose a meeting." });
     const names = new Map((await db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users)).map((u) => [u.id, u.name]));
     title = `${t.title} — ${m.title} (#${m.number})`;
-    Object.assign(values, { meetingType: m.type, meetingDate: m.date.replace("T", " "), location: m.location, attendees: m.attendees.join("\n") });
+    Object.assign(values, { meetingType: m.type, meetingDate: m.date.replace("T", " "), meetingLocation: m.location, attendees: m.attendees.join("\n") });
     values.agenda = m.agenda.map((a, i) => [String(i + 1), a.item, a.presenter, a.minutes]);
     values.actions = m.actions.map((a, i) => [String(i + 1), a.text, names.get(a.ownerId) ?? "", a.due, a.status]);
   } else if (body.kind === "progress-report") {
@@ -273,7 +281,12 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
     const st = planStats(b.deliverables, day);
     title = `${t.title} — ${day}`;
     values.period = day;
-    values.delivery = [["Information containers planned", String(st.total)], ["Published", String(st.published)], ["Shared", String(st.shared)], ["In progress", String(st.inProgress)], ["Not started", String(st.planned)], ["Overdue", String(st.overdue)], ["Overall progress", `${st.progress}%`]];
+    // factual draft of the summary from the figures; the author edits it before issue
+    values.summary = [
+      `Information delivery is ${progressPct(st.progress)}% complete: ${st.published} of ${st.total} information containers published and ${st.shared} shared${st.overdue ? `; ${st.overdue} container${st.overdue > 1 ? "s are" : " is"} overdue` : "; nothing is overdue"}.`,
+      ...(b.milestones.filter((m) => m.date >= day).slice(0, 1).map((m) => `The next milestone is ${m.name} on ${m.date}.`)),
+    ].join(" ");
+    values.delivery = [["Information containers planned", String(st.total)], ["Published", String(st.published)], ["Shared", String(st.shared)], ["In progress", String(st.inProgress)], ["Not started", String(st.planned)], ["Overdue", String(st.overdue)], ["Overall progress", `${progressPct(st.progress)}%`]];
     values.overdue = b.deliverables.filter((d) => d.dueDate && d.dueDate < day && d.status !== "published").map((d) => [d.containerName || d.title, team.get(d.taskTeamId)?.name ?? "", d.dueDate, d.status.replace("_", " ")]);
     const reviews = await db.select().from(schema.modelReviews).where(and(eq(schema.modelReviews.projectId, pid), eq(schema.modelReviews.status, "Completed")));
     const latest = new Map<string, typeof reviews[number]>(); for (const rv of reviews.sort((a, z2) => a.number - z2.number)) latest.set(rv.discipline, rv);
@@ -306,7 +319,7 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
   if (existing) {
     const lockedByOther = existing.lockedBy && existing.lockedBy !== uid && existing.lockedAt && now.getTime() - existing.lockedAt.getTime() < 90_000;
     if (lockedByOther) return res.status(423).json({ error: "Someone is editing that document right now. Try again shortly." });
-    const generatedKeys = body.kind === "midp" ? ["milestones", "plan"] : body.kind === "tidp" ? ["taskTeam", "containers"] : body.kind === "risk-register" ? ["risks"] : body.kind === "info-uses" ? ["uses"] : body.kind === "mrm" ? ["mrm"] : body.kind === "minutes" ? ["meetingType", "meetingDate", "location", "attendees", "agenda", "actions"] : body.kind === "progress-report" ? ["period", "delivery", "overdue", "quality", "coordination", "risks", "actions"] : ["matrix"];
+    const generatedKeys = body.kind === "midp" ? ["milestones", "plan"] : body.kind === "tidp" ? ["taskTeam", "containers"] : body.kind === "risk-register" ? ["risks"] : body.kind === "info-uses" ? ["uses"] : body.kind === "mrm" ? ["mrm"] : body.kind === "minutes" ? ["meetingType", "meetingDate", "meetingLocation", "attendees", "agenda", "actions"] : body.kind === "progress-report" ? ["period", "delivery", "overdue", "quality", "coordination", "risks", "actions"] : ["matrix"];
     const merged = { ...(existing.values as object), ...Object.fromEntries(generatedKeys.map((k) => [k, values[k]])) };
     await db.update(schema.documents).set({ values: merged, updatedAt: now }).where(eq(schema.documents.id, existing.id));
     await logActivity(pid, uid, "document.generated", `Regenerated ${title} from the delivery planner`, `/projects/${pid}/documents/${existing.id}`);

@@ -1,6 +1,6 @@
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { Router } from "express";
-import { planStats, type Deliverable } from "../../shared/delivery";
+import { planStats, type Deliverable, progressPct } from "../../shared/delivery";
 import { db, schema } from "../db";
 import { h } from "./auth";
 
@@ -62,7 +62,7 @@ r.get("/me/portfolio", h(async (req, res) => {
     const published = new Set(pd.filter((d) => ["shared", "published"].includes(d.status)).map((d) => d.id));
     return {
       id: p.id, code: p.code, name: p.name, role, stage: p.stage,
-      progress: st.progress, containers: st.total, overdue: st.overdue,
+      progress: progressPct(st.progress), containers: st.total, overdue: st.overdue,
       openIssues: issues.filter((i) => i.projectId === p.id && i.status !== "Closed").length,
       criticalIssues: issues.filter((i) => i.projectId === p.id && i.status !== "Closed" && ["High", "Critical"].includes(i.priority)).length,
       quality: latest.size ? Math.round([...latest.values()].reduce((a, b) => a + b, 0) / latest.size) : null,

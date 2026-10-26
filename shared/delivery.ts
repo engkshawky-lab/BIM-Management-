@@ -102,3 +102,6 @@ export const qualityScore = (f: Finding[]) => Math.max(0, 100 - f.filter((x) => 
 
 /** Days late (+) or early (−) against the due date; null until delivered. */
 export const variance = (d: Pick<Deliverable, "dueDate" | "actualDate">) => (d.dueDate && d.actualDate ? daysBetween(d.dueDate, d.actualDate) : null);
+
+/** planStats().progress is a 0–1 fraction; reports and dashboards show a whole percentage. */
+export const progressPct = (fraction: number) => Math.round(fraction * 100);

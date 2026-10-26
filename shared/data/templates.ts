@@ -214,7 +214,7 @@ export const templates: DocTemplate[] = [
     purpose: "Record of a BIM meeting: attendees, agenda with minutes, and actions with owners and due dates.",
     clauseRefs: ["19650-2 §5.6"],
     sections: [projectInfo, sec("meeting", "Meeting", "Generated from the meeting record.", [
-      text("meetingType", "Meeting type"), text("meetingDate", "Date"), text("location", "Location"), area("attendees", "Attendees"),
+      text("meetingType", "Meeting type"), text("meetingDate", "Date"), text("meetingLocation", "Location / link"), area("attendees", "Attendees"),
       table("agenda", "Agenda and minutes", ["#", "Item", "Presenter", "Minutes"], []),
       table("actions", "Actions", ["#", "Action", "Owner", "Due", "Status"], []),
     ])],

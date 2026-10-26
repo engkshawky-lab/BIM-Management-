@@ -1,3 +1,4 @@
+import { progressPct } from "../shared/delivery";
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { notify } from "./access";
 import { apiKey, ask } from "./claude";
@@ -39,7 +40,7 @@ async function qualityReview(pid: string, actor: string) {
   const score = Math.round(q.score);
   const delta = prev ? score - prev.qualityScore : 0;
   const top = [...q.set, ...q.plan.findings, ...q.documents.flatMap((d) => d.findings.map((f) => ({ ...f, message: `${d.title}: ${f.message}` })))].filter((f) => f.severity === "error").slice(0, 5);
-  let text = `Quality score ${score}%${prev ? ` (${delta >= 0 ? "+" : ""}${delta} since ${prev.day})` : ""}; ${q.counts.error} errors, ${q.counts.warning} warnings; delivery ${q.stats.progress}% with ${q.stats.overdue} overdue.`;
+  let text = `Quality score ${score}%${prev ? ` (${delta >= 0 ? "+" : ""}${delta} since ${prev.day})` : ""}; ${q.counts.error} errors, ${q.counts.warning} warnings; delivery ${progressPct(q.stats.progress)}% with ${q.stats.overdue} overdue.`;
   if (top.length) text += ` Top problems: ${top.map((f) => f.message).join(" | ")}`;
   if (apiKey()) {
     try {
@@ -79,7 +80,7 @@ export async function snapshotProject(pid: string) {
   const issues = await db.select({ status: schema.issues.status }).from(schema.issues).where(eq(schema.issues.projectId, pid));
   const reviews = await db.select().from(schema.modelReviews).where(and(eq(schema.modelReviews.projectId, pid), eq(schema.modelReviews.status, "Completed")));
   const latest = new Map<string, number>(); for (const r of reviews.sort((a, b) => a.number - b.number)) latest.set(r.discipline, r.score);
-  const row = { qualityScore: Math.round(q.score), errors: q.counts.error, warnings: q.counts.warning, progress: q.stats.progress, overdue: q.stats.overdue,
+  const row = { qualityScore: Math.round(q.score), errors: q.counts.error, warnings: q.counts.warning, progress: progressPct(q.stats.progress), overdue: q.stats.overdue,
     openIssues: issues.filter((i) => i.status !== "Closed").length, modelQuality: latest.size ? Math.round([...latest.values()].reduce((a, b) => a + b, 0) / latest.size) : null };
   await db.insert(schema.qualitySnapshots).values({ id: newId(), projectId: pid, day, ...row }).onDuplicateKeyUpdate({ set: row });
 }
