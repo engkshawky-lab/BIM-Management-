@@ -25,7 +25,7 @@ export type ProjectRole = "viewer" | "editor" | "manager" | "owner";
 
 export interface Project {
   id: string; name: string; code: string; description: string | null; appointingParty: string; location: string;
-  standards: ("iso19650" | "iso42001")[]; stage: string; ownerId: string; createdAt: string; updatedAt: string;
+  standards: ("iso19650" | "iso42001")[]; stage: string; standardId: string | null; standardStage: string; ownerId: string; createdAt: string; updatedAt: string;
   role?: ProjectRole; documents?: number; files?: number; members?: number;
 }
 

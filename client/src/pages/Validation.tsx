@@ -152,7 +152,7 @@ function Report({ data, runId }: { data: ProjectData; runId: string }) {
     <>
       <a className="small" href={`#/projects/${pid}/validation`}>← All validations</a>
       <div className="row spread" style={{ marginTop: 6 }}>
-        <div><h2 style={{ margin: 0 }}>{d.file?.name} <span className="muted small">v{d.run.fileVersion}</span></h2><div className="small muted">{d.run.summary} · {fmtDate(d.run.createdAt)}</div></div>
+        <div><h2 style={{ margin: 0 }}>{d.file?.name} <span className="muted small">v{d.run.fileVersion}</span></h2><div className="small muted">{d.run.summary} · {fmtDate(d.run.createdAt)}{"standard" in rep && (rep as { standard?: { name: string; stage: string } }).standard && <> · checked against <b>{(rep as { standard: { name: string; stage: string } }).standard.name}</b> at {(rep as { standard: { name: string; stage: string } }).standard.stage}</>}</div></div>
         <div className="row"><RunBadge status={d.run.status} /><span className="stat" style={{ fontSize: 22 }}>{d.run.score}</span>
           {"findings" in rep && <button onClick={() => exportCsv(`${d.file?.name}-validation`, ["Severity", "Area", "Finding", "Reference"], rep.findings.map((f) => [f.severity, f.area, f.message, f.ref ?? ""]))}>⬇ CSV</button>}
           {canEdit(data.role) && "findings" in rep && rep.findings.some((f) => f.severity === "error") && <button className="primary" onClick={raise}>Raise issues for errors</button>}

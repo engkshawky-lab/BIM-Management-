@@ -36,6 +36,13 @@
       "when": 1793017701117,
       "tag": "0004_user_role_favourites",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1793019775731,
+      "tag": "0005_client_standards",
+      "breakpoints": true
     }
   ]
 }

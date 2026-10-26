@@ -33,6 +33,7 @@ export const PROJECT_PAGES: NavItem[] = [
   p("p.validation", "Model validation", "validation", "check", "Model & coordination", "IFC, COBie, LOIN & IDS checks"),
   p("p.issues", "Issues (BCF)", "coordination/issues", "flag", "Model & coordination"),
   p("p.clash", "Clash matrix", "coordination/clash", "grid", "Model & coordination"),
+  p("p.tags", "Asset tags", "tags", "check", "Model & coordination", "Build and check asset tags"),
   p("p.quality", "Quality hub", "quality", "shield", "Quality & team", "Document, plan and document-set checks"),
   p("p.team", "Team", "team", "users", "Quality & team"),
   p("p.settings", "Project settings", "settings", "settings", "Quality & team"),
@@ -56,6 +57,7 @@ export const TEMPLATE_PAGES: NavItem[] = templates.map((t) =>
 export const RESOURCE_PAGES: NavItem[] = [
   g("r.19650", "ISO 19650 references", "/knowledge/iso19650/references", "library", "References"),
   g("r.42001", "ISO/IEC 42001 references", "/knowledge/iso42001/references", "library", "References"),
+  g("r.standards", "Client standards", "/standards", "book", "Client requirements"),
   g("r.profile", "My profile", "/profile", "user", "Account"),
 ];
 

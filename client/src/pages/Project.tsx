@@ -12,6 +12,7 @@ import ProjectWorkflow from "./ProjectWorkflow";
 import Quality from "./Quality";
 import Validation from "./Validation";
 import Coordination from "./Coordination";
+import AssetTags from "./AssetTags";
 
 export interface ProjectData { project: Project; members: Member[]; invitations: Invitation[]; role: Project["role"] }
 
@@ -46,6 +47,7 @@ export default function ProjectPage({ projectId, tab, sub }: { projectId: string
       {tab === "delivery" && <Delivery data={data} sub={sub} />}
       {tab === "validation" && <Validation data={data} sub={sub} />}
       {tab === "coordination" && <Coordination data={data} sub={sub} />}
+      {tab === "tags" && <AssetTags data={data} />}
       {tab === "quality" && <Quality data={data} />}
       {tab === "workflow" && <ProjectWorkflow data={data} />}
       {tab === "team" && <Team data={data} reload={reload} />}
@@ -166,6 +168,7 @@ function Settings({ data, reload }: { data: ProjectData; reload: () => void }) {
         try { await api(`/projects/${data.project.id}`, { method: "PUT", body: p }); toast("Project updated"); reload(); }
         catch (e) { toast((e as Error).message, "error"); }
       }} />
+      <StandardPicker data={data} reload={reload} />
       {data.role === "owner" && (
         <div className="card" style={{ marginTop: 12, borderColor: "var(--danger)" }}>
           <h3 style={{ marginTop: 0 }}>Delete project</h3>
@@ -177,5 +180,29 @@ function Settings({ data, reload }: { data: ProjectData; reload: () => void }) {
         </div>
       )}
     </>
+  );
+}
+
+function StandardPicker({ data, reload }: { data: ProjectData; reload: () => void }) {
+  const { toast } = useSession();
+  const [list, setList] = useState<{ id: string; name: string; stages: string[] }[]>([]);
+  const [sel, setSel] = useState({ standardId: data.project.standardId ?? "", stage: data.project.standardStage ?? "" });
+  useEffect(() => { api<{ standards: { id: string; name: string; stages: string[] }[] }>("/standards").then((r) => setList(r.standards)); }, []);
+  const stages = list.find((x) => x.id === sel.standardId)?.stages ?? [];
+  return (
+    <div className="card" style={{ marginTop: 12 }}>
+      <h3 style={{ marginTop: 0 }}>Client standard</h3>
+      <p className="small muted">COBie checks and asset tags follow this client's imported requirements at the chosen stage. Manage standards under <a href="#/standards">Resources › Client standards</a>.</p>
+      <div className="row">
+        <select value={sel.standardId} onChange={(e) => setSel({ standardId: e.target.value, stage: "" })} style={{ maxWidth: 320 }}>
+          <option value="">None (generic checks)</option>{list.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+        {stages.length > 0 && <select value={sel.stage} onChange={(e) => setSel({ ...sel, stage: e.target.value })} style={{ maxWidth: 240 }}>
+          <option value="">Latest stage</option>{stages.map((s) => <option key={s}>{s}</option>)}</select>}
+        <button className="primary" onClick={async () => {
+          try { await api(`/projects/${data.project.id}/standard`, { method: "PUT", body: { standardId: sel.standardId || null, stage: sel.stage } }); toast("Client standard saved"); reload(); }
+          catch (e) { toast((e as Error).message, "error"); }
+        }}>Apply</button>
+      </div>
+    </div>
   );
 }

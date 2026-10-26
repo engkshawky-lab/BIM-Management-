@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { z } from "zod";
 import { validateCobie, type Sheets } from "../../shared/cobie";
+import { validateCobieAgainstStandard, type ClientStandardData } from "../../shared/standards";
 import { analyseIfc, requirementsFromIds, requirementsFromLoin, type Requirement } from "../../shared/ifc";
 import { logActivity, notify, requireProject } from "../access";
 import { db, newId, schema } from "../db";
@@ -26,7 +27,8 @@ async function storedPath(fileId: string, version: number) {
 
 const cellText = (v: ExcelJS.CellValue): string => {
   if (v === null || v === undefined) return "";
-  if (v instanceof Date) return v.toISOString().slice(0, 19);
+  // whole-day dates stay date-only so length rules on date columns hold
+  if (v instanceof Date) return v.toISOString().endsWith("T00:00:00.000Z") ? v.toISOString().slice(0, 10) : v.toISOString().slice(0, 19);
   if (typeof v === "object") {
     if ("richText" in v) return v.richText.map((t) => t.text).join("");
     if ("result" in v) return cellText(v.result as ExcelJS.CellValue);
@@ -92,7 +94,20 @@ export async function runValidation(projectId: string, fileId: string, userId: s
       errors = rep.findings.filter((x) => x.severity === "error").length; warnings = rep.findings.filter((x) => x.severity === "warning").length; score = rep.score;
       summary = `${rep.schema} · ${rep.elementCount} elements · ${rep.requirements.length} requirement sets`;
     } else {
-      const rep = validateCobie(await readWorkbook(stored.full));
+      const sheets = await readWorkbook(stored.full);
+      const rep = validateCobie(sheets);
+      // The project's client standard adds schema, picklist, stage, tag and classification rules.
+      const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, projectId));
+      const [std] = project.standardId ? await db.select().from(schema.clientStandards).where(eq(schema.clientStandards.id, project.standardId)) : [];
+      if (std) {
+        const data = std.data as ClientStandardData;
+        const stage = project.standardStage || data.stages[data.stages.length - 1] || "";
+        rep.findings.push(...validateCobieAgainstStandard(sheets, data, stage));
+        const order = { error: 0, warning: 1, info: 2 } as const;
+        rep.findings.sort((a, z2) => order[a.severity] - order[z2.severity]);
+        rep.score = Math.max(0, rep.score - rep.findings.filter((x) => x.clause === "Client standard" && x.severity === "error").length * 4);
+        (rep as typeof rep & { standard?: { name: string; stage: string } }).standard = { name: std.name, stage };
+      }
       report = rep;
       errors = rep.findings.filter((x) => x.severity === "error").length; warnings = rep.findings.filter((x) => x.severity === "warning").length; score = rep.score;
       summary = `${rep.stats.components} components · ${rep.stats.types} types · ${rep.stats.spaces} spaces`;

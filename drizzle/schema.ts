@@ -43,6 +43,8 @@ export const projects = mysqlTable("projects", {
   location: varchar("location", { length: 200 }).notNull().default(""),
   standards: json<string[]>("standards").notNull(),
   stage: varchar("stage", { length: 60 }).notNull().default(""),
+  standardId: ref("standard_id"),
+  standardStage: varchar("standard_stage", { length: 80 }).notNull().default(""),
   ownerId: ref("owner_id").notNull(),
   createdAt: created(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
@@ -331,3 +333,15 @@ export const handoverItems = mysqlTable("handover_items", {
   sortOrder: int("sort_order").notNull().default(0),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 }, (t) => [index("handover_project").on(t.projectId)]);
+
+// ---------- Client information standards ----------
+
+export const clientStandards = mysqlTable("client_standards", {
+  id: id(),
+  ownerId: ref("owner_id").notNull(),
+  name: varchar("name", { length: 160 }).notNull(),
+  client: varchar("client", { length: 160 }).notNull().default(""),
+  data: json<unknown>("data").notNull(),
+  createdAt: created(),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+}, (t) => [index("standards_owner").on(t.ownerId)]);

@@ -4,3 +4,4 @@ storage
 *.log
 .env
 .env.local
+server/__local__/
