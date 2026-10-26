@@ -76,6 +76,8 @@ r.put("/profile", requireUser, h(async (req, res) => {
     jobTitle: z.string().trim().max(120),
     phone: z.string().trim().max(40),
     bio: z.string().max(2000),
+    bimRole: z.string().regex(/^[a-z-]{2,32}$/).nullable(),
+    favourites: z.array(z.string().max(120)).max(60),
   }).partial(), req.body, res); if (!body) return;
   await db.update(schema.users).set(body).where(eq(schema.users.id, req.user!.id));
   const [u] = await db.select().from(schema.users).where(eq(schema.users.id, req.user!.id));

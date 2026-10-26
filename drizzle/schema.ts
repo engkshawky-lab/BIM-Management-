@@ -21,6 +21,8 @@ export const users = mysqlTable("users", {
   phone: varchar("phone", { length: 40 }).notNull().default(""),
   bio: text("bio"),
   role: varchar("role", { length: 16 }).notNull().default("user"),
+  bimRole: varchar("bim_role", { length: 32 }),
+  favourites: json<string[] | null>("favourites"),
   createdAt: created(),
   lastLoginAt: datetime("last_login_at", { mode: "date" }),
 }, (t) => [uniqueIndex("users_email").on(t.email)]);

@@ -36,9 +36,10 @@ function UseDialog({ t, onClose }: { t: DocTemplate; onClose: () => void }) {
   );
 }
 
-export default function Templates({ std }: { std?: StandardId }) {
+export default function Templates({ std, focusId }: { std?: StandardId; focusId?: string }) {
   const [q, setQ] = useState("");
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(focusId ?? null);
+  useEffect(() => { if (focusId) { setOpen(focusId); setTimeout(() => document.getElementById("tpl-" + focusId)?.scrollIntoView({ block: "center", behavior: "smooth" }), 50); } }, [focusId]);
   const [use, setUse] = useState<DocTemplate | null>(null);
   const list = templates.filter((t) => (!std || t.standard === std) && (!q || (t.title + t.code + t.purpose + t.category).toLowerCase().includes(q.toLowerCase())));
   const categories = [...new Set(list.map((t) => t.category))];
@@ -53,7 +54,7 @@ export default function Templates({ std }: { std?: StandardId }) {
           <h2>{c}</h2>
           <div className="grid g3">
             {list.filter((t) => t.category === c).map((t) => (
-              <div key={t.id} className="card" style={{ display: "flex", flexDirection: "column" }}>
+              <div key={t.id} id={"tpl-" + t.id} className={"card" + (focusId === t.id ? " focus-card" : "")} style={{ display: "flex", flexDirection: "column" }}>
                 <div className="row spread"><span className="badge">{t.code}</span><StdBadge std={t.standard} /></div>
                 <h3>{t.title}</h3>
                 <p className="small muted" style={{ flex: 1 }}>{t.purpose}</p>

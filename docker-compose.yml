@@ -1,0 +1,29 @@
+# One-command local or server install:  docker compose up -d   →  http://localhost:3001
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: portal
+      MARIADB_USER: portal
+      MARIADB_PASSWORD: ${DB_PASSWORD:-portal-change-me}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root-change-me}
+    volumes: [db:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 20
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on: { db: { condition: service_healthy } }
+    ports: ["3001:3001"]
+    environment:
+      DATABASE_URL: mysql://portal:${DB_PASSWORD:-portal-change-me}@db:3306/portal
+      DATABASE_SSL: disable
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET (32+ random characters) in .env}
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY:-}
+    volumes: [files:/data]
+volumes:
+  db:
+  files:

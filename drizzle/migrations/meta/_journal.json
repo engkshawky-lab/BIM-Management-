@@ -29,6 +29,13 @@
       "when": 1793010451496,
       "tag": "0003_issue_comments",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1793017701117,
+      "tag": "0004_user_role_favourites",
+      "breakpoints": true
     }
   ]
 }

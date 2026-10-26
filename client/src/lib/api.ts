@@ -18,7 +18,7 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
 
 export interface User {
   id: string; email: string; name: string; organization: string; jobTitle: string; phone: string; bio: string | null;
-  role: string; createdAt: string; lastLoginAt: string | null;
+  role: string; bimRole: string | null; favourites: string[] | null; createdAt: string; lastLoginAt: string | null;
 }
 
 export type ProjectRole = "viewer" | "editor" | "manager" | "owner";

@@ -11,7 +11,7 @@ const SECTIONS: { key: string; label: string; only?: StandardId }[] = [
 ];
 
 /** One hub for all reference content: pick the standard, then the section. */
-export default function Knowledge({ std, section }: { std: StandardId; section?: string }) {
+export default function Knowledge({ std, section, arg }: { std: StandardId; section?: string; arg?: string }) {
   const sections = SECTIONS.filter((s) => !s.only || s.only === std);
   const cur = sections.some((s) => s.key === section) ? section! : "library";
   return (
@@ -23,8 +23,8 @@ export default function Knowledge({ std, section }: { std: StandardId; section?:
         </div>
       </div>
       <div className="tabs">{sections.map((s) => <button key={s.key} className={cur === s.key ? "on" : ""} onClick={() => navigate(`/knowledge/${std}/${s.key}`)}>{s.label}</button>)}</div>
-      {cur === "library" && <Library std={std} />}
-      {cur === "templates" && <Templates std={std} />}
+      {cur === "library" && <Library key={std + arg} std={std} initialTab={Number(arg) || 0} />}
+      {cur === "templates" && <Templates std={std} focusId={arg} />}
       {cur === "naming" && <NamingTool />}
       {cur === "references" && <References std={std} />}
     </>

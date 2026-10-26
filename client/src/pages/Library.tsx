@@ -47,11 +47,11 @@ function Glossary({ terms, q }: { terms: GlossaryTerm[]; q: string }) {
   );
 }
 
-export default function Library({ std }: { std: StandardId }) {
+export default function Library({ std, initialTab = 0 }: { std: StandardId; initialTab?: number }) {
   const tabs = std === "iso19650"
     ? ["Parts of the series", "Delivery process (19650-2)", "CDE & status codes", "Glossary"]
     : ["Clauses 4–10", "Annex A controls", "AI in BIM", "Glossary"];
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(initialTab);
   const [q, setQ] = useState("");
   const t = Math.min(tab, tabs.length - 1);
 
