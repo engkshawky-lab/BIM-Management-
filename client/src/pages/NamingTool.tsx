@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { StdBadge } from "../components/common";
-import { namingFields, roleCodes, suitabilityCodes, typeCodes } from "../data/iso19650";
+import { namingFields, roleCodes, suitabilityCodes, typeCodes } from "../../../shared/data/iso19650";
 
 const RULES: Record<string, RegExp> = {
   project: /^[A-Z0-9]{2,6}$/, originator: /^[A-Z0-9]{3,6}$/, volume: /^[A-Z0-9]{1,2}$/, level: /^[A-Z0-9]{2}$/,

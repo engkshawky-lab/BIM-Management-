@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { StateTag, StdBadge } from "../components/common";
-import { cdeStates, glossary19650, parts19650, process19650, suitabilityCodes } from "../data/iso19650";
-import { aiInBimUseCases, annexA42001, clauses42001, glossary42001 } from "../data/iso42001";
-import type { Clause, GlossaryTerm, StandardId } from "../data/types";
+import { cdeStates, glossary19650, parts19650, process19650, suitabilityCodes } from "../../../shared/data/iso19650";
+import { aiInBimUseCases, annexA42001, clauses42001, glossary42001 } from "../../../shared/data/iso42001";
+import type { Clause, GlossaryTerm, StandardId } from "../../../shared/data/types";
 
 const match = (q: string, ...s: (string | undefined)[]) => !q || s.some((x) => x?.toLowerCase().includes(q.toLowerCase()));
 

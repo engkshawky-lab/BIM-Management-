@@ -1,7 +1,7 @@
 import { StdBadge } from "../components/common";
-import { references19650 } from "../data/iso19650";
-import { references42001 } from "../data/iso42001";
-import type { Reference, StandardId } from "../data/types";
+import { references19650 } from "../../../shared/data/iso19650";
+import { references42001 } from "../../../shared/data/iso42001";
+import type { Reference, StandardId } from "../../../shared/data/types";
 
 function List({ refs, std }: { refs: Reference[]; std: StandardId }) {
   return (

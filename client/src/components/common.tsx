@@ -1,5 +1,5 @@
-import type { StandardId } from "../data/types";
-import { cdeStates } from "../data/iso19650";
+import type { StandardId } from "../../../shared/data/types";
+import { cdeStates } from "../../../shared/data/iso19650";
 
 export function StdBadge({ std }: { std: StandardId }) {
   return <span className={"badge " + (std === "iso19650" ? "b19650" : "b42001")}>{std === "iso19650" ? "ISO 19650" : "ISO/IEC 42001"}</span>;
