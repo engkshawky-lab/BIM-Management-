@@ -514,3 +514,14 @@ export const lessonProgress = mysqlTable("lesson_progress", {
   lessonId: varchar("lesson_id", { length: 40 }).notNull(),
   completedAt: datetime("completed_at", { mode: "date" }).notNull(),
 }, (t) => [primaryKey({ columns: [t.userId, t.courseId, t.lessonId] })]);
+
+/** 4D plan: programme activities linked to model elements (storey × IFC class) of one IFC file. */
+export const fourdPlans = mysqlTable("fourd_plans", {
+  projectId: varchar("project_id", { length: 36 }).primaryKey(),
+  fileId: ref("file_id"),
+  fileName: varchar("file_name", { length: 255 }).notNull().default(""),
+  fileVersion: int("file_version").notNull().default(0),
+  grid: json<{ storeys: string[]; classes: string[]; counts: Record<string, number> }>("grid"),
+  activities: json<{ id: string; code: string; name: string; start: string; finish: string; actualStart: string; actualFinish: string; storeys: string[]; classes: string[] }[]>("activities").notNull(),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+});

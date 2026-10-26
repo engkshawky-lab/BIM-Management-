@@ -40,6 +40,7 @@ export const PROJECT_PAGES: NavItem[] = [
   p("p.reviews", "Model QA/QC reviews", "reviews", "shield", "Model & coordination", "Graded discipline checklists A–D"),
   p("p.issues", "Issues (BCF)", "coordination/issues", "flag", "Model & coordination"),
   p("p.clash", "Clash matrix", "coordination/clash", "grid", "Model & coordination"),
+  p("p.4d", "4D planning", "4d", "calendar", "Model & coordination", "Link programme to model; planned vs actual by date"),
   p("p.tags", "Asset tags", "tags", "check", "Model & coordination", "Build and check asset tags"),
   p("p.quality", "Quality hub", "quality", "shield", "Quality & team", "Document, plan and document-set checks"),
   p("p.meetings", "Meetings & progress report", "meetings", "calendar", "Quality & team", "Agendas, minutes, actions, progress report"),
