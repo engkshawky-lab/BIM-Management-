@@ -169,7 +169,7 @@ export default function DocumentEditor({ data, docId }: { data: ProjectData; doc
   const [hasLock, setHasLock] = useState(false);
   const [dialog, setDialog] = useState<null | "transition" | "review" | "reviewDecision" | "ai" | "saveFile" | { revisionId: string }>(null);
   const dirty = useRef<{ values: Set<string>; title: boolean; container: boolean }>({ values: new Set(), title: false, container: false });
-  const flushRef = useRef<() => Promise<void>>(async () => undefined);
+  const flushRef = useRef<(keepalive?: boolean) => Promise<void>>(async () => undefined);
   const latest = useRef({ values, title, container });
   latest.current = { values, title, container };
 
@@ -198,7 +198,12 @@ export default function DocumentEditor({ data, docId }: { data: ProjectData; doc
       .catch((e) => { if (alive && e instanceof ApiError && e.status === 423) { setHasLock(false); load(true); } });
     acquire();
     const t = setInterval(acquire, 30_000);
-    const release = () => navigator.sendBeacon?.(`/api/projects/${pid}/documents/${docId}/lock-release`);
+    const release = () => {
+      const d = dirty.current;
+      // Pending edits go out with keepalive so they survive a reload or closed tab; the lock then times out by itself.
+      if (d.values.size || d.title || d.container) flushRef.current(true);
+      else navigator.sendBeacon?.(`/api/projects/${pid}/documents/${docId}/lock-release`);
+    };
     window.addEventListener("beforeunload", release);
     return () => {
       alive = false; clearInterval(t); window.removeEventListener("beforeunload", release);
@@ -210,7 +215,7 @@ export default function DocumentEditor({ data, docId }: { data: ProjectData; doc
   // Read-only viewers see live changes.
   useEffect(() => { if (canType) return; const t = setInterval(() => load(true), 6_000); return () => clearInterval(t); }, [canType, load]);
 
-  const flush = useCallback(async () => {
+  const flush = useCallback(async (keepalive = false) => {
     const d = dirty.current;
     if (!d.values.size && !d.title && !d.container) return;
     const cur = latest.current;
@@ -220,7 +225,7 @@ export default function DocumentEditor({ data, docId }: { data: ProjectData; doc
     if (d.container) body.containerName = cur.container;
     dirty.current = { values: new Set(), title: false, container: false };
     setSaveState("saving");
-    try { await api(`/projects/${pid}/documents/${docId}`, { method: "PUT", body }); setSaveState((s) => (s === "saving" ? "saved" : s)); }
+    try { await api(`/projects/${pid}/documents/${docId}`, { method: "PUT", body, keepalive }); setSaveState((s) => (s === "saving" ? "saved" : s)); }
     catch (e) {
       setSaveState("error"); toast((e as Error).message, "error");
       // put the keys back so the next attempt retries them
@@ -231,6 +236,10 @@ export default function DocumentEditor({ data, docId }: { data: ProjectData; doc
 
   useEffect(() => { if (saveState !== "dirty") return; const t = setTimeout(flush, 1000); return () => clearTimeout(t); }, [saveState, values, title, container, flush]);
   flushRef.current = flush;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); flush().then(() => toast("Saved")); } };
+    window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
+  }, [flush, toast]);
 
   const setValue = (id: string, v: FieldValue) => { setValues((all) => ({ ...all, [id]: v })); dirty.current.values.add(id); setSaveState("dirty"); };
 
@@ -257,7 +266,11 @@ export default function DocumentEditor({ data, docId }: { data: ProjectData; doc
       <div className="no-print">
         <div className="row spread">
           <a href={`#/projects/${pid}/documents`} className="small">← {data.project.code} documents</a>
-          <span className={"save-state " + saveState}>{!editable ? "Read-only" : !hasLock ? "" : saveState === "saved" ? "✓ All changes saved" : saveState === "saving" ? "Saving…" : saveState === "dirty" ? "Unsaved changes…" : "⚠ Save failed — retrying on next change"}</span>
+          <span className="row">{canType && <>
+            <button className="small" disabled={saveState === "saving"} title="Ctrl+S" onClick={() => flush().then(() => toast("Saved"))}>💾 Save</button>
+            <button className="small primary" onClick={async () => { await flush(); navigate(`/projects/${pid}/documents`); }}>Save & close</button>
+          </>}
+          <span className={"save-state " + saveState}>{!editable ? "Read-only" : !hasLock ? "" : saveState === "saved" ? "✓ All changes saved" : saveState === "saving" ? "Saving…" : saveState === "dirty" ? "Unsaved changes…" : "⚠ Save failed — press Save to retry"}</span></span>
         </div>
         <div className="row spread" style={{ marginTop: 6 }}>
           <div className="row"><StdBadge std={t.standard} /><span className="badge">{t.code}</span><StateTag state={doc.state} /><span className="small">{doc.suitability} — {suitDesc(doc.suitability)}</span><span className="badge">Rev {doc.revision}</span>

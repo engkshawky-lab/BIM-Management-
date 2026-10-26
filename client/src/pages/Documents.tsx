@@ -95,7 +95,7 @@ export default function Documents({ data }: { data: ProjectData }) {
       ) : (
         <div className="card table-wrap">
           <table className="data">
-            <thead><tr><th>Document</th><th>Template</th><th>Rev</th><th>Status</th><th>Review</th><th>Author</th><th>Updated</th></tr></thead>
+            <thead><tr><th>Document</th><th>Template</th><th>Rev</th><th>Status</th><th>Review</th><th>Author</th><th>Updated</th><th /></tr></thead>
             <tbody>
               {list.map((d) => {
                 const t = templateById(d.templateId);
@@ -108,6 +108,7 @@ export default function Documents({ data }: { data: ProjectData }) {
                     <td className="small">{REVIEW_LABEL[d.reviewStatus] ?? ""}</td>
                     <td className="small">{d.authorName}</td>
                     <td className="small muted nowrap">{fmtDate(d.updatedAt)}</td>
+                    <td><a className="btn small" href={`#/projects/${pid}/documents/${d.id}`}>{d.state === "WIP" && canEdit(data.role) ? "✎ Edit" : "Open"}</a></td>
                   </tr>
                 );
               })}
