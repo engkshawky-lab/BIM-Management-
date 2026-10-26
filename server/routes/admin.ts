@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db, schema } from "../db";
 import { createResetLink, h, parse, sentKeys } from "./auth";
 import { newId } from "../db";
+import { mailEnabled, sendMail } from "../mailer";
 
 // Platform administration: users, usage, platform-wide activity, feedback and branding.
 const r = Router();
@@ -21,6 +22,13 @@ r.get("/admin/overview", requireAdmin, h(async (_req, res) => {
     issues: await one(db.select({ n: count() }).from(schema.issues)),
     newFeedback: await one(db.select({ n: count() }).from(schema.feedback).where(eq(schema.feedback.status, "New"))),
   });
+}));
+
+r.get("/admin/mail", requireAdmin, (_req, res) => res.json({ enabled: mailEnabled(), host: process.env.SMTP_HOST ?? "", from: process.env.SMTP_FROM ?? process.env.SMTP_USER ?? "" }));
+r.post("/admin/mail/test", requireAdmin, h(async (req, res) => {
+  if (!mailEnabled()) return res.status(400).json({ error: "SMTP is not configured (set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM)." });
+  const ok = await sendMail(req.user!.email, "Portal test email", ["This is a test email from your BIM Management portal. Email delivery works."]);
+  res.status(ok ? 200 : 502).json(ok ? { ok } : { error: "Sending failed — check the server log and SMTP settings." });
 }));
 
 r.get("/admin/users", requireAdmin, h(async (_req, res) => {

@@ -51,6 +51,17 @@ export default function ProfilePage() {
             <button style={{ marginTop: 12 }}>Change password</button>
           </form>
           <div className="card">
+            <h3 style={{ marginTop: 0 }}>Email & language</h3>
+            <label>Email notifications</label>
+            <select value={user.emailPref ?? "instant"} onChange={async (e) => { const r = await api<{ user: User }>("/profile", { method: "PUT", body: { emailPref: e.target.value } }); setUser(r.user); toast("Email preference saved"); }}>
+              <option value="instant">Instant — one email per notification</option><option value="digest">Daily digest</option><option value="off">Off (in-app only)</option>
+            </select>
+            <label>Language</label>
+            <select value={user.locale ?? "en"} onChange={async (e) => { const r = await api<{ user: User }>("/profile", { method: "PUT", body: { locale: e.target.value } }); setUser(r.user); }}>
+              <option value="en">English</option><option value="ar">العربية (Arabic)</option>
+            </select>
+          </div>
+          <div className="card">
             <h3 style={{ marginTop: 0 }}>My projects</h3>
             {projects.length === 0 && <p className="muted">You are not in any project yet.</p>}
             {projects.map((p) => (

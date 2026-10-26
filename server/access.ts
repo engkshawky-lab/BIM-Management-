@@ -1,4 +1,5 @@
-import { and, eq, ne } from "drizzle-orm";
+import { mailEnabled, publicUrl, sendMail } from "./mailer";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
 import { db, newId, schema } from "./db";
 
@@ -39,5 +40,16 @@ export async function notify(projectId: string, actorId: string, message: string
         .where(and(eq(schema.projectMembers.projectId, projectId), ne(schema.projectMembers.userId, actorId)))).map((r) => r.id);
   const now = new Date();
   const rows = targets.filter((t) => t !== actorId).map((t) => ({ id: newId(), userId: t, projectId, message: message.slice(0, 500), link, createdAt: now }));
-  if (rows.length) await db.insert(schema.notifications).values(rows);
+  if (!rows.length) return;
+  await db.insert(schema.notifications).values(rows);
+  // instant email for users who want it; digest users get them in the daily summary
+  if (!mailEnabled()) return;
+  const users = await db.select({ id: schema.users.id, email: schema.users.email, pref: schema.users.emailPref, disabled: schema.users.disabled }).from(schema.users).where(inArray(schema.users.id, rows.map((r) => r.userId)));
+  const [project] = await db.select({ code: schema.projects.code, name: schema.projects.name }).from(schema.projects).where(eq(schema.projects.id, projectId));
+  for (const u of users.filter((x) => x.pref === "instant" && !x.disabled)) {
+    const row = rows.find((r) => r.userId === u.id)!;
+    void sendMail(u.email, `[${project?.code ?? "Portal"}] ${message.slice(0, 120)}`, [message, `Project: ${project?.code} — ${project?.name}`], link ? { label: "Open in the portal", url: `${publicUrl()}/#${link}` } : undefined)
+      .then(async (ok) => { if (ok) await db.update(schema.notifications).set({ emailed: true }).where(eq(schema.notifications.id, row.id)); })
+      .catch(() => undefined);
+  }
 }

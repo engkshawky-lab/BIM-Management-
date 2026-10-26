@@ -23,6 +23,13 @@ services:
       DATABASE_SSL: disable
       SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET (32+ random characters) in .env}
       CLAUDE_API_KEY: ${CLAUDE_API_KEY:-}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
     volumes: [files:/data]
 volumes:
   db:

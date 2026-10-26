@@ -17,7 +17,7 @@ const P = "/projects/:projectId";
 const today = () => new Date().toISOString().slice(0, 10);
 const date = z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, "use YYYY-MM-DD");
 
-async function bundle(pid: string) {
+export async function bundle(pid: string) {
   const [teams, milestones, deliverables, responsibility, loin, mrm] = await Promise.all([
     db.select().from(schema.taskTeams).where(eq(schema.taskTeams.projectId, pid)).orderBy(asc(schema.taskTeams.name)),
     db.select().from(schema.milestones).where(eq(schema.milestones.projectId, pid)).orderBy(asc(schema.milestones.date)),
@@ -326,8 +326,7 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
 }));
 
 // ---------- quality report ----------
-r.get(P + "/quality", requireProject(), h(async (req, res) => {
-  const pid = req.params.projectId;
+export async function computeQuality(pid: string) {
   const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, pid));
   const docs = await db.select().from(schema.documents).where(eq(schema.documents.projectId, pid));
   const b = await bundle(pid);
@@ -339,9 +338,14 @@ r.get(P + "/quality", requireProject(), h(async (req, res) => {
   const plan = analysePlan({ deliverables: b.deliverables, milestones: b.milestones, teams: b.teams, projectCode: project.code, today: today() });
   const set = checkProjectSet({ standards: project.standards, docs, milestoneCount: b.milestones.length, planCount: b.deliverables.length });
   const all = [...set, ...plan, ...documents.flatMap((d) => d.findings)];
-  res.json({ score: qualityScore(set.concat(plan)) * 0.4 + (documents.length ? documents.reduce((s, d) => s + d.score, 0) / documents.length : 0) * 0.6,
+  return { score: qualityScore(set.concat(plan)) * 0.4 + (documents.length ? documents.reduce((s, d) => s + d.score, 0) / documents.length : 0) * 0.6,
     counts: { error: all.filter((f) => f.severity === "error").length, warning: all.filter((f) => f.severity === "warning").length, info: all.filter((f) => f.severity === "info").length },
-    set, plan: { score: qualityScore(plan), findings: plan }, documents });
+    set, plan: { score: qualityScore(plan), findings: plan }, documents, stats: planStats(b.deliverables, today()) };
+}
+
+r.get(P + "/quality", requireProject(), h(async (req, res) => {
+  const { stats: _s, ...q } = await computeQuality(req.params.projectId);
+  res.json(q);
 }));
 
 export default r;

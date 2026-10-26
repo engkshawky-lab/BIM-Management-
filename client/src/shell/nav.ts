@@ -42,6 +42,7 @@ export const PROJECT_PAGES: NavItem[] = [
   p("p.tags", "Asset tags", "tags", "check", "Model & coordination", "Build and check asset tags"),
   p("p.quality", "Quality hub", "quality", "shield", "Quality & team", "Document, plan and document-set checks"),
   p("p.meetings", "Meetings & progress report", "meetings", "calendar", "Quality & team", "Agendas, minutes, actions, progress report"),
+  p("p.automations", "Automations", "automations", "sparkles", "Quality & team", "Scheduled chasers and quality reviews"),
   p("p.team", "Team", "team", "users", "Quality & team"),
   p("p.settings", "Project settings", "settings", "settings", "Quality & team"),
 ];

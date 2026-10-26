@@ -26,6 +26,9 @@ export const users = mysqlTable("users", {
   createdAt: created(),
   lastLoginAt: datetime("last_login_at", { mode: "date" }),
   disabled: int("disabled").notNull().default(0),
+  /** instant | digest | off */
+  emailPref: varchar("email_pref", { length: 10 }).notNull().default("instant"),
+  locale: varchar("locale", { length: 5 }).notNull().default("en"),
 }, (t) => [uniqueIndex("users_email").on(t.email)]);
 
 export const sessions = mysqlTable("sessions", {
@@ -169,6 +172,7 @@ export const notifications = mysqlTable("notifications", {
   message: varchar("message", { length: 500 }).notNull(),
   link: varchar("link", { length: 200 }).notNull().default(""),
   read: boolean("read").notNull().default(false),
+  emailed: boolean("emailed").notNull().default(false),
   createdAt: created(),
 }, (t) => [index("notifications_user").on(t.userId)]);
 
@@ -454,3 +458,39 @@ export const settings = mysqlTable("settings", {
   key: varchar("key", { length: 60 }).primaryKey(),
   value: json<Record<string, unknown>>("value").notNull(),
 });
+
+/** Daily snapshot of a project's health, for trends over time. */
+export const qualitySnapshots = mysqlTable("quality_snapshots", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  day: varchar("day", { length: 10 }).notNull(),
+  qualityScore: int("quality_score").notNull(),
+  errors: int("errors").notNull(),
+  warnings: int("warnings").notNull(),
+  progress: int("progress").notNull(),
+  overdue: int("overdue").notNull(),
+  openIssues: int("open_issues").notNull(),
+  modelQuality: int("model_quality"),
+}, (t) => [uniqueIndex("snap_project_day").on(t.projectId, t.day)]);
+
+/** Project automations ("agents") that run on a schedule, with run history. */
+export const agents = mysqlTable("agents", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  kind: varchar("kind", { length: 30 }).notNull(),
+  enabled: boolean("enabled").notNull().default(true),
+  frequency: varchar("frequency", { length: 10 }).notNull().default("weekly"),
+  lastRunAt: datetime("last_run_at", { mode: "date" }),
+  createdBy: ref("created_by").notNull(),
+  createdAt: created(),
+}, (t) => [index("agents_project").on(t.projectId)]);
+
+export const agentRuns = mysqlTable("agent_runs", {
+  id: id(),
+  agentId: ref("agent_id").notNull(),
+  projectId: ref("project_id").notNull(),
+  startedAt: datetime("started_at", { mode: "date" }).notNull(),
+  status: varchar("status", { length: 10 }).notNull(),
+  summary: text("summary"),
+  trigger: varchar("trigger", { length: 10 }).notNull().default("schedule"),
+}, (t) => [index("agent_runs_agent").on(t.agentId)]);

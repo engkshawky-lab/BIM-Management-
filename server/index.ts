@@ -18,6 +18,8 @@ import traceability from "./routes/traceability";
 import dashboard from "./routes/dashboard";
 import learn from "./routes/learn";
 import admin from "./routes/admin";
+import automation from "./routes/automation";
+import { startScheduler } from "./agents";
 import standards from "./routes/standards";
 
 const app = express();
@@ -36,7 +38,7 @@ app.use("/api", (req, res, next) => {
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api", auth);
-app.use("/api", requireUser, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, standards, ai);
+app.use("/api", requireUser, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, standards, ai);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: NextFunction) => {
@@ -54,4 +56,4 @@ if (process.env.NODE_ENV === "production" && fs.existsSync(clientDir)) {
 
 const port = Number(process.env.PORT ?? 3001);
 await runMigrations();
-app.listen(port, () => console.log(`Portal API listening on http://localhost:${port}`));
+app.listen(port, () => { console.log(`Portal API listening on http://localhost:${port}`); startScheduler(); });

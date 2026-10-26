@@ -4,6 +4,7 @@ import { Router, type NextFunction, type Request, type Response } from "express"
 import crypto from "crypto";
 import { z } from "zod";
 import { logActivity } from "../access";
+import { mailEnabled, sendMail } from "../mailer";
 import { checkPassword, endSession, hashPassword, requireUser, startSession, toPublic } from "../auth";
 import { db, newId, schema } from "../db";
 
@@ -89,12 +90,13 @@ r.post("/auth/forgot", h(async (req, res) => {
   const [u] = await db.select().from(schema.users).where(eq(schema.users.email, body.email));
   if (u && !u.disabled) {
     const link = await createResetLink(u.id, process.env.PUBLIC_URL?.replace(/\/$/, "") || `${req.protocol}://${req.get("host")}`);
-    // No mail server is bundled: the link goes to the server log for the operator, and admins can issue links from the console.
-    console.log(`[password reset] ${u.email}: ${link}`);
+    // With SMTP configured the link is emailed; otherwise it goes to the server log and admins can issue links from the console.
+    const sent = await sendMail(u.email, "Reset your portal password", [`Hello ${u.name},`, "Someone (hopefully you) asked to reset your password. The link below works once and expires in one hour.", "If you didn't ask for this, ignore this email."], { label: "Choose a new password", url: link });
+    if (!sent) console.log(`[password reset] ${u.email}: ${link}`);
     await db.insert(schema.notifications).values({ id: newId(), userId: u.id, projectId: null, message: "A password reset was requested for your account. If this wasn't you, contact your administrator.", link: "/profile", read: false, createdAt: new Date() }).catch(() => undefined);
   }
   // same answer whether or not the account exists
-  res.json({ ok: true, message: "If an account exists for that email, a reset link has been sent to your administrator." });
+  res.json({ ok: true, message: mailEnabled() ? "If an account exists for that email, we've sent a reset link." : "If an account exists for that email, your administrator can send you the reset link." });
 }));
 
 r.post("/auth/reset", h(async (req, res) => {
@@ -120,6 +122,8 @@ r.put("/profile", requireUser, h(async (req, res) => {
     bio: z.string().max(2000),
     bimRole: z.string().regex(/^[a-z-]{2,32}$/).nullable(),
     favourites: z.array(z.string().max(120)).max(60),
+    emailPref: z.enum(["instant", "digest", "off"]),
+    locale: z.enum(["en", "ar"]),
   }).partial(), req.body, res); if (!body) return;
   await db.update(schema.users).set(body).where(eq(schema.users.id, req.user!.id));
   const [u] = await db.select().from(schema.users).where(eq(schema.users.id, req.user!.id));

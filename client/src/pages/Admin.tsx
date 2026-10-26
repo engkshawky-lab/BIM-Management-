@@ -9,11 +9,16 @@ interface Branding { orgName: string; color: string; logo: string; footer: strin
 const TABS = [["overview", "Overview"], ["users", "Users"], ["activity", "Activity log"], ["feedback", "Feedback"], ["branding", "Branding"]] as const;
 
 function Overview() {
+  const { toast } = useSession();
   const [o, setO] = useState<Record<string, number> | null>(null);
-  useEffect(() => { api<Record<string, number>>("/admin/overview").then(setO); }, []);
+  const [mail, setMail] = useState<{ enabled: boolean; host: string; from: string } | null>(null);
+  useEffect(() => { api<Record<string, number>>("/admin/overview").then(setO); api<typeof mail>("/admin/mail").then(setMail); }, []);
   if (!o) return <p className="muted">Loading…</p>;
+  const mailCard = mail && <div className="card" style={{ marginTop: 12 }}><h3 style={{ marginTop: 0 }}>Email delivery</h3>
+    {mail.enabled ? <p className="small">SMTP <b>{mail.host}</b>, sender <b>{mail.from}</b>. <button className="small" onClick={async () => { try { await api("/admin/mail/test", { body: {} }); toast("Test email sent to you"); } catch (e) { toast((e as Error).message, "error"); } }}>Send test email</button></p>
+      : <p className="small muted">Not configured — notifications stay in-app and reset links are shown here instead of emailed. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS and SMTP_FROM in the server <code>.env</code> and restart.</p>}</div>;
   const tiles: [string, string][] = [["users", "Users"], ["activeUsers", "Active (7 days)"], ["projects", "Projects"], ["documents", "Documents"], ["files", "Files"], ["issues", "Issues"], ["newFeedback", "New feedback"]];
-  return <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>{tiles.map(([k, l]) => <div key={k} className="card"><div className="stat">{o[k]}</div><div className="small muted">{l}</div></div>)}</div>;
+  return <><div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10 }}>{tiles.map(([k, l]) => <div key={k} className="card"><div className="stat">{o[k]}</div><div className="small muted">{l}</div></div>)}</div>{mailCard}</>;
 }
 
 function Users() {

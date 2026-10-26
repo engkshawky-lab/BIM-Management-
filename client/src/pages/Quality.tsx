@@ -1,3 +1,4 @@
+import { Trends } from "./Automations";
 import { useEffect, useState } from "react";
 import { navigate } from "../App";
 import { StateTag } from "../components/common";
@@ -79,6 +80,7 @@ export default function Quality({ data }: { data: ProjectData }) {
           </table>
         </div>
       )}
+      <Trends projectId={pid} code={data.project.code} />
     </>
   );
 }
