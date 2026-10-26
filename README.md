@@ -33,9 +33,20 @@ Stack (same as `iso19650_platform_deploy`): React + Vite client, Express server,
 | Automation & email | Optional SMTP email (instant or daily digest per user), emailed reset links; background scheduler with daily health snapshots, quality trend charts, and project automations (overdue chaser, quality review, risk review) with run history. |
 | AI+ | AI clash triage (reviewer accepts suggestions), research notebook over pasted text, project documents and PDFs with citations, AI interview coach. |
 | 4D | Link programme activities to model elements by storey and IFC class; planned vs actual by date with timeline slider; unlinked and overlapping elements flagged. |
-| Careers & billing | Opt-in talent profiles with consent and view notifications, recruiter role; plans with project/member/storage/AI limits (BILLING=on), promo codes, admin plan assignment; saved fee and carbon estimates. |
-| Languages | English and Arabic (right-to-left) for navigation, menus, sign-in and profile. |
+| Careers & billing | Opt-in talent profiles with consent and view notifications, recruiter role; plans with project/member/storage/AI limits (BILLING=on), promo codes, admin plan assignment, card payments through Stripe Checkout and customer portal; saved fee and carbon estimates. |
+| Languages | English and Arabic (right-to-left): interface, learning content, standards library, templates and Word exports. User-entered content stays as written. |
 | Knowledge | ISO 19650 parts, 19650-2 process 5.1–5.8, CDE states and status codes, ISO/IEC 42001 clauses 4–10 and all 38 Annex A controls, glossaries, naming tool, references. |
+
+## Install with Docker (recommended)
+
+```bash
+git clone -b portal-v1 https://github.com/engkshawky-lab/BIM-Management-.git
+cd BIM-Management-
+echo "SESSION_SECRET=$(openssl rand -hex 32)" > .env   # add optional settings from .env.example
+docker compose up -d --build                           # first build ~5–10 minutes
+```
+
+Open http://localhost:3001 — the first account becomes the administrator. Database migrations run automatically on start.
 
 ## Run locally
 
