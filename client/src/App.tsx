@@ -1,5 +1,6 @@
 import ClientStandards from "./pages/ClientStandards";
 import { setLocale, type Locale } from "./i18n";
+import { applyDomLocale } from "./i18nDom";
 import Learn from "./pages/Learn";
 import Admin from "./pages/Admin";
 import Billing from "./pages/Billing";
@@ -42,11 +43,17 @@ export default function App() {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
   }, []);
 
+  // Arabic page content: start/stop the translation layer when the language changes
+  const loc = ((user?.locale ?? (() => { try { return localStorage.getItem("bim:locale"); } catch { return null; } })()) === "ar" ? "ar" : "en");
+  const [, setI18nReady] = useState(0);
+  // re-render once the dictionary has loaded so directly translated content (lessons) updates too
+  useEffect(() => { if (user !== undefined) applyDomLocale(loc).then(() => setI18nReady((n) => n + 1)); }, [loc, user === undefined]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { api<{ user: User | null }>("/auth/me").then((r) => setUser(r.user)).catch(() => setUser(null)); }, []);
 
   // interface language: the account setting, or the choice made on the sign-in page
   const stored = (() => { try { return localStorage.getItem("bim:locale"); } catch { return null; } })();
-  setLocale(((user?.locale ?? stored) === "ar" ? "ar" : "en") as Locale);
+  const locale = ((user?.locale ?? stored) === "ar" ? "ar" : "en") as Locale;
+  setLocale(locale);
   if (user === undefined) return <div className="center muted">Loading…</div>;
   const reset = /^\/reset\/([0-9a-f]{64})$/.exec(route)?.[1];
   if (reset) return <ResetPassword token={reset} />;

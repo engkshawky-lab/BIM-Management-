@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,
+    "resolveJsonModule": true,
     "types": ["node"]
   },
   "include": ["client/src", "server", "shared", "drizzle/schema.ts", "vite.config.ts", "drizzle.config.ts", "vitest.config.ts"]

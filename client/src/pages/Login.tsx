@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { api, type User } from "../lib/api";
 import { getLocale, setLocale, t } from "../i18n";
+import { applyDomLocale } from "../i18nDom";
 
 /** Language toggle before sign-in (remembered in this browser). */
 function LangSwitch({ onChange }: { onChange: () => void }) {
-  const set = (l: "en" | "ar") => { try { localStorage.setItem("bim:locale", l); } catch { /* storage unavailable */ } setLocale(l); onChange(); };
+  const set = (l: "en" | "ar") => { try { localStorage.setItem("bim:locale", l); } catch { /* storage unavailable */ } setLocale(l); applyDomLocale(l); onChange(); };
   return <div className="seg"><button type="button" className={getLocale() === "en" ? "on" : ""} onClick={() => set("en")}>EN</button><button type="button" className={getLocale() === "ar" ? "on" : ""} onClick={() => set("ar")}>عربي</button></div>;
 }
 

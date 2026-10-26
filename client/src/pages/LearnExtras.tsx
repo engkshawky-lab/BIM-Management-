@@ -3,6 +3,7 @@ import { useSession } from "../App";
 import { COURSES } from "../../../shared/data/courses";
 import { Markdown } from "../components/Markdown";
 import { api } from "../lib/api";
+import { tr } from "../i18nDom";
 
 /** YouTube / Vimeo links become embeds; anything else is shown as a link. */
 function Video({ url }: { url: string }) {
@@ -29,7 +30,7 @@ export function Courses({ onPractise }: { onPractise: (topic: string) => void })
         <div className="small muted" style={{ marginTop: 6 }}>Lesson {open.l + 1} of {c.lessons.length} · {l.minutes} min</div>
         <h2>{l.title}</h2>
         {state.videos[key] && <Video url={state.videos[key]} />}
-        <Markdown text={l.body} />
+        <Markdown text={tr(l.body)} />
         {user.role === "admin" && <p className="tiny muted">Admin: <button className="linklike" onClick={async () => { const url = prompt("Video URL for this lesson (YouTube, Vimeo or any link; empty to remove)", state.videos[key] ?? ""); if (url === null) return; try { await api("/learn/videos", { method: "PUT", body: { key, url } }); load(); } catch (e) { toast((e as Error).message, "error"); } }}>{state.videos[key] ? "change" : "add"} lesson video</button></p>}
         <div className="row spread" style={{ marginTop: 12 }}>
           <button disabled={open.l === 0} onClick={() => setOpen({ ...open, l: open.l - 1 })}>← Previous</button>
