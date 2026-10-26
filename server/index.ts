@@ -4,6 +4,7 @@ import path from "path";
 import { loadUser, requireUser } from "./auth";
 import { runMigrations } from "./db";
 import ai from "./routes/ai";
+import delivery from "./routes/delivery";
 import auth from "./routes/auth";
 import documents from "./routes/documents";
 import files from "./routes/files";
@@ -25,7 +26,7 @@ app.use("/api", (req, res, next) => {
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api", auth);
-app.use("/api", requireUser, projects, files, documents, ai);
+app.use("/api", requireUser, projects, files, documents, delivery, ai);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: NextFunction) => {

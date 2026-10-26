@@ -13,6 +13,12 @@ export function parse<T extends z.ZodType>(s: T, data: unknown, res: Response): 
   return r.data;
 }
 
+/** For partial updates: zod applies .default() even inside .partial(), so keep only keys the client actually sent. */
+export function sentKeys<T extends object>(parsed: T, raw: unknown): Partial<T> {
+  const keys = new Set(raw && typeof raw === "object" ? Object.keys(raw) : []);
+  return Object.fromEntries(Object.entries(parsed).filter(([k]) => keys.has(k))) as Partial<T>;
+}
+
 const r = Router();
 
 const registerSchema = z.object({

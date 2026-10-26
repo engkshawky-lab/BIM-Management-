@@ -171,3 +171,72 @@ export const workflowProgress = mysqlTable("workflow_progress", {
   updatedBy: ref("updated_by").notNull(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 }, (t) => [primaryKey({ columns: [t.projectId, t.workflowId] })]);
+
+// ---------- Phase 2: delivery planning ----------
+
+export const taskTeams = mysqlTable("task_teams", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  name: varchar("name", { length: 120 }).notNull(),
+  organization: varchar("organization", { length: 160 }).notNull().default(""),
+  originatorCode: varchar("originator_code", { length: 6 }).notNull().default(""),
+  roleCode: varchar("role_code", { length: 2 }).notNull().default(""),
+  leadUserId: ref("lead_user_id"),
+  createdAt: created(),
+}, (t) => [index("task_teams_project").on(t.projectId)]);
+
+export const milestones = mysqlTable("milestones", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  name: varchar("name", { length: 160 }).notNull(),
+  date: varchar("date", { length: 10 }).notNull(),
+  description: varchar("description", { length: 500 }).notNull().default(""),
+  createdAt: created(),
+}, (t) => [index("milestones_project").on(t.projectId)]);
+
+export const deliverables = mysqlTable("deliverables", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  taskTeamId: ref("task_team_id").notNull(),
+  containerName: varchar("container_name", { length: 120 }).notNull().default(""),
+  title: varchar("title", { length: 255 }).notNull(),
+  typeCode: varchar("type_code", { length: 2 }).notNull().default(""),
+  loin: varchar("loin", { length: 40 }).notNull().default(""),
+  milestoneId: ref("milestone_id"),
+  startDate: varchar("start_date", { length: 10 }).notNull().default(""),
+  dueDate: varchar("due_date", { length: 10 }).notNull().default(""),
+  status: varchar("status", { length: 16 }).notNull().default("planned"),
+  dependsOn: json<string[]>("depends_on").notNull(),
+  assigneeId: ref("assignee_id"),
+  fileId: ref("file_id"),
+  documentId: ref("document_id"),
+  notes: varchar("notes", { length: 1000 }).notNull().default(""),
+  createdAt: created(),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+}, (t) => [index("deliverables_project").on(t.projectId)]);
+
+export const responsibilityRows = mysqlTable("responsibility_rows", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  item: varchar("item", { length: 255 }).notNull(),
+  stage: varchar("stage", { length: 120 }).notNull().default(""),
+  loin: varchar("loin", { length: 40 }).notNull().default(""),
+  // task team id -> "R" | "A" | "C" | "I" | combinations like "R/A"
+  cells: json<Record<string, string>>("cells").notNull(),
+  sortOrder: int("sort_order").notNull().default(0),
+  createdAt: created(),
+}, (t) => [index("resp_project").on(t.projectId)]);
+
+export const loinRows = mysqlTable("loin_rows", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  ref: varchar("ref", { length: 40 }).notNull(),
+  element: varchar("element", { length: 160 }).notNull(),
+  ifcClass: varchar("ifc_class", { length: 80 }).notNull().default(""),
+  milestoneId: ref("milestone_id"),
+  purpose: varchar("purpose", { length: 255 }).notNull().default(""),
+  geometry: varchar("geometry", { length: 1000 }).notNull().default(""),
+  alphanumeric: varchar("alphanumeric", { length: 1000 }).notNull().default(""),
+  documentation: varchar("documentation", { length: 1000 }).notNull().default(""),
+  createdAt: created(),
+}, (t) => [index("loin_project").on(t.projectId)]);

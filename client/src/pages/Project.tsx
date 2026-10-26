@@ -3,14 +3,16 @@ import { initials, navigate, useSession } from "../App";
 import { StdBadge } from "../components/common";
 import { api, canManage, fmtDate, type ActivityRow, type Invitation, type Member, type Project } from "../lib/api";
 import DocumentEditor from "./DocumentEditor";
+import Delivery from "./Delivery";
 import Documents from "./Documents";
 import Files from "./Files";
 import { ProjectForm } from "./NewProject";
 import ProjectWorkflow from "./ProjectWorkflow";
+import Quality from "./Quality";
 
 export interface ProjectData { project: Project; members: Member[]; invitations: Invitation[]; role: Project["role"] }
 
-const TABS: [string, string][] = [["overview", "Overview"], ["documents", "Documents"], ["files", "Files (CDE)"], ["workflow", "Workflow"], ["team", "Team"], ["activity", "Activity"], ["settings", "Settings"]];
+const TABS: [string, string][] = [["overview", "Overview"], ["documents", "Documents"], ["files", "Files (CDE)"], ["delivery", "Delivery plan"], ["quality", "Quality"], ["workflow", "Workflow"], ["team", "Team"], ["activity", "Activity"], ["settings", "Settings"]];
 
 export default function ProjectPage({ projectId, tab, sub }: { projectId: string; tab: string; sub?: string }) {
   const [data, setData] = useState<ProjectData | null>(null);
@@ -40,6 +42,8 @@ export default function ProjectPage({ projectId, tab, sub }: { projectId: string
       {tab === "overview" && <Overview data={data} />}
       {tab === "documents" && <Documents data={data} />}
       {tab === "files" && <Files data={data} />}
+      {tab === "delivery" && <Delivery data={data} sub={sub} />}
+      {tab === "quality" && <Quality data={data} />}
       {tab === "workflow" && <ProjectWorkflow data={data} />}
       {tab === "team" && <Team data={data} reload={reload} />}
       {tab === "activity" && <Activity projectId={projectId} />}
@@ -65,6 +69,8 @@ function Overview({ data }: { data: ProjectData }) {
         <div className="row" style={{ marginTop: 12 }}>
           <a className="btn primary" href={`#/projects/${project.id}/documents`}>📄 Documents</a>
           <a className="btn" href={`#/projects/${project.id}/files`}>📁 Files</a>
+          <a className="btn" href={`#/projects/${project.id}/delivery`}>📅 Delivery plan</a>
+          <a className="btn" href={`#/projects/${project.id}/quality`}>✅ Quality</a>
           <a className="btn" href={`#/projects/${project.id}/workflow`}>🔀 Workflow</a>
         </div>
       </div>

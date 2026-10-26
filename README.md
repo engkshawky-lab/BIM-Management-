@@ -17,6 +17,8 @@ Stack (same as `iso19650_platform_deploy`): React + Vite client, Express server,
 | Document control | WIP → Shared → Published → Archived with suitability codes, automatic revisions (P01.01 → P01 → C01), full revision history with snapshots and restore. Role rules: reviewers/managers share, managers publish/archive. |
 | Export | Word (cover page, document control, approval table, contents, headers/footers with page numbers), Markdown, Print/PDF, and **Save to project files** (versioned in the CDE). |
 | Workflows | ISO 19650-2 delivery workflow and ISO/IEC 42001 implementation workflow per project, activity status, stage gates approved by managers, linked documents per activity. |
+| Delivery plan *(phase 2)* | Task teams (originator/role codes, lead) and information delivery milestones. MIDP/TIDP planner: containers with auto-numbered names, LOIN, milestone, dates, dependencies, responsible person, status; table and Gantt views; Excel/CSV import and CSV export; one-click generation of MIDP / TIDP documents. Responsibility (RACI) matrix per task team with accountability checks and DRM document generation. LOIN matrix per element and milestone (ISO 7817-1). |
+| Quality *(phase 2)* | Automated checks: required document set per standard, completeness and placeholders per document, template rules (EIR milestones & acceptance criteria, BEP named roles, SoA justifications, AI risk treatment…), container naming, plan dates vs milestones, dependency order and cycles, duplicates, overdue items. Scores, drill-down and CSV export. |
 | Knowledge | ISO 19650 parts, 19650-2 process 5.1–5.8, CDE states and status codes, ISO/IEC 42001 clauses 4–10 and all 38 Annex A controls, glossaries, naming tool, references. |
 
 ## Run locally
@@ -35,8 +37,8 @@ Tests: `npm test` (unit). Type check: `npm run check`.
 
 ## Phases — moving modules over from `iso19650_platform_deploy`
 
-1. **Core platform (this phase)** — accounts, projects, team, CDE files, document builder, review/approval, workflows.
-2. **Delivery tools** — MIDP/TIDP generator with Gantt, responsibility matrix (RACI) builder, LOIN matrix, EIR/BEP quality checker, BEP comparison, information exchange ledger.
+1. ✅ **Core platform** — accounts, projects, team, CDE files, document builder, review/approval, workflows.
+2. ✅ **Delivery tools** — MIDP/TIDP planner with Gantt, responsibility matrix, LOIN matrix, quality checker. *(Still to port: BEP version comparison, information exchange ledger.)*
 3. **Validation** — IFC/IDS validator (Python `ifc_parser` service), COBie checker, QA/QC checker, clash matrix, BCF issue centre.
 4. **AI assistants** — project consultant chat over project documents, document Q&A, requirement traceability (atomic requirements graph), AI policy/risk copilots for 42001.
 5. **Learning** — courses, quizzes, mock exams, videos, case studies, glossary games.

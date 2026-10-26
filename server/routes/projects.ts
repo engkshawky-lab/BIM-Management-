@@ -3,7 +3,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { ROLES, logActivity, notify, requireProject } from "../access";
 import { db, newId, schema } from "../db";
-import { h, parse } from "./auth";
+import { h, parse, sentKeys } from "./auth";
 
 const r = Router();
 
@@ -60,7 +60,8 @@ r.get("/projects/:projectId", requireProject(), h(async (req, res) => {
 }));
 
 r.put("/projects/:projectId", requireProject("manager"), h(async (req, res) => {
-  const body = parse(projectSchema.partial(), req.body, res); if (!body) return;
+  const parsed = parse(projectSchema.partial(), req.body, res); if (!parsed) return;
+  const body = sentKeys(parsed, req.body);
   await db.update(schema.projects).set({ ...body, updatedAt: new Date() }).where(eq(schema.projects.id, req.params.projectId));
   await logActivity(req.params.projectId, req.user!.id, "project.updated", "Updated project details");
   res.json({ ok: true });
@@ -73,7 +74,7 @@ r.delete("/projects/:projectId", requireProject("owner"), h(async (req, res) => 
   await db.transaction(async (tx) => {
     if (docIds.length) await tx.delete(schema.documentRevisions).where(inArray(schema.documentRevisions.documentId, docIds));
     if (fileIds.length) await tx.delete(schema.fileVersions).where(inArray(schema.fileVersions.fileId, fileIds));
-    for (const t of [schema.documents, schema.files, schema.folders, schema.comments, schema.activity, schema.invitations, schema.projectMembers, schema.workflowProgress] as const)
+    for (const t of [schema.documents, schema.files, schema.folders, schema.comments, schema.activity, schema.invitations, schema.projectMembers, schema.workflowProgress, schema.taskTeams, schema.milestones, schema.deliverables, schema.responsibilityRows, schema.loinRows] as const)
       await tx.delete(t).where(eq(t.projectId, pid));
     await tx.delete(schema.projects).where(eq(schema.projects.id, pid));
   });
