@@ -9,6 +9,7 @@ import { api, canEdit, type Member } from "../lib/api";
 import { exportCsv, parseTabular } from "../lib/export";
 import { Handover, Risks } from "./Coordination";
 import type { ProjectData } from "./Project";
+import ProjectInfoUses from "./InfoUses";
 
 interface RespRow { id: string; item: string; stage: string; loin: string; cells: Record<string, string>; sortOrder: number }
 interface LoinRow { id: string; ref: string; element: string; ifcClass: string; milestoneId: string | null; purpose: string; geometry: string; alphanumeric: string; documentation: string }
@@ -427,7 +428,7 @@ function Loin({ d, role, call }: { d: DeliveryData; role: ProjectData["role"]; c
 
 // ---------------------------------------------------------------- page
 
-const SUBTABS = ["plan", "setup", "responsibility", "loin", "risks", "handover"];
+const SUBTABS = ["plan", "setup", "uses", "responsibility", "loin", "risks", "handover"];
 
 export default function Delivery({ data, sub }: { data: ProjectData; sub?: string }) {
   const { data: d, call } = useDelivery(data.project.id);
@@ -437,6 +438,7 @@ export default function Delivery({ data, sub }: { data: ProjectData; sub?: strin
     <>
       {tab === "plan" && <Planner d={d} project={data.project} members={data.members} role={data.role} call={call} />}
       {tab === "setup" && <Setup d={d} members={data.members} role={data.role} call={call} />}
+      {tab === "uses" && <ProjectInfoUses data={data} />}
       {tab === "responsibility" && <Responsibility d={d} project={data.project} role={data.role} call={call} />}
       {tab === "loin" && <Loin d={d} role={data.role} call={call} />}
       {tab === "risks" && <Risks data={data} />}

@@ -229,6 +229,14 @@ export const templates: DocTemplate[] = [
     ])],
   },
   {
+    id: "info-uses", standard: "iso19650", generatedFrom: { kind: "info-uses", hubPath: "delivery/uses", label: "Information uses" }, code: "IU", category: "Plans", title: "Information Uses Schedule",
+    purpose: "The purposes for which information is produced on this project, with priority, responsible task teams, deliverables and information need.",
+    clauseRefs: ["19650-1 §5.1", "19650-2 §5.1.2", "§5.3.2"],
+    sections: [projectInfo, sec("uses", "Information uses", "Generated from the project's selected information uses.", [
+      table("uses", "Information uses", ["Code", "Use", "Phases", "Priority", "Task teams", "Deliverables", "Information need", "Notes"], []),
+    ])],
+  },
+  {
     id: "qa-checklist", standard: "iso19650", code: "QA", category: "Quality", title: "Information Container QA Checklist",
     purpose: "QA check before a container moves from WIP to Shared.",
     clauseRefs: ["19650-2 §5.6.3"],

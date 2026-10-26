@@ -1,5 +1,6 @@
 import { and, asc, eq } from "drizzle-orm";
 import { Router } from "express";
+import { INFO_USES, useByCode } from "../../shared/data/infoUses";
 import { z } from "zod";
 import { templateById } from "../../shared/data/templates";
 import { analysePlan, planStats, qualityScore, type Deliverable } from "../../shared/delivery";
@@ -141,9 +142,27 @@ r.post(P + "/deliverables-import", requireProject("editor"), h(async (req, res) 
   res.status(201).json({ count: body.rows.length });
 }));
 
+// ---------- information uses (ISO 19650-1 §5.1) ----------
+r.get(P + "/info-uses", requireProject(), h(async (req, res) => {
+  const [p] = await db.select({ u: schema.projects.infoUses }).from(schema.projects).where(eq(schema.projects.id, req.params.projectId));
+  res.json({ uses: p?.u ?? [] });
+}));
+
+r.put(P + "/info-uses", requireProject("editor"), h(async (req, res) => {
+  const body = parse(z.object({ uses: z.array(z.object({
+    code: z.string().refine((c) => !!useByCode(c), "Unknown information use"), priority: z.enum(["High", "Medium", "Low"]).default("Medium"),
+    taskTeams: z.array(z.string()).max(50).default([]), notes: z.string().max(1000).default(""),
+  })).max(INFO_USES.length) }), req.body, res); if (!body) return;
+  const pid = req.params.projectId;
+  const uses = [...new Map(body.uses.map((x) => [x.code, x])).values()].sort((a, b) => a.code.localeCompare(b.code));
+  await db.update(schema.projects).set({ infoUses: uses, updatedAt: new Date() }).where(eq(schema.projects.id, pid));
+  await logActivity(pid, req.user!.id, "infouses.updated", `Updated information uses (${uses.length} selected)`, `/projects/${pid}/delivery/uses`);
+  res.json({ ok: true });
+}));
+
 // ---------- generate controlled documents from the planner ----------
 r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) => {
-  const body = parse(z.object({ kind: z.enum(["midp", "tidp", "resp-matrix", "risk-register"]), taskTeamId: z.string().optional() }), req.body, res); if (!body) return;
+  const body = parse(z.object({ kind: z.enum(["midp", "tidp", "resp-matrix", "risk-register", "info-uses"]), taskTeamId: z.string().optional() }), req.body, res); if (!body) return;
   const pid = req.params.projectId; const uid = req.user!.id;
   const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, pid));
   const b = await bundle(pid);
@@ -170,6 +189,10 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
     const risks = await db.select().from(schema.risks).where(eq(schema.risks.projectId, pid)).orderBy(asc(schema.risks.number));
     const names = new Map((await db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users)).map((u) => [u.id, u.name]));
     values.risks = risks.filter((x) => x.status !== "Closed").map((x) => [`R${String(x.number).padStart(2, "0")}`, x.title, String(x.likelihood), String(x.impact), String(x.likelihood * x.impact), x.mitigation, names.get(x.ownerId ?? "") ?? ""]);
+  } else if (body.kind === "info-uses") {
+    const uses = project.infoUses ?? [];
+    if (!uses.length) return res.status(400).json({ error: "Select the project's information uses first." });
+    values.uses = uses.map((x) => { const d = useByCode(x.code)!; return [d.code, d.name, d.phases.join(", "), x.priority, x.taskTeams.map((id) => team.get(id)?.name).filter(Boolean).join(", "), d.deliverables.join("; "), d.loin, x.notes]; });
   } else {
     // ISO 19650 detailed responsibility matrix: R/A/C/I per task team flattened into columns
     const nameOf = (code: string, row: typeof b.responsibility[number]) => Object.entries(row.cells).filter(([, v]) => v.includes(code)).map(([k]) => team.get(k)?.name).filter(Boolean).join(", ");
@@ -183,14 +206,14 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
   if (existing) {
     const lockedByOther = existing.lockedBy && existing.lockedBy !== uid && existing.lockedAt && now.getTime() - existing.lockedAt.getTime() < 90_000;
     if (lockedByOther) return res.status(423).json({ error: "Someone is editing that document right now. Try again shortly." });
-    const generatedKeys = body.kind === "midp" ? ["milestones", "plan"] : body.kind === "tidp" ? ["taskTeam", "containers"] : body.kind === "risk-register" ? ["risks"] : ["matrix"];
+    const generatedKeys = body.kind === "midp" ? ["milestones", "plan"] : body.kind === "tidp" ? ["taskTeam", "containers"] : body.kind === "risk-register" ? ["risks"] : body.kind === "info-uses" ? ["uses"] : ["matrix"];
     const merged = { ...(existing.values as object), ...Object.fromEntries(generatedKeys.map((k) => [k, values[k]])) };
     await db.update(schema.documents).set({ values: merged, updatedAt: now }).where(eq(schema.documents.id, existing.id));
     await logActivity(pid, uid, "document.generated", `Regenerated ${title} from the delivery planner`, `/projects/${pid}/documents/${existing.id}`);
     return res.json({ id: existing.id, updated: true });
   }
   const id = newId();
-  const container = `${project.code}-${(body.taskTeamId && team.get(body.taskTeamId)?.originatorCode) || "XXX"}-ZZ-ZZ-SH-Z-${({ midp: "0001", tidp: "0002", "resp-matrix": "0003", "risk-register": "0004" } as const)[body.kind]}`;
+  const container = `${project.code}-${(body.taskTeamId && team.get(body.taskTeamId)?.originatorCode) || "XXX"}-ZZ-ZZ-SH-Z-${({ midp: "0001", tidp: "0002", "resp-matrix": "0003", "risk-register": "0004", "info-uses": "0005" } as const)[body.kind]}`;
   await db.insert(schema.documents).values({ id, projectId: pid, templateId: t.id, title, containerName: container, revision: "P01.01", state: "WIP", suitability: "S0", authorId: uid, values, createdAt: now, updatedAt: now });
   await db.insert(schema.documentRevisions).values({ id: newId(), documentId: id, revision: "P01.01", state: "WIP", suitability: "S0", note: "Generated from the delivery planner", values, authorId: uid, createdAt: now });
   await logActivity(pid, uid, "document.generated", `Generated ${title} from the delivery planner`, `/projects/${pid}/documents/${id}`);

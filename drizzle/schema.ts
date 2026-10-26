@@ -45,6 +45,8 @@ export const projects = mysqlTable("projects", {
   stage: varchar("stage", { length: 60 }).notNull().default(""),
   standardId: ref("standard_id"),
   standardStage: varchar("standard_stage", { length: 80 }).notNull().default(""),
+  /** selected information uses (shared/data/infoUses.ts) */
+  infoUses: json<{ code: string; priority: string; taskTeams: string[]; notes: string }[]>("info_uses"),
   ownerId: ref("owner_id").notNull(),
   createdAt: created(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),

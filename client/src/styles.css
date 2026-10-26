@@ -353,3 +353,7 @@ kbd { font: 600 11px var(--font); border: 1px solid var(--border); border-bottom
   .rail-btn { font-size: 10px; } .rail-icon { width: 36px; }
 }
 @media (prefers-reduced-motion: reduce) { .start-card:hover { transform: none; } }
+button.chip { border: 1px solid transparent; cursor: pointer; }
+button.chip.on { background: var(--accent); color: #fff; }
+button.linklike { background: none; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+button.linklike:hover { color: var(--accent); }

@@ -1,12 +1,14 @@
 import { navigate } from "../App";
 import type { StandardId } from "../../../shared/data/types";
 import Library from "./Library";
+import { InfoUseLibrary } from "./InfoUses";
 import NamingTool from "./NamingTool";
 import References from "./References";
 import Templates from "./Templates";
 
 const SECTIONS: { key: string; label: string; only?: StandardId }[] = [
   { key: "library", label: "Library" }, { key: "templates", label: "Templates" },
+  { key: "uses", label: "Information uses", only: "iso19650" },
   { key: "naming", label: "Naming & status codes", only: "iso19650" }, { key: "references", label: "References" },
 ];
 
@@ -25,6 +27,7 @@ export default function Knowledge({ std, section, arg }: { std: StandardId; sect
       <div className="tabs">{sections.map((s) => <button key={s.key} className={cur === s.key ? "on" : ""} onClick={() => navigate(`/knowledge/${std}/${s.key}`)}>{s.label}</button>)}</div>
       {cur === "library" && <Library key={std + arg} std={std} initialTab={Number(arg) || 0} />}
       {cur === "templates" && <Templates std={std} focusId={arg} />}
+      {cur === "uses" && <InfoUseLibrary />}
       {cur === "naming" && <NamingTool />}
       {cur === "references" && <References std={std} />}
     </>
