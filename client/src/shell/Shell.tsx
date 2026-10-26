@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { initials, navigate, useSession } from "../App";
 import { glossary19650, process19650 } from "../../../shared/data/iso19650";
@@ -40,8 +41,8 @@ export function useCurrentProject(route: string, projects: Project[], uid: strin
 
 function PanelLink({ item, projectId, active, fav }: { item: NavItem; projectId?: string; active: boolean; fav?: boolean }) {
   return (
-    <a className={"panel-link" + (active ? " on" : "")} href={"#" + hrefFor(item, projectId)} title={item.hint}>
-      <Icon name={item.icon} size={16} /><span>{item.label}</span>{fav && <Icon name="star" size={12} className="fav-mark" />}
+    <a className={"panel-link" + (active ? " on" : "")} href={"#" + hrefFor(item, projectId)} title={item.hint && t(item.hint)}>
+      <Icon name={item.icon} size={16} /><span>{t(item.label)}</span>{fav && <Icon name="star" size={12} className="fav-mark" />}
     </a>
   );
 }
@@ -51,7 +52,7 @@ function Groups({ items, route, projectId, favs, empty }: { items: NavItem[]; ro
   if (!items.length) return <p className="panel-empty">{empty}</p>;
   return <>{groups.map((gname) => (
     <div key={gname} className="panel-group">
-      <div className="panel-group-title">{gname}</div>
+      <div className="panel-group-title">{t(gname)}</div>
       {items.filter((i) => i.group === gname).map((i) => {
         const href = hrefFor(i, projectId);
         return <PanelLink key={i.key} item={i} projectId={projectId} fav={favs.has(i.key)} active={route === href || (i.scope === "project" && route.startsWith(href + "/"))} />;
@@ -68,7 +69,7 @@ function Panel({ section, route, projects, project, onRole, onClose }: { section
   const favs = new Set(user.favourites ?? []);
   const recent = useRecent(user.id);
   const role = roleById(focus);
-  const filter = (items: NavItem[]) => items.filter((i) => (!q || (i.label + " " + i.group + " " + (i.hint ?? "")).toLowerCase().includes(q.toLowerCase())) && (!role || role.tools.includes(i.key)));
+  const filter = (items: NavItem[]) => items.filter((i) => (!q || (i.label + " " + i.group + " " + (i.hint ?? "") + " " + t(i.label) + " " + t(i.group)).toLowerCase().includes(q.toLowerCase())) && (!role || role.tools.includes(i.key)));
   const sec = RAIL.find((s) => s.id === section);
   const title = section === "help" ? "Help" : sec?.title ?? "";
 
@@ -76,11 +77,11 @@ function Panel({ section, route, projects, project, onRole, onClose }: { section
   if (section === "home") {
     const favItems = (user.favourites ?? []).map(pageByKey).filter((x): x is NavItem => !!x);
     body = <>
-      <a className={"panel-link" + (route === "/" ? " on" : "")} href="#/"><Icon name="grid" size={16} /><span>Dashboard</span></a>
-      <div className="panel-group"><div className="panel-group-title">Favourites</div>
+      <a className={"panel-link" + (route === "/" ? " on" : "")} href="#/"><Icon name="grid" size={16} /><span>{t("Dashboard")}</span></a>
+      <div className="panel-group"><div className="panel-group-title">{t("Favourites")}</div>
         {favItems.length ? filter(favItems).map((i) => <PanelLink key={i.key} item={i} projectId={project?.id} active={route === hrefFor(i, project?.id)} />)
           : <p className="panel-empty">Use the ☆ Favourite button at the top of any page to pin it here.</p>}</div>
-      <div className="panel-group"><div className="panel-group-title">Recently visited</div>
+      <div className="panel-group"><div className="panel-group-title">{t("Recently visited")}</div>
         {recent.length ? recent.slice(0, 6).map((r) => <a key={r.path} className="panel-link" href={"#" + r.path}><Icon name="clock" size={16} /><span>{r.label}</span></a>)
           : <p className="panel-empty">Pages you open appear here.</p>}</div>
       <button className="panel-cta" onClick={onRole}><Icon name="target" size={16} />{user.bimRole ? `Role: ${roleById(user.bimRole)?.title} — change` : "Set my role & suggested favourites"}</button>
@@ -113,12 +114,12 @@ function Panel({ section, route, projects, project, onRole, onClose }: { section
 
   return (
     <aside className="panel no-print" aria-label={title}>
-      <div className="panel-head"><h2>{title}</h2><button className="icon-btn panel-close" onClick={onClose} aria-label="Close panel"><Icon name="close" size={16} /></button></div>
+      <div className="panel-head"><h2>{t(title)}</h2><button className="icon-btn panel-close" onClick={onClose} aria-label="Close panel"><Icon name="close" size={16} /></button></div>
       {section !== "help" && <>
-        <label className="search-box"><Icon name="search" size={15} /><input placeholder="Filter pages" value={q} onChange={(e) => setQ(e.target.value)} /></label>
-        <div className="focus-row"><span>Focus</span>
+        <label className="search-box"><Icon name="search" size={15} /><input placeholder={t("Filter pages")} value={q} onChange={(e) => setQ(e.target.value)} /></label>
+        <div className="focus-row"><span>{t("Focus")}</span>
           <select value={focus} onChange={(e) => setFocus(e.target.value)} aria-label="Focus by role">
-            <option value="all">All roles</option>{BIM_ROLES.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
+            <option value="all">{t("All roles")}</option>{BIM_ROLES.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}
           </select></div>
       </>}
       <div className="panel-body">{body}</div>
@@ -285,13 +286,13 @@ function UserMenu({ onRole, theme, setTheme }: { onRole: () => void; theme: stri
       <button className="avatar-btn" onClick={() => setOpen(!open)} aria-label="Account menu"><span className="avatar">{initials(user.name)}</span><Icon name="chevron" size={14} /></button>
       {open && <div className="popover menu" onClick={() => setOpen(false)}>
         <div className="menu-head"><b>{user.name}</b><span className="tiny muted">{user.email}</span>{user.bimRole && <span className="chip">{roleById(user.bimRole)?.title}</span>}</div>
-        <a href="#/profile"><Icon name="user" size={16} />My profile</a>
-        <a href="#/my-day"><Icon name="calendar" size={16} />My Day</a>
-        <a href="#/billing"><Icon name="table" size={16} />Plan & billing</a>
-        {user.role === "admin" && <a href="#/admin"><Icon name="settings" size={16} />Admin console</a>}
-        <button onClick={onRole}><Icon name="target" size={16} />Set my role</button>
-        <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}><Icon name={theme === "dark" ? "sun" : "moon"} size={16} />{theme === "dark" ? "Light theme" : "Dark theme"}</button>
-        <button onClick={async () => { await api("/auth/logout", { body: {} }); setUser(null); navigate("/"); }}><Icon name="logout" size={16} />Sign out</button>
+        <a href="#/profile"><Icon name="user" size={16} />{t("My profile")}</a>
+        <a href="#/my-day"><Icon name="calendar" size={16} />{t("My Day")}</a>
+        <a href="#/billing"><Icon name="table" size={16} />{t("Plan & billing")}</a>
+        {user.role === "admin" && <a href="#/admin"><Icon name="settings" size={16} />{t("Admin console")}</a>}
+        <button onClick={onRole}><Icon name="target" size={16} />{t("Set my role")}</button>
+        <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}><Icon name={theme === "dark" ? "sun" : "moon"} size={16} />{t(theme === "dark" ? "Light theme" : "Dark theme")}</button>
+        <button onClick={async () => { await api("/auth/logout", { body: {} }); setUser(null); navigate("/"); }}><Icon name="logout" size={16} />{t("Sign out")}</button>
       </div>}
     </div>
   );
@@ -305,7 +306,7 @@ function FavouriteToggle({ item }: { item: NavItem }) {
       const favourites = on ? (user.favourites ?? []).filter((k) => k !== item.key) : [...(user.favourites ?? []), item.key];
       try { const r = await api<{ user: typeof user }>("/profile", { method: "PUT", body: { favourites } }); setUser(r.user); toast(on ? "Removed from Favourites" : "Added to Favourites"); }
       catch (e) { toast((e as Error).message, "error"); }
-    }}><Icon name="star" size={15} />{on ? "Favourite" : "Favourite"}</button>
+    }}><Icon name="star" size={15} />{t("Favourite")}</button>
   );
 }
 
@@ -358,21 +359,21 @@ export default function Shell({ route, children }: { route: string; children: Re
         <a className="brand-mark" href="#/"><span className="brand-logo"><Icon name="building" size={18} /></span><b>BIM Management</b></a>
         <span className="std-badge">{badge}</span>
         {user.organization && <span className="org-chip" title="Your organization">{user.organization}</span>}
-        <button className="global-search" onClick={() => setPalette(true)}><Icon name="search" size={16} /><span>Search sections, tools, topics…</span><kbd>Ctrl K</kbd></button>
+        <button className="global-search" onClick={() => setPalette(true)}><Icon name="search" size={16} /><span>{t("Search sections, tools, topics…")}</span><kbd>Ctrl K</kbd></button>
         <span className="appbar-spacer" />
-        <button className="ask-btn" onClick={() => setAsk(true)}><Icon name="sparkles" size={16} /><span>Ask AI</span></button>
+        <button className="ask-btn" onClick={() => setAsk(true)}><Icon name="sparkles" size={16} /><span>{t("Ask AI")}</span></button>
         <Bell />
         <UserMenu onRole={() => setRolePicker(true)} theme={theme} setTheme={setTheme} />
       </header>
       <nav className="rail no-print" aria-label="Sections">
         {RAIL.map((s) => (
           <button key={s.id} className={"rail-btn" + (section === s.id && panelOpen ? " on" : section === s.id ? " cur" : "")} onClick={() => openSection(s.id)}>
-            <span className="rail-icon"><Icon name={s.icon} size={18} /></span>{s.label}
+            <span className="rail-icon"><Icon name={s.icon} size={18} /></span>{t(s.label)}
           </button>
         ))}
         <span className="rail-spacer" />
-        <button className={"rail-btn" + (section === "help" && panelOpen ? " on" : "")} onClick={() => openSection("help")}><span className="rail-icon"><Icon name="help" size={18} /></span>Help</button>
-        <button className="rail-btn" onClick={() => setPanelOpen(!panelOpen)}><span className="rail-icon"><Icon name="panel" size={18} /></span>{panelOpen ? "Hide" : "Show"}</button>
+        <button className={"rail-btn" + (section === "help" && panelOpen ? " on" : "")} onClick={() => openSection("help")}><span className="rail-icon"><Icon name="help" size={18} /></span>{t("Help")}</button>
+        <button className="rail-btn" onClick={() => setPanelOpen(!panelOpen)}><span className="rail-icon"><Icon name="panel" size={18} /></span>{t(panelOpen ? "Hide" : "Show")}</button>
       </nav>
       {panelOpen && <Panel section={section} route={route} projects={projects} project={project} onRole={() => setRolePicker(true)} onClose={() => setPanelOpen(false)} />}
       <main className="stage">

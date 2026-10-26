@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { useCallback, useEffect, useState } from "react";
 import { initials, navigate, useSession } from "../App";
 import { StdBadge } from "../components/common";
@@ -43,9 +44,9 @@ export default function ProjectPage({ projectId, tab, sub }: { projectId: string
   return (
     <>
       <div className="page-head">
-        <div className="crumbs"><a href={`#/projects/${projectId}/overview`}>{project.code} · {project.name}</a>{page && <><span>›</span><span>{page.group}</span><span>›</span><b>{page.label}</b></>}</div>
-        <h1>{page?.label === "Summary" ? project.name : page?.label ?? project.name}</h1>
-        <div className="row">{project.standards.map((s) => <StdBadge key={s} std={s} />)}<span className="small muted">{[project.appointingParty, project.stage].filter(Boolean).join(" · ")}{project.appointingParty || project.stage ? " · " : ""}your role: {data.role}</span></div>
+        <div className="crumbs"><a href={`#/projects/${projectId}/overview`}>{project.code} · {project.name}</a>{page && <><span>›</span><span>{t(page.group)}</span><span>›</span><b>{t(page.label)}</b></>}</div>
+        <h1>{page?.label === "Summary" ? project.name : page ? t(page.label) : project.name}</h1>
+        <div className="row">{project.standards.map((s) => <StdBadge key={s} std={s} />)}<span className="small muted">{[project.appointingParty, project.stage].filter(Boolean).join(" · ")}{project.appointingParty || project.stage ? " · " : ""}{t("your role")}: {data.role}</span></div>
       </div>
       {tab === "overview" && <Overview data={data} />}
       {tab === "documents" && <Documents data={data} />}

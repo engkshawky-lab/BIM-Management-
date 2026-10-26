@@ -36,6 +36,7 @@ const registerSchema = z.object({
   password: z.string().min(8).max(200),
   organization: z.string().trim().max(160).default(""),
   jobTitle: z.string().trim().max(120).default(""),
+  locale: z.enum(["en", "ar"]).default("en"),
 });
 
 /** Turn any pending invitations for this email into memberships. */
@@ -56,7 +57,7 @@ r.post("/auth/register", h(async (req, res) => {
   // The first account on a fresh install becomes the platform admin.
   const [anyUser] = await db.select({ id: schema.users.id }).from(schema.users).limit(1);
   await db.insert(schema.users).values({
-    id, email: body.email, name: body.name, organization: body.organization, jobTitle: body.jobTitle,
+    id, email: body.email, name: body.name, organization: body.organization, jobTitle: body.jobTitle, locale: body.locale,
     passwordHash: await hashPassword(body.password), role: anyUser ? "user" : "admin", createdAt: new Date(),
   });
   await acceptInvitations(id, body.email);

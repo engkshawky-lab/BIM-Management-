@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { useEffect, useState, type FormEvent } from "react";
 import { initials, useSession } from "../App";
 import { api, fmtDate, type Project, type User } from "../lib/api";
@@ -35,34 +36,34 @@ export default function ProfilePage() {
       <div className="grid g2">
         <form className="card" onSubmit={save}>
           <h3 style={{ marginTop: 0 }}>Profile details</h3>
-          <label>Full name</label><input required minLength={2} value={f.name} onChange={set("name")} />
-          <label>Organization</label><input value={f.organization} onChange={set("organization")} />
-          <label>Job title</label><input value={f.jobTitle} onChange={set("jobTitle")} />
-          <label>Phone</label><input value={f.phone} onChange={set("phone")} />
-          <label>About / expertise</label><textarea value={f.bio} onChange={set("bio")} placeholder="e.g. ISO 19650 Practitioner, 10 years BIM coordination" />
-          <button className="primary" style={{ marginTop: 12 }}>Save profile</button>
+          <label>{t("Full name")}</label><input required minLength={2} value={f.name} onChange={set("name")} />
+          <label>{t("Organization")}</label><input value={f.organization} onChange={set("organization")} />
+          <label>{t("Job title")}</label><input value={f.jobTitle} onChange={set("jobTitle")} />
+          <label>{t("Phone")}</label><input value={f.phone} onChange={set("phone")} />
+          <label>{t("About / expertise")}</label><textarea value={f.bio} onChange={set("bio")} placeholder="e.g. ISO 19650 Practitioner, 10 years BIM coordination" />
+          <button className="primary" style={{ marginTop: 12 }}>{t("Save profile")}</button>
         </form>
         <div className="grid" style={{ alignContent: "start" }}>
           <form className="card" onSubmit={changePw}>
-            <h3 style={{ marginTop: 0 }}>Change password</h3>
-            <label>Current password</label><input type="password" required value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} autoComplete="current-password" />
-            <label>New password</label><input type="password" required minLength={8} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} autoComplete="new-password" />
-            <label>Confirm new password</label><input type="password" required value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} autoComplete="new-password" />
-            <button style={{ marginTop: 12 }}>Change password</button>
+            <h3 style={{ marginTop: 0 }}>{t("Change password")}</h3>
+            <label>{t("Current password")}</label><input type="password" required value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} autoComplete="current-password" />
+            <label>{t("New password")}</label><input type="password" required minLength={8} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} autoComplete="new-password" />
+            <label>{t("Confirm new password")}</label><input type="password" required value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} autoComplete="new-password" />
+            <button style={{ marginTop: 12 }}>{t("Change password")}</button>
           </form>
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>Email & language</h3>
-            <label>Email notifications</label>
+            <h3 style={{ marginTop: 0 }}>{t("Email & language")}</h3>
+            <label>{t("Email notifications")}</label>
             <select value={user.emailPref ?? "instant"} onChange={async (e) => { const r = await api<{ user: User }>("/profile", { method: "PUT", body: { emailPref: e.target.value } }); setUser(r.user); toast("Email preference saved"); }}>
               <option value="instant">Instant — one email per notification</option><option value="digest">Daily digest</option><option value="off">Off (in-app only)</option>
             </select>
-            <label>Language</label>
+            <label>{t("Language")}</label>
             <select value={user.locale ?? "en"} onChange={async (e) => { const r = await api<{ user: User }>("/profile", { method: "PUT", body: { locale: e.target.value } }); setUser(r.user); }}>
               <option value="en">English</option><option value="ar">العربية (Arabic)</option>
             </select>
           </div>
           <div className="card">
-            <h3 style={{ marginTop: 0 }}>My projects</h3>
+            <h3 style={{ marginTop: 0 }}>{t("My projects")}</h3>
             {projects.length === 0 && <p className="muted">You are not in any project yet.</p>}
             {projects.map((p) => (
               <a key={p.id} href={`#/projects/${p.id}`} className="list-item"><span><b>{p.code}</b> {p.name}</span><span className="badge">{p.role}</span></a>
