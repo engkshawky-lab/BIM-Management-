@@ -65,6 +65,13 @@ export const TEMPLATE_PAGES: NavItem[] = templates.map((t) =>
 export const RESOURCE_PAGES: NavItem[] = [
   g("r.19650", "ISO 19650 references", "/knowledge/iso19650/references", "library", "References"),
   g("r.42001", "ISO/IEC 42001 references", "/knowledge/iso42001/references", "library", "References"),
+  g("r.myday", "My Day", "/my-day", "calendar", "My work", "Everything waiting on you"),
+  g("r.portfolio", "Portfolio dashboard", "/portfolio", "grid", "My work", "Health across your projects"),
+  g("r.fee", "BIM fee estimator", "/tools/fee", "table", "Tools"),
+  g("r.carbon", "Embodied carbon (6D)", "/tools/carbon", "layers", "Tools"),
+  g("r.maturity", "BIM maturity assessment", "/tools/maturity", "check", "Tools"),
+  g("r.dt", "Digital twin readiness", "/tools/dt", "check", "Tools"),
+  g("r.scan", "Scan-to-BIM readiness", "/tools/scan", "check", "Tools"),
   g("r.standards", "Client standards", "/standards", "book", "Client requirements"),
   g("r.profile", "My profile", "/profile", "user", "Account"),
 ];
@@ -85,7 +92,7 @@ export const RAIL: RailSection[] = [
 export function sectionFor(route: string): string {
   if (route.startsWith("/projects")) return "projects";
   if (/^\/knowledge\/[^/]+\/templates/.test(route)) return "documents";
-  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile")) return "resources";
+  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|standards)/.test(route)) return "resources";
   if (route.startsWith("/knowledge")) return "standards";
   return "home";
 }

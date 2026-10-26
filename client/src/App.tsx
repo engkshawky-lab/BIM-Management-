@@ -1,4 +1,5 @@
 import ClientStandards from "./pages/ClientStandards";
+import { MyDay, Portfolio, Tools } from "./pages/Dashboards";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { api, type User } from "./lib/api";
 import Shell from "./shell/Shell";
@@ -50,6 +51,9 @@ export default function App() {
   // legacy links into the separate knowledge pages
   else if (["library", "templates"].includes(parts[0])) view = <Knowledge std={parts[1] === "iso42001" ? "iso42001" : "iso19650"} section={parts[0]} />;
   else if (["naming", "references"].includes(parts[0])) view = <Knowledge std="iso19650" section={parts[0]} />;
+  else if (parts[0] === "my-day") view = <MyDay />;
+  else if (parts[0] === "portfolio") view = <Portfolio />;
+  else if (parts[0] === "tools") view = <Tools tool={parts[1]} />;
   else if (parts[0] === "standards") view = <ClientStandards id={parts[1]} />;
   else if (parts[0] === "profile") view = <ProfilePage />;
   else view = <Home />;
