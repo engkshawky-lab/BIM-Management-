@@ -14,6 +14,7 @@ import coordination from "./routes/coordination";
 import registers from "./routes/registers";
 import reviews from "./routes/reviews";
 import meetings from "./routes/meetings";
+import traceability from "./routes/traceability";
 import standards from "./routes/standards";
 
 const app = express();
@@ -32,7 +33,7 @@ app.use("/api", (req, res, next) => {
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api", auth);
-app.use("/api", requireUser, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, standards, ai);
+app.use("/api", requireUser, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, standards, ai);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: NextFunction) => {

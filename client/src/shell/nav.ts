@@ -21,10 +21,13 @@ const p = (key: string, label: string, path: string, icon: IconName, group: stri
 export const PROJECT_PAGES: NavItem[] = [
   p("p.summary", "Summary", "overview", "grid", "Overview"),
   p("p.activity", "Activity", "activity", "activity", "Overview"),
+  p("p.assistant", "Project assistant (AI)", "assistant", "sparkles", "Overview", "Ask questions answered from project records"),
   p("p.documents", "Documents", "documents", "file", "Information (CDE)", "Controlled documents, reviews, revisions"),
   p("p.files", "Files", "files", "folder", "Information (CDE)", "WIP · Shared · Published · Archived"),
   p("p.plan", "MIDP / TIDP planner", "delivery/plan", "calendar", "Delivery", "Information containers, Gantt, change impact"),
   p("p.setup", "Teams & milestones", "delivery/setup", "users", "Delivery"),
+  p("p.trace", "Requirements traceability", "traceability", "flow", "Delivery", "EIR → BEP → MIDP → delivered"),
+  p("p.contract", "Appointment review (AI)", "contract", "file", "Delivery", "Check contracts for ISO 19650 obligations"),
   p("p.uses", "Information uses", "delivery/uses", "target", "Delivery", "Why information is produced — drives LOIN & MIDP"),
   p("p.raci", "Responsibility matrix", "delivery/responsibility", "table", "Delivery", "RACI per task team"),
   p("p.mrm", "Model responsibility (MRM)", "delivery/mrm", "grid", "Delivery", "Who models each element, LOD per milestone"),

@@ -166,11 +166,12 @@ function CommandPalette({ projects, project, onClose }: { projects: Project[]; p
 
 // ---------------------------------------------------------------- Ask AI
 
-function AskAi({ onClose }: { onClose: () => void }) {
+function AskAi({ onClose, route }: { onClose: () => void; route: string }) {
+  const projectId = /^\/projects\/([0-9a-f-]{36})/.exec(route)?.[1];
   const [q, setQ] = useState("");
   const [enabled, setEnabled] = useState<boolean | null>(null);
   useEffect(() => { api<{ enabled: boolean }>("/ai/status").then((r) => setEnabled(r.enabled)).catch(() => setEnabled(false)); }, []);
-  // Until the project assistant ships, answer from the knowledge base: clauses, glossary and templates.
+  // Quick answers from the knowledge base; project questions go to the project assistant.
   const hits = useMemo(() => {
     const t = q.trim().toLowerCase();
     if (t.length < 2) return [];
@@ -186,7 +187,8 @@ function AskAi({ onClose }: { onClose: () => void }) {
       <aside className="drawer" onClick={(e) => e.stopPropagation()} aria-label="Ask AI">
         <div className="panel-head"><h2><Icon name="sparkles" size={18} /> Ask</h2><button className="icon-btn" onClick={onClose} aria-label="Close"><Icon name="close" size={16} /></button></div>
         <label className="search-box"><Icon name="search" size={15} /><input autoFocus placeholder="e.g. TIDP, acceptance criteria, impact assessment" value={q} onChange={(e) => setQ(e.target.value)} /></label>
-        <p className="tiny muted">{enabled ? "AI drafting is enabled inside documents (✨ Draft with AI). Answers below come from the built-in ISO knowledge base." : "Answers come from the built-in ISO knowledge base. Conversational AI answers over your project documents arrive with the AI assistant (needs CLAUDE_API_KEY on the server)."}</p>
+        {projectId && enabled && <a className="btn primary" href={`#/projects/${projectId}/assistant`} onClick={onClose} style={{ margin: "4px 0 8px", display: "inline-block" }}>✨ Ask the project assistant about this project →</a>}
+        <p className="tiny muted">{enabled ? "Results below come from the built-in ISO knowledge base. Open a project to ask the AI assistant questions answered from its records." : "Results come from the built-in ISO knowledge base. The AI project assistant needs CLAUDE_API_KEY on the server."}</p>
         <div className="drawer-results">
           {hits.map((h) => <a key={h.title + h.href} className="answer" href={"#" + h.href} onClick={onClose}><b>{h.title}</b><span>{h.text}</span></a>)}
           {q.trim().length >= 2 && !hits.length && <p className="panel-empty">No match in the knowledge base. Try another term.</p>}
@@ -361,7 +363,7 @@ export default function Shell({ route, children }: { route: string; children: Re
         {children}
       </main>
       {palette && <CommandPalette projects={projects} project={project} onClose={() => setPalette(false)} />}
-      {ask && <AskAi onClose={() => setAsk(false)} />}
+      {ask && <AskAi route={route} onClose={() => setAsk(false)} />}
       {rolePicker && <RolePicker onClose={() => { setRolePicker(false); store.set(`bim:role-skipped:${user.id}`, true); }} />}
     </div>
   );

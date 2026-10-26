@@ -402,3 +402,16 @@ export const meetings = mysqlTable("meetings", {
   createdAt: created(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 }, (t) => [index("meetings_project").on(t.projectId)]);
+
+/** Requirements traceability: EIR/AIR requirement -> BEP response -> MIDP containers -> delivery. */
+export const requirements = mysqlTable("requirements", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  ref: varchar("ref", { length: 40 }).notNull(),
+  text: varchar("text", { length: 2000 }).notNull(),
+  source: varchar("source", { length: 160 }).notNull().default(""),
+  category: varchar("category", { length: 60 }).notNull().default(""),
+  response: varchar("response", { length: 2000 }).notNull().default(""),
+  deliverableIds: json<string[]>("deliverable_ids").notNull(),
+  createdAt: created(),
+}, (t) => [index("requirements_project").on(t.projectId)]);

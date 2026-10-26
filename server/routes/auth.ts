@@ -1,3 +1,4 @@
+import { AiError } from "../claude";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
@@ -5,7 +6,11 @@ import { logActivity } from "../access";
 import { checkPassword, endSession, hashPassword, requireUser, startSession, toPublic } from "../auth";
 import { db, newId, schema } from "../db";
 
-export const h = (fn: (req: Request, res: Response) => Promise<unknown>) => (req: Request, res: Response, next: NextFunction) => fn(req, res).catch(next);
+export const h = (fn: (req: Request, res: Response) => Promise<unknown>) => (req: Request, res: Response, next: NextFunction) => fn(req, res).catch((e) => {
+  // AI failures carry their own status; unreadable model JSON is a bad gateway, not a server bug
+  if (e instanceof AiError) return res.status(e.status).json({ error: e.message });
+  next(e);
+});
 
 export function parse<T extends z.ZodType>(s: T, data: unknown, res: Response): z.infer<T> | undefined {
   const r = s.safeParse(data);

@@ -15,6 +15,8 @@ import Coordination from "./Coordination";
 import AssetTags from "./AssetTags";
 import ModelReviews from "./ModelReviews";
 import Meetings from "./Meetings";
+import Traceability from "./Traceability";
+import { ContractReview, ProjectAssistant } from "./Assistant";
 
 export interface ProjectData { project: Project; members: Member[]; invitations: Invitation[]; role: Project["role"] }
 
@@ -50,6 +52,9 @@ export default function ProjectPage({ projectId, tab, sub }: { projectId: string
       {tab === "validation" && <Validation data={data} sub={sub} />}
       {tab === "coordination" && <Coordination data={data} sub={sub} />}
       {tab === "tags" && <AssetTags data={data} />}
+      {tab === "assistant" && <ProjectAssistant data={data} />}
+      {tab === "contract" && <ContractReview data={data} />}
+      {tab === "traceability" && <Traceability data={data} />}
       {tab === "meetings" && <Meetings data={data} sub={sub} />}
       {tab === "reviews" && <ModelReviews data={data} sub={sub} />}
       {tab === "quality" && <Quality data={data} />}
