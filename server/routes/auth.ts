@@ -1,4 +1,5 @@
 import { AiError } from "../claude";
+import { LimitError } from "../billing";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import crypto from "crypto";
@@ -11,6 +12,7 @@ import { db, newId, schema } from "../db";
 export const h = (fn: (req: Request, res: Response) => Promise<unknown>) => (req: Request, res: Response, next: NextFunction) => fn(req, res).catch((e) => {
   // AI failures carry their own status; unreadable model JSON is a bad gateway, not a server bug
   if (e instanceof AiError) return res.status(e.status).json({ error: e.message });
+  if (e instanceof LimitError) return res.status(402).json({ error: e.message });
   next(e);
 });
 

@@ -1,3 +1,4 @@
+import { assertCanAddMember, assertCanCreateProject } from "../billing";
 import { and, count, desc, eq, inArray, isNull } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
@@ -39,6 +40,7 @@ r.get("/projects", h(async (req, res) => {
 r.post("/projects", h(async (req, res) => {
   const body = parse(projectSchema, req.body, res); if (!body) return;
   const id = newId(); const now = new Date(); const uid = req.user!.id;
+  await assertCanCreateProject(uid);
   await db.transaction(async (tx) => {
     await tx.insert(schema.projects).values({ id, ...body, ownerId: uid, createdAt: now, updatedAt: now });
     await tx.insert(schema.projectMembers).values({ projectId: id, userId: uid, role: "owner", joinedAt: now });
@@ -88,6 +90,7 @@ const roleSchema = z.enum(["viewer", "editor", "manager"]);
 r.post("/projects/:projectId/members", requireProject("manager"), h(async (req, res) => {
   const body = parse(z.object({ email: z.string().trim().toLowerCase().email(), role: roleSchema }), req.body, res); if (!body) return;
   const pid = req.params.projectId;
+  await assertCanAddMember(pid);
   const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, pid));
   const [user] = await db.select().from(schema.users).where(eq(schema.users.email, body.email));
   if (user) {

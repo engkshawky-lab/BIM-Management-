@@ -287,6 +287,7 @@ function UserMenu({ onRole, theme, setTheme }: { onRole: () => void; theme: stri
         <div className="menu-head"><b>{user.name}</b><span className="tiny muted">{user.email}</span>{user.bimRole && <span className="chip">{roleById(user.bimRole)?.title}</span>}</div>
         <a href="#/profile"><Icon name="user" size={16} />My profile</a>
         <a href="#/my-day"><Icon name="calendar" size={16} />My Day</a>
+        <a href="#/billing"><Icon name="table" size={16} />Plan & billing</a>
         {user.role === "admin" && <a href="#/admin"><Icon name="settings" size={16} />Admin console</a>}
         <button onClick={onRole}><Icon name="target" size={16} />Set my role</button>
         <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}><Icon name={theme === "dark" ? "sun" : "moon"} size={16} />{theme === "dark" ? "Light theme" : "Dark theme"}</button>

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "../App";
 import { api, fmtDate } from "../lib/api";
+import { PromoCodes } from "./Billing";
 
-interface UserRow { id: string; name: string; email: string; organization: string; role: string; disabled: boolean; projects: number; createdAt: string; lastLoginAt: string | null }
+interface UserRow { id: string; name: string; email: string; organization: string; role: string; disabled: boolean; projects: number; createdAt: string; lastLoginAt: string | null; plan: string; renewsAt: string | null }
 interface Fb { id: string; kind: string; message: string; page: string; status: string; name: string; email: string; createdAt: string }
 interface Act { id: string; project: string; user: string; summary: string; link: string; createdAt: string }
 interface Branding { orgName: string; color: string; logo: string; footer: string }
-const TABS = [["overview", "Overview"], ["users", "Users"], ["activity", "Activity log"], ["feedback", "Feedback"], ["branding", "Branding"]] as const;
+const TABS = [["overview", "Overview"], ["users", "Users"], ["codes", "Plans & codes"], ["activity", "Activity log"], ["feedback", "Feedback"], ["branding", "Branding"]] as const;
 
 function Overview() {
   const { toast } = useSession();
@@ -36,12 +37,14 @@ function Users() {
       <input placeholder="Search users…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 320, marginBottom: 10 }} />
       {link && <div className="banner info">One-time reset link for <b>{link.email}</b> (valid 60 minutes) — send it to them securely: <code style={{ wordBreak: "break-all" }}>{link.link}</code> <button className="small" onClick={() => navigator.clipboard?.writeText(link.link)}>Copy</button></div>}
       <div className="table-wrap"><table className="data">
-        <thead><tr><th>Name</th><th>Email</th><th>Organisation</th><th>Projects</th><th>Joined</th><th>Last sign-in</th><th>Role</th><th>Status</th><th /></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Organisation</th><th>Projects</th><th>Joined</th><th>Last sign-in</th><th>Role</th><th>Plan</th><th>Status</th><th /></tr></thead>
         <tbody>{list.map((u) => (
           <tr key={u.id} style={u.disabled ? { opacity: 0.6 } : undefined}>
             <td>{u.name}</td><td className="small">{u.email}</td><td className="small">{u.organization}</td><td>{u.projects}</td>
             <td className="small">{fmtDate(u.createdAt)}</td><td className="small">{u.lastLoginAt ? fmtDate(u.lastLoginAt) : "—"}</td>
             <td><select value={u.role} disabled={u.id === user.id} onChange={(e) => upd(u.id, { role: e.target.value })}><option value="user">User</option><option value="recruiter">Recruiter</option><option value="admin">Admin</option></select></td>
+            <td><select value={u.plan} onChange={async (e) => { const plan = e.target.value; const m = plan === "free" ? null : prompt("For how many months? (leave empty for no end date)", "12"); if (m === null && plan !== "free") return; try { await api(`/admin/users/${u.id}/plan`, { method: "PUT", body: { plan, months: m ? Number(m) : null } }); load(); } catch (err) { toast((err as Error).message, "error"); } }}>
+              <option value="free">Free</option><option value="pro">Professional</option><option value="enterprise">Enterprise</option></select>{u.renewsAt && <div className="tiny muted">until {fmtDate(u.renewsAt)}</div>}</td>
             <td>{u.id !== user.id && <button className="small" onClick={() => upd(u.id, { disabled: !u.disabled })}>{u.disabled ? "Enable" : "Disable"}</button>}</td>
             <td><button className="small" onClick={async () => { const r = await api<{ link: string }>(`/admin/users/${u.id}/reset-link`, { body: {} }); setLink({ email: u.email, link: r.link }); }}>Reset link</button></td>
           </tr>
@@ -95,7 +98,7 @@ export default function Admin({ tab }: { tab?: string }) {
     <>
       <div className="page-head"><h1>Admin console</h1></div>
       <div className="tabs">{TABS.map(([k, l]) => <a key={k} className={"tab" + (cur === k ? " on" : "")} href={`#/admin/${k}`}>{l}</a>)}</div>
-      {cur === "overview" ? <Overview /> : cur === "users" ? <Users /> : cur === "activity" ? <Activity /> : cur === "feedback" ? <Feedback /> : <BrandingTab />}
+      {cur === "overview" ? <Overview /> : cur === "users" ? <Users /> : cur === "codes" ? <PromoCodes /> : cur === "activity" ? <Activity /> : cur === "feedback" ? <Feedback /> : <BrandingTab />}
     </>
   );
 }

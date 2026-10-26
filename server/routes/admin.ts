@@ -35,7 +35,8 @@ r.get("/admin/users", requireAdmin, h(async (_req, res) => {
   const users = await db.select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, organization: schema.users.organization, role: schema.users.role, disabled: schema.users.disabled, createdAt: schema.users.createdAt, lastLoginAt: schema.users.lastLoginAt }).from(schema.users).orderBy(desc(schema.users.createdAt));
   const memberships = await db.select({ userId: schema.projectMembers.userId, n: count() }).from(schema.projectMembers).groupBy(schema.projectMembers.userId);
   const m = new Map(memberships.map((x) => [x.userId, Number(x.n)]));
-  res.json({ users: users.map((u) => ({ ...u, disabled: !!u.disabled, projects: m.get(u.id) ?? 0 })) });
+  const subs = new Map((await db.select().from(schema.subscriptions)).map((s) => [s.userId, s]));
+  res.json({ users: users.map((u) => ({ ...u, disabled: !!u.disabled, projects: m.get(u.id) ?? 0, plan: subs.get(u.id)?.plan ?? "free", renewsAt: subs.get(u.id)?.renewsAt ?? null })) });
 }));
 
 r.put("/admin/users/:id", requireAdmin, h(async (req, res) => {

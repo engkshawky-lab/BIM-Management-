@@ -30,6 +30,7 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-}
+      BILLING: ${BILLING:-off}
     volumes: [files:/data]
 volumes:
   db:

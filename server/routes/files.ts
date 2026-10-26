@@ -1,3 +1,4 @@
+import { assertStorage } from "../billing";
 import { and, asc, desc, eq, max } from "drizzle-orm";
 import { Router } from "express";
 import fs from "fs";
@@ -100,6 +101,7 @@ r.post(P + "/files", requireProject("editor"), upload.single("file"), h(async (r
   const pid = req.params.projectId;
   const blob = req.file;
   if (!blob) return res.status(400).json({ error: "No file uploaded." });
+  try { await assertStorage(pid, blob.size); } catch (e) { fs.rm(blob.path, () => undefined); throw e; }
   const body = parse(uploadMeta, req.body, res);
   if (!body) { fs.rm(blob.path, () => undefined); return; }
   const [folder] = await db.select().from(schema.folders).where(and(eq(schema.folders.id, body.folderId), eq(schema.folders.projectId, pid)));

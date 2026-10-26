@@ -558,3 +558,28 @@ export const estimates = mysqlTable("estimates", {
   createdBy: ref("created_by").notNull(),
   createdAt: created(),
 }, (t) => [index("estimates_project").on(t.projectId)]);
+
+export const subscriptions = mysqlTable("subscriptions", {
+  userId: varchar("user_id", { length: 36 }).primaryKey(),
+  plan: varchar("plan", { length: 16 }).notNull().default("free"),
+  status: varchar("status", { length: 16 }).notNull().default("active"),
+  renewsAt: datetime("renews_at", { mode: "date" }),
+  source: varchar("source", { length: 60 }).notNull().default(""),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+});
+
+export const promoCodes = mysqlTable("promo_codes", {
+  code: varchar("code", { length: 40 }).primaryKey(),
+  plan: varchar("plan", { length: 16 }).notNull(),
+  months: int("months").notNull(),
+  maxUses: int("max_uses").notNull().default(1),
+  uses: int("uses").notNull().default(0),
+  expiresAt: datetime("expires_at", { mode: "date" }),
+  createdAt: created(),
+});
+
+export const aiUsage = mysqlTable("ai_usage", {
+  userId: varchar("user_id", { length: 36 }).notNull(),
+  month: varchar("month", { length: 7 }).notNull(),
+  count: int("count").notNull().default(0),
+}, (t) => [primaryKey({ columns: [t.userId, t.month] })]);
