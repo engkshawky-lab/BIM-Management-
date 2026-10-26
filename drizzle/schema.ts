@@ -565,6 +565,8 @@ export const subscriptions = mysqlTable("subscriptions", {
   status: varchar("status", { length: 16 }).notNull().default("active"),
   renewsAt: datetime("renews_at", { mode: "date" }),
   source: varchar("source", { length: 60 }).notNull().default(""),
+  stripeCustomerId: varchar("stripe_customer_id", { length: 64 }),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 64 }),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 });
 

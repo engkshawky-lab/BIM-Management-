@@ -12,12 +12,18 @@ function Meter({ label, used, max, unit = "" }: { label: string; used: number; m
   return <div className="bar-row"><span className="small">{label}</span><span className="bar"><span style={{ width: `${pct}%`, background: pct >= 90 ? "var(--danger)" : undefined }} /></span><b className="small nowrap">{used}{unit} / {unlimited(max) ? "∞" : `${max}${unit}`}</b></div>;
 }
 
-export default function Billing() {
+export default function Billing({ paid = false }: { paid?: boolean }) {
   const { toast } = useSession();
   const [b, setB] = useState<B | null>(null);
   const [code, setCode] = useState("");
+  const [pay, setPay] = useState<{ enabled: boolean; plans: string[] }>({ enabled: false, plans: [] });
   const load = () => api<B>("/billing").then(setB);
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load(); api<typeof pay>("/billing/payments").then(setPay).catch(() => undefined);
+    // back from Stripe Checkout: the webhook updates the plan within a few seconds
+    if (paid) { toast("Payment received — your plan will update in a moment"); const t = setTimeout(load, 4000); return () => clearTimeout(t); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const go = async (path: string, body: object = {}) => { try { const r = await api<{ url: string }>(path, { body }); location.href = r.url; } catch (e) { toast((e as Error).message, "error"); } };
   if (!b) return <p className="muted">Loading…</p>;
   return (
     <>
@@ -35,7 +41,8 @@ export default function Billing() {
           <h3 style={{ marginTop: 0 }}>Redeem a code</h3>
           <form className="row" onSubmit={async (e) => { e.preventDefault(); try { await api("/billing/redeem", { body: { code } }); toast("Code redeemed — plan updated"); setCode(""); load(); } catch (err) { toast((err as Error).message, "error"); } }}>
             <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. BIM-1A2B3C4D" style={{ maxWidth: 240 }} className="mono" /><button className="primary" disabled={code.length < 3}>Redeem</button></form>
-          <p className="small muted">To upgrade, contact your portal administrator — they can assign a plan or issue a code.</p>
+          {pay.enabled ? <p className="small muted">Upgrade online with a card below{b.plan.source === "stripe" ? ", or manage your subscription and invoices." : "."}</p> : <p className="small muted">To upgrade, contact your portal administrator — they can assign a plan or issue a code.</p>}
+          {pay.enabled && b.plan.source === "stripe" && <button onClick={() => go("/billing/portal")}>Manage subscription & invoices</button>}
         </div>
       </div>
       <div className="grid g3" style={{ marginTop: 14 }}>{b.plans.map((p) => (
@@ -44,6 +51,7 @@ export default function Billing() {
           <p className="small muted">{p.price}</p>
           <ul className="small">{p.features.map((f) => <li key={f}>{f}</li>)}
             <li>{unlimited(p.projects) ? "Unlimited" : p.projects} projects · {unlimited(p.members) ? "unlimited" : p.members} members each</li><li>{p.storageGb} GB storage · {unlimited(p.aiPerMonth) ? "unlimited" : p.aiPerMonth} AI requests / month</li></ul>
+          {pay.enabled && pay.plans.includes(p.id) && p.id !== b.plan.id && <button className="primary" onClick={() => go("/billing/checkout", { plan: p.id })}>Upgrade to {p.name}</button>}
         </div>
       ))}</div>
     </>

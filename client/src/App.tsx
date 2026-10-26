@@ -61,7 +61,7 @@ export default function App() {
   // legacy links into the separate knowledge pages
   else if (["library", "templates"].includes(parts[0])) view = <Knowledge std={parts[1] === "iso42001" ? "iso42001" : "iso19650"} section={parts[0]} />;
   else if (["naming", "references"].includes(parts[0])) view = <Knowledge std="iso19650" section={parts[0]} />;
-  else if (parts[0] === "billing") view = <Billing />;
+  else if (parts[0] === "billing") view = <Billing key={parts[1] ?? ""} paid={parts[1] === "paid"} />;
   else if (parts[0] === "talent") view = parts[1] === "me" ? <MyTalentProfile /> : <TalentSearch />;
   else if (parts[0] === "admin") view = <Admin tab={parts[1]} />;
   else if (parts[0] === "learn") view = <Learn />;
