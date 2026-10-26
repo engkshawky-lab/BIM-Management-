@@ -96,3 +96,114 @@ export function ContractReview({ data }: { data: ProjectData }) {
     </>
   );
 }
+
+// ---------------------------------------------------------------- clash triage
+
+interface Triage { number: number; priority: string; taskTeamId: string | null; team: string; action: string; falsePositive: boolean; reason: string }
+
+/** AI suggestions for open clash issues; nothing changes until the reviewer accepts the selected rows. */
+export function ClashTriage({ projectId, onClose, onApplied }: { projectId: string; onClose: () => void; onApplied: () => void }) {
+  const { toast } = useSession();
+  const [items, setItems] = useState<(Triage & { on: boolean })[] | null>(null);
+  const [busy, setBusy] = useState(true);
+  useEffect(() => {
+    api<{ items: Triage[] }>(`/projects/${projectId}/issues/ai-triage`, { body: {} })
+      .then((r) => setItems(r.items.map((x) => ({ ...x, on: true })))).catch((e) => { toast((e as Error).message, "error"); onClose(); }).finally(() => setBusy(false));
+  }, [projectId]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="modal-bg" onClick={onClose}><div className="modal wide" onClick={(e) => e.stopPropagation()}>
+      <h2 style={{ marginTop: 0 }}>✨ AI clash triage</h2>
+      <p className="small muted">Suggested priority, responsible task team and action for each open clash. Review, untick anything you disagree with, then apply — a comment records each accepted suggestion.</p>
+      {busy ? <p className="muted">Analysing clashes… (up to a minute)</p> : items && <>
+        <div className="table-wrap" style={{ maxHeight: 420, overflow: "auto" }}><table className="data">
+          <thead><tr><th /><th>#</th><th>Priority</th><th>Team</th><th>Action</th><th>False positive?</th></tr></thead>
+          <tbody>{items.map((x, i) => <tr key={x.number} style={x.on ? undefined : { opacity: 0.5 }}>
+            <td><input type="checkbox" checked={x.on} onChange={() => setItems(items.map((y, j) => (j === i ? { ...y, on: !y.on } : y)))} /></td>
+            <td className="mono small">{x.number}</td><td><b>{x.priority}</b></td><td className="small">{x.team || "—"}</td>
+            <td className="small">{x.action}<div className="tiny muted">{x.reason}</div></td><td>{x.falsePositive ? "⚠ likely" : ""}</td>
+          </tr>)}</tbody>
+        </table></div>
+        <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button>
+          <button className="primary" disabled={!items.some((x) => x.on)} onClick={async () => { const r = await api<{ updated: number }>(`/projects/${projectId}/issues/ai-triage/apply`, { body: { items: items.filter((x) => x.on) } }); toast(`${r.updated} issues updated`); onApplied(); onClose(); }}>Apply {items.filter((x) => x.on).length} suggestions</button></div>
+      </>}
+    </div></div>
+  );
+}
+
+// ---------------------------------------------------------------- research notebook
+
+interface NbSummary { id: string; title: string; sources: number; notes: number; updatedAt: string }
+interface Nb { id: string; title: string; sources: { id: string; kind: string; name: string; chars: number }[]; notes: { id: string; question: string; answer: string; at: string }[] }
+
+export function Notebooks({ data, sub }: { data: ProjectData; sub?: string }) {
+  const { toast } = useSession();
+  const pid = data.project.id;
+  const [list, setList] = useState<NbSummary[] | null>(null);
+  const [title, setTitle] = useState("");
+  useEffect(() => { if (!sub) api<{ notebooks: NbSummary[] }>(`/projects/${pid}/notebooks`).then((r) => setList(r.notebooks)); }, [pid, sub]);
+  if (sub) return <Notebook data={data} id={sub} />;
+  if (!list) return <p className="muted">Loading…</p>;
+  return (
+    <>
+      <p className="muted">Collect sources — pasted text, project documents, PDFs from the project files — then ask questions to summarise, compare or check them. Answers cite the sources and are saved as notes.</p>
+      {canEdit(data.role) && <form className="card row" style={{ marginBottom: 12 }} onSubmit={async (e) => { e.preventDefault(); try { const r = await api<{ id: string }>(`/projects/${pid}/notebooks`, { body: { title } }); location.hash = `#/projects/${pid}/notebook/${r.id}`; } catch (err) { toast((err as Error).message, "error"); } }}>
+        <input required placeholder="Notebook title, e.g. Compare client EIRs" value={title} onChange={(e) => setTitle(e.target.value)} style={{ maxWidth: 360 }} /><button className="primary">New notebook</button></form>}
+      <div className="grid g3">{list.map((n) => <a key={n.id} className="card project-card" href={`#/projects/${pid}/notebook/${n.id}`}><h3 style={{ marginTop: 0 }}>{n.title}</h3><p className="small muted">{n.sources} sources · {n.notes} notes</p></a>)}</div>
+      {!list.length && <p className="muted">No notebooks yet.</p>}
+    </>
+  );
+}
+
+function Notebook({ data, id }: { data: ProjectData; id: string }) {
+  const { toast } = useSession();
+  const pid = data.project.id;
+  const editor = canEdit(data.role);
+  const [nb, setNb] = useState<Nb | null>(null);
+  const [docs, setDocs] = useState<{ id: string; title: string; containerName: string }[]>([]);
+  const [files, setFiles] = useState<{ id: string; name: string }[]>([]);
+  const [paste, setPaste] = useState({ name: "", text: "" });
+  const [q, setQ] = useState(""); const [busy, setBusy] = useState(false);
+  const load = () => api<{ notebook: Nb }>(`/projects/${pid}/notebooks/${id}`).then((r) => setNb(r.notebook));
+  useEffect(() => {
+    load();
+    api<{ documents: { id: string; title: string; containerName: string }[] }>(`/projects/${pid}/documents`).then((r) => setDocs(r.documents));
+    api<{ files: { id: string; name: string }[] }>(`/projects/${pid}/files?all=1`).then((r) => setFiles(r.files ?? [])).catch(() => undefined);
+  }, [pid, id]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!nb) return <p className="muted">Loading…</p>;
+  const put = async (body: object) => { try { await api(`/projects/${pid}/notebooks/${id}`, { method: "PUT", body }); load(); } catch (e) { toast((e as Error).message, "error"); } };
+  return (
+    <>
+      <a className="small" href={`#/projects/${pid}/notebook`}>← All notebooks</a>
+      <h2 style={{ marginTop: 6 }}>{nb.title}</h2>
+      <div className="grid g2" style={{ gridTemplateColumns: "minmax(280px, 1fr) 2fr" }}>
+        <div className="card" style={{ alignSelf: "start" }}>
+          <h3 style={{ marginTop: 0 }}>Sources ({nb.sources.length}/20)</h3>
+          {nb.sources.map((s, i) => <div key={s.id} className="row spread small" style={{ marginBottom: 4 }}><span><b>[N{i + 1}]</b> {s.name} <span className="tiny muted">{s.kind}</span></span>{editor && <button className="ghost tiny danger" onClick={() => put({ removeSource: s.id })}>✕</button>}</div>)}
+          {editor && <>
+            <label>Add a project document</label>
+            <select value="" onChange={(e) => { const d = docs.find((x) => x.id === e.target.value); if (d) put({ addSource: { kind: "document", name: d.title, refId: d.id } }); }}><option value="">Choose…</option>{docs.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}</select>
+            {files.length > 0 && <><label>Add a project file (PDF or text)</label>
+              <select value="" onChange={(e) => { const f = files.find((x) => x.id === e.target.value); if (f) put({ addSource: { kind: "file", name: f.name, refId: f.id } }); }}><option value="">Choose…</option>{files.filter((f) => /\.(pdf|txt|md|csv)$/i.test(f.name)).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select></>}
+            <label>Or paste text</label>
+            <input placeholder="Source name" value={paste.name} onChange={(e) => setPaste({ ...paste, name: e.target.value })} />
+            <textarea value={paste.text} onChange={(e) => setPaste({ ...paste, text: e.target.value })} style={{ minHeight: 80, marginTop: 4 }} />
+            <button className="small" disabled={!paste.name || paste.text.length < 20} onClick={async () => { await put({ addSource: { kind: "text", name: paste.name, text: paste.text } }); setPaste({ name: "", text: "" }); }}>Add text source</button>
+          </>}
+        </div>
+        <div>
+          <form className="card row" onSubmit={async (e) => { e.preventDefault(); setBusy(true); try { await api(`/projects/${pid}/notebooks/${id}/ask`, { body: { question: q } }); setQ(""); load(); } catch (err) { toast((err as Error).message, "error"); } finally { setBusy(false); } }}>
+            <textarea required value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. Compare the handover requirements across the sources" style={{ minHeight: 44, flex: 1 }} />
+            <button className="primary" disabled={busy || !nb.sources.length}>{busy ? "Thinking…" : "Ask"}</button>
+          </form>
+          {[...nb.notes].reverse().map((n) => (
+            <div key={n.id} className="card" style={{ marginTop: 10 }}>
+              <div className="row spread"><b>{n.question}</b>{editor && <button className="ghost tiny danger" onClick={() => put({ removeNote: n.id })}>✕</button>}</div>
+              <Markdown text={n.answer} cite={(k) => <span className="cite" title={nb.sources[k - 1]?.name}>[N{k}]</span>} />
+              <div className="tiny muted">{new Date(n.at).toLocaleString()}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}

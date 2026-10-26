@@ -5,14 +5,14 @@ import { Fragment, type ReactNode } from "react";
 
 function inline(text: string, cite?: (n: number) => ReactNode): ReactNode[] {
   const out: ReactNode[] = [];
-  const re = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[S\d+\])/g;
+  const re = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[SN]\d+\])/g;
   let last = 0; let m: RegExpExecArray | null; let k = 0;
   while ((m = re.exec(text))) {
     if (m.index > last) out.push(text.slice(last, m.index));
     const t = m[0];
     if (t.startsWith("**")) out.push(<b key={k++}>{t.slice(2, -2)}</b>);
     else if (t.startsWith("`")) out.push(<code key={k++}>{t.slice(1, -1)}</code>);
-    else if (t.startsWith("[S")) out.push(<Fragment key={k++}>{cite ? cite(+t.slice(2, -1)) : t}</Fragment>);
+    else if (/^\[[SN]/.test(t)) out.push(<Fragment key={k++}>{cite ? cite(+t.slice(2, -1)) : t}</Fragment>);
     else out.push(<i key={k++}>{t.slice(1, -1)}</i>);
     last = m.index + t.length;
   }

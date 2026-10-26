@@ -22,6 +22,7 @@ export const PROJECT_PAGES: NavItem[] = [
   p("p.summary", "Summary", "overview", "grid", "Overview"),
   p("p.activity", "Activity", "activity", "activity", "Overview"),
   p("p.assistant", "Project assistant (AI)", "assistant", "sparkles", "Overview", "Ask questions answered from project records"),
+  p("p.notebook", "Research notebook (AI)", "notebook", "book", "Overview", "Summarise and compare sources with citations"),
   p("p.documents", "Documents", "documents", "file", "Information (CDE)", "Controlled documents, reviews, revisions"),
   p("p.files", "Files", "files", "folder", "Information (CDE)", "WIP · Shared · Published · Archived"),
   p("p.plan", "MIDP / TIDP planner", "delivery/plan", "calendar", "Delivery", "Information containers, Gantt, change impact"),

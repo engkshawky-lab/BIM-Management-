@@ -1,4 +1,5 @@
 import { MRM_STARTER } from "../../../shared/mrm";
+import { ClashTriage } from "./Assistant";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { navigate, useSession } from "../App";
 import type { TaskTeam } from "../../../shared/delivery";
@@ -92,6 +93,7 @@ function Issues({ data, teams }: { data: ProjectData; teams: TaskTeam[] }) {
   const bcf = useRef<HTMLInputElement>(null);
   const { user } = useSession();
   const load = useCallback(() => api<{ issues: Issue[] }>(`/projects/${pid}/issues`).then((r) => setIssues(r.issues)), [pid]);
+  const [triage, setTriage] = useState(false);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { const on = () => setSelected(issueIdFromHash()); window.addEventListener("hashchange", on); return () => window.removeEventListener("hashchange", on); }, []);
 
@@ -104,6 +106,7 @@ function Issues({ data, teams }: { data: ProjectData; teams: TaskTeam[] }) {
 
   return (
     <>
+      {triage && <ClashTriage projectId={pid} onClose={() => setTriage(false)} onApplied={load} />}
       <div className="grid g4" style={{ marginBottom: 12 }}>
         {STATUSES.map((s) => <div key={s} className="card"><div className="small muted">{s}</div><div className="stat">{counts(s)}</div></div>)}
       </div>
@@ -125,6 +128,7 @@ function Issues({ data, teams }: { data: ProjectData; teams: TaskTeam[] }) {
               try { const r = await api<{ created: number; updated: number; errors: string[] }>(`/projects/${pid}/issues/bcf`, { form }); toast(`BCF: ${r.created} new, ${r.updated} updated${r.errors.length ? `, ${r.errors.length} skipped` : ""}`); load(); }
               catch (err) { toast((err as Error).message, "error"); }
             }} /></>}
+          {canEdit(data.role) && issues?.some((i) => i.type === "Clash" && i.status !== "Closed") && <button onClick={() => setTriage(true)}>✨ AI triage clashes</button>}
           <button onClick={() => exportCsv(`${data.project.code}-issues`, ["#", "Title", "Type", "Status", "Priority", "Assignee", "Due", "Labels", "Created"], list.map((i) => [String(i.number), i.title, i.type, i.status, i.priority, i.assigneeName, i.dueDate, i.labels.join("; "), i.createdAt.slice(0, 10)]))}>⬇ CSV</button>
         </div>
       </div>

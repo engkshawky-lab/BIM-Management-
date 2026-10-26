@@ -494,3 +494,16 @@ export const agentRuns = mysqlTable("agent_runs", {
   summary: text("summary"),
   trigger: varchar("trigger", { length: 10 }).notNull().default("schedule"),
 }, (t) => [index("agent_runs_agent").on(t.agentId)]);
+
+/** AI research notebook: a set of sources (pasted text, project documents, project PDF files) and saved notes. */
+export const notebooks = mysqlTable("notebooks", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  // { id, kind: "text" | "document" | "file", name, text?, refId? }
+  sources: json<{ id: string; kind: string; name: string; text?: string; refId?: string }[]>("sources").notNull(),
+  notes: json<{ id: string; question: string; answer: string; at: string }[]>("notes").notNull(),
+  createdBy: ref("created_by").notNull(),
+  createdAt: created(),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+}, (t) => [index("notebooks_project").on(t.projectId)]);
