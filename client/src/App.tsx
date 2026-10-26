@@ -1,12 +1,13 @@
 import ClientStandards from "./pages/ClientStandards";
 import Learn from "./pages/Learn";
+import Admin from "./pages/Admin";
 import { MyDay, Portfolio, Tools } from "./pages/Dashboards";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { api, type User } from "./lib/api";
 import Shell from "./shell/Shell";
 import Home from "./pages/Home";
 import Knowledge from "./pages/Knowledge";
-import Login from "./pages/Login";
+import Login, { ResetPassword } from "./pages/Login";
 import ProfilePage from "./pages/Profile";
 import ProjectPage from "./pages/Project";
 import NewProject from "./pages/NewProject";
@@ -41,6 +42,8 @@ export default function App() {
   useEffect(() => { api<{ user: User | null }>("/auth/me").then((r) => setUser(r.user)).catch(() => setUser(null)); }, []);
 
   if (user === undefined) return <div className="center muted">Loading…</div>;
+  const reset = /^\/reset\/([0-9a-f]{64})$/.exec(route)?.[1];
+  if (reset) return <ResetPassword token={reset} />;
   if (!user) return <Login onSignedIn={setUser} />;
 
   const parts = route.split("/").filter(Boolean);
@@ -52,6 +55,7 @@ export default function App() {
   // legacy links into the separate knowledge pages
   else if (["library", "templates"].includes(parts[0])) view = <Knowledge std={parts[1] === "iso42001" ? "iso42001" : "iso19650"} section={parts[0]} />;
   else if (["naming", "references"].includes(parts[0])) view = <Knowledge std="iso19650" section={parts[0]} />;
+  else if (parts[0] === "admin") view = <Admin tab={parts[1]} />;
   else if (parts[0] === "learn") view = <Learn />;
   else if (parts[0] === "my-day") view = <MyDay />;
   else if (parts[0] === "portfolio") view = <Portfolio />;

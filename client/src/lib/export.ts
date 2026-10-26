@@ -1,3 +1,4 @@
+import { api } from "./api";
 import { saveAs } from "file-saver";
 import type { DocTemplate } from "../../../shared/data/types";
 import type { FieldValue } from "../../../shared/documents";
@@ -28,7 +29,11 @@ export async function buildDocx(doc: ExportDoc, t: DocTemplate, project: ExportP
     ShadingType, Table, TableCell, TableOfContents, TableRow, TextRun, WidthType,
   } = await import("docx");
   type Block = InstanceType<typeof Paragraph> | InstanceType<typeof Table> | InstanceType<typeof TableOfContents>;
-  const NAVY = "1E3A5F";
+  const { ImageRun } = await import("docx");
+  // organisation branding set by an administrator (colour, name, logo, footer)
+  const brand = await api<{ branding: { orgName: string; color: string; logo: string; footer: string } }>("/settings/branding").then((r) => r.branding).catch(() => null);
+  const NAVY = (brand?.color || "#1E3A5F").replace("#", "").toUpperCase();
+  const logo = brand?.logo ? Uint8Array.from(atob(brand.logo.split(",")[1]), (c) => c.charCodeAt(0)) : null;
 
   const cell = (text: string, opts: { header?: boolean; label?: boolean; width?: number } = {}) => new TableCell({
     width: opts.width ? { size: opts.width, type: WidthType.PERCENTAGE } : undefined,
@@ -48,6 +53,8 @@ export async function buildDocx(doc: ExportDoc, t: DocTemplate, project: ExportP
   const gap = () => new Paragraph({ text: "" });
 
   const cover: Block[] = [
+    ...(logo ? [new Paragraph({ children: [new ImageRun({ type: brand!.logo.includes("image/png") ? "png" : "jpg", data: logo, transformation: { width: 160, height: 60 } })] })] : []),
+    ...(brand?.orgName ? [new Paragraph({ children: [new TextRun({ text: brand.orgName, bold: true, size: 26, color: NAVY })] })] : []),
     new Paragraph({ spacing: { before: 2400 }, children: [new TextRun({ text: `${STANDARD_NAME[t.standard]} · ${t.code}`, color: "0E7C86", bold: true, size: 24 })] }),
     new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: doc.title, bold: true, size: 56, color: NAVY })] }),
     new Paragraph({ spacing: { after: 600 }, children: [new TextRun({ text: `${project.code} — ${project.name}`, size: 30 })] }),
@@ -109,7 +116,7 @@ export async function buildDocx(doc: ExportDoc, t: DocTemplate, project: ExportP
     sections: [{
       properties: { titlePage: true },
       headers: { default: new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `${doc.containerName || doc.title}   Rev ${doc.revision}   ${doc.state}/${doc.suitability}`, size: 16, color: "666666" })] })] }) },
-      footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${project.code} · ${t.code} · Page `, size: 16, color: "666666" }), new TextRun({ children: [PageNumber.CURRENT], size: 16, color: "666666" }), new TextRun({ text: " of ", size: 16, color: "666666" }), new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, color: "666666" })] })] }) },
+      footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${brand?.footer ? `${brand.footer} · ` : ""}${project.code} · ${t.code} · Page `, size: 16, color: "666666" }), new TextRun({ children: [PageNumber.CURRENT], size: 16, color: "666666" }), new TextRun({ text: " of ", size: 16, color: "666666" }), new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, color: "666666" })] })] }) },
       children: [...cover, ...control, ...body],
     }],
   });

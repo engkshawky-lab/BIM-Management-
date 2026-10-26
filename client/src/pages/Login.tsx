@@ -1,8 +1,25 @@
 import { useState, type FormEvent } from "react";
 import { api, type User } from "../lib/api";
 
+/** Set a new password from a one-time reset link (#/reset/<token>). */
+export function ResetPassword({ token }: { token: string }) {
+  const [pw, setPw] = useState(""); const [done, setDone] = useState(false); const [error, setError] = useState("");
+  return (
+    <div className="auth-wrap">
+      <form className="card auth" onSubmit={async (e) => { e.preventDefault(); setError(""); try { await api("/auth/reset", { body: { token, password: pw } }); setDone(true); } catch (err) { setError((err as Error).message); } }}>
+        <h1>Set a new password</h1>
+        {done ? <><p>Your password has been changed. Sign in with the new password.</p><a className="btn primary" href="#/">Sign in</a></> : <>
+          <label>New password</label><input required type="password" minLength={8} value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
+          {error && <p className="error">{error}</p>}
+          <button className="primary" style={{ width: "100%", justifyContent: "center", marginTop: 12 }}>Change password</button></>}
+      </form>
+    </div>
+  );
+}
+
 export default function Login({ onSignedIn }: { onSignedIn: (u: User) => void }) {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
+  const [sent, setSent] = useState("");
   const [f, setF] = useState({ name: "", email: "", password: "", organization: "", jobTitle: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -11,6 +28,7 @@ export default function Login({ onSignedIn }: { onSignedIn: (u: User) => void })
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setError(""); setBusy(true);
     try {
+      if (mode === "forgot") { const r = await api<{ message: string }>("/auth/forgot", { body: { email: f.email } }); setSent(r.message); return; }
       const body = mode === "login" ? { email: f.email, password: f.password } : f;
       const r = await api<{ user: User }>(`/auth/${mode}`, { body });
       onSignedIn(r.user);
@@ -32,10 +50,14 @@ export default function Login({ onSignedIn }: { onSignedIn: (u: User) => void })
           <label>Job title</label><input value={f.jobTitle} onChange={set("jobTitle")} placeholder="e.g. Information Manager" />
         </>}
         <label>Email</label><input required type="email" value={f.email} onChange={set("email")} autoComplete="email" />
-        <label>Password</label><input required type="password" minLength={mode === "register" ? 8 : undefined} value={f.password} onChange={set("password")} autoComplete={mode === "login" ? "current-password" : "new-password"} />
+        {mode !== "forgot" && <label>Password</label>}{mode !== "forgot" && <input required type="password" minLength={mode === "register" ? 8 : undefined} value={f.password} onChange={set("password")} autoComplete={mode === "login" ? "current-password" : "new-password"} />}
+        {mode === "login" && <button type="button" className="linklike small" style={{ marginTop: 6 }} onClick={() => { setMode("forgot"); setError(""); setSent(""); }}>Forgot password?</button>}
+        {mode === "forgot" && <p className="small muted">Enter your account email. A one-time reset link (valid 1 hour) is issued to your portal administrator, who can also send it from the admin console.</p>}
+        {sent && <p className="small" style={{ color: "var(--ok)" }}>{sent}</p>}
         {mode === "register" && <p className="small muted">At least 8 characters. If someone invited you to a project, use the same email and you'll join it automatically.</p>}
         {error && <p className="error">{error}</p>}
-        <button className="primary" style={{ width: "100%", justifyContent: "center", marginTop: 12 }} disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}</button>
+        <button className="primary" style={{ width: "100%", justifyContent: "center", marginTop: 12 }} disabled={busy}>{busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "forgot" ? "Request reset link" : "Create account"}</button>
+        {mode === "forgot" && <button type="button" className="linklike small" style={{ marginTop: 8 }} onClick={() => setMode("login")}>← Back to sign in</button>}
       </form>
     </div>
   );

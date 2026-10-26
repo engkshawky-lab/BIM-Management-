@@ -105,7 +105,8 @@ Legend — **Status**: ✅ done · 🔜 next phase · ⏳ later phase. **Phase**
 1. ✅ Core platform — accounts, projects, team, CDE, documents, collaboration, workflows.
 2. ✅ Delivery — MIDP/TIDP, RACI, LOIN, quality report.
 3. ✅ **Validation & coordination** — IFC analyser + LOIN/IDS checks, COBie checker, issues (BCF), clash matrix, risk register, revision compare, change impact, handover module, new templates (BIM scope, MPDT).
-4. 🔜 AI & requirements — project AI assistant with citations, agents, notebook, traceability, contract review, ISO 19650-5 security, 42001 registers.
-5. ⏳ Dashboards & specialist tools — My Day inbox, portfolio dashboard, quality trends, 4D/6D, digital-twin & scan-to-BIM assessments, BIM fee estimator, cost plans.
-6. ⏳ Learn — courses, assessments, mock exams, scenarios, interview coach, guides, standards updates.
-7. ⏳ Organisation & business — admin console, organisations & branding, talent pool, plans & billing, email, password reset, Arabic UI.
+3b. ✅ **Client standards & delivery+** — client standards import, COBie v2, asset tags, information uses, MRM, QA/QC reviews, clash search sets, meetings & progress report, full BEP/CCA/handover/spec templates, MIDP Excel.
+4. ✅ **AI & requirements** — project AI assistant with citations, requirements traceability (with AI extraction), appointment review, ISO 19650-5 security triage. *Still open: scheduled AI agents, research notebook, AI clash triage.*
+5. ✅ **Dashboards & tools** — My Day, portfolio dashboard, BIM fee estimator, embodied carbon, maturity / digital-twin / scan-to-BIM assessments. *Still open: quality trends over time, 4D model linking, saved cost plans.*
+6. ✅ **Learn** — question bank, practice, timed mock exam, skill profile, scenarios. *Still open: video courses, interview coach, standards-updates feed.*
+7. ✅ **Admin** — admin console, users/roles/disable, reset links + forgot password, feedback, branding. *Still open: email delivery (SMTP), talent pool, plans & billing, Arabic UI.*

@@ -71,7 +71,7 @@ export async function loadUser(req: Request, _res: Response, next: NextFunction)
       const [row] = await db.select({ user: schema.users }).from(schema.sessions)
         .innerJoin(schema.users, eq(schema.users.id, schema.sessions.userId))
         .where(and(eq(schema.sessions.id, sid), gt(schema.sessions.expiresAt, new Date())));
-      if (row) req.user = toPublic(row.user);
+      if (row && !row.user.disabled) req.user = toPublic(row.user);
     }
     next();
   } catch (e) { next(e); }

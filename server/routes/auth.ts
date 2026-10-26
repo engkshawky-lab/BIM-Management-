@@ -1,6 +1,7 @@
 import { AiError } from "../claude";
 import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { Router, type NextFunction, type Request, type Response } from "express";
+import crypto from "crypto";
 import { z } from "zod";
 import { logActivity } from "../access";
 import { checkPassword, endSession, hashPassword, requireUser, startSession, toPublic } from "../auth";
@@ -65,9 +66,45 @@ r.post("/auth/login", h(async (req, res) => {
   const body = parse(z.object({ email: z.string().trim().toLowerCase(), password: z.string() }), req.body, res); if (!body) return;
   const [u] = await db.select().from(schema.users).where(eq(schema.users.email, body.email));
   if (!u || !(await checkPassword(body.password, u.passwordHash))) return res.status(401).json({ error: "Incorrect email or password." });
+  if (u.disabled) return res.status(403).json({ error: "This account is disabled. Contact your administrator." });
   await acceptInvitations(u.id, u.email);
   await startSession(res, u.id);
   res.json({ user: toPublic(u) });
+}));
+
+// ---------- password reset (one-time link, valid 1 hour) ----------
+const sha = (t: string) => crypto.createHash("sha256").update(t).digest("hex");
+export async function createResetLink(userId: string, origin: string) {
+  const token = crypto.randomBytes(32).toString("hex");
+  await db.insert(schema.passwordResets).values({ id: newId(), userId, tokenHash: sha(token), expiresAt: new Date(Date.now() + 3600_000), createdAt: new Date() });
+  return `${origin}/#/reset/${token}`;
+}
+const forgotHits = new Map<string, number[]>();
+r.post("/auth/forgot", h(async (req, res) => {
+  const body = parse(z.object({ email: z.string().trim().toLowerCase().email() }), req.body, res); if (!body) return;
+  const key = `${req.ip}|${body.email}`; const now = Date.now();
+  const hits = (forgotHits.get(key) ?? []).filter((t) => now - t < 3600_000);
+  if (hits.length >= 5) return res.status(429).json({ error: "Too many requests. Try again later." });
+  forgotHits.set(key, [...hits, now]);
+  const [u] = await db.select().from(schema.users).where(eq(schema.users.email, body.email));
+  if (u && !u.disabled) {
+    const link = await createResetLink(u.id, process.env.PUBLIC_URL?.replace(/\/$/, "") || `${req.protocol}://${req.get("host")}`);
+    // No mail server is bundled: the link goes to the server log for the operator, and admins can issue links from the console.
+    console.log(`[password reset] ${u.email}: ${link}`);
+    await db.insert(schema.notifications).values({ id: newId(), userId: u.id, projectId: null, message: "A password reset was requested for your account. If this wasn't you, contact your administrator.", link: "/profile", read: false, createdAt: new Date() }).catch(() => undefined);
+  }
+  // same answer whether or not the account exists
+  res.json({ ok: true, message: "If an account exists for that email, a reset link has been sent to your administrator." });
+}));
+
+r.post("/auth/reset", h(async (req, res) => {
+  const body = parse(z.object({ token: z.string().regex(/^[0-9a-f]{64}$/), password: z.string().min(8).max(200) }), req.body, res); if (!body) return;
+  const [row] = await db.select().from(schema.passwordResets).where(eq(schema.passwordResets.tokenHash, sha(body.token)));
+  if (!row || row.usedAt || row.expiresAt < new Date()) return res.status(400).json({ error: "This reset link is invalid or has expired." });
+  await db.update(schema.users).set({ passwordHash: await hashPassword(body.password) }).where(eq(schema.users.id, row.userId));
+  await db.update(schema.passwordResets).set({ usedAt: new Date() }).where(eq(schema.passwordResets.id, row.id));
+  await db.delete(schema.sessions).where(eq(schema.sessions.userId, row.userId)); // sign out everywhere
+  res.json({ ok: true });
 }));
 
 r.post("/auth/logout", h(async (req, res) => { await endSession(req, res); res.json({ ok: true }); }));

@@ -25,6 +25,7 @@ export const users = mysqlTable("users", {
   favourites: json<string[] | null>("favourites"),
   createdAt: created(),
   lastLoginAt: datetime("last_login_at", { mode: "date" }),
+  disabled: int("disabled").notNull().default(0),
 }, (t) => [uniqueIndex("users_email").on(t.email)]);
 
 export const sessions = mysqlTable("sessions", {
@@ -428,3 +429,28 @@ export const quizAttempts = mysqlTable("quiz_attempts", {
   seconds: int("seconds").notNull().default(0),
   createdAt: created(),
 }, (t) => [index("quiz_user").on(t.userId)]);
+
+export const passwordResets = mysqlTable("password_resets", {
+  id: id(),
+  userId: ref("user_id").notNull(),
+  tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+  expiresAt: datetime("expires_at", { mode: "date" }).notNull(),
+  usedAt: datetime("used_at", { mode: "date" }),
+  createdAt: created(),
+}, (t) => [uniqueIndex("password_resets_token").on(t.tokenHash)]);
+
+export const feedback = mysqlTable("feedback", {
+  id: id(),
+  userId: ref("user_id").notNull(),
+  kind: varchar("kind", { length: 16 }).notNull(),
+  message: varchar("message", { length: 4000 }).notNull(),
+  page: varchar("page", { length: 255 }).notNull().default(""),
+  status: varchar("status", { length: 16 }).notNull().default("New"),
+  createdAt: created(),
+});
+
+/** Platform-wide settings (e.g. organisation branding), one JSON value per key. */
+export const settings = mysqlTable("settings", {
+  key: varchar("key", { length: 60 }).primaryKey(),
+  value: json<Record<string, unknown>>("value").notNull(),
+});

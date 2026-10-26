@@ -107,6 +107,7 @@ function Panel({ section, route, projects, project, onRole, onClose }: { section
       <p><b>Projects</b> are organised in hubs: Overview, Information (CDE), Delivery, Model & coordination, Quality & team.</p>
       <p><b>Roles</b> — viewers read and comment, editors create and edit, managers approve, publish and manage the team.</p>
       <p><b>Data entered once</b> — MIDP, TIDP, responsibility matrix and risk register documents are generated from their data.</p>
+      <FeedbackForm route={route} />
     </div>;
   }
 
@@ -161,6 +162,19 @@ function CommandPalette({ projects, project, onClose }: { projects: Project[]; p
         </div>
       </div>
     </div>
+  );
+}
+
+function FeedbackForm({ route }: { route: string }) {
+  const [kind, setKind] = useState("Idea"); const [msg, setMsg] = useState(""); const [sent, setSent] = useState(false);
+  if (sent) return <p className="small" style={{ color: "var(--ok)" }}>Thanks — your feedback was sent to the administrators. <button className="linklike" onClick={() => { setSent(false); setMsg(""); }}>Send more</button></p>;
+  return (
+    <form onSubmit={async (e) => { e.preventDefault(); await api("/feedback", { body: { kind, message: msg, page: route } }); setSent(true); }}>
+      <p style={{ marginBottom: 4 }}><b>Feedback & support</b></p>
+      <div className="seg" style={{ marginBottom: 6 }}>{["Idea", "Problem", "Question"].map((k) => <button type="button" key={k} className={kind === k ? "on" : ""} onClick={() => setKind(k)}>{k}</button>)}</div>
+      <textarea required minLength={5} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="What would make the portal better, or what went wrong?" style={{ minHeight: 70 }} />
+      <button className="small primary" style={{ marginTop: 6 }}>Send</button>
+    </form>
   );
 }
 
@@ -272,6 +286,8 @@ function UserMenu({ onRole, theme, setTheme }: { onRole: () => void; theme: stri
       {open && <div className="popover menu" onClick={() => setOpen(false)}>
         <div className="menu-head"><b>{user.name}</b><span className="tiny muted">{user.email}</span>{user.bimRole && <span className="chip">{roleById(user.bimRole)?.title}</span>}</div>
         <a href="#/profile"><Icon name="user" size={16} />My profile</a>
+        <a href="#/my-day"><Icon name="calendar" size={16} />My Day</a>
+        {user.role === "admin" && <a href="#/admin"><Icon name="settings" size={16} />Admin console</a>}
         <button onClick={onRole}><Icon name="target" size={16} />Set my role</button>
         <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}><Icon name={theme === "dark" ? "sun" : "moon"} size={16} />{theme === "dark" ? "Light theme" : "Dark theme"}</button>
         <button onClick={async () => { await api("/auth/logout", { body: {} }); setUser(null); navigate("/"); }}><Icon name="logout" size={16} />Sign out</button>
