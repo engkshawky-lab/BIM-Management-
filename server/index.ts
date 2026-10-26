@@ -9,6 +9,9 @@ import auth from "./routes/auth";
 import documents from "./routes/documents";
 import files from "./routes/files";
 import projects from "./routes/projects";
+import validation from "./routes/validation";
+import coordination from "./routes/coordination";
+import registers from "./routes/registers";
 
 const app = express();
 app.disable("x-powered-by");
@@ -26,7 +29,7 @@ app.use("/api", (req, res, next) => {
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api", auth);
-app.use("/api", requireUser, projects, files, documents, delivery, ai);
+app.use("/api", requireUser, projects, files, documents, delivery, validation, coordination, registers, ai);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: NextFunction) => {

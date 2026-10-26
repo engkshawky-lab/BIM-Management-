@@ -188,9 +188,9 @@ r.delete(P + "/documents/:docId", requireProject("manager"), h(async (req, res) 
 
 // ---------- comments (documents and files) ----------
 r.get(P + "/comments", requireProject(), h(async (req, res) => {
-  const { documentId, fileId } = req.query as Record<string, string | undefined>;
-  if (!documentId && !fileId) return res.status(400).json({ error: "documentId or fileId is required." });
-  const target = documentId ? eq(schema.comments.documentId, documentId) : eq(schema.comments.fileId, fileId!);
+  const { documentId, fileId, issueId } = req.query as Record<string, string | undefined>;
+  if (!documentId && !fileId && !issueId) return res.status(400).json({ error: "documentId, fileId or issueId is required." });
+  const target = documentId ? eq(schema.comments.documentId, documentId) : fileId ? eq(schema.comments.fileId, fileId) : eq(schema.comments.issueId, issueId!);
   const rows = await db.select({ c: schema.comments, name: schema.users.name }).from(schema.comments)
     .leftJoin(schema.users, eq(schema.users.id, schema.comments.userId))
     .where(and(eq(schema.comments.projectId, req.params.projectId), target)).orderBy(schema.comments.createdAt);
@@ -198,20 +198,25 @@ r.get(P + "/comments", requireProject(), h(async (req, res) => {
 }));
 
 r.post(P + "/comments", requireProject("viewer"), h(async (req, res) => {
-  const body = parse(z.object({ documentId: z.string().optional(), fileId: z.string().optional(), sectionId: z.string().max(60).optional(), body: z.string().trim().min(1).max(5000) })
-    .refine((b) => !!b.documentId !== !!b.fileId, "Exactly one of documentId or fileId"), req.body, res); if (!body) return;
+  const body = parse(z.object({ documentId: z.string().optional(), fileId: z.string().optional(), issueId: z.string().optional(), sectionId: z.string().max(60).optional(), body: z.string().trim().min(1).max(5000) })
+    .refine((b) => [b.documentId, b.fileId, b.issueId].filter(Boolean).length === 1, "Exactly one of documentId, fileId or issueId"), req.body, res); if (!body) return;
   const pid = req.params.projectId; const uid = req.user!.id;
   let title = ""; let to: string | undefined; let target = "";
   if (body.documentId) {
     const d = await getDoc(pid, body.documentId); if (!d) return res.status(404).json({ error: "Document not found." });
     title = d.title; to = d.authorId; target = link(pid, d.id);
+  } else if (body.issueId) {
+    const [i] = await db.select().from(schema.issues).where(and(eq(schema.issues.id, body.issueId), eq(schema.issues.projectId, pid)));
+    if (!i) return res.status(404).json({ error: "Issue not found." });
+    title = `issue #${i.number} ${i.title}`; to = i.assigneeId ?? i.createdBy; target = `/projects/${pid}/coordination/issues/${i.id}`;
+    await db.update(schema.issues).set({ updatedAt: new Date() }).where(eq(schema.issues.id, i.id));
   } else {
     const [f] = await db.select().from(schema.files).where(and(eq(schema.files.id, body.fileId!), eq(schema.files.projectId, pid)));
     if (!f) return res.status(404).json({ error: "File not found." });
     title = f.name; to = f.uploadedBy; target = `/projects/${pid}/files`;
   }
   const id = newId();
-  await db.insert(schema.comments).values({ id, projectId: pid, documentId: body.documentId ?? null, fileId: body.fileId ?? null, sectionId: body.sectionId ?? null, userId: uid, body: body.body, createdAt: new Date() });
+  await db.insert(schema.comments).values({ id, projectId: pid, documentId: body.documentId ?? null, fileId: body.fileId ?? null, issueId: body.issueId ?? null, sectionId: body.sectionId ?? null, userId: uid, body: body.body, createdAt: new Date() });
   // @mentions notify by name or email prefix
   const members = await db.select({ id: schema.users.id, name: schema.users.name, email: schema.users.email }).from(schema.projectMembers)
     .innerJoin(schema.users, eq(schema.users.id, schema.projectMembers.userId)).where(eq(schema.projectMembers.projectId, pid));

@@ -5,6 +5,7 @@ import { suitabilityCodes } from "../../../shared/data/iso19650";
 import { templateById } from "../../../shared/data/templates";
 import type { DocTemplate, TemplateField } from "../../../shared/data/types";
 import { SUITABILITY, completeness, type CdeState, type FieldValue } from "../../../shared/documents";
+import { diffValues } from "../../../shared/impact";
 import { api, ApiError, canEdit, canManage, fmtDate, type CommentRow, type DocRow, type Folder, type RevisionRow } from "../lib/api";
 import { buildDocx, exportDocx, exportMarkdown, fileBase, parseTabular, type ExportDoc } from "../lib/export";
 import type { ProjectData } from "./Project";
@@ -113,12 +114,12 @@ export function Preview({ title, doc, values, t }: { title: string; doc: DocRow;
 
 // ---------------------------------------------------------------- comments
 
-export function Comments({ projectId, target, sectionId, readOnly }: { projectId: string; target: { documentId?: string; fileId?: string }; sectionId?: string; readOnly?: boolean }) {
+export function Comments({ projectId, target, sectionId, readOnly }: { projectId: string; target: { documentId?: string; fileId?: string; issueId?: string }; sectionId?: string; readOnly?: boolean }) {
   const { toast, user } = useSession();
   const [rows, setRows] = useState<CommentRow[]>([]);
   const [text, setText] = useState("");
   const [showResolved, setShowResolved] = useState(false);
-  const q = target.documentId ? `documentId=${target.documentId}` : `fileId=${target.fileId}`;
+  const q = target.documentId ? `documentId=${target.documentId}` : target.issueId ? `issueId=${target.issueId}` : `fileId=${target.fileId}`;
   const load = useCallback(() => api<{ comments: CommentRow[] }>(`/projects/${projectId}/comments?${q}`).then((r) => setRows(r.comments)), [projectId, q]);
   useEffect(() => { load(); const t = setInterval(load, 15_000); return () => clearInterval(t); }, [load]);
   const list = rows.filter((c) => (sectionId === undefined || c.sectionId === sectionId) && (showResolved || !c.resolved));
@@ -361,7 +362,7 @@ export default function DocumentEditor({ data, docId }: { data: ProjectData; doc
       }} /></Dialog>}
       {dialog === "ai" && <AiDialog pid={pid} docId={docId} t={t} sectionIndex={section} flush={flush} onClose={() => setDialog(null)} onApply={(vals) => { Object.entries(vals).forEach(([k, v]) => setValue(k, v)); setDialog(null); toast("AI draft applied — review and edit as needed"); }} />}
       {dialog === "saveFile" && <SaveToFilesDialog data={data} doc={doc} onClose={() => setDialog(null)} build={async () => { await flush(); return { blob: await buildDocx(exportDoc(), t, data.project), name: fileBase(exportDoc(), t) + ".docx" }; }} />}
-      {dialog && typeof dialog === "object" && <RevisionDialog pid={pid} docId={docId} revisionId={dialog.revisionId} doc={doc} t={t} canRestore={canType}
+      {dialog && typeof dialog === "object" && <RevisionDialog pid={pid} docId={docId} revisionId={dialog.revisionId} doc={doc} t={t} canRestore={canType} current={values}
         onRestore={(vals) => { Object.entries(vals).forEach(([k, v]) => setValue(k, v)); setDialog(null); toast("Revision content restored into the working copy"); }} onClose={() => setDialog(null)} />}
     </>
   );
@@ -478,17 +479,33 @@ function SaveToFilesDialog({ data, doc, onClose, build }: { data: ProjectData; d
   );
 }
 
-function RevisionDialog({ pid, docId, revisionId, doc, t, canRestore, onRestore, onClose }: {
-  pid: string; docId: string; revisionId: string; doc: DocRow; t: DocTemplate; canRestore: boolean; onRestore: (v: Values) => void; onClose: () => void;
+function RevisionDialog({ pid, docId, revisionId, doc, t, canRestore, current, onRestore, onClose }: {
+  pid: string; docId: string; revisionId: string; doc: DocRow; t: DocTemplate; canRestore: boolean; current: Values; onRestore: (v: Values) => void; onClose: () => void;
 }) {
   const [rev, setRev] = useState<{ revision: string; state: CdeState; suitability: string; values: Values; note: string } | null>(null);
+  const [mode, setMode] = useState<"view" | "compare">("compare");
+  const labels = useMemo(() => new Map(t.sections.flatMap((s) => s.fields.map((f) => [f.id, `${s.title} › ${f.label}`] as const))), [t]);
+  const changes = useMemo(() => (rev ? diffValues(rev.values, current) : []), [rev, current]);
   useEffect(() => { api<{ revision: typeof rev }>(`/projects/${pid}/documents/${docId}/revisions/${revisionId}`).then((r) => setRev(r.revision)); }, [pid, docId, revisionId]);
   return (
     <Dialog title={rev ? `Revision ${rev.revision} — ${rev.state}` : "Revision"} onClose={onClose}>
       {!rev ? <p className="muted">Loading…</p> : <>
         <p className="small muted">{rev.note}</p>
-        {canRestore && <button onClick={() => confirm("Replace the working copy with this revision's content?") && onRestore(rev.values)}>↺ Restore this content into the working copy</button>}
-        <div style={{ maxHeight: "60vh", overflow: "auto", marginTop: 10 }}><Preview title={doc.title} doc={{ ...doc, revision: rev.revision, state: rev.state, suitability: rev.suitability }} values={rev.values} t={t} /></div>
+        <div className="row spread">
+          <div className="seg"><button className={mode === "compare" ? "on" : ""} onClick={() => setMode("compare")}>Compare with current ({changes.length})</button><button className={mode === "view" ? "on" : ""} onClick={() => setMode("view")}>View revision</button></div>
+          {canRestore && <button onClick={() => confirm("Replace the working copy with this revision's content?") && onRestore(rev.values)}>↺ Restore into working copy</button>}
+        </div>
+        <div style={{ maxHeight: "60vh", overflow: "auto", marginTop: 10 }}>
+          {mode === "view" ? <Preview title={doc.title} doc={{ ...doc, revision: rev.revision, state: rev.state, suitability: rev.suitability }} values={rev.values} t={t} />
+            : changes.length === 0 ? <p style={{ color: "var(--ok)" }}>✔ The working copy is identical to {rev.revision}.</p>
+            : changes.map((c) => (
+              <div key={c.field} className="card" style={{ marginBottom: 8 }}>
+                <b className="small">{labels.get(c.field) ?? c.field}</b>
+                {c.kind === "text" ? <div className="small" style={{ whiteSpace: "pre-wrap" }}><div className="diff-del">{c.before || "(empty)"}</div><div className="diff-add">{c.after || "(empty)"}</div></div>
+                  : <div className="small">{c.removed.map((r) => <div key={"r" + r} className="diff-del">− {r}</div>)}{c.added.map((r) => <div key={"a" + r} className="diff-add">+ {r}</div>)}</div>}
+              </div>
+            ))}
+        </div>
       </>}
     </Dialog>
   );

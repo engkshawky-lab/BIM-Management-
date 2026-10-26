@@ -15,6 +15,20 @@
       "when": 1793004979831,
       "tag": "0001_delivery_planning",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1793010302729,
+      "tag": "0002_validation_coordination",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1793010451496,
+      "tag": "0003_issue_comments",
+      "breakpoints": true
     }
   ]
 }

@@ -4,6 +4,7 @@ import { Progress } from "../components/common";
 import { roleCodes, typeCodes } from "../../../shared/data/iso19650";
 import { DELIVERABLE_STATUSES, addDays, daysBetween, type Deliverable, type DeliverableStatus, type Finding, type Milestone, type TaskTeam } from "../../../shared/delivery";
 import { containerName } from "../../../shared/naming";
+import { changeImpact } from "../../../shared/impact";
 import { api, canEdit, type Member } from "../lib/api";
 import { exportCsv, parseTabular } from "../lib/export";
 import type { ProjectData } from "./Project";
@@ -158,6 +159,7 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
   const [view, setView] = useState<"table" | "gantt">("table");
   const [edit, setEdit] = useState<null | "new" | DeliveryData["deliverables"][number]>(null);
   const [importing, setImporting] = useState(false);
+  const [impact, setImpact] = useState<DeliveryData["deliverables"][number] | null>(null);
   const editor = canEdit(role);
   const team = new Map(d.teams.map((t) => [t.id, t]));
   const ms = new Map(d.milestones.map((m) => [m.id, m]));
@@ -215,7 +217,7 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
                     <td><select className="status-select" disabled={!editor} value={x.status} style={{ borderColor: STATUS_COLOR[x.status] }} onChange={(e) => call(`deliverables/${x.id}`, "PUT", { status: e.target.value })}>
                       {DELIVERABLE_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}</select></td>
                     <td className="small">{member.get(x.assigneeId ?? "") ?? "—"}</td>
-                    <td className="nowrap">{editor && <><button className="ghost tiny" onClick={() => setEdit(x)}>Edit</button><button className="ghost tiny danger" onClick={() => confirm(`Delete ${x.containerName || x.title}?`) && call(`deliverables/${x.id}`, "DELETE")}>✕</button></>}</td>
+                    <td className="nowrap"><button className="ghost tiny" title="What if this is late?" onClick={() => setImpact(x)}>Impact</button>{editor && <><button className="ghost tiny" onClick={() => setEdit(x)}>Edit</button><button className="ghost tiny danger" onClick={() => confirm(`Delete ${x.containerName || x.title}?`) && call(`deliverables/${x.id}`, "DELETE")}>✕</button></>}</td>
                   </tr>
                 );
               })}
@@ -227,8 +229,38 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
 
       {edit && <DeliverableDialog initial={edit === "new" ? undefined : edit} data={d} members={members} projectCode={project.code} onClose={() => setEdit(null)}
         onSave={async (row) => { const { id: _id, ...rest } = row as Deliverable; const r = edit === "new" ? await call("deliverables", "POST", rest, "Container added") : await call(`deliverables/${(edit as Deliverable).id}`, "PUT", rest, "Container updated"); if (r) setEdit(null); }} />}
+      {impact && <ImpactDialog d={d} item={impact} editor={editor} projectId={project.id} call={call} onClose={() => setImpact(null)} />}
       {importing && <ImportDialog data={d} onClose={() => setImporting(false)} onImport={async (rows) => { const r = await call("deliverables-import", "POST", { rows }, `Imported ${rows.length} containers`); if (r) setImporting(false); }} />}
     </>
+  );
+}
+
+function ImpactDialog({ d, item, editor, projectId, call, onClose }: { d: DeliveryData; item: DeliveryData["deliverables"][number]; editor: boolean; projectId: string; call: ReturnType<typeof useDelivery>["call"]; onClose: () => void }) {
+  const [days, setDays] = useState(7);
+  const r = useMemo(() => changeImpact(d.deliverables, d.milestones, item.id, days), [d, item.id, days]);
+  const apply = async () => {
+    for (const s of r.shifted) {
+      const cur = d.deliverables.find((x) => x.id === s.id)!;
+      const delta = daysBetween(s.from, s.to);
+      await call(`deliverables/${s.id}`, "PUT", { dueDate: s.to, ...(cur.startDate ? { startDate: addDays(cur.startDate, delta) } : {}) });
+    }
+    onClose();
+  };
+  return (
+    <div className="modal-bg" onClick={onClose}><div className="modal wide" onClick={(e) => e.stopPropagation()}>
+      <h2 style={{ marginTop: 0 }}>Change impact: {item.containerName || item.title}</h2>
+      {!item.dueDate ? <p className="muted">This container has no due date.</p> : <>
+        <div className="row"><label style={{ margin: 0 }}>If it is delayed by</label><input type="number" min={-60} max={365} value={days} onChange={(e) => setDays(+e.target.value)} style={{ width: 90 }} /><span>days (due {item.dueDate} → {addDays(item.dueDate, days)})</span></div>
+        <h3>Containers affected ({r.shifted.length})</h3>
+        <table className="data"><thead><tr><th>Container</th><th>Due now</th><th>New due</th></tr></thead>
+          <tbody>{r.shifted.map((s) => <tr key={s.id}><td>{s.label}</td><td>{s.from}</td><td><b>{s.to}</b></td></tr>)}</tbody></table>
+        <h3>Milestones at risk</h3>
+        {r.milestoneBreaches.length ? r.milestoneBreaches.map((b) => <div key={b.milestone} className="finding error">⛔ {b.milestone} ({b.date}) — {b.containers.join(", ")} would be late</div>) : <p style={{ color: "var(--ok)" }}>✔ No milestone is breached.</p>}
+        {r.documents.length > 0 && <><h3>Linked documents to revisit</h3>{r.documents.map((id) => <a key={id} className="list-item" href={`#/projects/${projectId}/documents/${id}`}>Open document</a>)}</>}
+        <p className="small muted">Dependencies are finish-to-start; float before a successor's start absorbs part of the delay.</p>
+      </>}
+      <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Close</button>{editor && r.shifted.length > 0 && <button className="primary" onClick={apply}>Apply new dates</button>}</div>
+    </div></div>
   );
 }
 

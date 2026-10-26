@@ -137,12 +137,13 @@ export const comments = mysqlTable("comments", {
   projectId: ref("project_id").notNull(),
   documentId: ref("document_id"),
   fileId: ref("file_id"),
+  issueId: ref("issue_id"),
   sectionId: varchar("section_id", { length: 60 }),
   userId: ref("user_id").notNull(),
   body: text("body").notNull(),
   resolved: boolean("resolved").notNull().default(false),
   createdAt: created(),
-}, (t) => [index("comments_document").on(t.documentId), index("comments_file").on(t.fileId)]);
+}, (t) => [index("comments_document").on(t.documentId), index("comments_file").on(t.fileId), index("comments_issue").on(t.issueId)]);
 
 export const activity = mysqlTable("activity", {
   id: id(),
@@ -240,3 +241,91 @@ export const loinRows = mysqlTable("loin_rows", {
   documentation: varchar("documentation", { length: 1000 }).notNull().default(""),
   createdAt: created(),
 }, (t) => [index("loin_project").on(t.projectId)]);
+
+// ---------- Phase 3: validation & coordination ----------
+
+export const validationRuns = mysqlTable("validation_runs", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  fileId: ref("file_id").notNull(),
+  fileVersion: int("file_version").notNull(),
+  kind: varchar("kind", { length: 16 }).notNull(),
+  status: varchar("status", { length: 16 }).notNull(),
+  score: int("score").notNull().default(0),
+  errors: int("errors").notNull().default(0),
+  warnings: int("warnings").notNull().default(0),
+  summary: varchar("summary", { length: 500 }).notNull().default(""),
+  report: json<unknown>("report").notNull(),
+  createdBy: ref("created_by").notNull(),
+  createdAt: created(),
+}, (t) => [index("validation_project").on(t.projectId), index("validation_file").on(t.fileId)]);
+
+export const issues = mysqlTable("issues", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  number: int("number").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 24 }).notNull().default("Issue"),
+  status: varchar("status", { length: 16 }).notNull().default("Open"),
+  priority: varchar("priority", { length: 16 }).notNull().default("Normal"),
+  assigneeId: ref("assignee_id"),
+  taskTeamId: ref("task_team_id"),
+  dueDate: varchar("due_date", { length: 10 }).notNull().default(""),
+  fileId: ref("file_id"),
+  documentId: ref("document_id"),
+  deliverableId: ref("deliverable_id"),
+  validationRunId: ref("validation_run_id"),
+  elementGuids: json<string[]>("element_guids").notNull(),
+  labels: json<string[]>("labels").notNull(),
+  bcfGuid: varchar("bcf_guid", { length: 36 }).notNull(),
+  createdBy: ref("created_by").notNull(),
+  createdAt: created(),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+  closedAt: datetime("closed_at", { mode: "date" }),
+}, (t) => [index("issues_project").on(t.projectId)]);
+
+export const clashTests = mysqlTable("clash_tests", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  teamA: ref("team_a").notNull(),
+  teamB: ref("team_b").notNull(),
+  kind: varchar("kind", { length: 16 }).notNull().default("hard"),
+  toleranceMm: int("tolerance_mm").notNull().default(0),
+  priority: varchar("priority", { length: 16 }).notNull().default("Normal"),
+  frequency: varchar("frequency", { length: 24 }).notNull().default("Weekly"),
+  notes: varchar("notes", { length: 500 }).notNull().default(""),
+}, (t) => [index("clash_project").on(t.projectId)]);
+
+export const risks = mysqlTable("risks", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  number: int("number").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  category: varchar("category", { length: 40 }).notNull().default("Information delivery"),
+  cause: varchar("cause", { length: 1000 }).notNull().default(""),
+  likelihood: int("likelihood").notNull().default(3),
+  impact: int("impact").notNull().default(3),
+  mitigation: varchar("mitigation", { length: 1000 }).notNull().default(""),
+  ownerId: ref("owner_id"),
+  status: varchar("status", { length: 16 }).notNull().default("Open"),
+  residualLikelihood: int("residual_likelihood"),
+  residualImpact: int("residual_impact"),
+  reviewDate: varchar("review_date", { length: 10 }).notNull().default(""),
+  createdAt: created(),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+}, (t) => [index("risks_project").on(t.projectId)]);
+
+export const handoverItems = mysqlTable("handover_items", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  category: varchar("category", { length: 60 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  clause: varchar("clause", { length: 40 }).notNull().default(""),
+  status: varchar("status", { length: 16 }).notNull().default("Not started"),
+  ownerId: ref("owner_id"),
+  fileId: ref("file_id"),
+  notes: varchar("notes", { length: 1000 }).notNull().default(""),
+  sortOrder: int("sort_order").notNull().default(0),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+}, (t) => [index("handover_project").on(t.projectId)]);

@@ -4,12 +4,12 @@ import fs from "fs";
 import multer from "multer";
 import path from "path";
 import { z } from "zod";
-import { logActivity, notify, requireProject } from "../access";
+import { atLeast, logActivity, notify, requireProject } from "../access";
 import { db, newId, schema } from "../db";
+import { UPLOAD_DIR } from "../storage";
 import { h, parse } from "./auth";
+import { runValidation, sharingBlocker, validationKind } from "./validation";
 
-export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR ?? "storage");
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const upload = multer({
   storage: multer.diskStorage({ destination: UPLOAD_DIR, filename: (_req, _file, cb) => cb(null, newId()) }),
@@ -17,6 +17,12 @@ const upload = multer({
 });
 
 const INLINE_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/gif", "text/plain"]);
+
+/** Validate IFC / COBie uploads in the background; the result lands in the activity feed and the Validation tab. */
+function autoValidate(projectId: string, fileId: string, name: string, userId: string) {
+  if (!validationKind(name)) return;
+  setImmediate(() => runValidation(projectId, fileId, userId).catch((e) => console.error("auto-validation failed", e)));
+}
 
 const r = Router();
 const P = "/projects/:projectId";
@@ -116,7 +122,8 @@ r.post(P + "/files", requireProject("editor"), upload.single("file"), h(async (r
     await db.update(schema.files).set({ currentVersion: version, name, updatedAt: now, ...(body.containerName ? { containerName: body.containerName } : {}) }).where(eq(schema.files.id, existing.id));
     await logActivity(pid, uid, "file.version", `Uploaded version ${version} of ${name}`, `/projects/${pid}/files`);
     await notify(pid, uid, `${req.user!.name} uploaded v${version} of ${name}`, `/projects/${pid}/files`);
-    return res.status(201).json({ id: existing.id, version });
+    autoValidate(pid, existing.id, name, uid);
+    return res.status(201).json({ id: existing.id, version, validating: !!validationKind(name) });
   }
 
   const id = newId();
@@ -128,7 +135,8 @@ r.post(P + "/files", requireProject("editor"), upload.single("file"), h(async (r
   await db.insert(schema.fileVersions).values({ id: newId(), fileId: id, version: 1, storageKey: blob.filename, size: blob.size, mimeType: blob.mimetype, note: body.note || "Initial upload", uploadedBy: uid, createdAt: now });
   await logActivity(pid, uid, "file.uploaded", `Uploaded ${name} to ${folder.name}`, `/projects/${pid}/files`);
   await notify(pid, uid, `${req.user!.name} uploaded ${name}`, `/projects/${pid}/files`);
-  res.status(201).json({ id, version: 1 });
+  autoValidate(pid, id, name, uid);
+  res.status(201).json({ id, version: 1, validating: !!validationKind(name) });
 }));
 
 r.get(P + "/files/:fileId/download", requireProject(), h(async (req, res) => {
@@ -154,6 +162,7 @@ r.put(P + "/files/:fileId", requireProject("editor"), h(async (req, res) => {
     name: z.string().trim().min(1).max(255), containerName: z.string().trim().max(120), folderId: z.string(),
     state: z.enum(["WIP", "SHARED", "PUBLISHED", "ARCHIVED"]), suitability: z.string().max(8), revision: z.string().max(12),
   }).partial(), req.body, res); if (!body) return;
+  const override = typeof req.body?.overrideReason === "string" ? req.body.overrideReason.trim().slice(0, 300) : "";
   const pid = req.params.projectId;
   const f = await getFile(pid, req.params.fileId);
   if (!f) return res.status(404).json({ error: "File not found." });
@@ -162,6 +171,14 @@ r.put(P + "/files/:fileId", requireProject("editor"), h(async (req, res) => {
   if (body.folderId) {
     const [folder] = await db.select().from(schema.folders).where(and(eq(schema.folders.id, body.folderId), eq(schema.folders.projectId, pid)));
     if (!folder) return res.status(404).json({ error: "Folder not found." });
+  }
+  // ISO 19650-2 5.6.3: information must pass its checks before it leaves WIP.
+  if ((body.state === "SHARED" || body.state === "PUBLISHED") && f.state === "WIP") {
+    const blocker = await sharingBlocker(f.id, f.currentVersion);
+    if (blocker) {
+      if (!override || !atLeast(req.projectRole, "manager")) return res.status(409).json({ error: blocker, validationBlocked: true });
+      await logActivity(pid, req.user!.id, "validation.override", `Override: shared ${f.name} despite failed validation — ${override}`, `/projects/${pid}/files`);
+    }
   }
   await db.update(schema.files).set({ ...body, updatedAt: new Date() }).where(eq(schema.files.id, f.id));
   if (body.state && body.state !== f.state) {

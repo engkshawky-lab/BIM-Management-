@@ -178,6 +178,7 @@ export const workflow19650: Workflow = {
         { id: "b1", title: "Write appointing party EIR", owner: "Appointing party", outputs: ["EIR"], templateIds: ["eir"] },
         { id: "b2", title: "Assemble reference information", owner: "Appointing party", outputs: ["Reference information register"] },
         { id: "b3", title: "Define tender response & evaluation criteria", owner: "Appointing party", outputs: ["Tender evaluation criteria"] },
+        { id: "b4", title: "BIM scope of services for each appointment", owner: "Appointing party", outputs: ["Scope of services"], templateIds: ["bim-scope"] },
       ],
     },
     {
@@ -195,7 +196,7 @@ export const workflow19650: Workflow = {
       gate: "Appointment documents complete incl. post-appointment BEP, responsibility matrix, MIDP and TIDPs.",
       activities: [
         { id: "d1", title: "Post-appointment BEP", owner: "Lead appointed party", outputs: ["Post-appointment BEP"], templateIds: ["bep-post"] },
-        { id: "d2", title: "Detailed responsibility matrix", owner: "Lead appointed party", outputs: ["Responsibility matrix"], templateIds: ["resp-matrix"] },
+        { id: "d2", title: "Detailed responsibility matrix", owner: "Lead appointed party", outputs: ["Responsibility matrix"], templateIds: ["resp-matrix", "mpdt"] },
         { id: "d3", title: "TIDPs", owner: "Task teams", outputs: ["TIDP"], templateIds: ["tidp"] },
         { id: "d4", title: "MIDP", owner: "Lead appointed party", outputs: ["MIDP"], templateIds: ["midp"] },
       ],

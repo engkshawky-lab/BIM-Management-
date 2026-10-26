@@ -214,3 +214,20 @@ textarea.cell-input { min-height: 34px; resize: vertical; }
 .gantt-today { border-left: 2px solid var(--danger); }
 .gantt-milestone span, .gantt-today span { position: absolute; bottom: 2px; left: 4px; font-size: 10px; white-space: nowrap; background: var(--surface); padding: 0 3px; color: #9333ea; }
 .gantt-today span { color: var(--danger); top: 2px; bottom: auto; }
+
+/* ---------- phase 3: validation & coordination ---------- */
+.check-card { padding: 12px; }
+.bar-row { display: grid; grid-template-columns: minmax(120px, 40%) 1fr 44px; gap: 8px; align-items: center; margin: 4px 0; }
+.bar { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; display: block; }
+.bar > span { display: block; height: 100%; background: var(--accent); }
+.issues-layout { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 12px; align-items: start; }
+@media (max-width: 1100px) { .issues-layout { grid-template-columns: 1fr; } }
+.issue-detail { position: sticky; top: 70px; max-height: calc(100vh - 90px); overflow: auto; }
+.dot-label { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.clash-cell { width: 92px; min-height: 44px; display: grid; justify-content: center; gap: 0; padding: 4px; color: var(--muted); }
+.clash-cell.set { color: var(--text); background: var(--surface-2); }
+.clash-cell.p-High { background: #fde68a; color: #92400e; } .clash-cell.p-Critical { background: #fecaca; color: #991b1b; }
+.heat { display: grid; grid-template-columns: 24px repeat(5, 1fr); gap: 3px; max-width: 360px; }
+.heat div { aspect-ratio: 1.6; display: grid; place-items: center; border-radius: 4px; font-size: 12px; font-weight: 700; }
+tr.done-row td { opacity: .65; }
+.diff-del { background: rgba(220,38,38,.1); text-decoration: line-through; } .diff-add { background: rgba(22,163,74,.12); }

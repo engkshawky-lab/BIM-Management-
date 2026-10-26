@@ -107,15 +107,27 @@ function FileDetail({ data, fileId, folders, onChanged, onClose, onNewVersion }:
   useEffect(() => { load(); }, [load]);
   if (!info) return <div className="card file-detail muted">Loading…</div>;
   const f = info.file;
-  const update = async (body: Partial<FileRow>) => {
+  const update = async (body: Partial<FileRow> & { overrideReason?: string }) => {
     try { await api(`/projects/${pid}/files/${fileId}`, { method: "PUT", body }); load(); onChanged(); toast("Updated"); }
-    catch (e) { toast((e as Error).message, "error"); }
+    catch (e) {
+      const msg = (e as Error).message;
+      // Failed validation blocks sharing; managers may override with a recorded reason.
+      if (/failed validation/.test(msg) && canManage(data.role) && !body.overrideReason) {
+        const reason = prompt(`${msg}\n\nAs a manager you can override. Reason (recorded in the activity log):`);
+        if (reason) return update({ ...body, overrideReason: reason });
+      }
+      toast(msg, "error"); load();
+    }
   };
   const previewable = /\.(pdf|png|jpe?g|gif|txt)$/i.test(f.name);
 
   return (
     <div className="card file-detail">
       <div className="row spread"><b>{icon(f.name)} {f.name}</b><button className="ghost" onClick={onClose}>✕</button></div>
+      {/\.ifc$|cobie.*\.xlsx$/i.test(f.name) && <div className="row small" style={{ margin: "6px 0" }}>
+        <a href={`#/projects/${pid}/validation`}>🔍 Validation results</a>
+        {canEdit(data.role) && <button className="small" onClick={async () => { try { const r = await api<{ id: string }>(`/projects/${pid}/files/${fileId}/validate`, { body: {} }); window.location.hash = `/projects/${pid}/validation/${r.id}`; } catch (e) { toast((e as Error).message, "error"); } }}>Validate now</button>}
+      </div>}
       {previewable && <a className="small" href={`/api/projects/${pid}/files/${fileId}/download?inline=1`} target="_blank" rel="noreferrer">Open preview ↗</a>}
       <fieldset disabled={!canEdit(data.role)} style={{ border: 0, padding: 0, margin: 0 }}>
         <label>Container name</label>

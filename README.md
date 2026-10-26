@@ -19,6 +19,9 @@ Stack (same as `iso19650_platform_deploy`): React + Vite client, Express server,
 | Workflows | ISO 19650-2 delivery workflow and ISO/IEC 42001 implementation workflow per project, activity status, stage gates approved by managers, linked documents per activity. |
 | Delivery plan *(phase 2)* | Task teams (originator/role codes, lead) and information delivery milestones. MIDP/TIDP planner: containers with auto-numbered names, LOIN, milestone, dates, dependencies, responsible person, status; table and Gantt views; Excel/CSV import and CSV export; one-click generation of MIDP / TIDP documents. Responsibility (RACI) matrix per task team with accountability checks and DRM document generation. LOIN matrix per element and milestone (ISO 7817-1). |
 | Quality *(phase 2)* | Automated checks: required document set per standard, completeness and placeholders per document, template rules (EIR milestones & acceptance criteria, BEP named roles, SoA justifications, AI risk treatment…), container naming, plan dates vs milestones, dependency order and cycles, duplicates, overdue items. Scores, drill-down and CSV export. |
+| Validation *(phase 3)* | IFC models (IFC2x3/4/4x3) and COBie workbooks are validated automatically on every upload with a built-in TypeScript STEP reader (no Python needed): header, spatial structure, names, property sets (instance + type), classification, georeferencing, units, GUID uniqueness, COBie attributes, plus requirements from the project LOIN matrix and buildingSMART IDS files. COBie: sheets, columns, mandatory fields, cross-references, uniqueness. Failing versions cannot be shared (manager override is logged). |
+| Coordination *(phase 3)* | Issue tracker (BCF-style types, status, priority, assignee, due, task team, model element GUIDs, discussion), BCF 2.1 import/export, issues raised from validation errors, clash test matrix per task-team pair, clash report import (Navisworks/Solibri/Revizto CSV) grouped by grid location, risk register with heat map and residual scores, handover checklist (PIM → AIM) with evidence files. |
+| Planning extras *(phase 3)* | Change-impact simulation through dependencies with milestone breach detection and one-click re-planning; field-by-field revision compare in documents; new BIM scope of services and MPDT templates (30 templates). |
 | Knowledge | ISO 19650 parts, 19650-2 process 5.1–5.8, CDE states and status codes, ISO/IEC 42001 clauses 4–10 and all 38 Annex A controls, glossaries, naming tool, references. |
 
 ## Run locally
@@ -35,11 +38,13 @@ Set `CLAUDE_API_KEY` to enable AI drafting.
 
 Tests: `npm test` (unit). Type check: `npm run check`.
 
-## Phases — moving modules over from `iso19650_platform_deploy`
+## Phases
+
+Every feature of `iso19650_platform_deploy` is reviewed and rebuilt — see [docs/FEATURE_MIGRATION.md](docs/FEATURE_MIGRATION.md) for the full module-by-module matrix.
 
 1. ✅ **Core platform** — accounts, projects, team, CDE files, document builder, review/approval, workflows.
 2. ✅ **Delivery tools** — MIDP/TIDP planner with Gantt, responsibility matrix, LOIN matrix, quality checker. *(Still to port: BEP version comparison, information exchange ledger.)*
-3. **Validation** — IFC/IDS validator (Python `ifc_parser` service), COBie checker, QA/QC checker, clash matrix, BCF issue centre.
+3. ✅ **Validation & coordination** — IFC/LOIN/IDS validation, COBie, issues + BCF, clash matrix, risk register, handover, change impact, revision compare.
 4. **AI assistants** — project consultant chat over project documents, document Q&A, requirement traceability (atomic requirements graph), AI policy/risk copilots for 42001.
 5. **Learning** — courses, quizzes, mock exams, videos, case studies, glossary games.
 6. **Admin & organisation** — platform admin dashboard, organisation BEP templates, branding presets, email notifications, SSO.

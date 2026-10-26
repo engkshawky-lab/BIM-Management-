@@ -74,7 +74,7 @@ r.delete("/projects/:projectId", requireProject("owner"), h(async (req, res) => 
   await db.transaction(async (tx) => {
     if (docIds.length) await tx.delete(schema.documentRevisions).where(inArray(schema.documentRevisions.documentId, docIds));
     if (fileIds.length) await tx.delete(schema.fileVersions).where(inArray(schema.fileVersions.fileId, fileIds));
-    for (const t of [schema.documents, schema.files, schema.folders, schema.comments, schema.activity, schema.invitations, schema.projectMembers, schema.workflowProgress, schema.taskTeams, schema.milestones, schema.deliverables, schema.responsibilityRows, schema.loinRows] as const)
+    for (const t of [schema.documents, schema.files, schema.folders, schema.comments, schema.activity, schema.invitations, schema.projectMembers, schema.workflowProgress, schema.taskTeams, schema.milestones, schema.deliverables, schema.responsibilityRows, schema.loinRows, schema.validationRuns, schema.issues, schema.clashTests, schema.risks, schema.handoverItems] as const)
       await tx.delete(t).where(eq(t.projectId, pid));
     await tx.delete(schema.projects).where(eq(schema.projects.id, pid));
   });

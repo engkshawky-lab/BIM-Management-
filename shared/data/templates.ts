@@ -247,6 +247,41 @@ export const templates: DocTemplate[] = [
     ])],
   },
 
+  {
+    id: "bim-scope", standard: "iso19650", code: "SCOPE", category: "Contract", title: "BIM Scope of Services",
+    purpose: "Defines the information management and BIM services each appointed party provides, by stage, for inclusion in the appointment.",
+    clauseRefs: ["19650-2 5.2.3", "19650-2 5.4.6"],
+    sections: [projectInfo,
+      sec("services", "Services by stage", "Tick the stages each service applies to and who provides it.", [
+        table("services", "Services", ["Service", "Provider", "Stage 2", "Stage 3", "Stage 4", "Stage 5", "Stage 6", "Deliverable"], [
+          ["Information management function", "Lead appointed party", "✓", "✓", "✓", "✓", "✓", "IM reports"],
+          ["Discipline information models", "Each task team", "✓", "✓", "✓", "✓", "", "IFC + native models"],
+          ["Federation & clash coordination", "BIM coordinator", "", "✓", "✓", "✓", "", "Coordination reports, BCF"],
+          ["Quantity take-off from models", "Cost consultant", "✓", "✓", "✓", "", "", "Cost plan"],
+          ["COBie / asset data", "Contractor", "", "", "✓", "✓", "✓", "Validated COBie"],
+          ["As-constructed models", "Contractor", "", "", "", "✓", "✓", "CR models"],
+        ]),
+      ]),
+      sec("exclusions", "Exclusions and assumptions", "Services not included and assumptions the fee is based on.", [area("exclusions", "Exclusions"), area("assumptions", "Assumptions")]),
+      sec("resources", "Resources and fee basis", "Key roles and effort.", [table("roles", "Roles", ["Role", "Organization", "Effort (days/month)", "Stages"])]),
+    ],
+  },
+  {
+    id: "mpdt", standard: "iso19650", code: "MPDT", category: "Plans", title: "Model Production and Delivery Table",
+    purpose: "States who models which element, to what level of information need, at each stage — the element-level companion to the responsibility matrix.",
+    clauseRefs: ["19650-2 5.4.2", "ISO 7817-1"],
+    sections: [projectInfo,
+      sec("table", "Model production and delivery", "One row per element or system. Use LOIN references from the delivery plan.", [
+        table("rows", "MPDT", ["Element / system", "Classification", "Model author (task team)", "Stage 2 LOIN", "Stage 3 LOIN", "Stage 4 LOIN", "Stage 5 LOIN", "Notes"], [
+          ["External walls", "Ss_25_10", "Architecture", "LOIN-02", "LOIN-03", "LOIN-04", "LOIN-05", ""],
+          ["Structural frame", "Ss_20_10", "Structures", "LOIN-02", "LOIN-03", "LOIN-04", "LOIN-05", ""],
+          ["Ductwork", "Ss_65_40", "MEP", "", "LOIN-03", "LOIN-04", "LOIN-05", "Fabrication model by contractor at Stage 5"],
+        ]),
+      ]),
+      sec("rules", "Modelling rules", "Ownership hand-over between designers and contractor, origin and coordinates.", [area("ownership", "Ownership transfer rules"), area("coordinates", "Origin, units and coordinate system")]),
+    ],
+  },
+
   // ---------------- ISO/IEC 42001 ----------------
   {
     id: "ai-context", standard: "iso42001", code: "AI-CTX", category: "Context", title: "Context, Interested Parties & AIMS Scope",

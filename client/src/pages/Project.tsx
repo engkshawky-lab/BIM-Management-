@@ -9,10 +9,12 @@ import Files from "./Files";
 import { ProjectForm } from "./NewProject";
 import ProjectWorkflow from "./ProjectWorkflow";
 import Quality from "./Quality";
+import Validation from "./Validation";
+import Coordination from "./Coordination";
 
 export interface ProjectData { project: Project; members: Member[]; invitations: Invitation[]; role: Project["role"] }
 
-const TABS: [string, string][] = [["overview", "Overview"], ["documents", "Documents"], ["files", "Files (CDE)"], ["delivery", "Delivery plan"], ["quality", "Quality"], ["workflow", "Workflow"], ["team", "Team"], ["activity", "Activity"], ["settings", "Settings"]];
+const TABS: [string, string][] = [["overview", "Overview"], ["documents", "Documents"], ["files", "Files (CDE)"], ["delivery", "Delivery plan"], ["validation", "Validation"], ["coordination", "Coordination"], ["quality", "Quality"], ["workflow", "Workflow"], ["team", "Team"], ["activity", "Activity"], ["settings", "Settings"]];
 
 export default function ProjectPage({ projectId, tab, sub }: { projectId: string; tab: string; sub?: string }) {
   const [data, setData] = useState<ProjectData | null>(null);
@@ -43,6 +45,8 @@ export default function ProjectPage({ projectId, tab, sub }: { projectId: string
       {tab === "documents" && <Documents data={data} />}
       {tab === "files" && <Files data={data} />}
       {tab === "delivery" && <Delivery data={data} sub={sub} />}
+      {tab === "validation" && <Validation data={data} sub={sub} />}
+      {tab === "coordination" && <Coordination data={data} sub={sub} />}
       {tab === "quality" && <Quality data={data} />}
       {tab === "workflow" && <ProjectWorkflow data={data} />}
       {tab === "team" && <Team data={data} reload={reload} />}
