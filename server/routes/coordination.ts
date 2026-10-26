@@ -186,6 +186,7 @@ r.get(P + "/clash-tests", requireProject(), h(async (req, res) => {
 const clashSchema = z.object({
   teamA: z.string(), teamB: z.string(), kind: z.enum(["hard", "clearance", "duplicate"]).default("hard"), toleranceMm: z.number().int().min(0).max(5000).default(0),
   priority: z.enum(PRIORITIES).default("Normal"), frequency: z.enum(["Daily", "Weekly", "Fortnightly", "Per milestone"]).default("Weekly"), notes: z.string().max(500).default(""),
+  code: z.string().trim().toUpperCase().max(20).default(""), setsA: z.array(z.string().trim().min(1).max(120)).max(60).default([]), setsB: z.array(z.string().trim().min(1).max(120)).max(60).default([]),
 });
 
 // Upsert by team pair (order-independent) so the matrix cell is the unit of editing.

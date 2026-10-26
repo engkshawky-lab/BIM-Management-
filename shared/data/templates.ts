@@ -245,6 +245,30 @@ export const templates: DocTemplate[] = [
     ])],
   },
   {
+    id: "minutes", standard: "iso19650", generatedFrom: { kind: "minutes", hubPath: "meetings", label: "Meetings" }, code: "MOM", category: "Meetings", title: "BIM Meeting Minutes",
+    purpose: "Record of a BIM meeting: attendees, agenda with minutes, and actions with owners and due dates.",
+    clauseRefs: ["19650-2 §5.6"],
+    sections: [projectInfo, sec("meeting", "Meeting", "Generated from the meeting record.", [
+      text("meetingType", "Meeting type"), text("meetingDate", "Date"), text("location", "Location"), area("attendees", "Attendees"),
+      table("agenda", "Agenda and minutes", ["#", "Item", "Presenter", "Minutes"], []),
+      table("actions", "Actions", ["#", "Action", "Owner", "Due", "Status"], []),
+    ])],
+  },
+  {
+    id: "progress-report", standard: "iso19650", generatedFrom: { kind: "progress-report", hubPath: "meetings", label: "Meetings" }, code: "BPR", category: "Meetings", title: "BIM Progress Report",
+    purpose: "Periodic report on information delivery, quality, coordination and risks — compiled from live project data.",
+    clauseRefs: ["19650-2 §5.6", "§5.7"],
+    sections: [projectInfo, sec("report", "Progress", "Generated from the delivery plan, reviews, issues and risks. Add commentary before issuing.", [
+      text("period", "Reporting date"), area("summary", "Executive summary", "Add commentary on progress, achievements and concerns."),
+      table("delivery", "Information delivery (MIDP)", ["Measure", "Value"], []),
+      table("overdue", "Overdue information containers", ["Container", "Task team", "Due", "Status"], []),
+      table("quality", "Model QA/QC — latest completed review per discipline", ["Discipline", "Review", "Grade", "Score"], []),
+      table("coordination", "Coordination issues", ["Priority", "Open", "Closed"], []),
+      table("risks", "Top information delivery risks", ["ID", "Risk", "Score", "Owner"], []),
+      table("actions", "Open meeting actions", ["Meeting", "Action", "Owner", "Due"], []),
+    ])],
+  },
+  {
     id: "qa-checklist", standard: "iso19650", code: "QA", category: "Quality", title: "Information Container QA Checklist",
     purpose: "QA check before a container moves from WIP to Shared.",
     clauseRefs: ["19650-2 §5.6.3"],

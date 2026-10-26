@@ -179,7 +179,7 @@ r.put(P + "/info-uses", requireProject("editor"), h(async (req, res) => {
 
 // ---------- generate controlled documents from the planner ----------
 r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) => {
-  const body = parse(z.object({ kind: z.enum(["midp", "tidp", "resp-matrix", "risk-register", "info-uses", "mrm"]), taskTeamId: z.string().optional() }), req.body, res); if (!body) return;
+  const body = parse(z.object({ kind: z.enum(["midp", "tidp", "resp-matrix", "risk-register", "info-uses", "mrm", "minutes", "progress-report"]), taskTeamId: z.string().optional(), meetingId: z.string().optional() }), req.body, res); if (!body) return;
   const pid = req.params.projectId; const uid = req.user!.id;
   const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, pid));
   const b = await bundle(pid);
@@ -206,6 +206,32 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
     const risks = await db.select().from(schema.risks).where(eq(schema.risks.projectId, pid)).orderBy(asc(schema.risks.number));
     const names = new Map((await db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users)).map((u) => [u.id, u.name]));
     values.risks = risks.filter((x) => x.status !== "Closed").map((x) => [`R${String(x.number).padStart(2, "0")}`, x.title, String(x.likelihood), String(x.impact), String(x.likelihood * x.impact), x.mitigation, names.get(x.ownerId ?? "") ?? ""]);
+  } else if (body.kind === "minutes") {
+    const [m] = await db.select().from(schema.meetings).where(and(eq(schema.meetings.id, body.meetingId ?? ""), eq(schema.meetings.projectId, pid)));
+    if (!m) return res.status(400).json({ error: "Choose a meeting." });
+    const names = new Map((await db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users)).map((u) => [u.id, u.name]));
+    title = `${t.title} — ${m.title} (#${m.number})`;
+    Object.assign(values, { meetingType: m.type, meetingDate: m.date.replace("T", " "), location: m.location, attendees: m.attendees.join("\n") });
+    values.agenda = m.agenda.map((a, i) => [String(i + 1), a.item, a.presenter, a.minutes]);
+    values.actions = m.actions.map((a, i) => [String(i + 1), a.text, names.get(a.ownerId) ?? "", a.due, a.status]);
+  } else if (body.kind === "progress-report") {
+    const day = today();
+    const names = new Map((await db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users)).map((u) => [u.id, u.name]));
+    const st = planStats(b.deliverables, day);
+    title = `${t.title} — ${day}`;
+    values.period = day;
+    values.delivery = [["Information containers planned", String(st.total)], ["Published", String(st.published)], ["Shared", String(st.shared)], ["In progress", String(st.inProgress)], ["Not started", String(st.planned)], ["Overdue", String(st.overdue)], ["Overall progress", `${st.progress}%`]];
+    values.overdue = b.deliverables.filter((d) => d.dueDate && d.dueDate < day && d.status !== "published").map((d) => [d.containerName || d.title, team.get(d.taskTeamId)?.name ?? "", d.dueDate, d.status.replace("_", " ")]);
+    const reviews = await db.select().from(schema.modelReviews).where(and(eq(schema.modelReviews.projectId, pid), eq(schema.modelReviews.status, "Completed")));
+    const latest = new Map<string, typeof reviews[number]>(); for (const rv of reviews.sort((a, z2) => a.number - z2.number)) latest.set(rv.discipline, rv);
+    values.quality = [...latest.values()].map((rv) => [rv.discipline, rv.title, rv.grade, `${rv.score}%`]);
+    const iss = await db.select().from(schema.issues).where(eq(schema.issues.projectId, pid));
+    values.coordination = [...new Set(iss.map((i) => i.priority))].map((p) => [p, String(iss.filter((i) => i.priority === p && i.status !== "Closed").length), String(iss.filter((i) => i.priority === p && i.status === "Closed").length)]);
+    const risks = await db.select().from(schema.risks).where(eq(schema.risks.projectId, pid));
+    values.risks = risks.filter((x) => x.status !== "Closed").sort((a, z2) => z2.likelihood * z2.impact - a.likelihood * a.impact).slice(0, 5).map((x) => [`R${String(x.number).padStart(2, "0")}`, x.title, String(x.likelihood * x.impact), names.get(x.ownerId ?? "") ?? ""]);
+    const mts = await db.select().from(schema.meetings).where(eq(schema.meetings.projectId, pid));
+    const lastByType = new Map<string, typeof mts[number]>(); for (const m of mts.sort((a, z2) => a.number - z2.number)) lastByType.set(m.type, m);
+    values.actions = [...lastByType.values()].flatMap((m) => m.actions.filter((a) => a.status !== "Done").map((a) => [m.title, a.text, names.get(a.ownerId) ?? "", a.due]));
   } else if (body.kind === "mrm") {
     if (!b.mrm.length) return res.status(400).json({ error: "Add elements to the model responsibility matrix first." });
     values.mrm = b.mrm.flatMap((row) => b.milestones.filter((m) => row.cells[m.id]?.lod || row.cells[m.id]?.teamId)
@@ -227,14 +253,19 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
   if (existing) {
     const lockedByOther = existing.lockedBy && existing.lockedBy !== uid && existing.lockedAt && now.getTime() - existing.lockedAt.getTime() < 90_000;
     if (lockedByOther) return res.status(423).json({ error: "Someone is editing that document right now. Try again shortly." });
-    const generatedKeys = body.kind === "midp" ? ["milestones", "plan"] : body.kind === "tidp" ? ["taskTeam", "containers"] : body.kind === "risk-register" ? ["risks"] : body.kind === "info-uses" ? ["uses"] : body.kind === "mrm" ? ["mrm"] : ["matrix"];
+    const generatedKeys = body.kind === "midp" ? ["milestones", "plan"] : body.kind === "tidp" ? ["taskTeam", "containers"] : body.kind === "risk-register" ? ["risks"] : body.kind === "info-uses" ? ["uses"] : body.kind === "mrm" ? ["mrm"] : body.kind === "minutes" ? ["meetingType", "meetingDate", "location", "attendees", "agenda", "actions"] : body.kind === "progress-report" ? ["period", "delivery", "overdue", "quality", "coordination", "risks", "actions"] : ["matrix"];
     const merged = { ...(existing.values as object), ...Object.fromEntries(generatedKeys.map((k) => [k, values[k]])) };
     await db.update(schema.documents).set({ values: merged, updatedAt: now }).where(eq(schema.documents.id, existing.id));
     await logActivity(pid, uid, "document.generated", `Regenerated ${title} from the delivery planner`, `/projects/${pid}/documents/${existing.id}`);
     return res.json({ id: existing.id, updated: true });
   }
   const id = newId();
-  const container = `${project.code}-${(body.taskTeamId && team.get(body.taskTeamId)?.originatorCode) || "XXX"}-ZZ-ZZ-SH-Z-${({ midp: "0001", tidp: "0002", "resp-matrix": "0003", "risk-register": "0004", "info-uses": "0005", mrm: "0006" } as const)[body.kind]}`;
+  // one-off records (minutes, reports) take the next free number in their series
+  const seriesBase = ({ midp: 1, tidp: 2, "resp-matrix": 3, "risk-register": 4, "info-uses": 5, mrm: 6, minutes: 100, "progress-report": 200 } as const)[body.kind];
+  const seq = ["minutes", "progress-report"].includes(body.kind)
+    ? seriesBase + (await db.select({ id: schema.documents.id }).from(schema.documents).where(and(eq(schema.documents.projectId, pid), eq(schema.documents.templateId, t.id)))).length + 1
+    : seriesBase;
+  const container = `${project.code}-${(body.taskTeamId && team.get(body.taskTeamId)?.originatorCode) || "XXX"}-ZZ-ZZ-${["minutes", "progress-report"].includes(body.kind) ? "MI" : "SH"}-Z-${String(seq).padStart(4, "0")}`;
   await db.insert(schema.documents).values({ id, projectId: pid, templateId: t.id, title, containerName: container, revision: "P01.01", state: "WIP", suitability: "S0", authorId: uid, values, createdAt: now, updatedAt: now });
   await db.insert(schema.documentRevisions).values({ id: newId(), documentId: id, revision: "P01.01", state: "WIP", suitability: "S0", note: "Generated from the delivery planner", values, authorId: uid, createdAt: now });
   await logActivity(pid, uid, "document.generated", `Generated ${title} from the delivery planner`, `/projects/${pid}/documents/${id}`);

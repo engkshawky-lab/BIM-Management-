@@ -1,3 +1,4 @@
+import { MRM_STARTER } from "../../../shared/mrm";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { navigate, useSession } from "../App";
 import type { TaskTeam } from "../../../shared/delivery";
@@ -155,7 +156,7 @@ function Issues({ data, teams }: { data: ProjectData; teams: TaskTeam[] }) {
   );
 }
 
-interface ClashTest { id: string; teamA: string; teamB: string; kind: string; toleranceMm: number; priority: string; frequency: string; notes: string }
+interface ClashTest { id: string; teamA: string; teamB: string; kind: string; toleranceMm: number; priority: string; frequency: string; notes: string; code: string; setsA: string[] | null; setsB: string[] | null }
 
 function ClashMatrix({ data, teams }: { data: ProjectData; teams: TaskTeam[] }) {
   const { toast } = useSession();
@@ -174,7 +175,11 @@ function ClashMatrix({ data, teams }: { data: ProjectData; teams: TaskTeam[] }) 
     <>
       <div className="row spread" style={{ marginBottom: 10 }}>
         <p className="small muted" style={{ margin: 0 }}>Clash detection matrix between task teams: test type, tolerance, priority and frequency. Click a cell to define a test. Import clash reports from Navisworks, Solibri or Revizto (CSV) to raise issues.</p>
-        {editor && <button className="primary" onClick={() => setImporting(true)}>⬆ Import clash report</button>}
+        <div className="row">
+          {tests.length > 0 && <button onClick={() => exportCsv(`${data.project.code}-clash-tests`, ["Code", "Team A", "Search sets A", "Team B", "Search sets B", "Type", "Tolerance (mm)", "Priority", "Frequency", "Notes"],
+            tests.map((t) => [t.code, teams.find((x) => x.id === t.teamA)?.name ?? "", (t.setsA ?? []).join("; "), teams.find((x) => x.id === t.teamB)?.name ?? "", (t.setsB ?? []).join("; "), t.kind, String(t.toleranceMm), t.priority, t.frequency, t.notes]))}>⬇ Clash tests CSV</button>}
+          {editor && <button className="primary" onClick={() => setImporting(true)}>⬆ Import clash report</button>}
+        </div>
       </div>
       <div className="card table-wrap">
         <table className="data clash-matrix">
@@ -184,12 +189,12 @@ function ClashMatrix({ data, teams }: { data: ProjectData; teams: TaskTeam[] }) 
               if (j < i) return <td key={col.id} className="muted center-cell">·</td>;
               const t = find(row.id, col.id);
               return <td key={col.id} className="center-cell"><button className={"clash-cell" + (t ? " set p-" + t.priority : "")} disabled={!editor} onClick={() => setEdit({ a: row.id, b: col.id })}>
-                {t ? <><b>{t.kind === "hard" ? "Hard" : t.kind === "clearance" ? `${t.toleranceMm} mm` : "Dup"}</b><span className="tiny">{t.frequency}</span></> : "+"}</button></td>;
+                {t ? <>{t.code && <span className="tiny mono">{t.code}</span>}<b>{t.kind === "hard" ? "Hard" : t.kind === "clearance" ? `${t.toleranceMm} mm` : "Dup"}</b><span className="tiny">{t.frequency}{(t.setsA?.length || t.setsB?.length) ? ` · ${(t.setsA?.length ?? 0)}×${(t.setsB?.length ?? 0)} sets` : ""}</span></> : "+"}</button></td>;
             })}</tr>
           ))}</tbody>
         </table>
       </div>
-      {edit && <ClashEditor key={edit.a + edit.b} initial={cur} label={`${teams.find((t) => t.id === edit.a)?.name} × ${teams.find((t) => t.id === edit.b)?.name}`} onClose={() => setEdit(null)}
+      {edit && <ClashEditor key={edit.a + edit.b} initial={cur} defaultCode={cur?.code || `${initials(teams.find((t) => t.id === edit.a)?.name)}-${initials(teams.find((t) => t.id === edit.b)?.name)}-${String(tests.length + 1).padStart(2, "0")}`} label={`${teams.find((t) => t.id === edit.a)?.name} × ${teams.find((t) => t.id === edit.b)?.name}`} onClose={() => setEdit(null)}
         onDelete={cur ? async () => { await api(`/projects/${pid}/clash-tests/${cur.id}`, { method: "DELETE" }); setEdit(null); load(); } : undefined}
         onSave={async (v) => { try { await api(`/projects/${pid}/clash-tests`, { method: "PUT", body: { ...v, teamA: edit.a, teamB: edit.b } }); setEdit(null); load(); } catch (e) { toast((e as Error).message, "error"); } }} />}
       {importing && <ClashImport data={data} teams={teams} onClose={() => setImporting(false)} />}
@@ -197,8 +202,24 @@ function ClashMatrix({ data, teams }: { data: ProjectData; teams: TaskTeam[] }) 
   );
 }
 
-function ClashEditor({ initial, label, onSave, onDelete, onClose }: { initial?: ClashTest; label: string; onSave: (v: Omit<ClashTest, "id" | "teamA" | "teamB">) => void; onDelete?: () => void; onClose: () => void }) {
-  const [v, setV] = useState({ kind: initial?.kind ?? "hard", toleranceMm: initial?.toleranceMm ?? 0, priority: initial?.priority ?? "Normal", frequency: initial?.frequency ?? "Weekly", notes: initial?.notes ?? "" });
+const initials = (name = "") => name.split(/[\s/&-]+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase().padEnd(2, "X");
+// Search-set suggestions reuse the model element list (no separate library to maintain).
+const SET_SUGGESTIONS = MRM_STARTER.map((x) => `${x.system} – ${x.element}`);
+
+function SetList({ label, value, onChange }: { label: string; value: string[]; onChange: (v: string[]) => void }) {
+  const [add, setAdd] = useState("");
+  return (
+    <div><label>{label}</label>
+      <div className="chips" style={{ marginBottom: 4 }}>{value.map((x) => <span key={x} className="chip">{x} <button className="linklike" onClick={() => onChange(value.filter((y) => y !== x))}>✕</button></span>)}</div>
+      <input list="set-suggest" placeholder="Add search set, e.g. HVAC – Ductwork" value={add} onChange={(e) => setAdd(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter" && add.trim()) { e.preventDefault(); if (!value.includes(add.trim())) onChange([...value, add.trim()]); setAdd(""); } }} />
+    </div>
+  );
+}
+
+function ClashEditor({ initial, defaultCode, label, onSave, onDelete, onClose }: { initial?: ClashTest; defaultCode: string; label: string; onSave: (v: Omit<ClashTest, "id" | "teamA" | "teamB">) => void; onDelete?: () => void; onClose: () => void }) {
+  const [v, setV] = useState({ kind: initial?.kind ?? "hard", toleranceMm: initial?.toleranceMm ?? 0, priority: initial?.priority ?? "Normal", frequency: initial?.frequency ?? "Weekly", notes: initial?.notes ?? "",
+    code: initial?.code || defaultCode, setsA: initial?.setsA ?? [], setsB: initial?.setsB ?? [] });
   return (
     <div className="modal-bg" onClick={onClose}><div className="modal" onClick={(e) => e.stopPropagation()}>
       <h2 style={{ marginTop: 0 }}>Clash test: {label}</h2>
@@ -208,6 +229,13 @@ function ClashEditor({ initial, label, onSave, onDelete, onClose }: { initial?: 
         <div><label>Priority</label><select value={v.priority} onChange={(e) => setV({ ...v, priority: e.target.value })}>{PRIORITIES.map((p) => <option key={p}>{p}</option>)}</select></div>
         <div><label>Frequency</label><select value={v.frequency} onChange={(e) => setV({ ...v, frequency: e.target.value })}>{["Daily", "Weekly", "Fortnightly", "Per milestone"].map((p) => <option key={p}>{p}</option>)}</select></div>
       </div>
+      <div className="grid g2" style={{ marginTop: 8 }}>
+        <div><label>Test code</label><input className="mono" value={v.code} onChange={(e) => setV({ ...v, code: e.target.value.toUpperCase() })} /></div>
+        <div />
+        <SetList label="Search sets — side A" value={v.setsA} onChange={(setsA) => setV({ ...v, setsA })} />
+        <SetList label="Search sets — side B" value={v.setsB} onChange={(setsB) => setV({ ...v, setsB })} />
+      </div>
+      <datalist id="set-suggest">{SET_SUGGESTIONS.map((x) => <option key={x} value={x} />)}</datalist>
       <label>Notes / rules</label><input value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} placeholder="e.g. exclude insulation; ducts vs primary steel only" />
       <div className="row spread" style={{ marginTop: 12 }}>{onDelete ? <button className="danger" onClick={onDelete}>Remove test</button> : <span />}<div className="row"><button onClick={onClose}>Cancel</button><button className="primary" onClick={() => onSave(v)}>Save</button></div></div>
     </div></div>

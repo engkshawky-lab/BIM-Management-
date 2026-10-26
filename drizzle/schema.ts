@@ -301,6 +301,9 @@ export const clashTests = mysqlTable("clash_tests", {
   priority: varchar("priority", { length: 16 }).notNull().default("Normal"),
   frequency: varchar("frequency", { length: 24 }).notNull().default("Weekly"),
   notes: varchar("notes", { length: 500 }).notNull().default(""),
+  code: varchar("code", { length: 20 }).notNull().default(""),
+  setsA: json<string[]>("sets_a"),
+  setsB: json<string[]>("sets_b"),
 }, (t) => [index("clash_project").on(t.projectId)]);
 
 export const risks = mysqlTable("risks", {
@@ -377,3 +380,22 @@ export const mrmRows = mysqlTable("mrm_rows", {
   sortOrder: int("sort_order").notNull().default(0),
   createdAt: created(),
 }, (t) => [index("mrm_project").on(t.projectId)]);
+
+export const meetings = mysqlTable("meetings", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  number: int("number").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  type: varchar("type", { length: 40 }).notNull(),
+  date: varchar("date", { length: 16 }).notNull().default(""),
+  location: varchar("location", { length: 160 }).notNull().default(""),
+  attendees: json<string[]>("attendees").notNull(),
+  // { item, presenter, minutes }
+  agenda: json<{ item: string; presenter: string; minutes: string }[]>("agenda").notNull(),
+  // { text, ownerId, due, status }
+  actions: json<{ id: string; text: string; ownerId: string; due: string; status: string }[]>("actions").notNull(),
+  status: varchar("status", { length: 16 }).notNull().default("Planned"),
+  createdBy: ref("created_by").notNull(),
+  createdAt: created(),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+}, (t) => [index("meetings_project").on(t.projectId)]);
