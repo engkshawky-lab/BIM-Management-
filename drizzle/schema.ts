@@ -525,3 +525,36 @@ export const fourdPlans = mysqlTable("fourd_plans", {
   activities: json<{ id: string; code: string; name: string; start: string; finish: string; actualStart: string; actualFinish: string; storeys: string[]; classes: string[] }[]>("activities").notNull(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 });
+
+/** Opt-in professional profile for the talent pool; nothing is visible unless `visible` is set. */
+export const talentProfiles = mysqlTable("talent_profiles", {
+  userId: varchar("user_id", { length: 36 }).primaryKey(),
+  visible: boolean("visible").notNull().default(false),
+  showResults: boolean("show_results").notNull().default(false),
+  headline: varchar("headline", { length: 160 }).notNull().default(""),
+  skills: json<string[]>("skills").notNull(),
+  certifications: json<string[]>("certifications").notNull(),
+  years: int("years").notNull().default(0),
+  location: varchar("location", { length: 120 }).notNull().default(""),
+  availability: varchar("availability", { length: 20 }).notNull().default("Not looking"),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+});
+
+export const talentViews = mysqlTable("talent_views", {
+  id: id(),
+  recruiterId: ref("recruiter_id").notNull(),
+  userId: ref("user_id").notNull(),
+  createdAt: created(),
+}, (t) => [index("talent_views_user").on(t.userId)]);
+
+/** Saved estimates (BIM fee, embodied carbon) attached to a project. */
+export const estimates = mysqlTable("estimates", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  kind: varchar("kind", { length: 10 }).notNull(),
+  title: varchar("title", { length: 160 }).notNull(),
+  input: json<Record<string, unknown>>("input").notNull(),
+  summary: varchar("summary", { length: 300 }).notNull().default(""),
+  createdBy: ref("created_by").notNull(),
+  createdAt: created(),
+}, (t) => [index("estimates_project").on(t.projectId)]);

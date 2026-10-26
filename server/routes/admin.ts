@@ -39,9 +39,9 @@ r.get("/admin/users", requireAdmin, h(async (_req, res) => {
 }));
 
 r.put("/admin/users/:id", requireAdmin, h(async (req, res) => {
-  const parsed = parse(z.object({ role: z.enum(["user", "admin"]), disabled: z.boolean() }).partial(), req.body, res); if (!parsed) return;
+  const parsed = parse(z.object({ role: z.enum(["user", "recruiter", "admin"]), disabled: z.boolean() }).partial(), req.body, res); if (!parsed) return;
   const body = sentKeys(parsed, req.body);
-  if (req.params.id === req.user!.id && (body.role === "user" || body.disabled)) return res.status(400).json({ error: "You can't remove your own admin access or disable yourself." });
+  if (req.params.id === req.user!.id && (body.role && body.role !== "admin" || body.disabled)) return res.status(400).json({ error: "You can't remove your own admin access or disable yourself." });
   await db.update(schema.users).set({ ...(body.role ? { role: body.role } : {}), ...(body.disabled !== undefined ? { disabled: body.disabled ? 1 : 0 } : {}) }).where(eq(schema.users.id, req.params.id));
   if (body.disabled) await db.delete(schema.sessions).where(eq(schema.sessions.userId, req.params.id));
   console.log(`[admin] ${req.user!.email} updated user ${req.params.id}: ${JSON.stringify(body)}`);

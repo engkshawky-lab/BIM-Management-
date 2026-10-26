@@ -141,6 +141,13 @@
       "when": 1793036040294,
       "tag": "0019_fourd",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1793036265682,
+      "tag": "0020_talent",
+      "breakpoints": true
     }
   ]
 }

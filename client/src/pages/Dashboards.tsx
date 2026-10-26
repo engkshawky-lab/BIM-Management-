@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ASSESSMENTS, CARBON_MATERIALS, COMPLEXITY, FEE_SERVICES, estimateCarbon, estimateFee, scoreAssessment } from "../../../shared/tools";
-import { api } from "../lib/api";
+import { useSession } from "../App";
+import { api, fmtDate } from "../lib/api";
 import { exportCsv } from "../lib/export";
 
 // ---------------------------------------------------------------- My Day
@@ -71,6 +72,29 @@ export function Portfolio() {
 
 // ---------------------------------------------------------------- Tools
 
+interface Est { id: string; title: string; summary: string; input: Record<string, unknown>; createdAt: string }
+/** Save the current estimate to a project, or reload one saved earlier. */
+function SaveEstimate<T extends object>({ kind, input, summary, onLoad }: { kind: "fee" | "carbon"; input: T; summary: string; onLoad: (v: T) => void }) {
+  const { toast } = useSession();
+  const [projects, setProjects] = useState<{ id: string; code: string; name: string }[]>([]);
+  const [pid, setPid] = useState(""); const [title, setTitle] = useState("");
+  const [saved, setSaved] = useState<Est[]>([]);
+  useEffect(() => { api<{ projects: { id: string; code: string; name: string }[] }>("/projects").then((r) => { setProjects(r.projects); if (r.projects[0]) setPid(r.projects[0].id); }); }, []);
+  const load = () => pid && api<{ estimates: (Est & { kind: string })[] }>(`/projects/${pid}/estimates`).then((r) => setSaved(r.estimates.filter((e) => e.kind === kind)));
+  useEffect(() => { load(); }, [pid]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!projects.length) return null;
+  return (
+    <div className="card" style={{ marginTop: 12 }}>
+      <div className="row"><b>Save to project</b>
+        <select value={pid} onChange={(e) => setPid(e.target.value)} style={{ width: "auto" }}>{projects.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}</select>
+        <input placeholder="Title, e.g. Stage 3 estimate" value={title} onChange={(e) => setTitle(e.target.value)} style={{ maxWidth: 260 }} />
+        <button className="primary small" disabled={!title} onClick={async () => { try { await api(`/projects/${pid}/estimates`, { body: { kind, title, input, summary } }); toast("Estimate saved to project"); setTitle(""); load(); } catch (e) { toast((e as Error).message, "error"); } }}>Save</button></div>
+      {saved.length > 0 && <table className="data" style={{ marginTop: 8 }}><tbody>{saved.map((e) => <tr key={e.id}><td>{e.title}</td><td className="small muted">{e.summary}</td><td className="small">{fmtDate(e.createdAt)}</td>
+        <td className="nowrap"><button className="small" onClick={() => onLoad(e.input as T)}>Load</button><button className="ghost tiny danger" onClick={async () => { await api(`/projects/${pid}/estimates/${e.id}`, { method: "DELETE" }); load(); }}>✕</button></td></tr>)}</tbody></table>}
+    </div>
+  );
+}
+
 const money = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 0 });
 
 function FeeTool() {
@@ -92,6 +116,7 @@ function FeeTool() {
           <tr><td><b>Total</b></td><td><b>{r.days}</b></td><td><b>{money(r.cost)}</b></td></tr>
         </tbody></table>
         <p className="small muted">{r.perM2.toFixed(2)} per m² · average {r.fte.toFixed(2)} FTE over {f.months} months</p>
+        <SaveEstimate kind="fee" input={f} summary={`${r.days} days · ${money(r.cost)}`} onLoad={(v) => setF(v)} />
         <button onClick={() => exportCsv("bim-fee-estimate", ["Service", "Days", "Fee"], [...r.lines.map((l) => [l.label, String(l.days), String(l.cost)]), ["Total", String(r.days), String(r.cost)]])}>⬇ CSV</button>
       </div>
     </>
@@ -118,6 +143,7 @@ function CarbonTool() {
         </tbody></table>
         <button className="ghost small" onClick={() => setRows([...rows, { materialId: "steel", qty: 0 }])}>+ Material</button>
         <p><b>{(r.totalKg / 1000).toFixed(1)} tCO₂e</b> · <b>{r.perM2.toFixed(0)} kgCO₂e/m²</b> GIFA · indicative band <b>{r.band}</b></p>
+        <SaveEstimate kind="carbon" input={{ gifa, rows }} summary={`${(r.totalKg / 1000).toFixed(1)} tCO2e · ${r.perM2.toFixed(0)} kg/m²`} onLoad={(v) => { setGifa(v.gifa); setRows(v.rows); }} />
         <button onClick={() => exportCsv("embodied-carbon", ["Material", "Quantity", "Unit", "Factor", "kgCO2e"], r.lines.map((l) => [l.label, String(l.qty), l.unit, String(l.factor), l.kg.toFixed(0)]))}>⬇ CSV</button>
       </div>
     </>

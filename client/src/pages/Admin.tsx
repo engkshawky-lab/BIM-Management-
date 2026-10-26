@@ -41,7 +41,7 @@ function Users() {
           <tr key={u.id} style={u.disabled ? { opacity: 0.6 } : undefined}>
             <td>{u.name}</td><td className="small">{u.email}</td><td className="small">{u.organization}</td><td>{u.projects}</td>
             <td className="small">{fmtDate(u.createdAt)}</td><td className="small">{u.lastLoginAt ? fmtDate(u.lastLoginAt) : "—"}</td>
-            <td><select value={u.role} disabled={u.id === user.id} onChange={(e) => upd(u.id, { role: e.target.value })}><option value="user">User</option><option value="admin">Admin</option></select></td>
+            <td><select value={u.role} disabled={u.id === user.id} onChange={(e) => upd(u.id, { role: e.target.value })}><option value="user">User</option><option value="recruiter">Recruiter</option><option value="admin">Admin</option></select></td>
             <td>{u.id !== user.id && <button className="small" onClick={() => upd(u.id, { disabled: !u.disabled })}>{u.disabled ? "Enable" : "Disable"}</button>}</td>
             <td><button className="small" onClick={async () => { const r = await api<{ link: string }>(`/admin/users/${u.id}/reset-link`, { body: {} }); setLink({ email: u.email, link: r.link }); }}>Reset link</button></td>
           </tr>

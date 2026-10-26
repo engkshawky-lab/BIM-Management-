@@ -1,6 +1,7 @@
 import ClientStandards from "./pages/ClientStandards";
 import Learn from "./pages/Learn";
 import Admin from "./pages/Admin";
+import { MyTalentProfile, TalentSearch } from "./pages/Talent";
 import { MyDay, Portfolio, Tools } from "./pages/Dashboards";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { api, type User } from "./lib/api";
@@ -55,6 +56,7 @@ export default function App() {
   // legacy links into the separate knowledge pages
   else if (["library", "templates"].includes(parts[0])) view = <Knowledge std={parts[1] === "iso42001" ? "iso42001" : "iso19650"} section={parts[0]} />;
   else if (["naming", "references"].includes(parts[0])) view = <Knowledge std="iso19650" section={parts[0]} />;
+  else if (parts[0] === "talent") view = parts[1] === "me" ? <MyTalentProfile /> : <TalentSearch />;
   else if (parts[0] === "admin") view = <Admin tab={parts[1]} />;
   else if (parts[0] === "learn") view = <Learn />;
   else if (parts[0] === "my-day") view = <MyDay />;

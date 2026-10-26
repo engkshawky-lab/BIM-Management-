@@ -76,6 +76,8 @@ export const RESOURCE_PAGES: NavItem[] = [
   g("r.maturity", "BIM maturity assessment", "/tools/maturity", "check", "Tools"),
   g("r.dt", "Digital twin readiness", "/tools/dt", "check", "Tools"),
   g("r.scan", "Scan-to-BIM readiness", "/tools/scan", "check", "Tools"),
+  g("r.talentme", "My talent profile", "/talent/me", "user", "Careers", "Opt-in profile for recruiters"),
+  g("r.talent", "Talent pool (recruiters)", "/talent", "users", "Careers"),
   g("r.standards", "Client standards", "/standards", "book", "Client requirements"),
   g("r.profile", "My profile", "/profile", "user", "Account"),
 ];
@@ -96,7 +98,7 @@ export const RAIL: RailSection[] = [
 export function sectionFor(route: string): string {
   if (route.startsWith("/projects")) return "projects";
   if (/^\/knowledge\/[^/]+\/templates/.test(route)) return "documents";
-  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|standards)/.test(route)) return "resources";
+  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|standards|talent|admin)/.test(route)) return "resources";
   if (route.startsWith("/knowledge") || route.startsWith("/learn")) return "standards";
   return "home";
 }
