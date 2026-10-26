@@ -1,10 +1,11 @@
 import { and, asc, eq } from "drizzle-orm";
+import ExcelJS from "exceljs";
 import { Router } from "express";
 import { INFO_USES, useByCode } from "../../shared/data/infoUses";
 import { LODS, MRM_STARTER } from "../../shared/mrm";
 import { z } from "zod";
 import { templateById } from "../../shared/data/templates";
-import { analysePlan, planStats, qualityScore, type Deliverable } from "../../shared/delivery";
+import { analysePlan, planStats, qualityScore, variance, type Deliverable } from "../../shared/delivery";
 import { initialValues } from "../../shared/documents";
 import { checkDocument, checkProjectSet } from "../../shared/quality";
 import { logActivity, requireProject } from "../access";
@@ -41,6 +42,7 @@ type Table = typeof schema.taskTeams | typeof schema.milestones | typeof schema.
 function crud<S extends z.ZodObject>(path: string, table: Table, shape: S, label: (row: z.infer<S>) => string, hooks: {
   beforeDelete?: (pid: string, id: string) => Promise<string | void>;
   validate?: (pid: string, row: Partial<z.infer<S>>) => Promise<string | void>;
+  transform?: (row: Partial<z.infer<S>>, pid: string, id: string) => Promise<Partial<z.infer<S>>>;
 } = {}) {
   const withTimestamps = (row: object, isNew: boolean) => ({ ...row, ...("updatedAt" in table ? { updatedAt: new Date() } : {}), ...(isNew ? { createdAt: new Date() } : {}) });
 
@@ -56,7 +58,8 @@ function crud<S extends z.ZodObject>(path: string, table: Table, shape: S, label
 
   r.put(`${P}/${path}/:id`, requireProject("editor"), h(async (req, res) => {
     const parsed = parse(shape.partial(), req.body, res); if (!parsed) return;
-    const body = sentKeys(parsed, req.body) as Partial<z.infer<S>>;
+    let body = sentKeys(parsed, req.body) as Partial<z.infer<S>>;
+    if (hooks.transform) body = await hooks.transform(body, req.params.projectId, req.params.id);
     const pid = req.params.projectId;
     const err = await hooks.validate?.(pid, body); if (err) return res.status(400).json({ error: err });
     const result = await db.update(table).set(withTimestamps(body, false) as never).where(and(eq(table.id, req.params.id), eq(table.projectId, pid)));
@@ -109,8 +112,15 @@ crud("deliverables", schema.deliverables, z.object({
   startDate: date.default(""), dueDate: date.default(""), status: z.enum(["planned", "in_progress", "shared", "published"]).default("planned"),
   dependsOn: z.array(z.string()).max(50).default([]), assigneeId: z.string().nullable().default(null),
   fileId: z.string().nullable().default(null), documentId: z.string().nullable().default(null), notes: z.string().max(1000).default(""),
+  formats: z.array(z.string().trim().toUpperCase().max(12)).max(10).default([]), classification: z.string().trim().max(80).default(""), actualDate: date.default(""),
 }), (d) => `container ${d.containerName || d.title}`, {
   validate: sameProject,
+  // record the actual delivery date when a container is first shared or published
+  transform: async (row, pid, id) => {
+    if (!row.status || !["shared", "published"].includes(row.status) || row.actualDate !== undefined) return row;
+    const [cur] = await db.select({ a: schema.deliverables.actualDate }).from(schema.deliverables).where(and(eq(schema.deliverables.id, id), eq(schema.deliverables.projectId, pid)));
+    return cur && !cur.a ? { ...row, actualDate: today() } : row;
+  },
   beforeDelete: async (pid, id) => {
     // drop the deleted container from everyone's dependency list
     const rows = await db.select().from(schema.deliverables).where(eq(schema.deliverables.projectId, pid));
@@ -157,6 +167,49 @@ r.post(P + "/deliverables-import", requireProject("editor"), h(async (req, res) 
   await db.insert(schema.deliverables).values(body.rows.map((row) => ({ ...row, containerName: row.containerName.toUpperCase(), id: newId(), projectId: pid, dependsOn: [], createdAt: now, updatedAt: now })));
   await logActivity(pid, req.user!.id, "deliverables.imported", `Imported ${body.rows.length} containers into the MIDP`, `/projects/${pid}/delivery`);
   res.status(201).json({ count: body.rows.length });
+}));
+
+// ---------- MIDP / TIDP Excel export ----------
+r.get(P + "/midp.xlsx", requireProject(), h(async (req, res) => {
+  const pid = req.params.projectId;
+  const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, pid));
+  const b = await bundle(pid);
+  const teamId = typeof req.query.team === "string" ? req.query.team : "";
+  const team = new Map(b.teams.map((t) => [t.id, t]));
+  const ms = new Map(b.milestones.map((m) => [m.id, m]));
+  const users = new Map((await db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users)).map((u) => [u.id, u.name]));
+  const rows = b.deliverables.filter((d) => !teamId || d.taskTeamId === teamId);
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "BIM Management portal";
+  const sheet = (name: string, cols: { header: string; key: string; width: number }[], data: Record<string, unknown>[]) => {
+    const ws = wb.addWorksheet(name, { views: [{ state: "frozen", ySplit: 1 }] });
+    ws.columns = cols; ws.addRows(data);
+    ws.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+    ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E293B" } };
+    ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
+    return ws;
+  };
+  const day = today();
+  const ws = sheet(teamId ? `TIDP ${team.get(teamId)?.name ?? ""}`.slice(0, 31) : "MIDP", [
+    { header: "Task team", key: "team", width: 20 }, { header: "Container name", key: "container", width: 34 }, { header: "Title", key: "title", width: 40 },
+    { header: "Type", key: "type", width: 6 }, { header: "Formats", key: "formats", width: 16 }, { header: "Classification", key: "cls", width: 18 },
+    { header: "LOIN", key: "loin", width: 10 }, { header: "Milestone", key: "ms", width: 18 }, { header: "Start", key: "start", width: 11 },
+    { header: "Due", key: "due", width: 11 }, { header: "Actual", key: "actual", width: 11 }, { header: "Variance (days)", key: "var", width: 10 },
+    { header: "Status", key: "status", width: 12 }, { header: "Responsible", key: "resp", width: 20 }, { header: "Depends on", key: "deps", width: 30 },
+  ], rows.map((d) => ({
+    team: team.get(d.taskTeamId)?.name ?? "", container: d.containerName, title: d.title, type: d.typeCode, formats: (d.formats ?? []).join(", "), cls: d.classification,
+    loin: d.loin, ms: ms.get(d.milestoneId ?? "")?.name ?? "", start: d.startDate, due: d.dueDate, actual: d.actualDate, var: variance(d) ?? "",
+    status: d.status.replace("_", " "), resp: users.get(d.assigneeId ?? "") ?? "", deps: d.dependsOn.map((x) => b.deliverables.find((y) => y.id === x)?.containerName).filter(Boolean).join(", "),
+  })));
+  rows.forEach((d, i) => { if (d.dueDate && d.dueDate < day && !["shared", "published"].includes(d.status)) ws.getRow(i + 2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDE2E2" } }; });
+  sheet("Milestones", [{ header: "Milestone", key: "n", width: 24 }, { header: "Date", key: "d", width: 12 }, { header: "Containers", key: "c", width: 12 }, { header: "Delivered", key: "x", width: 12 }],
+    b.milestones.map((m) => { const list = rows.filter((d) => d.milestoneId === m.id); return { n: m.name, d: m.date, c: list.length, x: list.filter((d) => ["shared", "published"].includes(d.status)).length }; }));
+  const st = planStats(rows, day);
+  sheet("Summary", [{ header: "Measure", key: "k", width: 28 }, { header: "Value", key: "v", width: 14 }],
+    [["Project", `${project.code} ${project.name}`], ["Exported", day], ["Containers", st.total], ["Published", st.published], ["Shared", st.shared], ["In progress", st.inProgress], ["Not started", st.planned], ["Overdue", st.overdue], ["Progress", `${st.progress}%`]].map(([k, v]) => ({ k, v })));
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", `attachment; filename="${project.code}-${teamId ? "TIDP" : "MIDP"}-${day}.xlsx"`);
+  await wb.xlsx.write(res); res.end();
 }));
 
 // ---------- information uses (ISO 19650-1 §5.1) ----------

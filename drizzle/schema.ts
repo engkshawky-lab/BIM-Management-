@@ -218,6 +218,9 @@ export const deliverables = mysqlTable("deliverables", {
   fileId: ref("file_id"),
   documentId: ref("document_id"),
   notes: varchar("notes", { length: 1000 }).notNull().default(""),
+  formats: json<string[]>("formats"),
+  classification: varchar("classification", { length: 80 }).notNull().default(""),
+  actualDate: varchar("actual_date", { length: 10 }).notNull().default(""),
   createdAt: created(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 }, (t) => [index("deliverables_project").on(t.projectId)]);

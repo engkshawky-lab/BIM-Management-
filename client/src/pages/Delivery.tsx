@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { navigate, useSession } from "../App";
 import { Progress } from "../components/common";
 import { roleCodes, typeCodes } from "../../../shared/data/iso19650";
-import { DELIVERABLE_STATUSES, addDays, daysBetween, type Deliverable, type DeliverableStatus, type Finding, type Milestone, type TaskTeam } from "../../../shared/delivery";
+import { DELIVERABLE_STATUSES, addDays, daysBetween, variance, type Deliverable, type DeliverableStatus, type Finding, type Milestone, type TaskTeam } from "../../../shared/delivery";
 import { containerName } from "../../../shared/naming";
 import { changeImpact } from "../../../shared/impact";
+import { RACI_STARTER } from "../../../shared/data/raciStarter";
 import { LODS, LOD_MEANING, mrmFindings, type Lod, type MrmCell } from "../../../shared/mrm";
 import { api, canEdit, type Member } from "../lib/api";
 import { exportCsv, parseTabular } from "../lib/export";
@@ -103,6 +104,11 @@ function DeliverableDialog({ initial, data, members, projectCode, onSave, onClos
       <div className="dep-list">{data.deliverables.filter((d) => d.id !== initial?.id).map((d) => (
         <label key={d.id} className="check"><input type="checkbox" checked={f.dependsOn?.includes(d.id)} onChange={(e) => set("dependsOn", e.target.checked ? [...(f.dependsOn ?? []), d.id] : (f.dependsOn ?? []).filter((x) => x !== d.id))} />{d.containerName || d.title}</label>
       ))}{data.deliverables.length <= (initial ? 1 : 0) && <span className="small muted">No other containers yet.</span>}</div>
+      <div className="grid g3">
+        <div><label>Formats</label><input value={(f.formats ?? []).join(", ")} placeholder="IFC, NWC, PDF, DWG, COBie" onChange={(e) => setF({ ...f, formats: e.target.value.split(",").map((x) => x.trim().toUpperCase()).filter(Boolean) })} /></div>
+        <div><label>Classification</label><input value={f.classification ?? ""} placeholder="e.g. Uniclass Ss_25 / NRM1 2.5" onChange={(e) => setF({ ...f, classification: e.target.value })} /></div>
+        <div><label>Actual delivery date</label><input type="date" value={f.actualDate ?? ""} onChange={(e) => setF({ ...f, actualDate: e.target.value })} /></div>
+      </div>
       <label>Notes</label><input value={f.notes} onChange={(e) => set("notes", e.target.value)} />
       <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button><button className="primary" disabled={!f.title || !f.taskTeamId} onClick={() => onSave(f)}>Save</button></div>
     </div></div>
@@ -207,6 +213,7 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
           {editor && <><button className="primary" onClick={() => setEdit("new")}>+ Container</button><button onClick={() => setImporting(true)}>Import from Excel</button>
             <button onClick={() => generate("midp")}>📄 Generate MIDP</button>
             {teamFilter && <button onClick={() => generate("tidp", teamFilter)}>📄 Generate TIDP</button>}</>}
+          <a className="btn" href={`/api/projects/${project.id}/midp.xlsx${teamFilter ? `?team=${teamFilter}` : ""}`}>⬇ Excel</a>
           <button onClick={() => exportCsv(`${project.code}-${teamFilter ? "TIDP-" + team.get(teamFilter)?.name : "MIDP"}`, ["Task team", "Container name", "Title", "Type", "LOIN", "Milestone", "Start", "Due", "Status", "Responsible", "Depends on"],
             items.map((x) => [team.get(x.taskTeamId)?.name ?? "", x.containerName, x.title, x.typeCode, x.loin, ms.get(x.milestoneId ?? "")?.name ?? "", x.startDate, x.dueDate, STATUS_LABEL[x.status], member.get(x.assigneeId ?? "") ?? "",
               x.dependsOn.map((id) => d.deliverables.find((y) => y.id === id)?.containerName).filter(Boolean).join("; ")]))}>⬇ CSV</button>
@@ -216,20 +223,21 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
       {view === "gantt" ? <div className="card"><Gantt data={d} items={items} /></div> : (
         <div className="card table-wrap">
           <table className="data">
-            <thead><tr><th>Container</th><th>Task team</th><th>LOIN</th><th>Milestone</th><th>Start</th><th>Due</th><th>Status</th><th>Responsible</th><th /></tr></thead>
+            <thead><tr><th>Container</th><th>Task team</th><th>LOIN</th><th>Milestone</th><th>Start</th><th>Due</th><th>Actual</th><th>Status</th><th>Responsible</th><th /></tr></thead>
             <tbody>
-              {items.length === 0 && <tr><td colSpan={9} className="muted">No containers{teamFilter || statusFilter ? " match the filter" : " yet — add one or import from Excel"}.</td></tr>}
+              {items.length === 0 && <tr><td colSpan={10} className="muted">No containers{teamFilter || statusFilter ? " match the filter" : " yet — add one or import from Excel"}.</td></tr>}
               {items.map((x) => {
                 const late = x.dueDate && x.dueDate < today() && x.status !== "shared" && x.status !== "published";
                 const m = ms.get(x.milestoneId ?? "");
                 return (
                   <tr key={x.id} className={late ? "late" : ""}>
-                    <td><span className="mono small">{x.containerName || "—"}</span><div>{x.title}</div>{x.dependsOn.length > 0 && <div className="tiny muted">after {x.dependsOn.map((id) => d.deliverables.find((y) => y.id === id)?.containerName || "?").join(", ")}</div>}</td>
+                    <td><span className="mono small">{x.containerName || "—"}</span><div>{x.title}</div>{(x.formats?.length || x.classification) ? <div className="tiny muted">{[x.formats?.join(" · "), x.classification].filter(Boolean).join(" — ")}</div> : null}{x.dependsOn.length > 0 && <div className="tiny muted">after {x.dependsOn.map((id) => d.deliverables.find((y) => y.id === id)?.containerName || "?").join(", ")}</div>}</td>
                     <td className="small">{team.get(x.taskTeamId)?.name}</td>
                     <td className="small">{x.loin}</td>
                     <td className="small">{m ? <>{m.name}<div className="tiny muted">{m.date}</div></> : "—"}</td>
                     <td className="small nowrap">{x.startDate}</td>
                     <td className="small nowrap">{x.dueDate}{late && <div className="tiny error">overdue</div>}</td>
+                    <td className="small nowrap">{x.actualDate || "—"}{(() => { const v = variance(x); return v === null ? null : <div className={"tiny " + (v > 0 ? "error" : "muted")}>{v > 0 ? `+${v} d late` : v < 0 ? `${-v} d early` : "on time"}</div>; })()}</td>
                     <td><select className="status-select" disabled={!editor} value={x.status} style={{ borderColor: STATUS_COLOR[x.status] }} onChange={(e) => call(`deliverables/${x.id}`, "PUT", { status: e.target.value })}>
                       {DELIVERABLE_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}</select></td>
                     <td className="small">{member.get(x.assigneeId ?? "") ?? "—"}</td>
@@ -367,6 +375,9 @@ function Responsibility({ d, project, role, call }: { d: DeliveryData; project: 
           {d.deliverables.length > 0 && d.responsibility.length === 0 && <button type="button" onClick={async () => {
             for (const [i, x] of d.deliverables.entries()) await call("responsibility", "POST", { item: x.title, stage: d.milestones.find((m) => m.id === x.milestoneId)?.name ?? "", loin: x.loin, cells: { [x.taskTeamId]: "R" }, sortOrder: i });
           }}>Seed from MIDP</button>}
+          {d.responsibility.length === 0 && <button type="button" onClick={async () => {
+            for (const [i, x] of RACI_STARTER.entries()) await call("responsibility", "POST", { ...x, sortOrder: i });
+          }}>Add ISO 19650-2 activity list ({RACI_STARTER.length})</button>}
         </form>}
       </div>
       {(missingA.length > 0 || missingR.length > 0 || multiA.length > 0) && <div className="card" style={{ marginTop: 12 }}>

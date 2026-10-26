@@ -9,6 +9,7 @@ export interface Deliverable {
   id: string; taskTeamId: string; containerName: string; title: string; typeCode: string; loin: string; milestoneId: string | null;
   startDate: string; dueDate: string; status: DeliverableStatus; dependsOn: string[]; assigneeId: string | null;
   fileId: string | null; documentId: string | null; notes: string;
+  formats?: string[] | null; classification?: string; actualDate?: string;
 }
 
 export type Severity = "error" | "warning" | "info";
@@ -98,3 +99,6 @@ export const addDays = (d: string, n: number) => new Date(Date.parse(d) + n * 86
 
 /** Score 0–100 from findings: errors cost more than warnings. */
 export const qualityScore = (f: Finding[]) => Math.max(0, 100 - f.filter((x) => x.severity === "error").length * 8 - f.filter((x) => x.severity === "warning").length * 3 - f.filter((x) => x.severity === "info").length);
+
+/** Days late (+) or early (−) against the due date; null until delivered. */
+export const variance = (d: Pick<Deliverable, "dueDate" | "actualDate">) => (d.dueDate && d.actualDate ? daysBetween(d.dueDate, d.actualDate) : null);

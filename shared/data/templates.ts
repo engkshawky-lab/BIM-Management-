@@ -1,3 +1,4 @@
+import { fullTemplates } from "./templatesFull";
 import type { DocTemplate, TemplateField, TemplateSection } from "./types";
 import { allControls42001 } from "./iso42001";
 
@@ -25,6 +26,7 @@ const aimsInfo = sec("org", "Organization information", "Identify the organizati
 
 export const templates: DocTemplate[] = [
   // ---------------- ISO 19650 ----------------
+  ...fullTemplates(projectInfo),
   {
     id: "oir", standard: "iso19650", code: "OIR", category: "Requirements", title: "Organizational Information Requirements",
     purpose: "Captures the strategic information the appointing party needs to run its business and its asset portfolio.",
@@ -151,35 +153,6 @@ export const templates: DocTemplate[] = [
     ],
   },
   {
-    id: "bep-pre", standard: "iso19650", code: "BEP-PRE", category: "Plans", title: "BIM Execution Plan (Pre-appointment)",
-    purpose: "Tender-stage plan demonstrating how the delivery team will meet the EIR.",
-    clauseRefs: ["19650-2 §5.3.2"],
-    sections: [
-      projectInfo,
-      sec("team", "Proposed delivery team", "Lead appointed party, task teams and the information management function.", [
-        table("team", "Delivery team", ["Organization", "Task team / discipline", "Information manager", "Contact"]),
-      ]),
-      sec("strategy", "Information delivery strategy", "How the EIR will be met, key milestones and approach.", [area("deliveryStrategy", "Delivery strategy")]),
-      sec("federation", "Proposed federation strategy", "How models are broken down and federated.", [area("federation", "Federation strategy", undefined, "One model per discipline per building zone; federated weekly in coordination software.")]),
-      sec("matrix", "High-level responsibility matrix", "Which task team is responsible for which information.", [table("hlrm", "Responsibility", ["Information / element", "Responsible task team", "LOIN"])]),
-      sec("amendments", "Proposed amendments", "Proposed amendments to the information standard or methods.", [area("amendments", "Amendments")]),
-      sec("software", "Proposed software & IT", "Software and hardware schedule.", [table("it", "IT schedule", ["Discipline", "Software", "Version", "Exchange"])]),
-    ],
-  },
-  {
-    id: "bep-post", standard: "iso19650", code: "BEP-POST", category: "Plans", title: "BIM Execution Plan (Post-appointment)",
-    purpose: "Confirmed BEP after appointment, with named individuals, confirmed federation and delivery plans.",
-    clauseRefs: ["19650-2 §5.4.1"],
-    sections: [
-      projectInfo,
-      sec("people", "Named information management roles", "Named individuals and their responsibilities.", [table("people", "Roles", ["Role", "Name", "Organization", "Responsibilities"], [["Information manager", "", "", "CDE governance, QA checks"], ["BIM coordinator", "", "", "Federation and clash coordination"]])]),
-      sec("federation", "Confirmed federation strategy & container breakdown", "Final breakdown structure.", [area("federation", "Federation strategy"), table("breakdown", "Container breakdown", ["Container", "Discipline", "Zone / volume", "Owner"])]),
-      sec("methods", "Information production methods", "Confirmed methods, procedures and coordination workflow.", [area("coordination", "Coordination and clash detection process", undefined, "Weekly federation, clash tests per matrix, BCF issue tracking, review in coordination meeting.")]),
-      sec("schedule", "Delivery schedule", "Reference to MIDP and TIDPs.", [text("midpRef", "MIDP reference"), date("baselineDate", "Baseline date")]),
-      sec("risks", "Information risks", "Confirmed risk register reference.", [area("risks", "Key risks")]),
-    ],
-  },
-  {
     id: "resp-matrix", standard: "iso19650", generatedFrom: { kind: "resp-matrix", hubPath: "delivery/responsibility", label: "Responsibility matrix" }, code: "DRM", category: "Plans", title: "Detailed Responsibility Matrix",
     purpose: "Defines who produces which information, when and to what level of information need.",
     clauseRefs: ["19650-2 §5.4.2"],
@@ -203,14 +176,6 @@ export const templates: DocTemplate[] = [
     sections: [projectInfo, sec("milestones", "Milestones", "Delivery milestones from the EIR.", [table("milestones", "Milestones", ["Milestone", "Date", "Purpose"])]),
       sec("plan", "Aggregated plan", "Rows from all TIDPs.", [table("plan", "MIDP", ["Task team", "Container", "LOIN", "Due date", "Milestone", "Status"])]),
       sec("risks", "Risks to delivery", "Risks identified when aggregating TIDPs.", [area("risks", "Risks")])],
-  },
-  {
-    id: "capability", standard: "iso19650", code: "CCA", category: "Tender", title: "Capability & Capacity Assessment",
-    purpose: "Assesses each task team's information management capability, IT and capacity.",
-    clauseRefs: ["19650-2 §5.3.3", "§5.3.4"],
-    sections: [projectInfo, sec("assessment", "Assessment", "Score 1–5 for each criterion.", [
-      table("scores", "Task team scores", ["Task team", "IM skills", "Software skills", "IT / hardware", "Capacity (FTE)", "Prior ISO 19650 projects", "Comments"]),
-    ]), sec("summary", "Summary", "Delivery team overall capability and gaps.", [area("summary", "Summary and actions")])],
   },
   {
     id: "mobilization", standard: "iso19650", code: "MOB", category: "Tender", title: "Mobilization Plan",
@@ -287,25 +252,6 @@ export const templates: DocTemplate[] = [
     ])],
   },
 
-  {
-    id: "bim-scope", standard: "iso19650", code: "SCOPE", category: "Contract", title: "BIM Scope of Services",
-    purpose: "Defines the information management and BIM services each appointed party provides, by stage, for inclusion in the appointment.",
-    clauseRefs: ["19650-2 5.2.3", "19650-2 5.4.6"],
-    sections: [projectInfo,
-      sec("services", "Services by stage", "Tick the stages each service applies to and who provides it.", [
-        table("services", "Services", ["Service", "Provider", "Stage 2", "Stage 3", "Stage 4", "Stage 5", "Stage 6", "Deliverable"], [
-          ["Information management function", "Lead appointed party", "✓", "✓", "✓", "✓", "✓", "IM reports"],
-          ["Discipline information models", "Each task team", "✓", "✓", "✓", "✓", "", "IFC + native models"],
-          ["Federation & clash coordination", "BIM coordinator", "", "✓", "✓", "✓", "", "Coordination reports, BCF"],
-          ["Quantity take-off from models", "Cost consultant", "✓", "✓", "✓", "", "", "Cost plan"],
-          ["COBie / asset data", "Contractor", "", "", "✓", "✓", "✓", "Validated COBie"],
-          ["As-constructed models", "Contractor", "", "", "", "✓", "✓", "CR models"],
-        ]),
-      ]),
-      sec("exclusions", "Exclusions and assumptions", "Services not included and assumptions the fee is based on.", [area("exclusions", "Exclusions"), area("assumptions", "Assumptions")]),
-      sec("resources", "Resources and fee basis", "Key roles and effort.", [table("roles", "Roles", ["Role", "Organization", "Effort (days/month)", "Stages"])]),
-    ],
-  },
   {
     id: "mpdt", standard: "iso19650", code: "MPDT", category: "Plans", title: "Model Production and Delivery Table",
     purpose: "States who models which element, to what level of information need, at each stage — the element-level companion to the responsibility matrix.",
