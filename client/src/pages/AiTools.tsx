@@ -7,6 +7,7 @@ import { saveMarkdownDocx } from "../lib/mdDocx";
 import { suitabilityCodes } from "../../../shared/data/iso19650";
 import { hubById } from "../../../shared/data/hubs";
 import HubPage from "./HubPage";
+import { GenerateTool, ReviewTool } from "./AiDocTools";
 
 // Standalone AI tools: document review, risk register, clash matrix, suitability, COBie, document generator.
 // Every result is decision support for an accountable reviewer, never an approval.
@@ -62,135 +63,7 @@ const sevColor = (s: string) => (s === "critical" || s === "missing" || s === "P
 const Pill = ({ text }: { text: string }) => <span className="badge" style={{ color: sevColor(text), borderColor: sevColor(text), background: "transparent" }}>{text}</span>;
 const Busy = ({ text }: { text: string }) => <div className="card muted">{text}</div>;
 
-// ---------------------------------------------------------------- Document review & compare
-
-interface Review {
-  docType: string; score: number; verdict: string; summary: string; strengths: string[]; missing: string[];
-  findings: { severity: string; clause: string; issue: string; evidence: string; recommendation: string }[];
-  coverage: { item: string; status: string; evidence: string; action: string }[];
-}
-
-function DocInput({ label, file, setFile, text, setText }: { label: string; file: File | null; setFile: (f: File | null) => void; text: string; setText: (t: string) => void }) {
-  return (
-    <div className="card" style={{ display: "grid", gap: 8 }}>
-      <b>{label}</b>
-      <input type="file" accept=".pdf,.docx,.txt,.md" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-      {file ? <div className="small muted">{file.name} · {(file.size / 1024).toFixed(0)} KB <button className="ghost small" onClick={() => setFile(null)}>Remove</button></div>
-        : <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="…or paste the document text here" style={{ minHeight: 140 }} />}
-    </div>
-  );
-}
-
-function ReviewTool() {
-  const [mode, setMode] = useState<"single" | "eir-bep" | "bep-versions">("single");
-  const [docType, setDocType] = useState("auto");
-  const [fa, setFa] = useState<File | null>(null); const [ta, setTa] = useState("");
-  const [fb, setFb] = useState<File | null>(null); const [tb, setTb] = useState("");
-  const { busy, result, run } = useRun<Review>();
-  const go = () => run(() => {
-    const form = new FormData();
-    form.set("mode", mode); form.set("docType", docType);
-    if (fa) form.set("fileA", fa); else form.set("textA", ta);
-    if (mode !== "single") { if (fb) form.set("fileB", fb); else form.set("textB", tb); }
-    return api<Review>("/ai/tools/review", { form });
-  });
-  const labels = mode === "eir-bep" ? ["EIR", "BEP"] : mode === "bep-versions" ? ["Previous BEP", "Revised BEP"] : ["Document"];
-  return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div className="row">
-        <div className="seg">{([["single", "Single document review"], ["eir-bep", "EIR ↔ BEP compliance"], ["bep-versions", "BEP version compare"]] as const).map(([k, l]) => <button key={k} className={mode === k ? "on" : ""} onClick={() => setMode(k)}>{l}</button>)}</div>
-        {mode === "single" && <select value={docType} onChange={(e) => setDocType(e.target.value)} style={{ width: "auto" }}>
-          {["auto", "OIR", "AIR", "PIR", "EIR", "Pre-appointment BEP", "Post-appointment BEP", "MIDP", "TIDP", "Responsibility matrix", "Information protocol", "Information standard", "Security management plan"].map((d) => <option key={d} value={d}>{d === "auto" ? "Auto-detect document type" : d}</option>)}
-        </select>}
-      </div>
-      <div className="grid g2">
-        <DocInput label={labels[0]} file={fa} setFile={setFa} text={ta} setText={setTa} />
-        {mode !== "single" && <DocInput label={labels[1]} file={fb} setFile={setFb} text={tb} setText={setTb} />}
-      </div>
-      <div className="row"><button className="primary" disabled={busy} onClick={go}>{busy ? "Reviewing…" : "Analyse"}</button><span className="small muted">PDF, DOCX or TXT up to 25 MB. Results are review support; they do not approve or certify a document.</span></div>
-      {busy && <Busy text="Reading the document and checking it against ISO 19650… this can take a minute." />}
-      {result && <ReviewResult r={result} mode={mode} />}
-    </div>
-  );
-}
-
-function ReviewResult({ r, mode }: { r: Review; mode: string }) {
-  return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div className="grid g4">
-        <div className="card"><div className="muted small">Score</div><div className="stat" style={{ color: r.score >= 75 ? "var(--ok)" : r.score >= 50 ? "var(--warn)" : "var(--danger)" }}>{r.score}</div></div>
-        <div className="card"><div className="muted small">Verdict</div><b>{r.verdict}</b></div>
-        <div className="card"><div className="muted small">Document type</div><b>{r.docType || "—"}</b></div>
-        <div className="card"><div className="muted small">Findings</div><b>{r.findings.filter((f) => f.severity === "critical").length} critical · {r.findings.filter((f) => f.severity === "major").length} major · {r.findings.filter((f) => f.severity === "minor").length} minor</b></div>
-      </div>
-      <div className="card"><h3 style={{ marginTop: 0 }}>Summary</h3><p style={{ whiteSpace: "pre-wrap" }}>{r.summary}</p>
-        {!!r.strengths.length && <><b>Strengths</b><ul>{r.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></>}
-        {!!r.missing.length && <><b>Missing content</b><ul>{r.missing.map((s, i) => <li key={i}>{s}</li>)}</ul></>}
-      </div>
-      {mode !== "single" && !!r.coverage.length && <div className="card table-wrap">
-        <div className="row spread"><h3 style={{ margin: 0 }}>{mode === "eir-bep" ? "EIR requirement coverage" : "Changes between versions"}</h3>
-          <button onClick={() => exportCsv("coverage", ["Item", "Status", "Evidence", "Action"], r.coverage.map((c) => [c.item, c.status, c.evidence, c.action]))}>CSV</button></div>
-        <table className="data"><thead><tr><th>Item</th><th>Status</th><th>Evidence</th><th>Action</th></tr></thead>
-          <tbody>{r.coverage.map((c, i) => <tr key={i}><td>{c.item}</td><td><Pill text={c.status} /></td><td className="small muted">{c.evidence}</td><td className="small">{c.action}</td></tr>)}</tbody></table>
-      </div>}
-      {!!r.findings.length && <div className="card table-wrap">
-        <div className="row spread"><h3 style={{ margin: 0 }}>Findings</h3>
-          <button onClick={() => exportCsv("review-findings", ["Severity", "Clause", "Issue", "Evidence", "Recommendation"], r.findings.map((f) => [f.severity, f.clause, f.issue, f.evidence, f.recommendation]))}>CSV</button></div>
-        <table className="data"><thead><tr><th>Severity</th><th>Clause</th><th>Issue</th><th>Recommendation</th></tr></thead>
-          <tbody>{r.findings.map((f, i) => <tr key={i}><td><Pill text={f.severity} /></td><td className="small">{f.clause}</td><td>{f.issue}{f.evidence && <div className="small muted">“{f.evidence}”</div>}</td><td className="small">{f.recommendation}</td></tr>)}</tbody></table>
-      </div>}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------- Document generator & custom template builder
-
-const QUICK: { group: string; docs: string[] }[] = [
-  { group: "Information requirements", docs: ["Organisational Information Requirements (OIR)", "Asset Information Requirements (AIR)", "Project Information Requirements (PIR)", "Exchange Information Requirements (EIR)"] },
-  { group: "Execution plans", docs: ["Pre-appointment BIM Execution Plan", "Post-appointment BIM Execution Plan", "Task Information Delivery Plan (TIDP)", "Master Information Delivery Plan (MIDP)", "Model Production and Delivery Table (MPDT)"] },
-  { group: "CDE & protocols", docs: ["CDE procedure and workflow", "Information protocol", "Project information standard", "Information production methods and procedures"] },
-  { group: "Data & compliance", docs: ["COBie data requirements schedule", "Level of information need specification", "Security management plan (ISO 19650-5)", "Health and safety information requirements (ISO 19650-6)"] },
-  { group: "Risk & handover", docs: ["Information delivery risk register", "Handover checklist and AIM acceptance plan", "Mobilisation plan", "Capability and capacity assessment"] },
-];
-
-function GenerateTool({ initial = "" }: { initial?: string }) {
-  const [f, setF] = useState({ docType: initial,projectName: "", organisation: "", appointingParty: "", stage: "", brief: "", style: "draft" as "draft" | "template" });
-  const [group, setGroup] = useState(0);
-  const { busy, result, run } = useRun<{ markdown: string; truncated: boolean }>();
-  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
-  const name = (f.docType || "document").replace(/[^\w-]+/g, "-").slice(0, 60);
-  return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div className="card" style={{ display: "grid", gap: 10 }}>
-        <div className="row spread"><b>Describe any ISO 19650 document you need</b>
-          <div className="seg"><button className={f.style === "draft" ? "on" : ""} onClick={() => setF({ ...f, style: "draft" })}>Project draft</button><button className={f.style === "template" ? "on" : ""} onClick={() => setF({ ...f, style: "template" })}>Reusable template</button></div></div>
-        <div className="row">{QUICK.map((q, i) => <button key={q.group} className={"chip" + (group === i ? " on" : "")} onClick={() => setGroup(i)}>{q.group}</button>)}</div>
-        <div className="row">{QUICK[group].docs.map((d) => <button key={d} className="small" onClick={() => setF({ ...f, docType: d })}>{d}</button>)}</div>
-        <div className="grid g2">
-          <Field label="Document type *"><input value={f.docType} onChange={set("docType")} placeholder="e.g. Information delivery risk register" /></Field>
-          <Field label="Project name"><input value={f.projectName} onChange={set("projectName")} placeholder="e.g. New Hospital Block B" /></Field>
-          <Field label="Organisation"><input value={f.organisation} onChange={set("organisation")} /></Field>
-          <Field label="Appointing party"><input value={f.appointingParty} onChange={set("appointingParty")} /></Field>
-          <Field label="Stage"><input value={f.stage} onChange={set("stage")} placeholder="e.g. RIBA Stage 3 / Concept design" /></Field>
-        </div>
-        <Field label="Extra requirements"><textarea value={f.brief} onChange={set("brief")} placeholder="e.g. align to UK BIM Framework, include a RACI table, Uniclass 2015, COBie at stage 4 and 6…" style={{ minHeight: 80 }} /></Field>
-        <div className="row"><button className="primary" disabled={busy || f.docType.trim().length < 2} onClick={() => run(() => api("/ai/tools/generate", { body: f }))}>{busy ? "Drafting…" : "Generate preview"}</button>
-          <span className="small muted">Items needing the appointing party's confirmation are marked [CONFIRM].</span></div>
-      </div>
-      {busy && <Busy text="Drafting the document… long documents take up to two minutes." />}
-      {result && <div className="card">
-        <div className="row spread" style={{ marginBottom: 8 }}><b>Preview</b>
-          <div className="row">
-            <button className="primary" onClick={() => saveMarkdownDocx(result.markdown, name)}>Download Word</button>
-            <button onClick={() => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([result.markdown], { type: "text/markdown" })); a.download = name + ".md"; a.click(); }}>Markdown</button>
-            <button onClick={() => navigator.clipboard?.writeText(result.markdown)}>Copy</button>
-          </div></div>
-        {result.truncated && <p className="small" style={{ color: "var(--warn)" }}>The draft hit the length limit; generate remaining sections separately.</p>}
-        <div className="preview"><Markdown text={result.markdown} /></div>
-      </div>}
-    </div>
-  );
-}
+// Document review and the document generator live in AiDocTools.tsx.
 
 // ---------------------------------------------------------------- Risk register
 

@@ -453,3 +453,31 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .hub-check > span { flex: 1; min-width: 0; }
 .hub input[type="checkbox"], .hub input[type="radio"] { width: auto; flex: 0 0 auto; margin-top: 3px; accent-color: var(--hub); }
 .hub label.row { font-weight: 400; margin: 0; }
+
+/* AI-written documents shown as a page: always light, like the Word file it becomes */
+.doc-paper { background: #fff; color: #1f2937; border: 1px solid var(--border); border-radius: 10px; padding: clamp(18px, 4vw, 44px); font-size: 13.5px; line-height: 1.6; max-width: 900px; margin-inline: auto; box-shadow: 0 6px 24px rgba(0,0,0,.12); }
+.doc-paper h1 { font-size: 24px; color: #1e3a5f; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 3px solid #1e3a5f; }
+.doc-paper h2 { font-size: 18px; color: #1e3a5f; margin: 26px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #d6dde6; }
+.doc-paper h3 { font-size: 15px; color: #27466f; margin: 18px 0 6px; }
+.doc-paper h4 { font-size: 13.5px; color: #334155; margin: 14px 0 4px; }
+.doc-paper p { margin: 0 0 10px; }
+.doc-paper ul, .doc-paper ol { margin: 0 0 10px; padding-inline-start: 22px; }
+.doc-paper li { margin-bottom: 3px; }
+.doc-paper blockquote { margin: 10px 0; padding: 10px 14px; background: #eef4fb; border-inline-start: 4px solid #3b82f6; border-radius: 6px; color: #1e3a5f; }
+.doc-paper hr { border: none; border-top: 1px solid #d6dde6; margin: 18px 0; }
+.doc-paper code { background: #f1f5f9; color: #0f172a; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+.doc-paper a { color: #2563eb; }
+.doc-table { overflow-x: auto; margin: 8px 0 14px; }
+.doc-table table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+.doc-table th { background: #1e3a5f; color: #fff; text-align: start; padding: 7px 9px; font-weight: 600; vertical-align: top; }
+.doc-table td { border: 1px solid #d6dde6; padding: 6px 9px; vertical-align: top; }
+.doc-table tbody tr:nth-child(even) td { background: #f6f8fb; }
+.doc-ph { background: #fef08a; color: #713f12; padding: 0 4px; border-radius: 4px; font-weight: 600; }
+/* generator progress */
+.gen-steps { display: grid; gap: 6px; }
+.gen-step { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 8px; background: var(--surface-2); }
+.gen-step .gen-dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; flex: 0 0 auto; background: var(--border); color: var(--text); }
+.gen-step.done .gen-dot { background: var(--ok); color: #fff; }
+.gen-step.busy .gen-dot { background: var(--hub, var(--accent)); color: #fff; animation: pulse 1.2s ease-in-out infinite; }
+.gen-step.error .gen-dot { background: var(--danger); color: #fff; }
+@keyframes pulse { 50% { opacity: .45; } }

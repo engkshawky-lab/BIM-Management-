@@ -23,16 +23,20 @@ export async function ask(opts: { system: string; messages: Anthropic.Beta.BetaM
     let msg;
     // Server tools (e.g. web search) can pause a long turn; continue it a few times before giving up.
     for (let i = 0; i < 4; i++) {
-      msg = await getClient().beta.messages.create({
+      const params = {
         model: MODEL,
         max_tokens: opts.maxTokens ?? 16000,
-        system: [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }],
+        system: [{ type: "text" as const, text: opts.system, cache_control: { type: "ephemeral" as const } }],
         messages,
         output_config: { effort: opts.effort ?? "medium" },
         ...(opts.tools ? { tools: opts.tools as Anthropic.Beta.BetaToolUnion[] } : {}),
         betas: ["server-side-fallback-2026-07-01"],
         fallbacks: "default",
-      });
+      } as Anthropic.Beta.MessageCreateParamsNonStreaming;
+      // the SDK refuses large non-streaming requests (they may run past its timeout), so stream those and keep the final message
+      msg = params.max_tokens > 16000
+        ? await getClient().beta.messages.stream(params).finalMessage()
+        : await getClient().beta.messages.create(params);
       if (msg.stop_reason !== "pause_turn") break;
       messages.push({ role: "assistant", content: msg.content as Anthropic.Beta.BetaContentBlockParam[] });
     }
@@ -50,9 +54,28 @@ export async function ask(opts: { system: string; messages: Anthropic.Beta.BetaM
   }
 }
 
-/** Parse a JSON object from a model answer (tolerates code fences). */
+/** Parse a JSON object from a model answer (tolerates code fences, and an answer cut off by the length limit). */
 export function parseJson<T>(text: string): T {
   const t = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   const start = t.indexOf("{"), end = t.lastIndexOf("}");
-  return JSON.parse(start >= 0 && end > start ? t.slice(start, end + 1) : t) as T;
+  try { return JSON.parse(start >= 0 && end > start ? t.slice(start, end + 1) : t) as T; }
+  catch (e) { const fixed = start >= 0 ? closeTruncatedJson(t.slice(start)) : null; if (fixed) return fixed as T; throw e; }
+}
+
+/** Salvage a JSON object that was cut off mid-way: drop the incomplete tail and close open arrays/objects. */
+export function closeTruncatedJson(t: string): unknown | null {
+  // candidate cut points: just after each complete value inside a container (after "}" or "]" or a closed string)
+  for (let cut = t.length; cut > 1; ) {
+    cut = Math.max(t.lastIndexOf("}", cut - 1), t.lastIndexOf("]", cut - 1)) + 1;
+    if (cut <= 0) break;
+    const head = t.slice(0, cut);
+    const stack: string[] = []; let inStr = false, esc = false;
+    for (const ch of head) {
+      if (inStr) { if (esc) esc = false; else if (ch === "\\") esc = true; else if (ch === '"') inStr = false; continue; }
+      if (ch === '"') inStr = true; else if (ch === "{" || ch === "[") stack.push(ch); else if (ch === "}" || ch === "]") stack.pop();
+    }
+    if (inStr) continue;
+    try { return JSON.parse(head.replace(/,\s*$/, "") + stack.reverse().map((c) => (c === "{" ? "}" : "]")).join("")); } catch { /* try an earlier cut */ }
+  }
+  return null;
 }

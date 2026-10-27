@@ -9,6 +9,7 @@ import { validateCobie } from "../../shared/cobie";
 import { partDetailById, partDetails19650 } from "../../shared/data/parts19650Detail";
 import { suitabilityCodes } from "../../shared/data/iso19650";
 import { hubById, hubDigest } from "../../shared/data/hubs";
+import { complianceScore, matchTemplate, reviewChecklists, templateOutline } from "../../shared/aiDocs";
 import { AiError, ask, parseJson } from "../claude";
 import { h, parse } from "./auth";
 import { readWorkbook } from "./validation";
@@ -113,28 +114,36 @@ r.post(T + "/review", upload.fields([{ name: "fileA", maxCount: 1 }, { name: "fi
   const b = body.mode === "single" ? [] : await sourceBlocks(labelB, f.fileB?.[0], body.textB);
   if (!a.length || (body.mode !== "single" && !b.length)) return res.status(400).json({ error: body.mode === "single" ? "Upload or paste a document." : `Provide both the ${labelA} and the ${labelB}.` });
 
+  const target = body.docType !== "auto" ? matchTemplate(body.docType) : undefined;
   const task = body.mode === "single"
-    ? `Review the document${body.docType !== "auto" ? ` as a ${body.docType}` : " (identify its type first)"} for ISO 19650 compliance and fitness for purpose: completeness against what this document type should contain, clarity of responsibilities, measurable acceptance criteria, consistency, and unresolved placeholders.`
+    ? `Review the document${body.docType !== "auto" ? ` as a ${body.docType}${target ? ` (checklist ${target.code})` : ""}` : " — first identify which document type it is and use that type's checklist"} for ISO 19650 compliance and fitness for purpose.
+Build "coverage" with ONE row per checklist item of that document type (every numbered section of its checklist, plus any further requirement of the clauses cited), each "met", "partial" or "missing", with short evidence and the action needed.
+Then list findings for problems the checklist does not capture: unclear responsibilities, requirements without measurable acceptance criteria, contradictions, unresolved placeholders or [TBC] items, wrong clause use, and anything that would block issue.`
     : body.mode === "eir-bep"
-      ? "Check whether the BEP responds to every requirement in the EIR (ISO 19650-2 5.3.2 / 5.4.1). Build a coverage list with one row per EIR requirement."
-      : "Compare the two BEP versions: what changed, what was added or removed, and whether changes weaken commitments made to the appointing party. Use the coverage list for each significant change.";
+      ? "Check whether the BEP responds to every requirement in the EIR (ISO 19650-2 5.3.2 / 5.4.1). Build \"coverage\" with one row per EIR requirement (met / partial / missing), quoting where the BEP responds."
+      : "Compare the two BEP versions: what changed, what was added or removed, and whether changes weaken commitments made to the appointing party. Build \"coverage\" with one row per significant change (status \"changed\"), or \"missing\" where a commitment was removed.";
   const system = `${EXPERT}
-You review information-management documents as decision support; you do not approve or certify them. ${JSON_ONLY}
-Schema: {"docType": string, "score": 0-100, "verdict": "Fit for issue" | "Minor revisions" | "Major revisions" | "Not fit for purpose", "summary": string,
-"strengths": string[], "findings": [{"severity": "critical" | "major" | "minor", "clause": string, "issue": string, "evidence": string, "recommendation": string}],
-"missing": string[], "coverage": [{"item": string, "status": "met" | "partial" | "missing" | "changed", "evidence": string, "action": string}]}
-Quote short evidence from the document where you can (under 25 words). Leave "coverage" empty for a single-document review. Give at most 25 findings, most severe first.`;
-  const { text } = await ask({ system, messages: [{ role: "user", content: [...a, ...b, { type: "text", text: task }] as never }], maxTokens: 12000 });
+You review information-management documents as decision support for an accountable reviewer; you do not approve or certify them. Be specific: cite the section of the reviewed document, quote short evidence (under 25 words) and give a concrete fix.
+${body.mode === "single" ? `Checklists of what each document type must contain (from the portal's ISO 19650 templates):\n${reviewChecklists()}\n` : ""}${JSON_ONLY}
+Schema: {"docType": string (short, e.g. "Exchange Information Requirements (EIR)"), "summary": string (4–6 sentences: overall state, biggest gaps, what to do first), "strengths": string[] (at most 6),
+"coverage": [{"item": string, "status": "met" | "partial" | "missing" | "changed", "evidence": string, "action": string}],
+"findings": [{"severity": "critical" | "major" | "minor", "section": string (where in the reviewed document), "clause": string, "issue": string, "evidence": string, "recommendation": string}]}
+critical = would block issue or breach an appointment obligation; major = must be fixed before issue; minor = improvement. Give at most 20 findings, most severe first.
+Keep it tight: evidence under 20 words, actions and recommendations under 30 words, at most 40 coverage rows. Write "summary" first and "findings" last.`;
+  // long documents need room: the model reasons before answering and both count towards the limit
+  const { text } = await ask({ system, messages: [{ role: "user", content: [...a, ...b, { type: "text", text: task }] as never }], maxTokens: 32000 });
   let out: Record<string, unknown>;
   try { out = parseJson(text); } catch { return res.status(502).json({ error: "The AI response could not be read. Try again." }); }
   const findings = (Array.isArray(out.findings) ? out.findings : []).slice(0, 40).map((x: Record<string, unknown>) => ({
     severity: ["critical", "major", "minor"].includes(String(x.severity)) ? String(x.severity) : "minor",
-    clause: str(x.clause, 80), issue: str(x.issue), evidence: str(x.evidence, 400), recommendation: str(x.recommendation),
+    section: str(x.section, 120), clause: str(x.clause, 80), issue: str(x.issue), evidence: str(x.evidence, 400), recommendation: str(x.recommendation),
   }));
   const coverage = (Array.isArray(out.coverage) ? out.coverage : []).slice(0, 80).map((x: Record<string, unknown>) => ({
     item: str(x.item, 600), status: ["met", "partial", "missing", "changed"].includes(String(x.status)) ? String(x.status) : "partial", evidence: str(x.evidence, 400), action: str(x.action, 600),
   }));
-  res.json({ docType: str(out.docType, 80), score: clamp(out.score, 0, 100), verdict: str(out.verdict, 40), summary: str(out.summary, 3000), strengths: strs(out.strengths), findings, missing: strs(out.missing, 40), coverage });
+  const { score, verdict, coveragePct } = complianceScore(coverage, findings);
+  const missing = coverage.filter((c) => c.status === "missing").map((c) => c.item);
+  res.json({ docType: str(out.docType, 80) || target?.title || "", score, verdict, coveragePct, summary: str(out.summary, 3000), strengths: strs(out.strengths), findings, missing, coverage });
 }));
 
 // ---------------------------------------------------------------- Risk register
@@ -247,20 +256,66 @@ Schema: {"readiness": "Ready" | "Minor fixes" | "Not ready", "summary": string, 
 
 // ---------------------------------------------------------------- Document generator / custom template builder
 
-r.post(T + "/generate", h(async (req, res) => {
-  const body = parse(z.object({
-    docType: z.string().trim().min(2).max(160), projectName: z.string().max(200).default(""), organisation: z.string().max(200).default(""),
-    appointingParty: z.string().max(200).default(""), stage: z.string().max(120).default(""), brief: z.string().max(6000).default(""),
-    style: z.enum(["template", "draft"]).default("draft"),
-  }), req.body, res); if (!body) return;
+// Two steps so long documents never get cut off and the author sees progress: an outline (from the portal's
+// own template when the document type has one), then each section drafted on its own.
+
+const docBrief = z.object({
+  docType: z.string().trim().min(2).max(160), projectName: z.string().max(200).default(""), organisation: z.string().max(200).default(""),
+  appointingParty: z.string().max(200).default(""), stage: z.string().max(120).default(""), brief: z.string().max(6000).default(""),
+  style: z.enum(["template", "draft"]).default("draft"),
+});
+const outlineSection = z.object({ title: z.string().max(200), purpose: z.string().max(2000), contents: z.array(z.string().max(400)).max(30), clauses: z.array(z.string().max(80)).max(12) });
+const briefText = (b: z.infer<typeof docBrief>) =>
+  `Document: ${b.docType}\nProject: ${b.projectName || "[Project name]"}\nOrganisation (author): ${b.organisation || "[Organisation]"}\nAppointing party: ${b.appointingParty || "[Appointing party]"}\nStage: ${b.stage || "not stated"}\nAuthor's requirements:\n${b.brief || "none given"}`;
+
+r.post(T + "/generate/outline", h(async (req, res) => {
+  const body = parse(docBrief, req.body, res); if (!body) return;
+  const t = matchTemplate(body.docType);
+  if (t) return res.json({ title: t.title, source: "template", templateCode: t.code, clauses: t.clauseRefs, sections: templateOutline(t) });
   const system = `${EXPERT}
-Write a complete, professional ${body.style === "template" ? "reusable template with guidance notes in [square brackets] where the author must fill in" : "project-specific working draft"} for the document requested.
-Output GitHub-flavoured Markdown only: start with "# <title>", then a document control table (Document title, Reference, Revision P01, Status: Draft for review, Prepared by, Checked by, Approved by, Date),
-numbered sections ("## 1 Introduction" …), tables where a register or matrix belongs, and the relevant ISO 19650 clause references per section.
-Mark anything that must be confirmed by the appointing party as [CONFIRM]. Do not claim the document is approved or compliant.`;
-  const user = `Document: ${body.docType}\nProject: ${body.projectName || "[Project name]"}\nOrganisation: ${body.organisation || "[Organisation]"}\nAppointing party: ${body.appointingParty || "[Appointing party]"}\nStage: ${body.stage || "n/a"}\nRequirements / brief:\n${body.brief || "none given"}`;
-  const { text, truncated } = await ask({ system, messages: [{ role: "user", content: user }], maxTokens: 16000 });
-  res.json({ markdown: text.replace(/^```(?:markdown|md)?\s*/i, "").replace(/\s*```$/, ""), truncated });
+Plan the structure of the document requested, as a senior author would before drafting. ${JSON_ONLY}
+Schema: {"title": string, "clauses": string[], "sections": [{"title": string, "purpose": string, "contents": string[], "clauses": string[]}]}
+Use 6–14 sections in a logical order (start with introduction/purpose and scope; end with review, approval and change control where it fits).
+"contents" lists 3–8 concrete items the section must contain (name registers or tables where they belong). Clause references must be real ISO 19650 clauses (or other standards) that apply.`;
+  const { text } = await ask({ system, messages: [{ role: "user", content: briefText(body) }], maxTokens: 4000, effort: "low" });
+  let out: { title?: string; clauses?: unknown; sections?: Record<string, unknown>[] };
+  try { out = parseJson(text); } catch { return res.status(502).json({ error: "The AI response could not be read. Try again." }); }
+  const sections = (out.sections ?? []).slice(0, 20).map((s) => ({ title: str(s.title, 200), purpose: str(s.purpose), contents: strs(s.contents, 12), clauses: strs(s.clauses, 6) })).filter((s) => s.title);
+  if (!sections.length) return res.status(502).json({ error: "The AI did not return an outline. Try again." });
+  res.json({ title: str(out.title, 200) || body.docType, source: "ai", clauses: strs(out.clauses, 8), sections });
+}));
+
+r.post(T + "/generate/section", h(async (req, res) => {
+  const body = parse(docBrief.extend({
+    title: z.string().max(200), index: z.number().int().min(0).max(40), outline: z.array(z.string().max(200)).max(40),
+    section: outlineSection, instruction: z.string().max(2000).default(""),
+  }), req.body, res); if (!body) return;
+  const n = body.index + 1;
+  const system = `${EXPERT}
+You are drafting ONE section of a controlled ISO 19650 document. Write it as the final text an information manager would issue, not as advice about the document.
+${body.style === "template"
+    ? "This is a reusable TEMPLATE: write the standard text, and put guidance for the author in [square brackets] wherever project-specific content is needed."
+    : "This is a PROJECT-SPECIFIC working draft: use the project details given. Where a fact is not given, write a sensible proposed value and mark it [CONFIRM] — never leave a section empty."}
+Format (GitHub Markdown):
+- Start with exactly "## ${n} ${body.section.title}". Use "### ${n}.1 …", "### ${n}.2 …" for sub-sections.
+- Cover every required content item. Prefer short paragraphs, numbered requirements ("${n}.1.1 The lead appointed party shall …") and tables for registers, matrices, roles, milestones and schedules (3–10 realistic rows, no empty tables).
+- Put the applicable clause references in the text, e.g. "(ISO 19650-2 5.2.1)". Do not quote standard text.
+- No document title, no document control table, no closing summary, no horizontal rules, no HTML. 300–900 words.
+Do not claim the document is approved or compliant.`;
+  const user = `${briefText(body)}
+
+Full document outline (for consistency — draft only section ${n}):
+${body.outline.map((t, i) => `${i + 1}. ${t}`).join("\n")}
+
+Section ${n}: ${body.section.title}
+Purpose: ${body.section.purpose}
+Must contain:
+${body.section.contents.map((c) => `- ${c}`).join("\n") || "- (as appropriate)"}
+Relevant clauses: ${body.section.clauses.join(", ") || "as applicable"}${body.instruction ? `\n\nAuthor's instruction for this section: ${body.instruction}` : ""}`;
+  const { text, truncated } = await ask({ system, messages: [{ role: "user", content: user }], maxTokens: 6000 });
+  let md = text.replace(/^```(?:markdown|md)?\s*/i, "").replace(/\s*```$/, "").trim();
+  if (!md.startsWith("## ")) md = `## ${n} ${body.section.title}\n\n${md}`;
+  res.json({ markdown: md, truncated });
 }));
 
 export default r;
