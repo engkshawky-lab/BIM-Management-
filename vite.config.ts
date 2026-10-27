@@ -5,5 +5,6 @@ export default defineConfig({
   root: "client",
   plugins: [react()],
   build: { outDir: "../dist/client", emptyOutDir: true },
-  server: { proxy: { "/api": "http://localhost:3001" } },
+  // Keep the browser's Host header so the API's same-origin check matches the Origin header.
+  server: { proxy: { "/api": { target: "http://localhost:3001", changeOrigin: false } } },
 });
