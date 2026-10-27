@@ -169,6 +169,13 @@
       "when": 1793084189810,
       "tag": "0023_specialist",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1793100383505,
+      "tag": "0024_downloads",
+      "breakpoints": true
     }
   ]
 }

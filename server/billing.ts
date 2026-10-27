@@ -47,7 +47,7 @@ export async function assertStorage(projectId: string, incomingBytes: number) {
   if (u.storageBytes + incomingBytes > plan.storageGb * 1024 ** 3) throw new LimitError(`Storage limit reached (${plan.storageGb} GB on the ${plan.name} plan).${upgrade}`);
 }
 
-const AI_PATHS = /\/(ai-draft|assistant|requirements\/extract|contract-review|ai-triage|ask|interview)$/;
+const AI_PATHS = /\/(ai-draft|assistant|requirements\/extract|contract-review|ai-triage|ask|interview|ai\/tools\/[a-z-]+|news\/refresh)$/;
 /** Counts AI requests per user per month and enforces the plan quota when billing is on. */
 export async function aiQuota(req: Request, res: Response, next: NextFunction) {
   if (req.method !== "POST" || !AI_PATHS.test(req.path) || !req.user) return next();

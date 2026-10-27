@@ -636,3 +636,19 @@ export const adoptionProgress = mysqlTable("adoption_progress", {
   data: json<Record<string, { status: string; owner: string; due: string; note: string }>>("data").notNull(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 });
+
+/** Curated downloads library maintained by administrators. */
+export const resources = mysqlTable("resources", {
+  id: id(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: varchar("description", { length: 2000 }).notNull().default(""),
+  category: varchar("category", { length: 40 }).notNull(),
+  part: varchar("part", { length: 16 }).notNull().default(""),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  mimeType: varchar("mime_type", { length: 120 }).notNull(),
+  size: bigint("size", { mode: "number" }).notNull(),
+  storageKey: varchar("storage_key", { length: 255 }).notNull(),
+  downloads: int("downloads").notNull().default(0),
+  uploadedBy: ref("uploaded_by").notNull(),
+  createdAt: created(),
+}, (t) => [index("resources_category").on(t.category)]);

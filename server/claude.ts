@@ -17,17 +17,26 @@ const getClient = () => {
  * Ask Claude and return the text answer. Uses the server-side refusal fallback (routed by
  * refusal category) so a policy decline is retried on a suitable model within the same call.
  */
-export async function ask(opts: { system: string; messages: Anthropic.Beta.BetaMessageParam[]; maxTokens?: number; effort?: "low" | "medium" | "high" }) {
+export async function ask(opts: { system: string; messages: Anthropic.Beta.BetaMessageParam[]; maxTokens?: number; effort?: "low" | "medium" | "high"; tools?: unknown[] }) {
   try {
-    const msg = await getClient().beta.messages.create({
-      model: MODEL,
-      max_tokens: opts.maxTokens ?? 16000,
-      system: [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }],
-      messages: opts.messages,
-      output_config: { effort: opts.effort ?? "medium" },
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-    });
+    const messages = [...opts.messages];
+    let msg;
+    // Server tools (e.g. web search) can pause a long turn; continue it a few times before giving up.
+    for (let i = 0; i < 4; i++) {
+      msg = await getClient().beta.messages.create({
+        model: MODEL,
+        max_tokens: opts.maxTokens ?? 16000,
+        system: [{ type: "text", text: opts.system, cache_control: { type: "ephemeral" } }],
+        messages,
+        output_config: { effort: opts.effort ?? "medium" },
+        ...(opts.tools ? { tools: opts.tools as Anthropic.Beta.BetaToolUnion[] } : {}),
+        betas: ["server-side-fallback-2026-07-01"],
+        fallbacks: "default",
+      });
+      if (msg.stop_reason !== "pause_turn") break;
+      messages.push({ role: "assistant", content: msg.content as Anthropic.Beta.BetaContentBlockParam[] });
+    }
+    msg = msg!;
     if (msg.stop_reason === "refusal") throw new AiError("The AI model declined this request.", 422);
     const text = msg.content.map((b) => (b.type === "text" ? b.text : "")).join("").trim();
     if (!text) throw new AiError("The AI returned no answer. Try rephrasing.", 502);

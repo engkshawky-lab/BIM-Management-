@@ -54,8 +54,13 @@ export const PROJECT_PAGES: NavItem[] = [
 export const STANDARD_PAGES: NavItem[] = [
   g("s.learn", "Learn: quizzes, mock exam, scenarios", "/learn", "sparkles", "Learn", "Practice questions, timed exam, skill profile"),
   g("s.guides", "Best-practice guides", "/learn/guides", "book", "Learn", "Practical guidance for modellers, coordinators and managers"),
+  g("s.hub.implementation", "BIM implementation best practices", "/hubs/implementation", "flow", "Advanced topics", "Strategy, maturity, people, process, technology, KPIs"),
+  g("s.hub.scan", "Scan to BIM", "/hubs/scan-to-bim", "layers", "Advanced topics", "Reality capture, accuracy, workflow, cost estimator"),
+  g("s.hub.dimensions", "BIM dimensions (4D–7D, net zero)", "/hubs/dimensions", "layers", "Advanced topics", "4D time, 5D cost, 6D carbon, 7D FM, net zero"),
   g("s.adoption", "Implementation guide", "/learn/adoption", "flow", "Learn", "Adopt ISO 19650 across your organization, step by step"),
-  g("s.19650.parts", "All parts (1–6)", "/knowledge/iso19650/library/0", "book", "ISO 19650"),
+  g("s.19650.parts", "All parts (1–6): learning hub", "/parts", "book", "ISO 19650", "Beginner to expert, clause deep dives, checklists, Ask AI"),
+  ...[1, 2, 3, 4, 5, 6].map((n) => g(`s.19650.part${n}`, `Part ${n}`, `/parts/19650-${n}`, "book", "ISO 19650")),
+  g("s.19650.summary", "Parts at a glance", "/knowledge/iso19650/library/0", "book", "ISO 19650"),
   g("s.19650.process", "Delivery process (19650-2)", "/knowledge/iso19650/library/1", "flow", "ISO 19650"),
   g("s.19650.cde", "CDE & status codes", "/knowledge/iso19650/library/2", "layers", "ISO 19650"),
   g("s.19650.glossary", "Glossary & acronyms", "/knowledge/iso19650/library/3", "text", "ISO 19650"),
@@ -71,11 +76,20 @@ export const TEMPLATE_PAGES: NavItem[] = templates.map((t) =>
   g(`t.${t.id}`, `${t.code} — ${t.title}`, `/knowledge/${t.standard}/templates/${t.id}`, "file", `${t.standard === "iso19650" ? "ISO 19650" : "ISO/IEC 42001"} · ${t.category}`, t.purpose));
 
 export const RESOURCE_PAGES: NavItem[] = [
+  g("r.downloads", "Downloads library", "/downloads", "library", "References", "Templates, checklists and guides curated by administrators"),
+  g("r.samples", "Sample documents (EIR, AIR, OIR, BEP…)", "/samples", "file", "References", "Structured Word samples with guidance"),
+  g("r.news", "BIM & ISO 19650 news", "/news", "activity", "References", "AI-compiled news with relevance ratings"),
   g("r.19650", "ISO 19650 references", "/knowledge/iso19650/references", "library", "References"),
   g("r.42001", "ISO/IEC 42001 references", "/knowledge/iso42001/references", "library", "References"),
   g("r.wizard", "Setup wizard", "/wizard", "sparkles", "My work", "Answer a few questions; get the documents and workflow you need"),
   g("r.myday", "My Day", "/my-day", "calendar", "My work", "Everything waiting on you"),
   g("r.portfolio", "Portfolio dashboard", "/portfolio", "grid", "My work", "Health across your projects"),
+  g("ai.review", "Document review & compare", "/ai-tools/review", "sparkles", "AI tools", "Review EIR/BEP/MIDP; EIR ↔ BEP check; BEP versions"),
+  g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "AI tools", "EIR, AIR, PIR, OIR, BEP, TIDP, MIDP or any custom template"),
+  g("ai.risks", "Risk register generator", "/ai-tools/risks", "sparkles", "AI tools"),
+  g("ai.clash", "Clash matrix builder", "/ai-tools/clash", "sparkles", "AI tools"),
+  g("ai.suitability", "Suitability code hub", "/ai-tools/suitability", "sparkles", "AI tools"),
+  g("ai.cobie", "COBie data checker", "/ai-tools/cobie", "sparkles", "AI tools"),
   g("r.fee", "BIM fee estimator", "/tools/fee", "table", "Tools"),
   g("r.carbon", "Embodied carbon (6D)", "/tools/carbon", "layers", "Tools"),
   g("r.maturity", "BIM maturity assessment", "/tools/maturity", "check", "Tools"),
@@ -104,8 +118,8 @@ export const RAIL: RailSection[] = [
 export function sectionFor(route: string): string {
   if (route.startsWith("/projects")) return "projects";
   if (/^\/knowledge\/[^/]+\/templates/.test(route)) return "documents";
-  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|standards|talent|admin|wizard|support)/.test(route)) return "resources";
-  if (route.startsWith("/knowledge") || route.startsWith("/learn")) return "standards";
+  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|ai-tools|downloads|samples|news|standards|talent|admin|wizard|support)/.test(route)) return "resources";
+  if (route.startsWith("/knowledge") || route.startsWith("/learn") || route.startsWith("/parts") || route.startsWith("/hubs")) return "standards";
   return "home";
 }
 

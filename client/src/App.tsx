@@ -18,6 +18,11 @@ import NewProject from "./pages/NewProject";
 import { AdoptionGuide, GuidesPage } from "./pages/LearnGuides";
 import SetupWizard from "./pages/SetupWizard";
 import Support from "./pages/Support";
+import AiTools from "./pages/AiTools";
+import PartsHub from "./pages/PartsHub";
+import { DownloadsLibrary, NewsFeed, SampleDocuments } from "./pages/Resources";
+import HubPage from "./pages/HubPage";
+import { hubById } from "../../shared/data/hubs";
 
 interface Session { user: User; setUser: (u: User | null) => void; toast: (msg: string, kind?: "ok" | "error") => void }
 const Ctx = createContext<Session>(null!);
@@ -82,6 +87,12 @@ export default function App() {
   else if (parts[0] === "my-day") view = <MyDay />;
   else if (parts[0] === "portfolio") view = <Portfolio />;
   else if (parts[0] === "tools") view = <Tools tool={parts[1]} />;
+  else if (parts[0] === "ai-tools") view = <AiTools tool={parts[1]} arg={parts[2]} />;
+  else if (parts[0] === "hubs" && hubById(parts[1] ?? "")) view = <HubPage hub={hubById(parts[1])!} sectionId={parts[2]} tabId={parts[3]} />;
+  else if (parts[0] === "downloads") view = <DownloadsLibrary />;
+  else if (parts[0] === "news") view = <NewsFeed />;
+  else if (parts[0] === "samples") view = <SampleDocuments />;
+  else if (parts[0] === "parts") view = <PartsHub key={parts[1] ?? ""} partId={parts[1]} />;
   else if (parts[0] === "standards") view = <ClientStandards id={parts[1]} />;
   else if (parts[0] === "profile") view = <ProfilePage />;
   else view = <Home />;

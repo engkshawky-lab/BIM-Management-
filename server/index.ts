@@ -4,6 +4,9 @@ import path from "path";
 import { loadUser, requireUser } from "./auth";
 import { runMigrations } from "./db";
 import ai from "./routes/ai";
+import aitools from "./routes/aitools";
+import library from "./routes/library";
+import news, { startNewsSchedule } from "./routes/news";
 import delivery from "./routes/delivery";
 import auth from "./routes/auth";
 import documents from "./routes/documents";
@@ -46,7 +49,7 @@ app.use("/api", (req, res, next) => {
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api", auth);
-app.use("/api", requireUser, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai);
+app.use("/api", requireUser, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, library, news);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: NextFunction) => {
@@ -64,4 +67,4 @@ if (process.env.NODE_ENV === "production" && fs.existsSync(clientDir)) {
 
 const port = Number(process.env.PORT ?? 3001);
 await runMigrations();
-app.listen(port, () => { console.log(`Portal API listening on http://localhost:${port}`); startScheduler(); });
+app.listen(port, () => { console.log(`Portal API listening on http://localhost:${port}`); startScheduler(); startNewsSchedule(); });
