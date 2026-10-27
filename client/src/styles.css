@@ -393,3 +393,58 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 [dir="rtl"] .comment { border-radius: 8px 0 0 8px; }
 [dir="rtl"] .gantt, [dir="rtl"] .gantt-wrap, [dir="rtl"] input[type=range], [dir="rtl"] svg, [dir="rtl"] .mono, [dir="rtl"] code, [dir="rtl"] input[type=email], [dir="rtl"] input[type=date] { direction: ltr; }
 @media (max-width: 900px) { [dir="rtl"] .panel { left: auto; right: 64px; box-shadow: -12px 0 30px rgba(0,0,0,.25); } [dir="rtl"] .page-tools { left: 16px; } }
+
+/* ---------- Topic hubs, parts hub and AI tools: colourful, friendly layout. --hub is the page accent. ---------- */
+.hub { --hub: var(--accent); display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+.hub > *, .hub .grid > * { min-width: 0; }
+.hub-hero { position: relative; overflow: hidden; border-radius: 16px; padding: 22px 24px; color: #fff;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--hub) 92%, #0b1220), color-mix(in srgb, var(--hub) 55%, #312e81)); }
+.hub-hero::after { content: ""; position: absolute; inset: auto -60px -80px auto; width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,.12); }
+.hub-hero .eyebrow { font-size: 11.5px; letter-spacing: .12em; font-weight: 700; opacity: .85; }
+.hub-hero h1 { font-size: clamp(24px, 3vw, 32px); margin: 4px 0 8px; color: #fff; }
+.hub-hero p { margin: 0; max-width: 780px; opacity: .92; }
+.hub-hero .facts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; position: relative; z-index: 1; }
+.hub-hero .facts span { background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.28); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; }
+.hub-sections { display: flex; gap: 8px; flex-wrap: wrap; }
+.hub-sections a { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; font-weight: 600; color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); background: color-mix(in srgb, var(--c) 10%, var(--surface)); }
+.hub-sections a::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.hub-sections a.on { background: var(--c); color: #fff; border-color: var(--c); }
+.hub-sections a.on::before { background: #fff; }
+.hub-tabs { display: flex; gap: 6px; flex-wrap: wrap; padding: 6px; border-radius: 12px; background: var(--surface-2); }
+.hub-tabs a { padding: 6px 12px; border-radius: 8px; color: var(--muted); font-weight: 600; font-size: 13px; }
+.hub-tabs a:hover { color: var(--text); background: var(--surface); }
+.hub-tabs a.on { background: var(--surface); color: var(--hub); box-shadow: 0 1px 3px rgba(0,0,0,.12), inset 0 -2px 0 var(--hub); }
+.hub-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; border-top: 3px solid var(--c, var(--hub)); }
+.hub-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--c, var(--hub)); margin-bottom: 10px; }
+.hub-title::before { content: ""; width: 4px; height: 16px; border-radius: 2px; background: var(--c, var(--hub)); }
+.hub-tile { border-radius: 12px; padding: 14px; background: color-mix(in srgb, var(--c) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); }
+.hub-tile b { color: color-mix(in srgb, var(--c) 80%, var(--text)); }
+.hub-flow { display: flex; gap: 0; overflow-x: auto; padding-bottom: 4px; }
+.hub-flow > div { flex: 1 0 160px; position: relative; padding: 14px 22px 14px 18px; color: #fff; min-height: 96px;
+  background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 65%, #0b1220)); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%); }
+.hub-flow > div:first-child { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%); border-radius: 10px 0 0 10px; }
+.hub-flow > div b { display: block; font-size: 13px; }
+.hub-flow > div span { display: block; font-size: 12px; opacity: .9; margin-top: 4px; }
+.hub-table th { background: color-mix(in srgb, var(--hub) 16%, var(--surface)); color: var(--text); }
+.hub-table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--hub) 4%, transparent); }
+.hub-stat { border-radius: 12px; padding: 14px; text-align: center; background: color-mix(in srgb, var(--c) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 28%, transparent); }
+.hub-stat .v { font-size: 22px; font-weight: 800; color: var(--c); line-height: 1.2; }
+.hub-check { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; }
+.hub-check:hover { background: var(--surface-2); }
+.hub-check.done span { text-decoration: line-through; color: var(--muted); }
+/* process diagram */
+.proc-lanes { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.proc-lanes button { border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid var(--c); color: var(--c); background: transparent; }
+.proc-lanes button.on { background: var(--c); color: #fff; }
+.proc-steps { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 8px; align-items: stretch; }
+.proc-step { flex: 0 0 150px; text-align: start; border-radius: 10px; padding: 10px; border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
+  background: color-mix(in srgb, var(--c) 8%, var(--surface)); color: var(--text); display: grid; gap: 2px; align-content: start; }
+.proc-step small { color: var(--muted); font-size: 11px; }
+.proc-step b { font-size: 13px; }
+.proc-step.on { background: var(--c); color: #fff; border-color: var(--c); box-shadow: 0 4px 14px color-mix(in srgb, var(--c) 45%, transparent); }
+.proc-step.on small { color: rgba(255,255,255,.85); }
+.proc-step.dim { opacity: .35; }
+.proc-arrow { align-self: center; color: var(--muted); }
+.proc-detail { margin-top: 10px; border-radius: 12px; padding: 16px; border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); background: color-mix(in srgb, var(--c) 6%, var(--surface)); }
+.proc-detail h3 { margin: 0 0 2px; color: color-mix(in srgb, var(--c) 85%, var(--text)); }

@@ -14,6 +14,11 @@ describe("topic hubs", () => {
           for (const b of t.blocks) {
             if (b.kind === "table") for (const r of b.rows) expect(r.length, `${s.id}/${t.id} "${b.title}" row width`).toBe(b.columns.length);
             if (b.kind === "quiz") for (const q of b.questions) expect(q.answer, `quiz answer for "${q.q}"`).toBeLessThan(q.options.length);
+            if (b.kind === "process") {
+              const lanes = new Set(b.lanes.map((l) => l.id));
+              for (const st of b.steps) expect(lanes.has(st.lane), `step ${st.id} lane ${st.lane}`).toBe(true);
+              expect(new Set(b.steps.map((st) => st.id)).size).toBe(b.steps.length);
+            }
           }
         }
       }

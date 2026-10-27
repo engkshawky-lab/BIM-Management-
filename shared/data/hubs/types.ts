@@ -15,13 +15,30 @@ export type HubBlock =
   | { kind: "faq"; title: string; items: { q: string; a: string }[] }
   | { kind: "quiz"; title: string; questions: { q: string; options: string[]; answer: number; why: string }[] }
   /** Interactive widget rendered by the page, e.g. the scan-to-BIM cost estimator. */
-  | { kind: "widget"; widget: "scan-cost" | "ask-ai" | "generate"; title: string; docType?: string };
+  | { kind: "widget"; widget: "scan-cost" | "ask-ai" | "generate"; title: string; docType?: string }
+  /** Clickable process diagram: steps in swimlanes (parties); clicking a step shows its detail. */
+  | { kind: "process"; title: string; lanes: { id: string; label: string; tone: Tone }[]; steps: ProcessStep[] };
+
+export interface ProcessStep {
+  id: string;
+  title: string;
+  subtitle: string;
+  lane: string;          // lane id of the responsible party
+  clause: string;        // e.g. "ISO 19650-2 5.1"
+  inputs: string[];
+  activities: string[];
+  outputs: string[];
+  documents: string[];   // document names (match template titles/codes where possible)
+  tip?: string;          // practical tip or common pitfall
+}
 
 export interface HubTab { id: string; label: string; blocks: HubBlock[] }
 export interface HubSection { id: string; label: string; tabs: HubTab[] }
 
 export interface Hub {
-  id: "scan-to-bim" | "dimensions" | "implementation";
+  id: "scan-to-bim" | "dimensions" | "implementation" | "cobie" | "revit" | "infrastructure" | "loin" | "appointment" | "documents-roles";
+  /** Accent colour for the hub's header and cards. */
+  tone?: Tone;
   eyebrow: string;
   title: string;
   intro: string;

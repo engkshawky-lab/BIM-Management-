@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useSession } from "../App";
 import { api, fmtDate, fmtSize } from "../lib/api";
 import { buildDocx, type ExportDoc } from "../lib/export";
@@ -10,8 +10,8 @@ import { saveAs } from "file-saver";
 
 // Resources: curated downloads library, AI-compiled BIM news, and sample ISO 19650 documents.
 
-const Head = ({ eyebrow, title, intro }: { eyebrow: string; title: string; intro: string }) => (
-  <div className="page-head"><div className="small muted">{eyebrow}</div><h1>{title}</h1><p className="muted" style={{ margin: 0, maxWidth: 760 }}>{intro}</p></div>
+const Head = ({ eyebrow, title, intro, color }: { eyebrow: string; title: string; intro: string; color: string }) => (
+  <div className="hub-hero" style={{ "--hub": color, marginBottom: 14 } as CSSProperties}><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{intro}</p></div>
 );
 
 // ---------------------------------------------------------------- Downloads library
@@ -52,7 +52,7 @@ export function DownloadsLibrary() {
 
   return (
     <>
-      <Head eyebrow="ISO 19650 · RESOURCES" title="Downloads" intro="Curated templates, checklists, guides and worked examples maintained by the platform administrators. Word, Excel, PDF, DWG, IFC and other files are supported." />
+      <Head color="#0d9488" eyebrow="ISO 19650 · RESOURCES" title="Downloads" intro="Curated templates, checklists, guides and worked examples maintained by the platform administrators. Word, Excel, PDF, DWG, IFC and other files are supported." />
       {admin && <div className="card" style={{ display: "grid", gap: 8, marginBottom: 12 }}>
         <b>Add a resource</b>
         <div className="grid g4">
@@ -121,7 +121,7 @@ export function NewsFeed() {
   const relColor = (r: string) => (r === "High" ? "var(--ok)" : r === "Medium" ? "var(--warn)" : "var(--muted)");
   return (
     <>
-      <Head eyebrow="LIVE INTELLIGENCE" title="BIM & ISO 19650 news" intro="Recent developments in BIM, ISO 19650 and information management, found by AI web search across standards bodies, governments, buildingSMART, professional institutions and software vendors. Each story is summarised with a relevance rating and the parts of ISO 19650 it affects. Always read the original source." />
+      <Head color="#dc2626" eyebrow="LIVE INTELLIGENCE" title="BIM & ISO 19650 news" intro="Recent developments in BIM, ISO 19650 and information management, found by AI web search across standards bodies, governments, buildingSMART, professional institutions and software vendors. Each story is summarised with a relevance rating and the parts of ISO 19650 it affects. Always read the original source." />
       <div className="row spread" style={{ marginBottom: 12 }}>
         <div className="row">
           <button className={"chip" + (!topic ? " on" : "")} onClick={() => setTopic("")}>All</button>
@@ -180,7 +180,7 @@ export function SampleDocuments() {
   };
   return (
     <>
-      <Head eyebrow="ISO 19650 · TEMPLATES" title="Sample documents" intro="Ready-to-use ISO 19650 document structures with the correct sections, clause references and guidance notes. Download a structured Word sample, preview the sections, start a controlled project document from the template, or let AI draft a filled sample for a project you describe." />
+      <Head color="#3b82f6" eyebrow="ISO 19650 · TEMPLATES" title="Sample documents" intro="Ready-to-use ISO 19650 document structures with the correct sections, clause references and guidance notes. Download a structured Word sample, preview the sections, start a controlled project document from the template, or let AI draft a filled sample for a project you describe." />
       <div className="grid g2">
         {SAMPLES.map(({ id, color, scope }) => { const t = templateById(id); if (!t) return null; const fields = t.sections.reduce((a, s) => a + s.fields.length, 0); return (
           <div key={id} className="card" style={{ borderTop: `3px solid ${color}`, display: "grid", gap: 8, alignContent: "start" }}>

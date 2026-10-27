@@ -54,6 +54,13 @@ export const PROJECT_PAGES: NavItem[] = [
 export const STANDARD_PAGES: NavItem[] = [
   g("s.learn", "Learn: quizzes, mock exam, scenarios", "/learn", "sparkles", "Learn", "Practice questions, timed exam, skill profile"),
   g("s.guides", "Best-practice guides", "/learn/guides", "book", "Learn", "Practical guidance for modellers, coordinators and managers"),
+  g("s.hubs", "All topic hubs", "/hubs", "grid", "Advanced topics", "Every in-depth guide in one place"),
+  g("s.hub.appointment", "Appointment process diagram", "/hubs/appointment", "flow", "Advanced topics", "Interactive ISO 19650-2 process: who does what, inputs, outputs"),
+  g("s.hub.docroles", "Documents aligned with roles", "/hubs/documents-roles", "file", "Advanced topics", "Which party produces which document at each stage"),
+  g("s.hub.loin", "LOD / LOI / LOIN hub", "/hubs/loin", "layers", "Advanced topics", "Level of information need, LOD 100–500, element library"),
+  g("s.hub.cobie", "COBie practical guide", "/hubs/cobie", "table", "Advanced topics", "Sheets, timing, authoring, quality checks"),
+  g("s.hub.infra", "Infrastructure BIM & ISO 19650", "/hubs/infrastructure", "layers", "Advanced topics", "Roads, rail, bridges, utilities"),
+  g("s.hub.revit", "Revit best practices", "/hubs/revit", "settings", "Advanced topics", "Setup, naming, parameters, IFC export, QA"),
   g("s.hub.implementation", "BIM implementation best practices", "/hubs/implementation", "flow", "Advanced topics", "Strategy, maturity, people, process, technology, KPIs"),
   g("s.hub.scan", "Scan to BIM", "/hubs/scan-to-bim", "layers", "Advanced topics", "Reality capture, accuracy, workflow, cost estimator"),
   g("s.hub.dimensions", "BIM dimensions (4D–7D, net zero)", "/hubs/dimensions", "layers", "Advanced topics", "4D time, 5D cost, 6D carbon, 7D FM, net zero"),

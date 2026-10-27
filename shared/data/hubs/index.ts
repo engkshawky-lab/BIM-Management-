@@ -1,9 +1,21 @@
+import { appointmentHub } from "./appointment";
+import { cobieHub } from "./cobie";
 import { dimensionsHub } from "./dimensions";
+import { documentsRolesHub } from "./documentsRoles";
 import { implementationHub } from "./implementation";
+import { infrastructureHub } from "./infrastructure";
+import { loinHub } from "./loin";
+import { revitHub } from "./revit";
 import { scanToBimHub } from "./scanToBim";
 import type { Hub } from "./types";
 
-export const hubs: Hub[] = [scanToBimHub, dimensionsHub, implementationHub];
+export const hubs: Hub[] = [
+  appointmentHub, documentsRolesHub, loinHub, cobieHub, infrastructureHub,
+  { ...scanToBimHub, tone: scanToBimHub.tone ?? "red" },
+  { ...dimensionsHub, tone: dimensionsHub.tone ?? "green" },
+  revitHub,
+  { ...implementationHub, tone: implementationHub.tone ?? "purple" },
+];
 export const hubById = (id: string) => hubs.find((h) => h.id === id);
 
 /** Plain-text digest of a hub for grounding the AI tutor (widgets and quizzes left out). */
@@ -20,6 +32,7 @@ export function hubDigest(hub: Hub, limit = 60_000) {
       else if (b.kind === "callout") out.push(`${b.title}: ${b.body}`);
       else if (b.kind === "faq") out.push(`${b.title}: ${b.items.map((x) => `Q ${x.q} A ${x.a}`).join(" ")}`);
       else if (b.kind === "stats") out.push(`${b.title}: ${b.stats.map((x) => `${x.value} ${x.label}`).join("; ")}`);
+      else if (b.kind === "process") out.push(`${b.title}: ${b.steps.map((s) => `${s.title} (${s.clause}, ${b.lanes.find((l) => l.id === s.lane)?.label}): ${s.activities.join("; ")} → ${s.outputs.join("; ")}`).join("\n")}`);
     }
   }
   return out.join("\n").slice(0, limit);

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useSession } from "../App";
 import { Markdown } from "../components/Markdown";
 import { api } from "../lib/api";
@@ -431,13 +431,14 @@ export default function AiTools({ tool, arg }: { tool?: string; arg?: string }) 
   const cur = AI_TOOLS.find((t) => t.id === tool) ?? AI_TOOLS[0];
   const ai = useAiEnabled();
   return (
-    <>
-      <div className="page-head"><div className="small muted">AI TOOLS · ISO 19650</div><h1>{cur.label}</h1><p className="muted" style={{ margin: 0 }}>{cur.hint}</p></div>
-      <div className="tabs">{AI_TOOLS.map((t) => <a key={t.id} className={"tab" + (cur.id === t.id ? " on" : "")} href={`#/ai-tools/${t.id}`}>{t.label}</a>)}</div>
-      {ai === null ? <div className="muted">Loading…</div>
+    <div className="hub" style={{ "--hub": "#7c3aed" } as CSSProperties}>
+      <div className="hub-hero"><div className="eyebrow">AI TOOLS · ISO 19650</div><h1>{cur.label}</h1><p>{cur.hint}</p>
+        <div className="facts"><span>Powered by Claude</span><span>Review-first: you stay accountable</span><span>Export to Word / CSV</span></div></div>
+      <div className="hub-tabs">{AI_TOOLS.map((t) => <a key={t.id} className={cur.id === t.id ? "on" : ""} href={`#/ai-tools/${t.id}`}>{t.label}</a>)}</div>
+      <div>{ai === null ? <div className="muted">Loading…</div>
         : cur.id === "suitability" ? <SuitabilityTool ai={ai} />
           : !ai ? <AiOff />
-            : cur.id === "review" ? <ReviewTool /> : cur.id === "generate" ? <GenerateTool key={arg ?? ""} initial={arg ? decodeURIComponent(arg) : ""} /> : cur.id === "risks" ? <RiskTool /> : cur.id === "clash" ? <ClashTool /> : <CobieTool />}
-    </>
+            : cur.id === "review" ? <ReviewTool /> : cur.id === "generate" ? <GenerateTool key={arg ?? ""} initial={arg ? decodeURIComponent(arg) : ""} /> : cur.id === "risks" ? <RiskTool /> : cur.id === "clash" ? <ClashTool /> : <CobieTool />}</div>
+    </div>
   );
 }
