@@ -34,11 +34,16 @@ export function NewDocumentDialog({ data, initialTemplate, onClose }: { data: Pr
   const t = templateById(templateId ?? "");
   const [title, setTitle] = useState("");
   const [container, setContainer] = useState("");
+  const [house, setHouse] = useState<{ id: string; name: string; templateId: string; createdByName: string }[]>([]);
+  const [houseId, setHouseId] = useState("");
+  useEffect(() => { api<{ templates: typeof house }>("/house-templates").then((r) => setHouse(r.templates)).catch(() => undefined); }, []);
+  const houseFor = house.filter((h) => h.templateId === templateId);
+  useEffect(() => setHouseId(""), [templateId]);
   useEffect(() => { if (t) setContainer(`${project.code}-XXX-ZZ-ZZ-${t.standard === "iso19650" ? "RP" : "RP"}-Z-0001`); }, [t, project.code]);
 
   const create = async () => {
     try {
-      const r = await api<{ id: string }>(`/projects/${project.id}/documents`, { body: { templateId, title: title || undefined, containerName: container } });
+      const r = await api<{ id: string }>(`/projects/${project.id}/documents`, { body: { templateId, title: title || undefined, containerName: container, ...(houseId ? { houseTemplateId: houseId } : {}) } });
       toast("Document created"); onClose(); navigate(`/projects/${project.id}/documents/${r.id}`);
     } catch (e) { toast((e as Error).message, "error"); }
   };
@@ -57,6 +62,10 @@ export function NewDocumentDialog({ data, initialTemplate, onClose }: { data: Pr
         </select>
         {t && <p className="small muted">{t.purpose} <br />{t.clauseRefs.join(" · ")} · {t.sections.length} sections. Project details are filled in automatically.</p>}
         {t?.generatedFrom ? <GeneratedNotice projectId={project.id} t={t} onClose={onClose} /> : <>
+        {houseFor.length > 0 && <><label>Start from</label><select value={houseId} onChange={(e) => setHouseId(e.target.value)}>
+          <option value="">Standard template</option>
+          {houseFor.map((h) => <option key={h.id} value={h.id}>⭐ {h.name}{h.createdByName && ` (${h.createdByName})`}</option>)}
+        </select><p className="tiny muted">House templates carry your organization's approved content; project details still come from this project.</p></>}
         <label>Title</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t?.title} />
         <label>Container name / document number</label><input value={container} onChange={(e) => setContainer(e.target.value.toUpperCase())} />
         <p className="small muted">Replace XXX with your originator code. See the <a href="#/knowledge/iso19650/naming" target="_blank">naming tool</a>.</p>

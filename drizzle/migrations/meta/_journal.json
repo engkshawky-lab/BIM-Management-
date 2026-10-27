@@ -162,6 +162,13 @@
       "when": 1793040098672,
       "tag": "0022_stripe",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1793084189810,
+      "tag": "0023_specialist",
+      "breakpoints": true
     }
   ]
 }

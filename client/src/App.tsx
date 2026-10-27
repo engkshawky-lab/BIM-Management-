@@ -15,6 +15,9 @@ import Login, { ResetPassword } from "./pages/Login";
 import ProfilePage from "./pages/Profile";
 import ProjectPage from "./pages/Project";
 import NewProject from "./pages/NewProject";
+import { AdoptionGuide, GuidesPage } from "./pages/LearnGuides";
+import SetupWizard from "./pages/SetupWizard";
+import Support from "./pages/Support";
 
 interface Session { user: User; setUser: (u: User | null) => void; toast: (msg: string, kind?: "ok" | "error") => void }
 const Ctx = createContext<Session>(null!);
@@ -71,7 +74,11 @@ export default function App() {
   else if (parts[0] === "billing") view = <Billing key={parts[1] ?? ""} paid={parts[1] === "paid"} />;
   else if (parts[0] === "talent") view = parts[1] === "me" ? <MyTalentProfile /> : <TalentSearch />;
   else if (parts[0] === "admin") view = <Admin tab={parts[1]} />;
+  else if (parts[0] === "learn" && parts[1] === "guides") view = <GuidesPage key={parts[2] ?? ""} id={parts[2]} />;
+  else if (parts[0] === "learn" && parts[1] === "adoption") view = <AdoptionGuide />;
   else if (parts[0] === "learn") view = <Learn />;
+  else if (parts[0] === "wizard") view = <SetupWizard />;
+  else if (parts[0] === "support") view = <Support />;
   else if (parts[0] === "my-day") view = <MyDay />;
   else if (parts[0] === "portfolio") view = <Portfolio />;
   else if (parts[0] === "tools") view = <Tools tool={parts[1]} />;

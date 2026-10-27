@@ -281,6 +281,11 @@ export default function DocumentEditor({ data, docId }: { data: ProjectData; doc
             <button onClick={() => exportMarkdown(exportDoc(), t)}>⬇ Markdown</button>
             <button onClick={() => { setPanel("preview"); setTimeout(() => window.print(), 50); }}>🖨 PDF</button>
             {canEdit(data.role) && <button onClick={() => setDialog("saveFile")}>💾 Save to project files</button>}
+            {canEdit(data.role) && !t.generatedFrom && <button title="Reuse this content as the starting point for new documents in your organization" onClick={async () => {
+              const name = prompt("Name for the house template (shared with your organization):", `${t.code} — ${data.project.code}`); if (!name?.trim()) return;
+              try { await flush(); await api(`/projects/${pid}/documents/${doc.id}/house-template`, { body: { name: name.trim() } }); toast("Saved as a house template. Choose it when you create a new document."); }
+              catch (e) { toast((e as Error).message, "error"); }
+            }}>⭐ Save as house template</button>}
           </div>
         </div>
 

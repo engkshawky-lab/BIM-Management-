@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { QUESTIONS, SCENARIOS, TOPICS, type Question } from "../../../shared/data/learn";
 import { api, fmtDate } from "../lib/api";
 import { Courses, InterviewCoach, StandardsUpdates } from "./LearnExtras";
+import { AssignedTraining } from "./LearnGuides";
 
 interface Attempt { id: string; mode: string; topic: string; score: number; total: number; seconds: number; createdAt: string }
 const shuffle = <T,>(a: T[]) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
@@ -87,6 +88,11 @@ export default function Learn() {
   return (
     <>
       <div className="page-head"><h1>Learn</h1><p className="muted">Short courses, practice questions by topic, a timed mock exam, decision scenarios and an AI interview coach. Questions are written for learning and paraphrase the standards — always check the licensed editions.</p></div>
+      <AssignedTraining />
+      <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+        <a className="badge" href="#/learn/guides">📘 Best-practice guides</a>
+        <a className="badge" href="#/learn/adoption">🧭 Implementation guide for your organization</a>
+      </div>
       <h2 className="section-title">Courses</h2>
       <Courses onPractise={(t) => setRun({ mode: "practice", topic: t, qs: shuffle(QUESTIONS.filter((q) => q.topic === t)) })} />
       <h2 className="section-title">Practise & test</h2>

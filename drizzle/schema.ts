@@ -1,4 +1,4 @@
-import { boolean, customType, datetime, index, int, mysqlTable, primaryKey, text, uniqueIndex, varchar, bigint } from "drizzle-orm/mysql-core";
+import { boolean, customType, mediumtext, datetime, index, int, mysqlTable, primaryKey, text, uniqueIndex, varchar, bigint } from "drizzle-orm/mysql-core";
 
 // MariaDB stores JSON as LONGTEXT and returns it as a string; MySQL returns parsed objects. Accept both.
 const json = <T>(name: string) => customType<{ data: T; driverData: string }>({
@@ -450,6 +450,9 @@ export const feedback = mysqlTable("feedback", {
   message: varchar("message", { length: 4000 }).notNull(),
   page: varchar("page", { length: 255 }).notNull().default(""),
   status: varchar("status", { length: 16 }).notNull().default("New"),
+  screenshot: mediumtext("screenshot"),
+  reply: varchar("reply", { length: 4000 }).notNull().default(""),
+  repliedAt: datetime("replied_at", { mode: "date" }),
   createdAt: created(),
 });
 
@@ -585,3 +588,51 @@ export const aiUsage = mysqlTable("ai_usage", {
   month: varchar("month", { length: 7 }).notNull(),
   count: int("count").notNull().default(0),
 }, (t) => [primaryKey({ columns: [t.userId, t.month] })]);
+
+// ---------- health & safety information (ISO 19650-6) ----------
+export const hsItems = mysqlTable("hs_items", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  number: int("number").notNull(),
+  hazard: varchar("hazard", { length: 255 }).notNull(),
+  location: varchar("location", { length: 160 }).notNull().default(""),
+  phase: varchar("phase", { length: 24 }).notNull().default("Construction"),
+  description: varchar("description", { length: 1000 }).notNull().default(""),
+  controls: varchar("controls", { length: 1000 }).notNull().default(""),
+  residual: varchar("residual", { length: 8 }).notNull().default("Medium"),
+  audience: varchar("audience", { length: 160 }).notNull().default(""),
+  fileId: ref("file_id"),
+  ownerId: ref("owner_id"),
+  status: varchar("status", { length: 16 }).notNull().default("Open"),
+  createdAt: created(),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+}, (t) => [index("hs_project").on(t.projectId)]);
+
+/** Organization "house" templates: a saved document's content reused as the start of new documents. */
+export const houseTemplates = mysqlTable("house_templates", {
+  id: id(),
+  organization: varchar("organization", { length: 160 }).notNull(),
+  name: varchar("name", { length: 160 }).notNull(),
+  templateId: varchar("template_id", { length: 40 }).notNull(),
+  values: json<Record<string, unknown>>("values").notNull(),
+  createdBy: ref("created_by").notNull(),
+  createdAt: created(),
+}, (t) => [index("house_templates_org").on(t.organization)]);
+
+/** Courses a project manager assigns to team members. */
+export const courseAssignments = mysqlTable("course_assignments", {
+  id: id(),
+  projectId: ref("project_id").notNull(),
+  courseId: varchar("course_id", { length: 40 }).notNull(),
+  userId: ref("user_id").notNull(),
+  dueDate: varchar("due_date", { length: 10 }).notNull().default(""),
+  assignedBy: ref("assigned_by").notNull(),
+  createdAt: created(),
+}, (t) => [index("course_assignments_project").on(t.projectId), uniqueIndex("course_assignments_unique").on(t.projectId, t.courseId, t.userId)]);
+
+/** Per-user progress through the organization ISO 19650 implementation guide. */
+export const adoptionProgress = mysqlTable("adoption_progress", {
+  userId: varchar("user_id", { length: 36 }).primaryKey(),
+  data: json<Record<string, { status: string; owner: string; due: string; note: string }>>("data").notNull(),
+  updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
+});

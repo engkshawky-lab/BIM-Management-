@@ -35,6 +35,7 @@ export const PROJECT_PAGES: NavItem[] = [
   p("p.loin", "Level of information need", "delivery/loin", "layers", "Delivery", "LOIN per element & milestone"),
   p("p.gates", "Process gates", "workflow", "flow", "Delivery", "ISO 19650-2 / 42001 stage gates"),
   p("p.risks", "Risk register", "delivery/risks", "alert", "Delivery"),
+  p("p.hs", "Health & safety information", "delivery/hs", "alert", "Delivery", "ISO 19650-6 hazards and residual risks"),
   p("p.handover", "Handover", "delivery/handover", "handshake", "Delivery", "PIM → AIM checklist"),
   p("p.validation", "Model validation", "validation", "check", "Model & coordination", "IFC, COBie, LOIN & IDS checks"),
   p("p.reviews", "Model QA/QC reviews", "reviews", "shield", "Model & coordination", "Graded discipline checklists A–D"),
@@ -45,12 +46,15 @@ export const PROJECT_PAGES: NavItem[] = [
   p("p.quality", "Quality hub", "quality", "shield", "Quality & team", "Document, plan and document-set checks"),
   p("p.meetings", "Meetings & progress report", "meetings", "calendar", "Quality & team", "Agendas, minutes, actions, progress report"),
   p("p.automations", "Automations", "automations", "sparkles", "Quality & team", "Scheduled chasers and quality reviews"),
+  p("p.training", "Team training", "training", "book", "Quality & team", "Assign courses and track completion"),
   p("p.team", "Team", "team", "users", "Quality & team"),
   p("p.settings", "Project settings", "settings", "settings", "Quality & team"),
 ];
 
 export const STANDARD_PAGES: NavItem[] = [
   g("s.learn", "Learn: quizzes, mock exam, scenarios", "/learn", "sparkles", "Learn", "Practice questions, timed exam, skill profile"),
+  g("s.guides", "Best-practice guides", "/learn/guides", "book", "Learn", "Practical guidance for modellers, coordinators and managers"),
+  g("s.adoption", "Implementation guide", "/learn/adoption", "flow", "Learn", "Adopt ISO 19650 across your organization, step by step"),
   g("s.19650.parts", "All parts (1–6)", "/knowledge/iso19650/library/0", "book", "ISO 19650"),
   g("s.19650.process", "Delivery process (19650-2)", "/knowledge/iso19650/library/1", "flow", "ISO 19650"),
   g("s.19650.cde", "CDE & status codes", "/knowledge/iso19650/library/2", "layers", "ISO 19650"),
@@ -69,6 +73,7 @@ export const TEMPLATE_PAGES: NavItem[] = templates.map((t) =>
 export const RESOURCE_PAGES: NavItem[] = [
   g("r.19650", "ISO 19650 references", "/knowledge/iso19650/references", "library", "References"),
   g("r.42001", "ISO/IEC 42001 references", "/knowledge/iso42001/references", "library", "References"),
+  g("r.wizard", "Setup wizard", "/wizard", "sparkles", "My work", "Answer a few questions; get the documents and workflow you need"),
   g("r.myday", "My Day", "/my-day", "calendar", "My work", "Everything waiting on you"),
   g("r.portfolio", "Portfolio dashboard", "/portfolio", "grid", "My work", "Health across your projects"),
   g("r.fee", "BIM fee estimator", "/tools/fee", "table", "Tools"),
@@ -80,6 +85,7 @@ export const RESOURCE_PAGES: NavItem[] = [
   g("r.talent", "Talent pool (recruiters)", "/talent", "users", "Careers"),
   g("r.standards", "Client standards", "/standards", "book", "Client requirements"),
   g("r.profile", "My profile", "/profile", "user", "Account"),
+  g("r.support", "Help & support", "/support", "help", "Account", "Ask a question or report a problem; see replies"),
 ];
 
 export const ALL_PAGES = [...PROJECT_PAGES, ...STANDARD_PAGES, ...TEMPLATE_PAGES, ...RESOURCE_PAGES];
@@ -98,7 +104,7 @@ export const RAIL: RailSection[] = [
 export function sectionFor(route: string): string {
   if (route.startsWith("/projects")) return "projects";
   if (/^\/knowledge\/[^/]+\/templates/.test(route)) return "documents";
-  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|standards|talent|admin)/.test(route)) return "resources";
+  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|standards|talent|admin|wizard|support)/.test(route)) return "resources";
   if (route.startsWith("/knowledge") || route.startsWith("/learn")) return "standards";
   return "home";
 }

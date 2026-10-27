@@ -1,6 +1,6 @@
 import { Trends } from "./Automations";
 import { useEffect, useState } from "react";
-import { navigate } from "../App";
+import { navigate, useSession } from "../App";
 import { StateTag } from "../components/common";
 import { templateById } from "../../../shared/data/templates";
 import type { Finding } from "../../../shared/delivery";
@@ -35,6 +35,8 @@ export default function Quality({ data }: { data: ProjectData }) {
   const pid = data.project.id;
   const [r, setR] = useState<Report | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  const [pack, setPack] = useState("");
+  const { toast } = useSession();
   const load = () => api<Report>(`/projects/${pid}/quality`).then(setR);
   useEffect(() => { load(); }, [pid]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!r) return <p className="muted">Running checks…</p>;
@@ -47,6 +49,11 @@ export default function Quality({ data }: { data: ProjectData }) {
         <p className="muted" style={{ margin: 0 }}>Automated checks against ISO 19650-2 and ISO/IEC 42001 expectations: required document set, completeness, placeholders, naming, plan dates and dependencies.</p>
         <div className="row">
           <button onClick={load}>↻ Re-run</button>
+          <button disabled={!!pack} title="Zip of every document in Word, the quality report and all registers, indexed by ISO clause" onClick={async () => {
+            setPack("Preparing…");
+            try { const { buildAuditPack } = await import("../lib/auditPack"); await buildAuditPack(data.project, data.members, setPack); toast("Audit evidence pack downloaded."); }
+            catch (e) { toast((e as Error).message, "error"); } finally { setPack(""); }
+          }}>{pack || "📦 Audit evidence pack"}</button>
           <button onClick={() => exportCsv(`${data.project.code}-quality-report`, ["Source", "Severity", "Area", "Reference", "Finding", "Clause"], all.map((f) => [f.doc, f.severity, f.area, f.ref ?? "", f.message, f.clause ?? ""]))}>⬇ CSV</button>
         </div>
       </div>

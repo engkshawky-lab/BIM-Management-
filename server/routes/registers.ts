@@ -107,4 +107,52 @@ r.delete(P + "/handover/:id", requireProject("manager"), h(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// ---------- health & safety information register (ISO 19650-6) ----------
+export const HS_PHASES = ["Design", "Construction", "Operation", "Maintenance", "Demolition"] as const;
+const hsSchema = z.object({
+  hazard: z.string().trim().min(1).max(255), location: z.string().max(160).default(""), phase: z.enum(HS_PHASES).default("Construction"),
+  description: z.string().max(1000).default(""), controls: z.string().max(1000).default(""), residual: z.enum(["Low", "Medium", "High"]).default("Medium"),
+  audience: z.string().max(160).default(""), fileId: z.string().nullable().default(null), ownerId: z.string().nullable().default(null),
+  status: z.enum(["Open", "Closed"]).default("Open"),
+});
+
+async function checkHsRefs(pid: string, body: { fileId?: string | null; ownerId?: string | null }) {
+  if (body.ownerId && !(await memberRole(pid, body.ownerId))) return "Owner is not a project member.";
+  if (body.fileId) {
+    const [f] = await db.select({ id: schema.files.id }).from(schema.files).where(and(eq(schema.files.id, body.fileId), eq(schema.files.projectId, pid)));
+    if (!f) return "Unknown file.";
+  }
+  return null;
+}
+
+r.get(P + "/hs", requireProject(), h(async (req, res) => {
+  res.json({ items: await db.select().from(schema.hsItems).where(eq(schema.hsItems.projectId, req.params.projectId)).orderBy(asc(schema.hsItems.number)) });
+}));
+
+r.post(P + "/hs", requireProject("editor"), h(async (req, res) => {
+  const body = parse(hsSchema, req.body, res); if (!body) return;
+  const pid = req.params.projectId;
+  const bad = await checkHsRefs(pid, body); if (bad) return res.status(400).json({ error: bad });
+  const [{ n }] = await db.select({ n: max(schema.hsItems.number) }).from(schema.hsItems).where(eq(schema.hsItems.projectId, pid));
+  const id = newId(); const now = new Date(); const ref = `HS${String((n ?? 0) + 1).padStart(2, "0")}`;
+  await db.insert(schema.hsItems).values({ ...body, id, projectId: pid, number: (n ?? 0) + 1, createdAt: now, updatedAt: now });
+  await logActivity(pid, req.user!.id, "hs.created", `Added H&S information ${ref}: ${body.hazard}`, `/projects/${pid}/delivery/hs`);
+  if (body.ownerId) await notify(pid, req.user!.id, `You own H&S information ${ref}: ${body.hazard}`, `/projects/${pid}/delivery/hs`, body.ownerId);
+  res.status(201).json({ id });
+}));
+
+r.put(P + "/hs/:id", requireProject("editor"), h(async (req, res) => {
+  const parsed = parse(hsSchema.partial(), req.body, res); if (!parsed) return;
+  const body = sentKeys(parsed, req.body);
+  if (!Object.keys(body).length) return res.status(400).json({ error: "Nothing to change." });
+  const bad = await checkHsRefs(req.params.projectId, body); if (bad) return res.status(400).json({ error: bad });
+  await db.update(schema.hsItems).set({ ...body, updatedAt: new Date() }).where(and(eq(schema.hsItems.id, req.params.id), eq(schema.hsItems.projectId, req.params.projectId)));
+  res.json({ ok: true });
+}));
+
+r.delete(P + "/hs/:id", requireProject("manager"), h(async (req, res) => {
+  await db.delete(schema.hsItems).where(and(eq(schema.hsItems.id, req.params.id), eq(schema.hsItems.projectId, req.params.projectId)));
+  res.json({ ok: true });
+}));
+
 export default r;

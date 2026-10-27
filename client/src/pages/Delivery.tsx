@@ -12,6 +12,7 @@ import { exportCsv, parseTabular } from "../lib/export";
 import { Handover, Risks } from "./Coordination";
 import type { ProjectData } from "./Project";
 import ProjectInfoUses from "./InfoUses";
+import HealthSafety from "./HealthSafety";
 
 interface RespRow { id: string; item: string; stage: string; loin: string; cells: Record<string, string>; sortOrder: number }
 interface LoinRow { id: string; ref: string; element: string; ifcClass: string; milestoneId: string | null; purpose: string; geometry: string; alphanumeric: string; documentation: string }
@@ -493,7 +494,7 @@ function Mrm({ d, project, role, call }: { d: DeliveryData; project: ProjectData
 
 // ---------------------------------------------------------------- page
 
-const SUBTABS = ["plan", "setup", "uses", "responsibility", "mrm", "loin", "risks", "handover"];
+const SUBTABS = ["plan", "setup", "uses", "responsibility", "mrm", "loin", "risks", "hs", "handover"];
 
 export default function Delivery({ data, sub }: { data: ProjectData; sub?: string }) {
   const { data: d, call } = useDelivery(data.project.id);
@@ -508,6 +509,7 @@ export default function Delivery({ data, sub }: { data: ProjectData; sub?: strin
       {tab === "mrm" && <Mrm d={d} project={data.project} role={data.role} call={call} />}
       {tab === "loin" && <Loin d={d} role={data.role} call={call} />}
       {tab === "risks" && <Risks data={data} />}
+      {tab === "hs" && <HealthSafety data={data} />}
       {tab === "handover" && <Handover data={data} />}
     </>
   );

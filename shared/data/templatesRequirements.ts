@@ -244,5 +244,57 @@ export function requirementsTemplates(projectInfo: TemplateSection, orgInfo: Tem
         ]),
       ],
     },
+    {
+      id: "infra-requirements", standard: "iso19650", code: "INF", category: "Specialist", title: "Infrastructure Information Requirements",
+      purpose: "Addendum to the EIR and information standard for linear and civil assets: breakdown by section and chainage, survey and coordinates, IFC 4.3 and GIS exchange.",
+      clauseRefs: ["19650-2 §5.2.1", "19650-2 §5.1.4", "ISO 16739-1 (IFC 4.3)"],
+      sections: [
+        projectInfo,
+        sec("assetScope", "Network and asset scope", "The linear assets and structures in the appointment and how they are divided.", [
+          table("sections", "Sections and volumes", ["Code", "Section / system", "From chainage", "To chainage"], [["S01", "", "0+000", ""], ["S02", "", "", ""]]),
+          table("structures", "Structures", ["Ref", "Type", "Section", "Chainage"], [["ST01", "Bridge", "", ""], ["ST02", "Culvert", "", ""]]),
+        ]),
+        sec("survey", "Survey, coordinates and datums", "Map projection, vertical datum, survey control and how models are positioned.", [
+          text("projection", "Map projection / coordinate reference system"), text("verticalDatum", "Vertical datum"),
+          area("control", "Survey control and transformations", undefined, "All models are positioned in the project coordinate reference system. Survey control points, any local grid and the transformation parameters are published as reference information."),
+          text("alignmentMaster", "Master alignment source", undefined, "Highway / rail design model; alignments exchanged as IFC 4.3 and LandXML"),
+        ]),
+        sec("modelling", "Modelling and breakdown rules", "How infrastructure models are split, named and classified.", [
+          area("splitRules", "Model split", undefined, "Models are split by section and discipline (alignment, earthworks, drainage, pavement, structures, utilities, signage and lighting) to keep file sizes manageable."),
+          select("classificationInf", "Classification", ["Uniclass 2015", "CCI", "Client asset hierarchy", "Other"]),
+          table("disciplines", "Disciplines and IFC entities", ["Discipline", "Main IFC entities", "Format"], [["Alignment", "IfcAlignment", "IFC 4.3 / LandXML"], ["Earthworks", "IfcEarthworksFill / IfcEarthworksCut", "IFC 4.3"], ["Pavement / track", "IfcCourse / IfcPavement / IfcTrackElement", "IFC 4.3"], ["Bridges", "IfcBridge / IfcBridgePart", "IFC 4.3"], ["Drainage & utilities", "IfcPipeSegment / IfcDistributionChamberElement", "IFC 4.3"]]),
+        ]),
+        sec("gis", "GIS integration", "How model information is exchanged with the asset owner's GIS.", [
+          area("gisExchange", "GIS exchange", undefined, "Asset locations and attributes are delivered as GIS layers (e.g. GeoPackage or shapefile) in the project coordinate reference system, with the same asset identifiers as the models."),
+        ]),
+        sec("assets", "Linear asset information", "Attributes linear assets need for operation and maintenance.", [
+          table("linearAttrs", "Linear asset attributes", ["Asset type", "Location reference", "Attributes", "Stage"], [["Pavement", "Start / end chainage, lane", "Construction type, layer thicknesses, date laid", "As-built"], ["Drainage run", "Start / end node", "Diameter, material, invert levels", "As-built"], ["Lighting column", "Chainage, offset", "Type, height, lamp, circuit", "As-built"]]),
+        ]),
+      ],
+    },
+    {
+      id: "facade-requirements", standard: "iso19650", code: "FAC", category: "Specialist", title: "Façade Information Requirements",
+      purpose: "Addendum for façade design and specialist contractor packages: panel identification, interfaces, performance information and fabrication-to-handover exchanges.",
+      clauseRefs: ["19650-2 §5.2.1", "19650-2 §5.4.2"],
+      sections: [
+        projectInfo,
+        sec("scope", "Façade package scope", "Systems in the package and the responsibility split between designer and specialist.", [
+          table("systems", "Façade systems", ["System", "Description", "Design responsibility", "Fabrication responsibility"], [["Unitized curtain wall", "", "", ""], ["Stick curtain wall", "", "", ""], ["Rainscreen cladding", "", "", ""], ["Glazed doors and windows", "", "", ""]]),
+        ]),
+        sec("identification", "Panel and unit identification", "Unique type and instance marks used in models, drawings, fabrication and on site.", [
+          area("markRules", "Marking rules", undefined, "Every unit carries a type mark and a unique instance mark (elevation–level–sequence). The same mark appears in the model, on fabrication drawings, on the delivered unit and in the asset register."),
+        ]),
+        sec("interfaces", "Interfaces and coordination", "Interfaces that must be modelled and checked before fabrication.", [
+          table("interfacesTable", "Interfaces", ["Interface", "With", "Information needed", "Milestone"], [["Brackets and slab edge", "Structure", "Bracket positions, tolerances, embedded plates", "Detailed design"], ["Penetrations", "MEP", "Sizes, locations, fire stopping", "Detailed design"], ["Building maintenance unit", "BMU supplier", "Restraint points, loads", "Detailed design"], ["Fire separation", "Architect / fire engineer", "Spandrel and cavity barrier details", "Detailed design"]]),
+        ]),
+        sec("performance", "Performance information", "Performance data attached to façade types, with evidence.", [
+          table("perf", "Performance requirements", ["Property", "Requirement", "Evidence"], [["Thermal transmittance (U-value)", "", "Calculation / test report"], ["Air permeability", "", "Test report"], ["Water tightness", "", "Test report"], ["Acoustic insulation", "", "Test report"], ["Reaction to fire", "", "Classification report"], ["Structural / wind load", "", "Calculation"]]),
+        ]),
+        sec("fabrication", "Fabrication, testing and handover", "Exchanges from the specialist's fabrication models to coordination and the asset register.", [
+          area("fabExchange", "Fabrication exchange", undefined, "Fabrication models stay native to the specialist's tools; a coordination IFC is shared at each milestone. Visual and performance mock-ups are recorded with photos and test reports."),
+          area("facadeHandover", "Handover information", undefined, "As-installed unit schedule with marks, warranties, cleaning and maintenance access, replacement method and spare units."),
+        ]),
+      ],
+    },
   ];
 }

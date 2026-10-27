@@ -1,8 +1,8 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
 import { templateById } from "../../shared/data/templates";
-import { SUITABILITY, initialValues, nextRevision, type CdeState } from "../../shared/documents";
+import { PROJECT_FACT_FIELDS, SUITABILITY, initialValues, nextRevision, type CdeState } from "../../shared/documents";
 import { atLeast, logActivity, memberRole, notify, requireProject } from "../access";
 import { db, newId, schema } from "../db";
 import { h, parse } from "./auth";
@@ -17,6 +17,20 @@ async function getDoc(projectId: string, id: string) {
   return d;
 }
 const lockActive = (d: typeof schema.documents.$inferSelect) => !!d.lockedBy && !!d.lockedAt && Date.now() - d.lockedAt.getTime() < LOCK_MS;
+
+// ---------- organization house templates ----------
+// Shared with colleagues: same organization name in the profile AND at least one project in common with
+// the author (the organization name alone is self-declared). Without an organization, only the author sees them.
+const orgKey = (u: { id: string; organization: string }) => u.organization.trim().toLowerCase() || `user:${u.id}`;
+async function visibleHouseTemplates(u: { id: string; organization: string }) {
+  const rows = await db.select().from(schema.houseTemplates).where(eq(schema.houseTemplates.organization, orgKey(u))).orderBy(desc(schema.houseTemplates.createdAt));
+  const authors = [...new Set(rows.map((x) => x.createdBy).filter((id) => id !== u.id))];
+  if (!authors.length) return rows;
+  const mine = (await db.select({ p: schema.projectMembers.projectId }).from(schema.projectMembers).where(eq(schema.projectMembers.userId, u.id))).map((x) => x.p);
+  const colleagues = new Set(mine.length ? (await db.select({ u: schema.projectMembers.userId }).from(schema.projectMembers)
+    .where(and(inArray(schema.projectMembers.projectId, mine), inArray(schema.projectMembers.userId, authors)))).map((x) => x.u) : []);
+  return rows.filter((x) => x.createdBy === u.id || colleagues.has(x.createdBy));
+}
 
 async function userName(id: string | null) {
   if (!id) return null;
@@ -33,7 +47,7 @@ r.get(P + "/documents", requireProject(), h(async (req, res) => {
 }));
 
 r.post(P + "/documents", requireProject("editor"), h(async (req, res) => {
-  const body = parse(z.object({ templateId: z.string(), title: z.string().trim().max(255).optional(), containerName: z.string().trim().max(120).default("") }), req.body, res); if (!body) return;
+  const body = parse(z.object({ templateId: z.string(), title: z.string().trim().max(255).optional(), containerName: z.string().trim().max(120).default(""), houseTemplateId: z.string().optional() }), req.body, res); if (!body) return;
   const t = templateById(body.templateId);
   if (!t) return res.status(400).json({ error: "Unknown template." });
   if (t.generatedFrom) return res.status(409).json({ error: `${t.code} is generated from the ${t.generatedFrom.label}. Use "Generate" there instead of creating it by hand.` });
@@ -41,13 +55,44 @@ r.post(P + "/documents", requireProject("editor"), h(async (req, res) => {
   const [project] = await db.select().from(schema.projects).where(eq(schema.projects.id, pid));
   const id = newId(); const now = new Date(); const uid = req.user!.id;
   const values = initialValues(t, project);
+  let source = `template ${t.code}`;
+  if (body.houseTemplateId) {
+    const house = (await visibleHouseTemplates(req.user!)).find((x) => x.id === body.houseTemplateId && x.templateId === t.id);
+    if (!house) return res.status(400).json({ error: "Unknown house template." });
+    for (const [k, v] of Object.entries(house.values)) if (k in values && !PROJECT_FACT_FIELDS.includes(k)) values[k] = v as typeof values[string];
+    source = `house template "${house.name}"`;
+  }
   await db.insert(schema.documents).values({
     id, projectId: pid, templateId: t.id, title: body.title || t.title, containerName: body.containerName,
     revision: "P01.01", state: "WIP", suitability: "S0", authorId: uid, values, createdAt: now, updatedAt: now,
   });
-  await db.insert(schema.documentRevisions).values({ id: newId(), documentId: id, revision: "P01.01", state: "WIP", suitability: "S0", note: `Created from template ${t.code}`, values, authorId: uid, createdAt: now });
+  await db.insert(schema.documentRevisions).values({ id: newId(), documentId: id, revision: "P01.01", state: "WIP", suitability: "S0", note: `Created from ${source}`, values, authorId: uid, createdAt: now });
   await logActivity(pid, uid, "document.created", `Created ${t.code}: ${body.title || t.title}`, link(pid, id));
   res.status(201).json({ id });
+}));
+
+r.get("/house-templates", h(async (req, res) => {
+  const rows = await visibleHouseTemplates(req.user!);
+  const names = new Map((await db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users)).map((u) => [u.id, u.name]));
+  res.json({ templates: rows.map(({ values: _v, ...x }) => ({ ...x, createdByName: names.get(x.createdBy) ?? "" })) });
+}));
+
+r.post(P + "/documents/:docId/house-template", requireProject("editor"), h(async (req, res) => {
+  const body = parse(z.object({ name: z.string().trim().min(1).max(160) }), req.body, res); if (!body) return;
+  const d = await getDoc(req.params.projectId, req.params.docId);
+  if (!d) return res.status(404).json({ error: "Document not found." });
+  const values = Object.fromEntries(Object.entries(d.values).filter(([k]) => !PROJECT_FACT_FIELDS.includes(k)));
+  const id = newId();
+  await db.insert(schema.houseTemplates).values({ id, organization: orgKey(req.user!), name: body.name, templateId: d.templateId, values, createdBy: req.user!.id, createdAt: new Date() });
+  res.status(201).json({ id });
+}));
+
+r.delete("/house-templates/:id", h(async (req, res) => {
+  const [x] = await db.select().from(schema.houseTemplates).where(eq(schema.houseTemplates.id, req.params.id));
+  if (!x || x.organization !== orgKey(req.user!)) return res.status(404).json({ error: "House template not found." });
+  if (x.createdBy !== req.user!.id && req.user!.role !== "admin") return res.status(403).json({ error: "Only the author or an administrator can delete a house template." });
+  await db.delete(schema.houseTemplates).where(eq(schema.houseTemplates.id, x.id));
+  res.json({ ok: true });
 }));
 
 r.get(P + "/documents/:docId", requireProject(), h(async (req, res) => {

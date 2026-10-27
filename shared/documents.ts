@@ -28,6 +28,9 @@ const PROJECT_FIELDS: Record<string, (p: ProjectFacts) => string> = {
   orgName: (p) => p.appointingParty,
 };
 
+/** Fields filled from the project record; never copied between projects (e.g. from a house template). */
+export const PROJECT_FACT_FIELDS = Object.keys(PROJECT_FIELDS);
+
 export function initialValues(t: DocTemplate, project?: ProjectFacts): Record<string, FieldValue> {
   const v: Record<string, FieldValue> = {};
   for (const s of t.sections)

@@ -70,7 +70,29 @@ export default function Templates({ std, focusId }: { std?: StandardId; focusId?
           </div>
         </div>
       ))}
+      <HouseTemplates />
       {use && <UseDialog t={use} onClose={() => setUse(null)} />}
+    </>
+  );
+}
+
+/** Organization house templates: saved from a document with "Save as house template". */
+function HouseTemplates() {
+  const { user, toast } = useSession();
+  const [rows, setRows] = useState<{ id: string; name: string; templateId: string; createdBy: string; createdByName: string; createdAt: string }[] | null>(null);
+  const load = () => api<{ templates: NonNullable<typeof rows> }>("/house-templates").then((r) => setRows(r.templates));
+  useEffect(() => { load(); }, []);
+  if (!rows) return null;
+  return (
+    <>
+      <h2>House templates</h2>
+      <p className="small muted">Your organization's approved versions of the templates above{user.organization ? ` (shared with colleagues in ${user.organization} who work on a project with you)` : " (add your organization to your profile to share them with colleagues on your projects)"}. Open any document and choose ⭐ Save as house template; then pick it when creating a new document.</p>
+      {rows.length === 0 ? <div className="card muted small">No house templates yet.</div> : (
+        <div className="card table-wrap"><table className="data"><tbody>{rows.map((h) => (
+          <tr key={h.id}><td><span className="badge">{templates.find((t) => t.id === h.templateId)?.code}</span> {h.name}</td><td className="small muted">{h.createdByName}</td>
+            <td>{(h.createdBy === user.id || user.role === "admin") && <button className="ghost small" onClick={async () => { if (!confirm(`Delete house template "${h.name}"?`)) return; try { await api(`/house-templates/${h.id}`, { method: "DELETE" }); load(); } catch (e) { toast((e as Error).message, "error"); } }}>Delete</button>}</td></tr>
+        ))}</tbody></table></div>
+      )}
     </>
   );
 }

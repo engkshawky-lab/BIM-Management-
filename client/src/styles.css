@@ -69,6 +69,17 @@ details.clause > div { padding: 0 14px 12px; }
 .stage { border-inline-start: 4px solid var(--border); }
 .stage.done { border-inline-start-color: var(--ok); }
 .stage.active { border-inline-start-color: var(--accent); }
+.process-map { display: flex; align-items: stretch; gap: 6px; overflow-x: auto; padding: 4px 2px 12px; margin-bottom: 8px; }
+.pm-stage { display: flex; flex-direction: column; gap: 4px; min-width: 150px; max-width: 190px; text-align: start; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+.pm-stage b { font-size: 13px; line-height: 1.3; }
+.pm-stage.done { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 10%, var(--surface)); }
+.pm-stage.active { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.pm-bar { height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+.pm-bar span { display: block; height: 100%; background: var(--accent); }
+.pm-stage.done .pm-bar span { background: var(--ok); }
+.pm-arrow { align-self: center; color: var(--muted); font-size: 18px; }
+.pm-arrow.on { color: var(--accent); }
+[dir="rtl"] .pm-arrow { transform: scaleX(-1); }
 .progress { height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
 .progress > div { height: 100%; background: var(--accent); }
 

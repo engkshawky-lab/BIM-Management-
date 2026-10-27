@@ -1,12 +1,14 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { Router } from "express";
 import { z } from "zod";
+import { ADOPTION_STEP_IDS } from "../../shared/data/adoption";
 import { COURSES } from "../../shared/data/courses";
 import { QUESTIONS } from "../../shared/data/learn";
 import { STANDARD_UPDATES, type Update } from "../../shared/data/updates";
+import { logActivity, memberRole, notify, requireProject } from "../access";
 import { ask } from "../claude";
 import { db, newId, schema } from "../db";
-import { h, parse } from "./auth";
+import { h, parse, sentKeys } from "./auth";
 
 // Quiz results are scored on the server from the answers, so history can be trusted.
 const r = Router();
@@ -76,6 +78,75 @@ r.post("/learn/interview", h(async (req, res) => {
   const messages = body.transcript.length ? body.transcript : [{ role: "user" as const, content: "I'm ready to start the interview." }];
   const { text } = await ask({ system, messages, maxTokens: 2000, effort: "low" });
   res.json({ reply: text });
+}));
+
+// ---------- training assignments (a manager assigns courses to project members) ----------
+const coursePct = (courseId: string, done: Set<string>) => {
+  const c = COURSES.find((x) => x.id === courseId);
+  return c ? c.lessons.filter((l) => done.has(`${c.id}/${l.id}`)).length / c.lessons.length : 0;
+};
+async function completedFor(userIds: string[]) {
+  const rows = userIds.length ? await db.select().from(schema.lessonProgress).where(inArray(schema.lessonProgress.userId, userIds)) : [];
+  const m = new Map<string, Set<string>>();
+  for (const x of rows) (m.get(x.userId) ?? m.set(x.userId, new Set()).get(x.userId)!).add(`${x.courseId}/${x.lessonId}`);
+  return m;
+}
+
+r.get("/projects/:projectId/training", requireProject(), h(async (req, res) => {
+  const rows = await db.select({ a: schema.courseAssignments, name: schema.users.name }).from(schema.courseAssignments)
+    .leftJoin(schema.users, eq(schema.users.id, schema.courseAssignments.userId)).where(eq(schema.courseAssignments.projectId, req.params.projectId));
+  const done = await completedFor([...new Set(rows.map((x) => x.a.userId))]);
+  res.json({ assignments: rows.map((x) => ({ ...x.a, userName: x.name ?? "", progress: coursePct(x.a.courseId, done.get(x.a.userId) ?? new Set()) })) });
+}));
+
+r.post("/projects/:projectId/training", requireProject("manager"), h(async (req, res) => {
+  const body = parse(z.object({ courseId: z.string(), userIds: z.array(z.string()).min(1).max(200), dueDate: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/).default("") }), req.body, res); if (!body) return;
+  const pid = req.params.projectId;
+  const c = COURSES.find((x) => x.id === body.courseId); if (!c) return res.status(400).json({ error: "Unknown course." });
+  for (const u of body.userIds) if (!(await memberRole(pid, u))) return res.status(400).json({ error: "Every assignee must be a project member." });
+  const now = new Date();
+  await db.insert(schema.courseAssignments).values(body.userIds.map((userId) => ({ id: newId(), projectId: pid, courseId: c.id, userId, dueDate: body.dueDate, assignedBy: req.user!.id, createdAt: now })))
+    .onDuplicateKeyUpdate({ set: { dueDate: body.dueDate } });
+  for (const u of body.userIds) await notify(pid, req.user!.id, `Training assigned: ${c.title}${body.dueDate ? ` (due ${body.dueDate})` : ""}`, `/learn`, u);
+  await logActivity(pid, req.user!.id, "training.assigned", `Assigned "${c.title}" to ${body.userIds.length} member${body.userIds.length > 1 ? "s" : ""}`, `/projects/${pid}/training`);
+  res.status(201).json({ count: body.userIds.length });
+}));
+
+r.put("/projects/:projectId/training/:id", requireProject("manager"), h(async (req, res) => {
+  const parsed = parse(z.object({ dueDate: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/) }).partial(), req.body, res); if (!parsed) return;
+  const body = sentKeys(parsed, req.body);
+  if (!Object.keys(body).length) return res.status(400).json({ error: "Nothing to change." });
+  await db.update(schema.courseAssignments).set(body).where(and(eq(schema.courseAssignments.id, req.params.id), eq(schema.courseAssignments.projectId, req.params.projectId)));
+  res.json({ ok: true });
+}));
+
+r.delete("/projects/:projectId/training/:id", requireProject("manager"), h(async (req, res) => {
+  await db.delete(schema.courseAssignments).where(and(eq(schema.courseAssignments.id, req.params.id), eq(schema.courseAssignments.projectId, req.params.projectId)));
+  res.json({ ok: true });
+}));
+
+/** The signed-in user's assignments across projects (shown in Learn and My Day). */
+r.get("/learn/assignments", h(async (req, res) => {
+  const uid = req.user!.id;
+  const rows = await db.select({ a: schema.courseAssignments, project: schema.projects.code }).from(schema.courseAssignments)
+    .leftJoin(schema.projects, eq(schema.projects.id, schema.courseAssignments.projectId)).where(eq(schema.courseAssignments.userId, uid));
+  const done = (await completedFor([uid])).get(uid) ?? new Set();
+  res.json({ assignments: rows.map((x) => ({ ...x.a, project: x.project ?? "", progress: coursePct(x.a.courseId, done) })) });
+}));
+
+// ---------- organization implementation guide ----------
+const stepSchema = z.object({ status: z.enum(["To do", "In progress", "Done", "N/A"]), owner: z.string().max(120).default(""), due: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/).default(""), note: z.string().max(1000).default("") });
+r.get("/learn/adoption", h(async (req, res) => {
+  const [row] = await db.select().from(schema.adoptionProgress).where(eq(schema.adoptionProgress.userId, req.user!.id));
+  res.json({ steps: row?.data ?? {} });
+}));
+r.put("/learn/adoption", h(async (req, res) => {
+  const body = parse(z.object({ steps: z.record(z.string(), stepSchema) }), req.body, res); if (!body) return;
+  const unknown = Object.keys(body.steps).filter((k) => !ADOPTION_STEP_IDS.includes(k));
+  if (unknown.length) return res.status(400).json({ error: `Unknown step: ${unknown[0]}` });
+  const now = new Date();
+  await db.insert(schema.adoptionProgress).values({ userId: req.user!.id, data: body.steps, updatedAt: now }).onDuplicateKeyUpdate({ set: { data: body.steps, updatedAt: now } });
+  res.json({ ok: true });
 }));
 
 export default r;

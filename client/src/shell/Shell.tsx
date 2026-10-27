@@ -7,6 +7,7 @@ import { api, canManage, type Notification, type Project } from "../lib/api";
 import { Icon } from "./icons";
 import { ALL_PAGES, PROJECT_PAGES, RAIL, RESOURCE_PAGES, STANDARD_PAGES, TEMPLATE_PAGES, hrefFor, labelForRoute, pageByKey, sectionFor, type NavItem } from "./nav";
 import { BIM_ROLES, roleById } from "./roles";
+import { SupportForm } from "../pages/Support";
 
 // ---------------------------------------------------------------- per-user local conveniences
 
@@ -108,7 +109,8 @@ function Panel({ section, route, projects, project, onRole, onClose }: { section
       <p><b>Projects</b> are organised in hubs: Overview, Information (CDE), Delivery, Model & coordination, Quality & team.</p>
       <p><b>Roles</b> — viewers read and comment, editors create and edit, managers approve, publish and manage the team.</p>
       <p><b>Data entered once</b> — MIDP, TIDP, responsibility matrix and risk register documents are generated from their data.</p>
-      <FeedbackForm route={route} />
+      <p style={{ marginBottom: 4 }}><b>Feedback & support</b> <a className="small" href="#/support">My requests</a></p>
+      <SupportForm route={route} />
     </div>;
   }
 
@@ -163,19 +165,6 @@ function CommandPalette({ projects, project, onClose }: { projects: Project[]; p
         </div>
       </div>
     </div>
-  );
-}
-
-function FeedbackForm({ route }: { route: string }) {
-  const [kind, setKind] = useState("Idea"); const [msg, setMsg] = useState(""); const [sent, setSent] = useState(false);
-  if (sent) return <p className="small" style={{ color: "var(--ok)" }}>Thanks — your feedback was sent to the administrators. <button className="linklike" onClick={() => { setSent(false); setMsg(""); }}>Send more</button></p>;
-  return (
-    <form onSubmit={async (e) => { e.preventDefault(); await api("/feedback", { body: { kind, message: msg, page: route } }); setSent(true); }}>
-      <p style={{ marginBottom: 4 }}><b>Feedback & support</b></p>
-      <div className="seg" style={{ marginBottom: 6 }}>{["Idea", "Problem", "Question"].map((k) => <button type="button" key={k} className={kind === k ? "on" : ""} onClick={() => setKind(k)}>{k}</button>)}</div>
-      <textarea required minLength={5} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="What would make the portal better, or what went wrong?" style={{ minHeight: 70 }} />
-      <button className="small primary" style={{ marginTop: 6 }}>Send</button>
-    </form>
   );
 }
 

@@ -12,7 +12,7 @@ Stack (same as `iso19650_platform_deploy`): React + Vite client, Express server,
 | Projects | Create projects (code, appointing party, stage, standards in scope). Overview, settings, delete. |
 | Team | Add members by email with roles (viewer / editor / manager / owner). People without an account get an invitation and join automatically when they register. |
 | Files (CDE) | Default folders WIP / Shared / Published / Archived / Client information / Reference, sub-folders, drag-and-drop upload of any file type, versioning (upload new version, download any version), CDE state + suitability + revision per file, move, comments, preview for PDF/images. |
-| Documents | 28 templates (16 ISO 19650, 12 ISO/IEC 42001). Project details pre-filled. Section editor with progress, autosave, Excel paste into tables, live preview. AI drafting per section (review before apply). |
+| Documents | 38 templates (26 ISO 19650, 12 ISO/IEC 42001). Project details pre-filled. Section editor with progress, autosave, Excel paste into tables, live preview. AI drafting per section (review before apply). |
 | Collaboration | Edit lock with live read-only view for others, section comments with @mentions, review requests, reviewer approve / request changes, notifications bell, project activity feed. |
 | Document control | WIP → Shared → Published → Archived with suitability codes, automatic revisions (P01.01 → P01 → C01), full revision history with snapshots and restore. Role rules: reviewers/managers share, managers publish/archive. |
 | Export | Word (cover page, document control, approval table, contents, headers/footers with page numbers), Markdown, Print/PDF, and **Save to project files** (versioned in the CDE). |
@@ -29,12 +29,15 @@ Stack (same as `iso19650_platform_deploy`): React + Vite client, Express server,
 | My work & tools | My Day inbox across projects; portfolio dashboard; BIM fee estimator; embodied-carbon estimator; maturity, digital-twin and scan-to-BIM readiness assessments. |
 | Learn | 40-question bank in 7 topics, practice with feedback, timed mock exam, results history, skill profile, decision scenarios. |
 | Admin | Admin console (usage, users, enable/disable, roles, password reset links, platform activity log, feedback queue), organisation branding on Word exports, "forgot password" flow, in-app feedback. |
-| Templates | 35+ templates incl. full BEP pre/post, capability assessment, handover strategy, BIM specification, security triage (19650-5), information uses schedule, MRM, minutes, progress report. |
+| Templates | 38 templates incl. full OIR, AIR, EIR, information standard, CDE procedure and information protocol, full BEP pre/post, capability assessment, handover strategy, BIM specification, security triage (19650-5), information uses schedule, MRM, minutes, progress report. |
 | Automation & email | Optional SMTP email (instant or daily digest per user), emailed reset links; background scheduler with daily health snapshots, quality trend charts, and project automations (overdue chaser, quality review, risk review) with run history. |
 | AI+ | AI clash triage (reviewer accepts suggestions), research notebook over pasted text, project documents and PDFs with citations, AI interview coach. |
 | 4D | Link programme activities to model elements by storey and IFC class; planned vs actual by date with timeline slider; unlinked and overlapping elements flagged. |
 | Careers & billing | Opt-in talent profiles with consent and view notifications, recruiter role; plans with project/member/storage/AI limits (BILLING=on), promo codes, admin plan assignment, card payments through Stripe Checkout and customer portal; saved fee and carbon estimates. |
 | Languages | English and Arabic (right-to-left): interface, learning content, standards library, templates and Word exports. User-entered content stays as written. |
+| Getting started | Setup wizard (six questions → recommended documents, standards and tools, created in a new or existing project); ISO 19650 implementation guide for organizations (18 tracked steps); best-practice guides. |
+| Specialist registers | Health & safety information register (ISO 19650-6); team training assignments with completion; audit evidence pack (all documents in Word + quality report + registers + gates + activity log, indexed by clause); visual process map. |
+| Organization | House templates: save a document as your organization's template and start new documents from it. Help & support requests with screenshots and admin replies. Infrastructure and façade requirement templates. |
 | Knowledge | ISO 19650 parts, 19650-2 process 5.1–5.8, CDE states and status codes, ISO/IEC 42001 clauses 4–10 and all 38 Annex A controls, glossaries, naming tool, references. |
 
 ## Install with Docker (recommended)

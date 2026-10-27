@@ -163,9 +163,14 @@ export function exportMarkdown(doc: ExportDoc, t: DocTemplate) {
   saveAs(new Blob([toMarkdown(doc, t)], { type: "text/markdown" }), fileBase(doc, t) + ".md");
 }
 
-export function exportCsv(name: string, header: string[], rows: string[][]) {
+/** CSV text with a byte-order mark so Excel opens UTF-8 (including Arabic) correctly. */
+export function csvText(header: string[], rows: string[][]) {
   const esc = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
-  saveAs(new Blob(["﻿" + [header, ...rows].map((r) => r.map(esc).join(",")).join("\n")], { type: "text/csv" }), name + ".csv");
+  return "﻿" + [header, ...rows].map((r) => r.map(esc).join(",")).join("\n");
+}
+
+export function exportCsv(name: string, header: string[], rows: string[][]) {
+  saveAs(new Blob([csvText(header, rows)], { type: "text/csv" }), name + ".csv");
 }
 
 /** Parse rows pasted from Excel / Sheets (tab-separated) or CSV text, honouring quoted cells. */

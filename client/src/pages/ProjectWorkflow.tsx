@@ -36,12 +36,30 @@ function WorkflowBoard({ wf, data, docs }: { wf: Workflow; data: ProjectData; do
         <div><StdBadge std={wf.standard} /><h2 style={{ marginTop: 6 }}>{wf.title}</h2><p className="muted">{wf.description}</p></div>
         <div style={{ minWidth: 220 }}><div className="small muted">{Math.round(pct * 100)}% of activities · {Object.values(p.gates).filter((g) => g.approved).length}/{wf.stages.length} gates</div><Progress value={pct} /></div>
       </div>
+      <div className="process-map" role="list" aria-label="Process map">
+        {wf.stages.map((s, i) => {
+          const n = s.activities.filter((a) => p.activities[a.id] === "done").length;
+          const state = p.gates[s.id]?.approved ? "done" : i === firstOpen ? "active" : "todo";
+          return [
+            i > 0 && <span key={s.id + "-arrow"} className={"pm-arrow " + (state === "todo" ? "" : "on")} aria-hidden>→</span>,
+            <button key={s.id} role="listitem" className={"pm-stage " + state} title={s.gate} onClick={() => {
+              const el = document.getElementById(`stage-${wf.id}-${s.id}`) as HTMLDetailsElement | null;
+              if (el) { el.open = true; el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+            }}>
+              <span className="tiny">Stage {i + 1}</span>
+              <b>{s.title}</b>
+              <span className="pm-bar"><span style={{ width: `${(n / s.activities.length) * 100}%` }} /></span>
+              <span className="tiny">{state === "done" ? "✔ Gate approved" : `${n}/${s.activities.length} activities${state === "active" ? " · current" : ""}`}</span>
+            </button>,
+          ];
+        })}
+      </div>
       {wf.stages.map((s, i) => {
         const gate = p.gates[s.id];
         const done = s.activities.filter((a) => p.activities[a.id] === "done").length;
         const allDone = done === s.activities.length;
         return (
-          <details key={s.id} className={"card stage " + (gate?.approved ? "done" : i === firstOpen ? "active" : "")} style={{ marginBottom: 10 }} open={i === firstOpen}>
+          <details key={s.id} id={`stage-${wf.id}-${s.id}`} className={"card stage " + (gate?.approved ? "done" : i === firstOpen ? "active" : "")} style={{ marginBottom: 10 }} open={i === firstOpen}>
             <summary className="row spread" style={{ cursor: "pointer" }}>
               <b>Stage {i + 1} · {s.title}</b>
               <span className="small muted">{gate?.approved ? "✔ gate approved" : `${done}/${s.activities.length} activities`}</span>

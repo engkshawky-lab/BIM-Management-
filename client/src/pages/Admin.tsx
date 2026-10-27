@@ -4,7 +4,7 @@ import { api, fmtDate } from "../lib/api";
 import { PromoCodes } from "./Billing";
 
 interface UserRow { id: string; name: string; email: string; organization: string; role: string; disabled: boolean; projects: number; createdAt: string; lastLoginAt: string | null; plan: string; renewsAt: string | null }
-interface Fb { id: string; kind: string; message: string; page: string; status: string; name: string; email: string; createdAt: string }
+interface Fb { id: string; kind: string; message: string; page: string; status: string; name: string; email: string; createdAt: string; reply: string; repliedAt: string | null; hasScreenshot: boolean }
 interface Act { id: string; project: string; user: string; summary: string; link: string; createdAt: string }
 interface Branding { orgName: string; color: string; logo: string; footer: string }
 const TABS = [["overview", "Overview"], ["users", "Users"], ["codes", "Plans & codes"], ["activity", "Activity log"], ["feedback", "Feedback"], ["branding", "Branding"]] as const;
@@ -62,13 +62,25 @@ function Activity() {
 }
 
 function Feedback() {
+  const { toast } = useSession();
   const [rows, setRows] = useState<Fb[] | null>(null);
+  const [shot, setShot] = useState<string | null>(null);
+  const [draft, setDraft] = useState<Record<string, string>>({});
   const load = useCallback(() => api<{ feedback: Fb[] }>("/admin/feedback").then((r) => setRows(r.feedback)), []);
   useEffect(() => { load(); }, [load]);
+  const put = async (id: string, body: Partial<Fb>) => { try { await api(`/admin/feedback/${id}`, { method: "PUT", body }); load(); } catch (e) { toast((e as Error).message, "error"); } };
   if (!rows) return <p className="muted">Loading…</p>;
   return <div className="card">{rows.length ? <table className="data"><tbody>{rows.map((f) => (
-    <tr key={f.id}><td className="small nowrap muted">{fmtDate(f.createdAt)}</td><td><span className="chip">{f.kind}</span></td><td>{f.message}<div className="tiny muted">{f.name} · {f.email}{f.page && ` · ${f.page}`}</div></td>
-      <td><select value={f.status} onChange={async (e) => { await api(`/admin/feedback/${f.id}`, { method: "PUT", body: { status: e.target.value } }); load(); }}>{["New", "In progress", "Done", "Won't fix"].map((s) => <option key={s}>{s}</option>)}</select></td></tr>
+    <tr key={f.id}><td className="small nowrap muted">{fmtDate(f.createdAt)}</td><td><span className="chip">{f.kind}</span></td>
+      <td>{f.message}<div className="tiny muted">{f.name} · {f.email}{f.page && ` · ${f.page}`}</div>
+        {f.hasScreenshot && <div><button className="linklike small" onClick={() => setShot(shot === f.id ? null : f.id)}>🖼 {shot === f.id ? "Hide" : "Show"} screenshot</button>{shot === f.id && <img src={`/api/feedback/${f.id}/screenshot`} alt="Attached screenshot" style={{ display: "block", maxWidth: "100%", marginTop: 6, borderRadius: 6 }} />}</div>}
+        {f.reply && <div className="guidance small" style={{ marginTop: 6, whiteSpace: "pre-wrap" }}><b>Reply:</b> {f.reply}</div>}
+        <div className="row" style={{ marginTop: 6 }}>
+          <input placeholder={f.reply ? "Send another reply…" : "Reply to the user…"} value={draft[f.id] ?? ""} onChange={(e) => setDraft({ ...draft, [f.id]: e.target.value })} />
+          <button className="small" disabled={!(draft[f.id] ?? "").trim()} onClick={async () => { await put(f.id, { reply: draft[f.id].trim(), ...(f.status === "New" ? { status: "In progress" } : {}) }); setDraft({ ...draft, [f.id]: "" }); }}>Reply</button>
+        </div>
+      </td>
+      <td><select value={f.status} onChange={(e) => put(f.id, { status: e.target.value })}>{["New", "In progress", "Done", "Won't fix"].map((s) => <option key={s}>{s}</option>)}</select></td></tr>
   ))}</tbody></table> : <p className="muted">No feedback yet.</p>}</div>;
 }
 

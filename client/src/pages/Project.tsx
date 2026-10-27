@@ -20,6 +20,7 @@ import Traceability from "./Traceability";
 import Automations from "./Automations";
 import FourD from "./FourD";
 import { ContractReview, Notebooks, ProjectAssistant } from "./Assistant";
+import Training from "./Training";
 
 export interface ProjectData { project: Project; members: Member[]; invitations: Invitation[]; role: Project["role"] }
 
@@ -65,6 +66,7 @@ export default function ProjectPage({ projectId, tab, sub }: { projectId: string
       {tab === "reviews" && <ModelReviews data={data} sub={sub} />}
       {tab === "quality" && <Quality data={data} />}
       {tab === "workflow" && <ProjectWorkflow data={data} />}
+      {tab === "training" && <Training data={data} />}
       {tab === "team" && <Team data={data} reload={reload} />}
       {tab === "activity" && <Activity projectId={projectId} />}
       {tab === "settings" && !canManage(data.role) && <div className="card muted">Only project managers can change settings.</div>}
