@@ -26,9 +26,10 @@ export const loinHub: Hub = {
               kind: "text",
               title: "Three terms, one goal",
               body: [
-                "Level of information need (LOIN) is the international framework for defining the extent and granularity of information required. It is set out in ISO 7817-1, which superseded the European standard EN 17412-1 that first introduced the concepts. ISO 19650 uses the term level of information need when it describes how information requirements should be specified.",
-                "Level of development (LOD) is a scale published by BIMForum in its LOD Specification. It describes how far an element's geometry and attached information have been developed, and therefore how much other people can rely on it, using levels such as 100, 200, 300, 350, 400 and 500.",
-                "Level of information (LOI) is a UK legacy term from the PAS 1192 era, used alongside level of model detail to describe the non-graphical content expected at each stage. It still appears in older contracts and templates.",
+                "Level of information need (LOIN) is the international framework for defining the extent and granularity of information required. It is set out in ISO 7817-1:2024, Part 1: Concepts and principles, a first edition published in June 2024. It was prepared by ISO/TC 59/SC 13 together with CEN/TC 442 under the Vienna Agreement, and its European adoption, EN ISO 7817-1:2024, replaces EN 17412-1:2020, the European standard that first introduced the concepts. ISO 19650 uses the term level of information need when it describes how information requirements should be specified.",
+                "A guidance part, ISO/TS 7817-2, is being developed to explain step by step how to specify geometrical information, alphanumerical information and documentation. At the time of writing it is still a draft, so check its status before citing it.",
+                "Level of development (LOD) is a scale published by BIMForum in its LOD Specification, currently the 2025 edition. It describes how far an element's geometry and attached information have been developed, and therefore how much other people can rely on it, using the progression 100, 200, 300, 350 and 400. LOD 500, field verification, comes from the AIA definitions and sits outside that progression.",
+                "Level of information (LOI) is a UK legacy term from the PAS 1192 era, used alongside level of model detail to describe the non-graphical content expected at each stage. PAS 1192-2 has been withdrawn and the NBS BIM Toolkit that popularised numbered LOD and LOI bands has been retired, but the terms still appear in older contracts and templates.",
               ],
             },
             {
@@ -37,8 +38,15 @@ export const loinHub: Hub = {
               cards: [
                 { title: "LOIN (ISO 7817-1)", body: "Purpose-driven. Defines geometry, alphanumeric information and documentation separately for each object, purpose, milestone and actor. No fixed numbered levels.", tone: "purple" },
                 { title: "LOD (BIMForum)", body: "Scale-driven. Numbered levels describe how developed and reliable an element is, from conceptual to fabrication and field-verified.", tone: "blue" },
-                { title: "LOI (UK legacy)", body: "Stage-driven. Describes the non-graphical information expected at each stage, paired with level of model detail in PAS 1192-2.", tone: "amber" },
+                { title: "LOI (UK legacy)", body: "Stage-driven. Describes the non-graphical information expected at each stage, paired with level of model detail in the now withdrawn PAS 1192-2.", tone: "amber" },
               ],
+            },
+            {
+              kind: "graphic",
+              graphic: "lod-vs-loi",
+              title: "LOD, LOI and LOIN compared",
+              caption:
+                "LOD grades how developed and reliable an element is, LOI grades the non-graphical data expected at a stage, and LOIN states, for each purpose and milestone, exactly which geometry, data and documents are needed. LOD or LOI labels can still be used inside a LOIN requirement as shorthand, provided the EIR defines them.",
             },
             {
               kind: "steps",
@@ -50,6 +58,13 @@ export const loinHub: Hub = {
                 { title: "Object", body: "Name the object or object type the requirement applies to, using an agreed breakdown or classification." },
                 { title: "Then define the information", body: "Only now specify geometry, alphanumeric information and documentation that meet that purpose, at that milestone, for that actor and object." },
               ],
+            },
+            {
+              kind: "graphic",
+              graphic: "loin-framework",
+              title: "How LOIN is specified",
+              caption:
+                "ISO 7817-1 works in two steps. First the prerequisites set the context: purpose, information delivery milestone, actors and the objects within a breakdown structure. Then the information itself is described in three independent parts: geometrical information (detail, dimensionality, location, appearance, parametric behaviour), alphanumerical information (identification, information content) and documentation.",
             },
             {
               kind: "callout",
@@ -78,8 +93,9 @@ export const loinHub: Hub = {
               kind: "text",
               title: "The framework in plain terms",
               body: [
-                "ISO 7817-1 describes a framework with two parts. First come the prerequisites, which set the context: purpose, information delivery milestone, actors and the object breakdown. Then comes the detailed description of the information required, split into geometrical information, alphanumeric information and documentation.",
-                "The standard does not prescribe numbered levels. Instead it gives a consistent structure so that requirements can be written in the same way by any appointing party and understood by any delivery team, including in machine-readable form.",
+                "ISO 7817-1 describes a framework with two parts. First come the prerequisites, which set the context: the purposes, the information delivery milestones, the actors and the objects within a breakdown structure (clause 5). Then comes the detailed description of the information required, split into geometrical information, alphanumerical information and documentation (clause 6).",
+                "The standard does not prescribe numbered levels. Instead it gives a consistent structure so that requirements can be written in the same way by any appointing party and understood by any delivery team, including in machine-readable form. It also covers verification and validation of deliveries against the requirement (clause 7) and gives informative example methods for specifying level of information need in an annex.",
+                "One stated aim is to prevent over-delivery: information beyond what the purpose needs costs effort to produce and check, and adds no value.",
               ],
             },
             {
@@ -89,7 +105,7 @@ export const loinHub: Hub = {
                 { title: "Purpose", body: "Why is the information needed? Example: quantity take-off for cost planning.", tone: "purple" },
                 { title: "Information delivery milestone", body: "When is it needed? Example: the end of the spatial coordination stage.", tone: "blue" },
                 { title: "Actors", body: "Who requests it and who provides it? Example: requested by the cost consultant, delivered by the architect.", tone: "teal" },
-                { title: "Object breakdown", body: "Which objects does it apply to? Example: internal walls identified through an agreed classification system.", tone: "amber" },
+                { title: "Objects in a breakdown structure", body: "Which objects does it apply to? Example: internal walls identified through an agreed classification system such as Uniclass or another ISO 12006-2 based system.", tone: "amber" },
               ],
             },
             {
@@ -102,8 +118,8 @@ export const loinHub: Hub = {
                 ["Geometrical", "Location", "How the object is placed and positioned", "Relative to a space, or absolute in project coordinates"],
                 ["Geometrical", "Appearance", "How realistic the visual representation is", "Symbolic colour, through to realistic materials and textures"],
                 ["Geometrical", "Parametric behaviour", "Whether the shape can be changed by parameters", "Fixed geometry, or parametric with adjustable dimensions"],
-                ["Alphanumeric", "Identification", "How the object is identified: name, identifier, type, classification code", "A type name only, through to a unique asset tag and classification"],
-                ["Alphanumeric", "Information content", "The properties required, ideally referenced to a data dictionary following ISO 23386 and data templates following ISO 23387", "A few performance properties, through to full product and maintenance data"],
+                ["Alphanumerical", "Identification", "How the object is identified: name, identifier, type, classification code", "A type name only, through to a unique asset tag and classification"],
+                ["Alphanumerical", "Information content","The properties required, ideally referenced to a data dictionary following ISO 23386 and data templates following ISO 23387", "A few performance properties, through to full product and maintenance data"],
                 ["Documentation", "Documents", "The documents that must accompany the object", "None, through to data sheets, certificates, manuals, warranties or calculations"],
               ],
             },
@@ -125,8 +141,16 @@ export const loinHub: Hub = {
               title: "Level of development in BIMForum terms",
               body: [
                 "The BIMForum LOD Specification defines levels of development that describe how much an element has been thought through and how far other people can rely on it. The emphasis is on reliability for others, not just on how detailed the geometry looks.",
+                "The current edition is the LOD Specification 2025, released at the end of 2024 in two parts: Part I with element definitions and illustrations, and Part II, a spreadsheet for recording attribute requirements. It builds on the basic LOD definitions of the AIA G202-2013 project BIM protocol form and is organised by the CSI Uniformat 2010 classification.",
                 "Levels are applied per element, not to the whole model. A model at a given stage usually contains elements at several levels.",
               ],
+            },
+            {
+              kind: "graphic",
+              graphic: "lod-progression",
+              title: "One element through LOD 100 to 400",
+              caption:
+                "The same door as it develops: a symbol or opening at LOD 100, a generic placeholder of approximate size at LOD 200, a specific measurable door at LOD 300, frame fixings and interfaces with the wall at LOD 350, and fabrication detail such as hinges, seals and ironmongery at LOD 400. Field verification (LOD 500) is a check of the installed element, not a further step of detail, so it is not shown.",
             },
             {
               kind: "table",
@@ -138,7 +162,7 @@ export const loinHub: Hub = {
                 ["LOD 300", "Specific element with defined size, shape, location and orientation that can be measured directly", "Developed and spatially coordinated design, quantities, drawings"],
                 ["LOD 350", "As LOD 300 plus the parts needed for coordination with nearby or attached elements, such as supports and connections", "Detailed multi-discipline coordination"],
                 ["LOD 400", "Element modelled with enough detail and accuracy for fabrication, including assembly and installation information", "Fabrication, prefabrication, shop drawings"],
-                ["LOD 500", "Field-verified representation of size, shape, location, quantity and orientation", "As-built record and asset management"],
+                ["LOD 500 (outside the BIMForum progression)", "Defined in the AIA protocol as a field-verified representation of size, shape, location, quantity and orientation; the BIMForum specification does not define or illustrate it because it is not a further level of geometry or data", "As-built record and asset management, if the contract defines it"],
               ],
             },
             {
@@ -147,7 +171,7 @@ export const loinHub: Hub = {
               cards: [
                 { title: "LOD 350 is about coordination", body: "It adds interfaces and connections with other systems, such as hangers, supports and clearance zones, so that disciplines can coordinate reliably.", tone: "blue" },
                 { title: "LOD 400 is about fabrication", body: "It is modelled to a level where a fabricator could make or install the element from it, often by the specialist contractor rather than the designer.", tone: "amber" },
-                { title: "LOD 500 is about verification", body: "By BIMForum convention it indicates field verification of the element, not a further step of geometric detail beyond LOD 400.", tone: "green" },
+                { title: "LOD 500 is about verification", body: "It indicates field verification of the installed element, not a further step of geometric detail beyond LOD 400. BIMForum leaves it out of its definitions for that reason, so a contract that asks for LOD 500 must say what verification it expects.", tone: "green" },
               ],
             },
             {
@@ -226,13 +250,13 @@ export const loinHub: Hub = {
               kind: "text",
               title: "Level of information in UK legacy practice",
               body: [
-                "Under PAS 1192-2, levels of definition were tied to project stages. Each level combined a level of model detail for graphical content with a level of information for non-graphical content. Later UK tools and templates also used numbered LOD and LOI levels per element.",
-                "PAS 1192-2 has been withdrawn and replaced by the ISO 19650 series, which uses level of information need. LOI still appears in older appointments and templates, so it is useful to understand and translate it.",
+                "Legacy content. Under PAS 1192-2:2013, levels of definition were tied to project stages. Each level combined a level of model detail for graphical content with a level of information for non-graphical content. The NBS BIM Toolkit, launched in 2015, then published numbered LOD and LOI templates per element and stage.",
+                "PAS 1192-2 has been withdrawn and replaced by BS EN ISO 19650-1 and -2, which use level of information need, and NBS retired the BIM Toolkit in 2022. LOI still appears in older appointments and templates, so it is useful to understand and translate it, but it should not be used to write new requirements.",
               ],
             },
             {
               kind: "table",
-              title: "UK legacy levels of definition (indicative)",
+              title: "UK legacy levels of definition, PAS 1192-2 (withdrawn, indicative)",
               columns: ["Level", "Stage meaning", "Typical non-graphical information (LOI)"],
               rows: [
                 ["1", "Brief", "Project requirements, performance targets, constraints and benchmarks"],
@@ -270,9 +294,9 @@ export const loinHub: Hub = {
               title: "LOIN compared with LOD and LOI",
               columns: ["Criterion", "LOIN (ISO 7817-1)", "LOD (BIMForum)", "LOI (UK legacy)"],
               rows: [
-                ["Origin", "International standard, developed from EN 17412-1", "US industry specification published by BIMForum", "UK PAS 1192 era practice and tools"],
+                ["Origin", "International standard ISO 7817-1:2024; its EN ISO adoption replaces EN 17412-1:2020", "US industry specification published by BIMForum, 2025 edition current", "UK PAS 1192 era practice and the retired NBS BIM Toolkit"],
                 ["Basis", "Purpose, milestone, actor and object", "Numbered levels of element development", "Numbered levels tied to project stages"],
-                ["Fixed levels", "No; requirements are described per need", "Yes: 100, 200, 300, 350, 400, 500", "Yes, stage-based numbers"],
+                ["Fixed levels", "No; requirements are described per need", "Yes: 100, 200, 300, 350, 400; LOD 500 (field verified) sits outside the progression", "Yes, stage-based numbers"],
                 ["Geometry", "Described by detail, dimensionality, location, appearance, parametric behaviour", "Implied by each level", "Covered separately by level of model detail"],
                 ["Alphanumeric data", "Identification and information content specified explicitly", "Attached information described per level", "Main focus of LOI"],
                 ["Documentation", "An explicit, separate information type", "Not a primary focus", "Partly covered"],
@@ -441,6 +465,102 @@ export const loinHub: Hub = {
             },
           ],
         },
+        // ------------------------------------------------------------------ Worked examples
+        {
+          id: "worked-examples",
+          label: "Worked examples",
+          blocks: [
+            {
+              kind: "graphic",
+              graphic: "loin-example",
+              title: "Example: a fire door's LOIN at three milestones",
+              caption:
+                "Fire door D-03-014 followed from concept design to handover. Geometry barely changes after technical design, while the alphanumerical information and documentation grow sharply, because the purposes shift from fire strategy and specification to procurement, certification and maintenance.",
+            },
+            {
+              kind: "text",
+              title: "How to read the examples",
+              body: [
+                "Each table follows one object through three information delivery milestones and describes it in ISO 7817-1 terms: the prerequisites (purpose, milestone, actors), the five geometrical aspects, the two alphanumerical aspects and documentation. Property names follow IFC property set conventions where one exists; others are shown as project-defined properties.",
+                "All values are illustrative and invented for teaching. On a real project the purposes come from the EIR, the property names and units from the project's data dictionary, and the values from the design and the installed products.",
+              ],
+            },
+            {
+              kind: "table",
+              title: "Fire door (internal, 30-minute fire resisting with smoke seals)",
+              columns: ["Aspect", "Concept design", "Technical design", "Handover"],
+              rows: [
+                ["Purpose", "Fire strategy and compartmentation check", "Specification, door schedule and tender", "Asset register, statutory inspection and maintenance"],
+                ["Actors", "Requested by fire engineer; delivered by architect", "Requested by lead designer and cost consultant; delivered by architect", "Requested by facilities manager; delivered by main contractor with door supplier"],
+                ["Detail", "Opening or symbol only", "Leaf, frame and swing at true size; no ironmongery detail", "As technical design; ironmongery not modelled in detail"],
+                ["Dimensionality", "2D symbol in plan", "3D solid", "3D solid"],
+                ["Location", "Approximate, in the correct wall", "Exact position relative to grid and level", "As installed, verified on site"],
+                ["Appearance", "Symbolic", "Generic material colours", "Generic; finish recorded as data"],
+                ["Parametric behaviour", "Not required", "Parametric leaf width and height", "Fixed to the installed size"],
+                ["Identification", "Door type code, e.g. DT-FD30", "Type mark plus unique door number D-03-014; classification code", "Unique asset tag D-03-014 linked to the asset register; classification code"],
+                ["Information content", "Pset_DoorCommon.FireRating = 30 min; IsExternal = false", "FireRating = FD30S; SmokeStop = true; AcousticRating = 30 dB Rw; clear opening width 850 mm; ironmongery set IM-07", "Manufacturer = (supplier name); ModelReference = (product code); SerialNumber; InstallationDate = 2026-05-12; WarrantyEndDate; inspection interval 6 months"],
+                ["Documentation", "None", "Door schedule; fire strategy drawing reference", "Fire test or assessment certificate; installation certificate; O&M entry; inspection regime"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Air handling unit (rooftop supply and extract unit)",
+              columns: ["Aspect", "Concept design", "Technical design", "Handover"],
+              rows: [
+                ["Purpose", "Plant space allowance and structural loading", "Coordination, specification and procurement", "Planned maintenance and energy monitoring"],
+                ["Actors", "Requested by architect and structural engineer; delivered by MEP engineer", "Requested by lead designer and main contractor; delivered by MEP engineer", "Requested by facilities manager; delivered by MEP contractor"],
+                ["Detail", "Simple box for the space allowance", "Casing, connections and access zones; no internal components", "Manufacturer object with connections and maintenance zones"],
+                ["Dimensionality", "3D box", "3D solid", "3D solid"],
+                ["Location", "Approximate, within the plant area", "Exact position and connection points", "As installed, verified"],
+                ["Appearance", "Symbolic", "Symbolic system colour", "Symbolic system colour"],
+                ["Parametric behaviour", "Adjustable box size", "Parametric by duty and size range", "Fixed to the installed model"],
+                ["Identification", "System name, e.g. AHU-01", "Type, system and classification code", "Unique asset tag AHU-01 linked to the CAFM system"],
+                ["Information content", "Design airflow 4.0 m3/s; operating weight allowance 2,500 kg", "Pset_UnitaryEquipmentTypeAirHandler or project-defined properties: airflow supply and extract; external static pressure 400 Pa; heat recovery efficiency; filter class; electrical supply 400 V three-phase", "Manufacturer; ModelReference; SerialNumber; InstallationDate; commissioned airflow; filter change interval; WarrantyEndDate"],
+                ["Documentation", "None", "Equipment specification; schematic", "Commissioning certificate; O&M manual; warranty; spares list"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Structural column (steel, internal)",
+              columns: ["Aspect", "Concept design", "Technical design", "Construction (fabrication)"],
+              rows: [
+                ["Purpose", "Grid layout and early cost plan", "Structural analysis, coordination and tender", "Fabrication and erection"],
+                ["Actors", "Requested by architect and cost consultant; delivered by structural engineer", "Requested by lead designer; delivered by structural engineer", "Requested by main contractor; delivered by steelwork contractor"],
+                ["Detail", "Line or generic section", "Correct section and orientation; connections shown as intent only", "Full member with base plate, cap plate, cleats, bolts and holes"],
+                ["Dimensionality", "1D analytical line or simple 3D", "3D solid plus analytical model", "3D solid"],
+                ["Location", "On grid, approximate levels", "Exact grid position, base and top levels", "Exact, including erection tolerances"],
+                ["Appearance", "Symbolic", "Symbolic", "Symbolic; fire protection shown by colour code"],
+                ["Parametric behaviour", "Adjustable height", "Parametric section and length", "Fixed fabrication geometry"],
+                ["Identification", "Grid reference, e.g. C3", "Member mark and classification code", "Piece mark and erection mark, e.g. C3-L02"],
+                ["Information content", "Material = steel; indicative section size", "Section = UC 305x305x97; SteelGrade = S355; Pset_ColumnCommon.LoadBearing = true; FireRating = 60 min", "Weight; fabrication length; surface treatment; fire protection system and thickness; bolt grade"],
+                ["Documentation", "None", "Design calculations summary; general arrangement drawing", "Fabrication drawings; mill certificates; erection method statement"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Bridge bearing (elastomeric laminated bearing)",
+              columns: ["Aspect", "Preliminary design", "Detailed design", "Handover"],
+              rows: [
+                ["Purpose", "Articulation scheme and substructure sizing", "Specification, setting-out and procurement", "Inspection, maintenance and replacement planning"],
+                ["Actors", "Requested by bridge designer; delivered by structural engineer", "Requested by contractor; delivered by structural engineer", "Requested by asset owner; delivered by contractor with bearing supplier"],
+                ["Detail", "Not modelled, or a point marker", "Bearing outline and plinth at true size", "Installed bearing outline and plinth"],
+                ["Dimensionality", "0D point", "3D solid", "3D solid"],
+                ["Location", "Approximate, per support line", "Exact set-out in project coordinates", "As installed, surveyed position and level"],
+                ["Appearance", "Symbolic", "Symbolic", "Symbolic"],
+                ["Parametric behaviour", "Not required", "Parametric plan size and thickness", "Fixed to the installed product"],
+                ["Identification", "Support reference, e.g. Pier 2 bearing line", "Bearing reference B-P2-01 and classification code", "Unique asset identifier in the structures database"],
+                ["Information content", "Bearing type = elastomeric; fixity (fixed, guided or free)", "Design vertical load; movement range longitudinal and transverse; rotation capacity; plan size; product standard EN 1337-3", "Manufacturer; product reference; InstallationDate; installed temperature; measured preset; inspection interval"],
+                ["Documentation", "Articulation diagram", "Bearing schedule; specification", "Declaration of performance; installation record; inspection and replacement guidance"],
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Patterns worth noticing",
+              body: "Geometry usually stops growing once coordination is done, while data and documentation keep growing towards handover. The actor who delivers also changes, from designer to contractor or supplier. Write each change down explicitly in the responsibility matrix so nobody assumes someone else is providing it.",
+              tone: "info",
+            },
+          ],
+        },
         // ------------------------------------------------------------------ EIR/BEP transfer
         {
           id: "transfer",
@@ -450,12 +570,12 @@ export const loinHub: Hub = {
               kind: "steps",
               title: "How LOIN flows through the appointment",
               steps: [
-                { title: "EIR", body: "The appointing party states the LOIN for the appointment as part of the exchange information requirements, with acceptance criteria." },
-                { title: "Pre-appointment BEP", body: "The prospective lead appointed party confirms how it will meet the LOIN, and flags any requirements it proposes to change." },
-                { title: "Responsibility matrix", body: "The detailed responsibility matrix allocates each object, milestone and LOIN requirement to a task team." },
-                { title: "TIDPs", body: "Each task team lists the information containers it will produce, with the LOIN each container must meet at each milestone." },
-                { title: "MIDP", body: "The lead appointed party combines TIDPs into the master information delivery plan, checking coverage of every LOIN requirement." },
-                { title: "Review and acceptance", body: "Delivered containers are checked against the LOIN and acceptance criteria before authorization and acceptance." },
+                { title: "EIR (ISO 19650-2, 5.2.1)", body: "The appointing party states its information requirements for the appointment, the level of information need for each one, the acceptance criteria and the delivery milestones." },
+                { title: "Pre-appointment BEP (5.3.2)", body: "The prospective lead appointed party confirms how it will meet the LOIN, and flags any requirements it proposes to change." },
+                { title: "Detailed responsibility matrix (5.4.2)", body: "Once appointed, the lead appointed party refines the high-level matrix into a detailed one: what information is produced, when, and by which task team, so each object, milestone and LOIN requirement has an owner." },
+                { title: "Lead appointed party's EIR (5.4.3)", body: "The lead appointed party passes the relevant requirements, including LOIN, on to each appointed party in its own exchange information requirements." },
+                { title: "TIDPs (5.4.4) and MIDP (5.4.5)", body: "Each task team lists the information containers it will produce and their milestones in a TIDP; the lead appointed party combines them into the master information delivery plan, checking every LOIN requirement is covered." },
+                { title: "Review and acceptance (5.6 and 5.7)", body: "Containers are checked against the LOIN before sharing, reviewed and authorised by the lead appointed party, then reviewed and accepted by the appointing party against the acceptance criteria." },
               ],
             },
             {
@@ -550,12 +670,12 @@ export const loinHub: Hub = {
               kind: "quiz",
               title: "Test your LOD, LOI and LOIN knowledge",
               questions: [
-                { q: "Which standard sets out the level of information need concepts internationally?", options: ["ISO 16739-1", "ISO 7817-1", "ISO 12006-2", "ISO 55000"], answer: 1, why: "ISO 7817-1 sets out the LOIN concepts and principles, superseding EN 17412-1." },
+                { q: "Which standard sets out the level of information need concepts internationally?", options: ["ISO 16739-1", "ISO 7817-1", "ISO 12006-2", "ISO 55000"], answer: 1, why: "ISO 7817-1:2024 sets out the LOIN concepts and principles; its European adoption replaces EN 17412-1:2020." },
                 { q: "Which of these is a prerequisite in the LOIN framework?", options: ["File format", "Purpose", "Software version", "Model size"], answer: 1, why: "Purpose, milestone, actors and object breakdown are the prerequisites that frame a requirement." },
                 { q: "What are the three types of information described in LOIN?", options: ["2D, 3D and 4D", "Geometrical, alphanumeric and documentation", "Cost, time and quality", "Design, construction and operation"], answer: 1, why: "LOIN specifies geometrical information, alphanumeric information and documentation." },
                 { q: "Which is a geometrical aspect in LOIN?", options: ["Warranty", "Dimensionality", "Classification code", "Serial number"], answer: 1, why: "Geometrical aspects are detail, dimensionality, location, appearance and parametric behaviour." },
                 { q: "In BIMForum terms, what does LOD 350 add to LOD 300?", options: ["Field verification", "Fabrication detail", "Interfaces and connections for coordination", "Cost data"], answer: 2, why: "LOD 350 adds the parts needed to coordinate with nearby or attached elements." },
-                { q: "What does LOD 500 indicate by BIMForum convention?", options: ["The highest geometric detail", "Field verification", "Conceptual design", "Energy analysis"], answer: 1, why: "LOD 500 refers to field verification rather than further geometric progression." },
+                { q: "What does LOD 500 indicate?", options: ["The highest geometric detail", "Field verification", "Conceptual design", "Energy analysis"], answer: 1, why: "LOD 500 refers to field verification rather than further geometric progression, which is why the BIMForum specification does not define or illustrate it." },
                 { q: "Who usually produces LOD 400 fabrication models?", options: ["The appointing party", "The specialist contractor or fabricator", "The planning authority", "The cost consultant"], answer: 1, why: "Fabrication-level models are normally produced by those who will make or install the element." },
                 { q: "LOI is mainly associated with which framework?", options: ["UK PAS 1192 practice", "BIMForum LOD Specification", "ISO 7817-1", "IFC 4.3"], answer: 0, why: "Level of information was used in UK PAS 1192 era practice alongside level of model detail." },
                 { q: "Where should LOIN requirements first be stated for an appointment?", options: ["In the TIDP", "In the EIR", "In the O&M manual", "In the clash report"], answer: 1, why: "The appointing party states its requirements, including LOIN, in the exchange information requirements." },

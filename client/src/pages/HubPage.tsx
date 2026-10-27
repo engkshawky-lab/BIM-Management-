@@ -1,12 +1,17 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import type { Hub, HubBlock, ProcessStep, Tone } from "../../../shared/data/hubs/types";
+import { lazy, Suspense, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import type { Hub, HubBlock, ProcessStep } from "../../../shared/data/hubs/types";
 import { getChecks, lastVisited, markVisited, quizBest, quizzesFor, recordQuiz, setChecks, visitedTabs } from "../lib/progress";
 import { AskPartChat, generateHref } from "./AiTools";
+import { HubGraphic } from "./HubGraphics";
+import { ORDER, TONES } from "./hubTheme";
+import { RoleMatrix } from "./RoleMatrix";
+
+// the COBie reference carries the whole schema; load it only on the tab that shows it
+const CobieReference = lazy(() => import("./CobieReference"));
 
 // Renders a topic hub (Scan to BIM, BIM dimensions, COBie, LOIN…): coloured header, section switch, tabs, content blocks.
 
-export const TONES: Record<Tone, string> = { blue: "#3b82f6", green: "#16a34a", amber: "#d97706", purple: "#9333ea", red: "#dc2626", teal: "#0d9488" };
-export const ORDER: Tone[] = ["blue", "green", "purple", "amber", "red", "teal"];
+export { TONES, ORDER };
 const cycle = (i: number) => TONES[ORDER[i % ORDER.length]];
 const cv = (c: string) => ({ "--c": c }) as CSSProperties;
 
@@ -147,6 +152,9 @@ function Block({ b, hub, i, k }: { b: HubBlock; hub: Hub; i: number; k: string }
     case "faq": return card(b.items.map((x, k) => <details key={k} className="clause"><summary>{x.q}</summary><div style={{ padding: "4px 0 8px" }}>{x.a}</div></details>));
     case "quiz": return card(<Quiz questions={b.questions} storeKey={k} />);
     case "process": return card(<Process b={b} />);
+    case "rolematrix": return card(<RoleMatrix b={b} />);
+    case "graphic": return card(<><HubGraphic id={b.graphic} />{b.caption && <p className="small muted" style={{ margin: "8px 0 0" }}>{b.caption}</p>}</>);
+    case "cobie-schema": return card(<Suspense fallback={<div className="muted">Loading the COBie reference…</div>}><CobieReference /></Suspense>);
     case "widget":
       if (b.widget === "scan-cost") return card(<ScanCost />);
       if (b.widget === "ask-ai") return card(<AskPartChat hubId={hub.id} partLabel={hub.title} suggestions={hub.aiPrompts.slice(0, 3)} />);
@@ -181,11 +189,13 @@ function blockText(b: HubBlock): string {
     case "faq": return b.title + " " + b.items.map((x) => x.q + " " + x.a).join(" ");
     case "quiz": return b.title + " " + b.questions.map((q) => q.q).join(" ");
     case "process": return b.title + " " + b.steps.map((s) => [s.title, s.subtitle, s.clause, ...s.activities, ...s.outputs, ...s.documents].join(" ")).join(" ");
+    case "rolematrix": return b.title + " " + b.docs.map((d) => [d.name, d.summary, d.purpose, ...d.keyContent].join(" ")).join(" ");
+    case "graphic": return b.title + " " + (b.caption ?? "");
     default: return b.title;
   }
 }
 
-function HubSearch({ hub }: { hub: Hub }) {
+function HubSearch({ hub, base }: { hub: Hub; base: string }) {
   const [q, setQ] = useState("");
   const term = q.trim().toLowerCase();
   const hits = term.length < 3 ? [] : allTabs(hub).flatMap(({ s, t }) => {
@@ -198,7 +208,7 @@ function HubSearch({ hub }: { hub: Hub }) {
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={`Search ${hub.title}…`} style={{ width: "100%" }} />
       {term.length >= 3 && <div className="hub-card" style={{ position: "absolute", insetInline: 0, top: 42, zIndex: 20, boxShadow: "0 10px 30px rgba(0,0,0,.25)", display: "grid", gap: 4 }}>
         {!hits.length ? <span className="small muted">No topics mention “{q.trim()}”.</span> : hits.map(({ s, t, snippet }) => (
-          <a key={s.id + t.id} href={`#/hubs/${hub.id}/${s.id}/${t.id}`} onClick={() => setQ("")} className="hub-check" style={{ color: "inherit" }}>
+          <a key={s.id + t.id} href={`${base}/${s.id}/${t.id}`} onClick={() => setQ("")} className="hub-check" style={{ color: "inherit" }}>
             <span><b style={{ color: "var(--hub)" }}>{hub.sections.length > 1 ? `${s.label} › ` : ""}{t.label}</b><span className="small muted" style={{ display: "block" }}>{snippet}</span></span>
           </a>))}
       </div>}
@@ -206,18 +216,17 @@ function HubSearch({ hub }: { hub: Hub }) {
   );
 }
 
-export default function HubPage({ hub, sectionId, tabId }: { hub: Hub; sectionId?: string; tabId?: string }) {
+export default function HubPage({ hub, sectionId, tabId, base = `#/hubs/${hub.id}`, embedded }: { hub: Hub; sectionId?: string; tabId?: string; base?: string; embedded?: boolean }) {
   const section = hub.sections.find((s) => s.id === sectionId) ?? hub.sections[0];
   const tab = section.tabs.find((t) => t.id === tabId) ?? section.tabs[0];
-  const base = `#/hubs/${hub.id}`;
   const order = allTabs(hub);
   const pos = order.findIndex((x) => x.s.id === section.id && x.t.id === tab.id);
   const prev = order[pos - 1], next = order[pos + 1];
   const [visited, setVisited] = useState(() => visitedTabs(hub.id));
   useEffect(() => {
-    markVisited(hub.id, `${section.id}/${tab.id}`, `/hubs/${hub.id}/${section.id}/${tab.id}`, `${hub.title} — ${tab.label}`);
+    markVisited(hub.id, `${section.id}/${tab.id}`, `${base.slice(1)}/${section.id}/${tab.id}`, `${hub.title} — ${tab.label}`);
     setVisited(visitedTabs(hub.id));
-  }, [hub.id, hub.title, section.id, tab.id, tab.label]);
+  }, [hub.id, hub.title, section.id, tab.id, tab.label, base]);
   const explored = order.filter((x) => visited.has(x.key)).length;
   const quizzes = hub.sections.flatMap((s) => s.tabs.flatMap((t) => t.blocks)).filter((b) => b.kind === "quiz").length;
   const best = quizzesFor(hub.id + "/");
@@ -225,7 +234,7 @@ export default function HubPage({ hub, sectionId, tabId }: { hub: Hub; sectionId
   const goTab = (x: (typeof order)[number]) => `${base}/${x.s.id}/${x.t.id}`;
   return (
     <div className="hub" style={{ "--hub": TONES[hub.tone ?? "blue"] } as CSSProperties}>
-      <div className="hub-hero">
+      {!embedded && <div className="hub-hero">
         <div className="eyebrow">{hub.eyebrow}</div><h1>{hub.title}</h1><p>{hub.intro}</p>
         <div className="facts">{hub.sections.length > 1 && <span>{hub.sections.length} sections</span>}<span>{order.length} topics</span>{quizzes > 0 && <span>{quizzes} {quizzes > 1 ? "quizzes" : "quiz"}</span>}<span>AI tutor</span>
           {best.length > 0 && <span>Best quiz score {Math.round(Math.max(...best.map((b) => b.best / b.of)) * 100)}%</span>}</div>
@@ -233,8 +242,8 @@ export default function HubPage({ hub, sectionId, tabId }: { hub: Hub; sectionId
           <div className="small" style={{ opacity: .9, marginBottom: 4 }}>{explored === order.length ? "You have explored every topic in this hub!" : <>You have explored {explored} of {order.length} topics</>}</div>
           <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,.25)" }}><div style={{ width: pct + "%", height: "100%", borderRadius: 3, background: "#fff" }} /></div>
         </div>
-      </div>
-      <HubSearch hub={hub} />
+      </div>}
+      <HubSearch hub={hub} base={base} />
       {hub.sections.length > 1 && <div className="hub-sections">{hub.sections.map((s, i) => { const seen = s.tabs.filter((t) => visited.has(`${s.id}/${t.id}`)).length; return (
         <a key={s.id} href={`${base}/${s.id}`} className={s.id === section.id ? "on" : ""} style={cv(cycle(i))}>{s.label}<small style={{ opacity: .75, fontWeight: 500 }}>{seen}/{s.tabs.length}</small></a>); })}</div>}
       <div className="hub-tabs" style={{ position: "sticky", top: 0, zIndex: 5 }}>{section.tabs.map((t) => (

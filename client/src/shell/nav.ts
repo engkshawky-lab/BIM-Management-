@@ -97,6 +97,7 @@ export const RESOURCE_PAGES: NavItem[] = [
   g("ai.clash", "Clash matrix builder", "/ai-tools/clash", "sparkles", "AI tools"),
   g("ai.suitability", "Suitability code hub", "/ai-tools/suitability", "sparkles", "AI tools"),
   g("ai.cobie", "COBie data checker", "/ai-tools/cobie", "sparkles", "AI tools"),
+  g("ai.mcp", "Connect via MCP", "/ai-tools/mcp", "link", "AI tools", "Connect Claude to Revit, IFC and CDE tools with MCP"),
   g("r.fee", "BIM fee estimator", "/tools/fee", "table", "Tools"),
   g("r.carbon", "Embodied carbon (6D)", "/tools/carbon", "layers", "Tools"),
   g("r.maturity", "BIM maturity assessment", "/tools/maturity", "check", "Tools"),

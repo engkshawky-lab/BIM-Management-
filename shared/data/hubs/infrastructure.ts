@@ -1,6 +1,7 @@
 import type { Hub } from "./types";
 
-// Infrastructure BIM hub: linear and networked assets (roads, rail, bridges, utilities)
+// Infrastructure BIM hub: linear and networked assets (roads, rail, bridges, tunnels,
+// ports and waterways, utilities, energy)
 // framed against the ISO 19650 information management process and IFC 4.3.
 // Content is paraphrased practical guidance. Client-specific standards change often;
 // always confirm the current edition of any client or national requirement you reference.
@@ -11,7 +12,7 @@ export const infrastructureHub: Hub = {
   eyebrow: "REFERENCE · INFRASTRUCTURE",
   title: "Infrastructure BIM & ISO 19650",
   intro:
-    "Roads, railways, bridges, tunnels and utility networks are long, linear, geographically spread and owned for decades. This hub shows how ISO 19650 information management works for infrastructure: IFC 4.3 and alignment-based modelling, chainage-driven CDE structures, asset information requirements for owners and operators, LOIN examples by element and stage, worked examples and the challenges you will meet on real schemes.",
+    "Roads, railways, bridges, tunnels, ports, utility networks and energy assets are long, linear or widely spread, and owned for decades. This hub shows how ISO 19650 information management works for infrastructure: IFC 4.3 and alignment-based modelling, linear referencing and GIS integration, chainage-driven CDE structures, asset data dictionaries and classification, asset information requirements for owners and operators, LOIN examples by element and stage, typical EIR clauses, operational use and digital twins, worked examples and the challenges you will meet on real schemes.",
   sections: [
     // ==================================================================== OVERVIEW
     {
@@ -44,6 +45,12 @@ export const infrastructureHub: Hub = {
               ],
             },
             {
+              kind: "graphic",
+              graphic: "infra-breakdown",
+              title: "Breaking down a linear asset",
+              caption: "A linear asset is split first by section, then by chainage range along the alignment, then by discipline or asset system. The alignment, terrain and existing-conditions survey sit underneath as shared reference containers that every task team links to, so any element, issue or asset record can be located by section, chainage and offset as well as by coordinates.",
+            },
+            {
               kind: "stats",
               title: "What to expect on a typical scheme",
               stats: [
@@ -69,8 +76,9 @@ export const infrastructureHub: Hub = {
               kind: "text",
               title: "IFC 4.3 is now an ISO standard",
               body: [
-                "IFC 4.3 extends the Industry Foundation Classes from buildings into infrastructure. It was published by ISO as ISO 16739-1:2024, replacing the earlier ISO 16739-1 edition based on IFC 4. It adds spatial structures, elements and positioning concepts for roads, railways, bridges, ports and waterways, alongside the common concepts needed for earthworks and geotechnics.",
+                "IFC 4.3 extends the Industry Foundation Classes from buildings into infrastructure. buildingSMART International announced in April 2024 that it had been formally published by ISO as ISO 16739-1:2024, which corresponds to the IFC 4.3 ADD2 schema (version 4.3.2.0) and replaces the 2018 edition based on IFC 4. It adds spatial structures, elements and positioning concepts for roads, railways, bridges, ports and waterways, alongside the shared concepts needed for earthworks, pavements, signs, signals and geotechnics.",
                 "The most important addition for linear assets is a full alignment model. Alignment describes the reference line of the asset in plan and profile, with optional cant for railways, and lets other elements be positioned along it by distance and offset.",
+                "Tunnels are not yet a dedicated domain in IFC 4.3. buildingSMART's IFC Tunnel project is extending the schema for a future release (IFC 4.4). Until that is published and supported by your tools, tunnels are modelled with generic IFC 4.3 concepts, as described in the Tunnels section of this hub.",
                 "Software support for IFC 4.3 has been growing since publication, but it is still uneven across tools and domains. Test export and import between the actual tools on your project during mobilization before you rely on IFC 4.3 for coordination or handover.",
               ],
             },
@@ -81,16 +89,18 @@ export const infrastructureHub: Hub = {
               rows: [
                 ["IfcAlignment", "The reference line of a linear asset, combining horizontal, vertical and (for rail) cant layouts", "The backbone for positioning and chainage on roads, rail and pipelines"],
                 ["Horizontal, vertical and cant segments", "Straights, arcs, transition curves, gradients and vertical curves, and superelevation for track", "Preserves the design intent of the alignment rather than just a polyline"],
-                ["IfcLinearPlacement", "Placing an object by distance along an alignment plus offsets", "Lets signs, drainage, OLE masts or valves be located by chainage"],
-                ["IfcReferent", "Named points along an alignment such as kilometre posts or stationing references", "Connects the model to the owner's linear referencing system"],
-                ["IfcRoad with IfcFacilityPart (road part types)", "Spatial structure for road facilities, such as carriageways, lanes, junctions and shoulders", "Organises road models in a way owners recognise"],
-                ["IfcRailway with IfcFacilityPart (railway part types)", "Spatial structure for rail facilities, such as track sections and station areas", "Supports breakdown by route section and asset system"],
-                ["IfcBridge with IfcFacilityPart (bridge part types)", "Spatial structure for bridges: deck, piers, abutments, foundations", "Gives structures a consistent breakdown for review and asset handover"],
-                ["IfcMarineFacility", "Spatial structure for ports and waterways", "Extends coverage to quays, breakwaters and navigation assets"],
-                ["IfcCourse, IfcPavement, IfcKerb", "Road and track layers, pavement build-ups and kerbs", "Supports quantities and maintenance information for layered construction"],
+                ["IfcLinearPlacement", "Placing an object by distance along a curve (usually the alignment) plus lateral, vertical and longitudinal offsets, through IfcAxis2PlacementLinear and IfcPointByDistanceExpression", "Lets signs, drainage, OLE masts or valves be located by chainage; an optional Cartesian fallback helps tools that cannot read linear placement"],
+                ["IfcReferent", "Points along an alignment such as stations, kilometre or mile points, reference markers, landmarks and boundaries; Pset_Stationing holds the station value and any station equation", "Connects the model to the owner's linear referencing system"],
+                ["IfcFacility and IfcFacilityPart", "Generic facility and facility part concepts shared by all infrastructure domains; IfcFacilityPartCommon covers generic parts such as segments, junctions, level crossings, above-ground and below-ground parts", "Gives every domain the same pattern of facility, then longitudinal and vertical parts"],
+                ["IfcRoad and IfcRoadPart", "Road facility and its parts, typed for example as carriageway, traffic lane, hard shoulder, central reserve, roundabout, intersection, layby or toll plaza", "Organises road models in a way owners recognise"],
+                ["IfcRailway and IfcRailwayPart", "Railway facility and its parts, typed for example as track, plain track, turnout track, lineside, above track and substructure", "Supports breakdown by route section and asset system"],
+                ["IfcBridge and IfcBridgePart", "Bridge facility (typed as arched, cable-stayed, girder, truss, culvert and so on) and its parts: deck, deck segment, pier, abutment, foundation, pylon, substructure and superstructure", "Gives structures a consistent breakdown for review and asset handover"],
+                ["IfcMarineFacility and IfcMarinePart", "Ports and waterways facilities such as port, quay, jetty, breakwater, canal, ship lock and dry dock, with parts such as berthing structure, approach channel and chamber", "Extends coverage to quays, breakwaters and navigation assets"],
+                ["IfcCourse, IfcPavement, IfcKerb", "Layers of material in a road or track build-up (including ballast), pavement elements and kerbs", "Supports quantities and maintenance information for layered construction"],
+                ["IfcRail, IfcTrackElement, IfcSign, IfcSignal", "Rails, sleepers, frogs and vehicle stops; traffic and railway signs and signals", "Gives common linear-asset equipment its own semantic classes"],
                 ["IfcEarthworksCut and IfcEarthworksFill", "Excavation and embankment volumes", "Supports earthworks quantities and mass-haul planning"],
-                ["IfcGeotechnicalElement family", "Boreholes, strata and geotechnical assemblies", "Lets ground information be shared alongside the design"],
-                ["IfcMapConversion and IfcProjectedCRS", "The link from the model's local coordinates to a mapped coordinate reference system", "Essential for alignment with GIS and survey data"],
+                ["IfcGeotechnicalElement family", "IfcBorehole, IfcGeomodel, IfcGeoslice, IfcGeotechnicalStratum and IfcGeotechnicalAssembly", "Lets ground information be shared alongside the design"],
+                ["IfcMapConversion and IfcProjectedCRS", "The link from the model's local engineering coordinates to a mapped coordinate reference system: eastings, northings, orthogonal height, rotation and a unit scale; IfcMapConversionScaled adds per-axis factors", "Essential for alignment with GIS and survey data"],
               ],
             },
             {
@@ -112,6 +122,122 @@ export const infrastructureHub: Hub = {
           ],
         },
         {
+          id: "linear-referencing",
+          label: "Linear referencing",
+          blocks: [
+            {
+              kind: "text",
+              title: "Locating things along a line",
+              body: [
+                "Linear referencing describes a location as a measure along a linear element plus, where needed, an offset from it. ISO 19148 defines the general model: a linear element (an alignment, a road centreline, a track or a pipe), a linear referencing method that says how the measure is made, and events or segments located by one measure (a point) or two measures (a range).",
+                "On projects the measure is usually called chainage (UK and much of the Commonwealth), stationing (North America and parts of Europe) or kilometre or mile posts on operating networks. Rail networks often use an engineer's line reference with mileage, and highway networks often use section-based network references with a cumulative distance from the start of each section.",
+                "The design chainage on a project and the owner's network referencing are rarely the same thing. Information management has to say which one is used for which purpose, and how to convert between them, before asset records and issues start to be located.",
+              ],
+            },
+            {
+              kind: "table",
+              title: "Ways to reference an asset location",
+              columns: ["Method", "How a location is expressed", "Best used for", "Watch out for"],
+              rows: [
+                ["Design chainage", "Distance along the design alignment, for example Ch 2+350, with a left or right offset", "Design, setting out, coordination and issue logging", "Changes whenever the alignment changes; meaningless outside the project"],
+                ["Network reference with offset", "Owner's section or link identifier plus distance from the section start", "Asset inventories, inspections and maintenance on an operating network", "Sections can be re-measured or re-split by the owner over time"],
+                ["Kilometre or mile posts", "Nearest physical marker plus a distance from it", "Field location, incident reporting and operations", "Posts are not always exactly at nominal spacing"],
+                ["Engineer's line reference and mileage (rail)", "Line code plus miles and chains or kilometres and metres", "Rail asset registers, possessions and track access", "Mileage often runs from historic origins and can jump at boundaries"],
+                ["Node and link", "Upstream and downstream node identifiers for each link", "Drainage, sewers, water and cable networks", "Needs consistent node numbering and flow direction"],
+                ["Coordinates", "Easting, northing and height in the agreed CRS and vertical datum", "GIS, survey, clash detection and any location that must survive alignment change", "Needs the right CRS, datum and grid-to-ground approach"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "How IFC 4.3 carries linear referencing",
+              columns: ["Need", "IFC 4.3 concept", "Practical note"],
+              rows: [
+                ["Define the reference line", "IfcAlignment with horizontal, vertical and (for rail) cant layouts", "Exchange the semantic alignment, not only its 3D curve"],
+                ["Place an element at a chainage", "IfcLinearPlacement using IfcAxis2PlacementLinear and IfcPointByDistanceExpression", "Distance along the curve, then lateral offset (positive to the left in the direction of increasing distance), vertical and longitudinal offsets"],
+                ["Record the station value", "IfcReferent of type STATION with Pset_Stationing", "Station value at a location, plus the incoming station where a station equation changes the numbering"],
+                ["Mark kilometre posts and reference markers", "IfcReferent typed KILOPOINT, MILEPOINT or REFERENCEMARKER", "Lets the model match the markers used on site and in the owner's records"],
+                ["Mark boundaries and landmarks", "IfcReferent typed BOUNDARY, LANDMARK or INTERSECTION", "Useful for maintenance boundaries and section changes between contracts"],
+                ["Describe the referencing method", "Pset_LinearReferencingMethod (absolute, relative or interpolative)", "Definitions follow ISO 19148; state the method in the information standard"],
+                ["Support tools that cannot read linear placement", "CartesianPosition fallback on IfcLinearPlacement", "Ask exporters to write both so coordinates survive in simpler viewers"],
+              ],
+            },
+            {
+              kind: "checklist",
+              title: "Linear referencing rules for the project information standard",
+              items: [
+                "Name of each alignment and which disciplines and assets reference it",
+                "Chainage format, units, origin and direction of increase",
+                "Sign convention for offsets (left and right, or positive and negative) and where they are measured from",
+                "How station equations are handled where chainage changes or overlaps",
+                "Which owner network referencing system applies and how design chainage is converted to it",
+                "Rule that every point asset also carries coordinates in the agreed CRS",
+                "Procedure for re-referencing assets, issues and quantities when the alignment is revised",
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Chainage is a design convenience, not an identity",
+              body: "Never use chainage as an asset identifier. Give each asset a stable identifier, store its location in both linear and coordinate terms, and treat chainage as an attribute that may be recalculated when the alignment changes.",
+              tone: "warn",
+            },
+          ],
+        },
+        {
+          id: "gis-bim",
+          label: "GIS–BIM integration",
+          blocks: [
+            {
+              kind: "text",
+              title: "Two worlds that must meet",
+              body: [
+                "BIM tools describe objects in detail in a local engineering coordinate system. GIS describes features across large areas in mapped coordinate reference systems, with topology and attributes optimised for analysis and network management. Infrastructure owners need both: BIM for design and construction, GIS for planning, operation and maintenance.",
+                "ISO/TR 23262 sets out the barriers to interoperability between the geospatial and BIM domains at the data, service and process levels, and ISO/TS 19166 gives a conceptual framework for mapping BIM information to GIS through perspective definitions, element mappings and level of detail mappings. buildingSMART and the Open Geospatial Consortium (OGC) work together on these questions, and CityGML 3.0 was designed partly to improve interoperability with IFC.",
+              ],
+            },
+            {
+              kind: "table",
+              title: "Georeferencing essentials",
+              columns: ["Item", "What to agree", "Where it is recorded"],
+              rows: [
+                ["Horizontal CRS", "The projected coordinate reference system, ideally identified by its EPSG code", "Information standard and IfcProjectedCRS"],
+                ["Vertical datum", "The height reference, for example a national levelling datum, and any geoid model used", "Information standard and IfcProjectedCRS vertical datum"],
+                ["Project base point and rotation", "Where the local engineering origin sits in map coordinates and how the local x-axis is rotated", "IfcMapConversion eastings, northings, orthogonal height and x-axis direction"],
+                ["Scale approach", "Whether the model works in grid or ground distances and the factor used on long schemes", "BEP; IfcMapConversionScaled only where constant factors are agreed and exchanged"],
+                ["Survey control", "Control network, monuments, accuracy and who maintains it", "Survey report as reference information in the CDE"],
+                ["Units", "Length and angle units for model and map", "Information standard; IfcMapConversion scale where units differ"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Typical data exchanges between BIM and GIS",
+              columns: ["Direction", "Typical content", "Common formats"],
+              rows: [
+                ["GIS to BIM", "Constraints, land ownership, environmental designations, existing networks, terrain", "Shapefile, GeoPackage, file geodatabase, LandXML or raster terrain"],
+                ["BIM to GIS (design)", "Proposed alignment, footprints, land take, corridor extents for consent and stakeholder maps", "IFC 4.3, GeoPackage, CityGML, LandXML for alignments"],
+                ["BIM to GIS (handover)", "Asset features with identifiers, attributes, connectivity and status", "Owner's GIS schema, often delivered as GeoPackage or a geodatabase, validated before load"],
+                ["Survey to both", "Point clouds, topographic survey, as-laid and as-built positions", "LAS or LAZ, E57, survey CSV with CRS stated"],
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Setting up GIS–BIM integration on a scheme",
+              steps: [
+                { title: "Confirm the CRS and datum", body: "Agree them with the owner and the surveyor before any modelling starts, and record them in the information standard." },
+                { title: "Set up the model origin", body: "Place the local engineering origin near the scheme to avoid large coordinate values, and record the map conversion." },
+                { title: "Agree the feature mapping", body: "Map each IFC class and property set to the owner's GIS feature class and attribute names, including code lists." },
+                { title: "Test a round trip", body: "Export a sample section from BIM to GIS and check location, attributes and connectivity against survey." },
+                { title: "Validate before load", body: "Check geometry type, CRS, mandatory attributes and topology rules before data enters the owner's GIS." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Check the map conversion on day one",
+              body: "A misplaced or rotated model is one of the most common infrastructure coordination errors. Overlay the first shared model on the owner's GIS base map and on survey control before anyone builds on it.",
+              tone: "warn",
+            },
+          ],
+        },
+        {
           id: "standards",
           label: "Key standards",
           blocks: [
@@ -127,17 +253,23 @@ export const infrastructureHub: Hub = {
               title: "Standards and guidance used alongside ISO 19650",
               columns: ["Region or group", "Standard or source", "What it is used for"],
               rows: [
-                ["International", "ISO 19650 parts 1 to 6", "Information management across the asset life cycle, including security (part 5) and health and safety information (part 6)"],
-                ["International", "ISO 16739-1:2024 (IFC 4.3)", "Open data schema for exchanging building and infrastructure models"],
-                ["International", "ISO 7817-1", "Level of information need concepts and principles for specifying information"],
-                ["International", "ISO 23386 and ISO 23387", "Describing and maintaining properties in interconnected data dictionaries, and data templates for construction objects"],
+                ["International", "ISO 19650 parts 1 to 6", "Information management across the asset life cycle, including operation (part 3), security (part 5) and health and safety information (part 6, first published in 2025)"],
+                ["International", "ISO 16739-1:2024 (IFC 4.3 ADD2)", "Open data schema for exchanging building and infrastructure models"],
+                ["International", "ISO 7817-1:2024", "Level of information need concepts and principles for specifying information"],
+                ["International", "ISO 23386 and ISO 23387 (current edition 2025)", "Describing and maintaining properties in interconnected data dictionaries, and data templates for construction objects"],
                 ["International", "ISO 12006-2 and ISO 12006-3", "Frameworks for classification and for object-oriented information"],
                 ["International", "ISO 55000 series", "Asset management systems that the asset information model should serve"],
-                ["International", "ISO 19100 series (geographic information)", "Geospatial data standards that matter when BIM data meets GIS"],
-                ["International", "buildingSMART BCF and IDS", "Issue exchange between tools, and machine-readable information delivery specifications for checking models"],
+                ["International", "ISO 19100 series (geographic information)", "Geospatial data standards that matter when BIM data meets GIS, including ISO 19111 for coordinate reference systems"],
+                ["International", "ISO 19148:2021", "Linear referencing: locations measured along, and optionally offset from, a linear element; IFC 4.3 linear referencing methods follow its definitions"],
+                ["International", "ISO/TR 23262:2021 and ISO/TS 19166:2021", "A technical report on GIS and BIM interoperability barriers, and a technical specification for conceptual mapping of BIM information to GIS"],
+                ["International", "OGC CityGML 3.0", "Open Geospatial Consortium model for 3D city and landscape objects, often the GIS-side partner of IFC"],
+                ["International", "buildingSMART BCF and IDS 1.0", "Issue exchange between tools, and machine-readable information delivery specifications for checking models (IDS 1.0 became a buildingSMART final standard in June 2024)"],
+                ["Energy sector", "IEC 61850 and the IEC Common Information Model (IEC 61970 and IEC 61968)", "Substation automation configuration, and the network and asset data model used by many electricity utilities"],
                 ["UK highways", "Design Manual for Roads and Bridges and National Highways information and asset data requirements", "Design standards for the strategic road network and the owner's requirements for asset data and information delivery"],
                 ["UK rail", "Network Rail standards for information management, asset data and engineering", "Rail-specific requirements for design information, asset data and handover into the owner's asset systems"],
                 ["UK general", "UK BIM Framework guidance and Uniclass classification", "National guidance on applying ISO 19650 and a classification system that covers infrastructure"],
+                ["Australia", "Transport for NSW Digital Engineering Framework", "An example of a transport owner's published digital engineering requirements, including its own asset register approach for linear assets instead of COBie"],
+                ["Nordics", "CoClass (Sweden) and national BIM requirements of road and rail owners", "Classification built on ISO 12006-2 and the ISO/IEC 81346 reference designation principles, used widely for infrastructure"],
                 ["MENA / GCC", "Government and authority BIM mandates and guidelines", "Several GCC authorities and giga-project clients publish their own BIM and digital delivery requirements, often based on ISO 19650"],
                 ["MENA / GCC", "Utility and transport authority asset standards", "Owner-specific asset data, GIS and as-built submission requirements for networks"],
               ],
@@ -159,6 +291,62 @@ export const infrastructureHub: Hub = {
                 "Who is responsible for monitoring updates",
                 "Any agreed departures or deviations and their approval reference",
               ],
+            },
+          ],
+        },
+        {
+          id: "asset-data",
+          label: "Asset data & classification",
+          blocks: [
+            {
+              kind: "text",
+              title: "Asset data that the operator can use",
+              body: [
+                "An infrastructure owner's asset information requirements are usually expressed through an asset data dictionary: a list of asset types, the attributes required for each, permitted values and the rules for identifiers and locations. National Highways, for example, publishes its asset data requirements in the Asset Data Management Manual, which includes a data dictionary and an asset reference catalogue. Many rail, water and energy owners hold equivalent dictionaries.",
+                "ISO 23386 describes how properties in interconnected data dictionaries should be authored and maintained, and ISO 23387 describes data templates that group those properties for a type of construction object. Using these concepts, and publishing the dictionary in a machine-readable form such as the buildingSMART Data Dictionary or an IDS file, lets project teams check data automatically instead of reading long spreadsheets.",
+              ],
+            },
+            {
+              kind: "table",
+              title: "Classification systems used on infrastructure",
+              columns: ["System", "Origin", "Infrastructure coverage", "Typical use on a scheme"],
+              rows: [
+                ["Uniclass", "UK, maintained by NBS", "Tables for complexes, entities, spaces and locations, elements and functions, systems and products, covering roads, rail, utilities, bridges, tunnels and energy", "Classifying information containers and objects in UK BIM Framework projects"],
+                ["CoClass", "Sweden", "Construction entities, spaces, functional and constructive systems and components, with reference designation aligned to ISO/IEC 81346", "Road and rail projects in Sweden and other Nordic owners"],
+                ["ISO/IEC 81346 reference designation", "International", "Structuring principles and reference designations for systems and components, used heavily in energy and industrial plants", "Identifying equipment in substations, power plants and process facilities"],
+                ["Owner asset type catalogue", "Each asset owner", "Asset types and attributes specific to the owner's network and maintenance regime", "The handover target that model data must map to"],
+                ["OmniClass and MasterFormat", "North America", "Building-focused tables, with partial civil coverage", "Mixed schemes with North American participants"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Mapping model data to the owner's dictionary",
+              columns: ["Model side", "Owner side", "Mapping rule to agree"],
+              rows: [
+                ["IFC class and predefined type, for example IfcSign or IfcCourse", "Owner asset type, for example road sign or pavement layer", "One-to-one or one-to-many table, kept under change control"],
+                ["IFC property set and property name", "Owner attribute name", "Name, data type, unit and whether mandatory at each milestone"],
+                ["Enumerated property values", "Owner code list", "Value-by-value mapping, including what to do with values that do not map"],
+                ["GlobalId and project tag", "Owner asset identifier", "Who allocates the owner identifier and when it is written back into the model"],
+                ["Spatial container and linear placement", "Network reference and location fields", "Conversion from design chainage to network reference, and coordinate fields"],
+                ["Classification reference (Uniclass or CoClass)", "Owner asset hierarchy", "Which classification table is used and how it relates to the owner hierarchy"],
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Handover into the asset management system",
+              steps: [
+                { title: "Obtain the current dictionary", body: "Get the owner's current asset data dictionary and loading templates at appointment, and register the version." },
+                { title: "Build the mapping", body: "Map IFC classes, properties and values to owner asset types and attributes, and publish the mapping as a shared resource." },
+                { title: "Write IDS rules", body: "Express the mandatory attributes per asset type and milestone as IDS so models can be checked before sharing." },
+                { title: "Trial load early", body: "Load a sample of design data into a test copy of the owner's system during detailed design." },
+                { title: "Deliver and reconcile", body: "Deliver as-built asset data by section, reconcile counts and identifiers with the owner, and close out rejections." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "COBie is not always the answer for linear assets",
+              body: "COBie was designed around buildings and spaces. Several transport owners, Transport for NSW among them, explain publicly why they use their own asset register structures for linear assets instead. Follow the owner's handover format; use COBie for building-type facilities such as stations or depots only where the owner asks for it.",
+              tone: "info",
             },
           ],
         },
@@ -301,6 +489,64 @@ export const infrastructureHub: Hub = {
             },
           ],
         },
+        {
+          id: "digital-twins",
+          label: "Operations & digital twins",
+          blocks: [
+            {
+              kind: "text",
+              title: "Using the asset information model in operation",
+              body: [
+                "After handover the asset information model (AIM) becomes the owner's reference for inspection, maintenance, renewals and incident response. ISO 19650-3 describes how information is managed during the operational phase: the appointing party identifies foreseeable trigger events, and each event starts a small information delivery cycle that ends with the AIM being updated and accepted.",
+                "A digital twin connects that AIM to live or regularly refreshed data such as sensors, inspections and operational systems, so the owner can see the current state of the asset and test decisions before acting. The twin is only as reliable as the identifiers, locations and asset data handed over by the project.",
+              ],
+            },
+            {
+              kind: "table",
+              title: "Trigger events on infrastructure networks",
+              columns: ["Trigger event", "Example", "Information that must be updated"],
+              rows: [
+                ["Planned inspection", "Principal bridge inspection, track geometry run, sewer CCTV survey", "Condition scores, defects, photographs and next inspection date"],
+                ["Planned maintenance or renewal", "Resurfacing a pavement section, rail renewal, valve replacement", "As-built layers, components, installation dates, product data"],
+                ["Unplanned event", "Vehicle strike on a parapet, flood, burst main, earthwork slip", "Incident record, temporary measures, repairs and new condition data"],
+                ["Asset change or enhancement", "New gantry, additional lane, substation extension", "New project AIM increment delivered under ISO 19650-2 and merged into the AIM"],
+                ["Change of operator or maintainer", "New maintenance contract area", "Verified AIM extract and outstanding defects for the incoming organisation"],
+                ["Regulatory or policy change", "New safety standard or reporting requirement", "Additional attributes or assessments across the affected asset types"],
+                ["Decommissioning", "Abandoning a pipe or removing a structure", "Status change, abandonment records and retained location data"],
+              ],
+            },
+            {
+              kind: "cards",
+              title: "Common digital twin uses on infrastructure",
+              cards: [
+                { title: "Structural health monitoring", body: "Strain, tilt, displacement and vibration sensors on bridges and earthworks linked to the elements they monitor.", tone: "teal" },
+                { title: "Network performance", body: "Traffic flow, journey time, train running and power flow data located on the network model.", tone: "blue" },
+                { title: "Water and drainage", body: "Telemetry from pumping stations, level sensors and flow meters combined with network topology for event planning.", tone: "green" },
+                { title: "Condition-based maintenance", body: "Inspection and sensor data driving maintenance and renewal decisions rather than fixed intervals.", tone: "amber" },
+                { title: "Asset protection", body: "Visualising third-party works and possessions against buried and critical assets to prevent damage.", tone: "red" },
+                { title: "Scenario testing", body: "Testing closures, diversions or flood scenarios on the model before applying them on the live network.", tone: "purple" },
+              ],
+            },
+            {
+              kind: "checklist",
+              title: "Project information a digital twin depends on",
+              items: [
+                "Stable asset identifiers that match the owner's systems",
+                "Locations in both coordinates and network referencing",
+                "Sensor and device records linked to the asset or element they measure",
+                "Connectivity and topology for networks",
+                "Design parameters needed to interpret readings, such as alarm thresholds and design loads",
+                "Security classification of the combined data set under ISO 19650-5",
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Start with a decision, not a platform",
+              body: "Define which operational decisions the twin should improve, then specify the data and update frequency those decisions need. A twin without a clear purpose becomes an expensive 3D viewer.",
+              tone: "info",
+            },
+          ],
+        },
       ],
     },
     // ==================================================================== ROADS
@@ -380,6 +626,27 @@ export const infrastructureHub: Hub = {
                 ["Lighting column", "Asset ID", "Chainage, offset, coordinates", "Height, lantern type, power supply, mounting", "Electrical test certificate"],
                 ["Earthworks slope", "Asset ID", "Chainage range, side", "Slope angle, height, material, drainage, vegetation", "Geotechnical report, monitoring records"],
                 ["Technology cabinet", "Asset ID", "Chainage, coordinates", "Equipment housed, power and comms connections", "Wiring diagrams, test records"],
+                ["Kerb run", "Asset ID, run reference", "Start and end chainage, side, offset", "Kerb type, upstand, material, bedding, drop kerbs", "As-built survey"],
+                ["Road marking and studs", "Asset ID, marking reference", "Chainage range, lane, side", "Marking type, material, colour, retroreflectivity class, stud type and spacing", "Installation records, performance test results"],
+                ["Gantry or cantilever sign structure", "Structure ID", "Chainage, coordinates, carriageway", "Span, structure type, signs and equipment carried, foundation type", "Design certificate, inspection records"],
+                ["Culvert (small)", "Asset ID", "Chainage, coordinates, watercourse", "Size, shape, material, inlet and outlet levels, headwalls", "Inspection record, as-built drawing"],
+                ["Boundary fence", "Asset ID, run reference", "Start and end chainage, side", "Fence type, height, gates, ownership of boundary", "Land ownership plan, installation record"],
+                ["Attenuation pond or tank", "Asset ID", "Coordinates, catchment", "Storage volume, inlet and outlet controls, levels, lining", "Drainage design report, maintenance plan"],
+                ["Ducting and chambers (highway comms)", "Asset ID, route section", "Chainage range, side, depth", "Duct count, sizes, occupancy, chamber types", "As-built route survey, occupancy records"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Typical road EIR clauses (paraphrase and adapt)",
+              columns: ["Topic", "Example clause intent"],
+              rows: [
+                ["Referencing", "All point assets shall carry design chainage, offset, coordinates in the project CRS and the owner's network reference at handover"],
+                ["Asset data", "Asset data shall follow the owner's current asset data dictionary; the version used shall be recorded in the BEP and in each delivery"],
+                ["Pavement records", "Each pavement layer shall be recorded by section and lane with material, thickness and construction date as constructed"],
+                ["Drainage connectivity", "Drainage shall be delivered as a connected node-link network with flow direction, invert levels and surveyed cover levels"],
+                ["Temporary works", "Traffic management phases shall be modelled as separate containers and retained in the archive at completion"],
+                ["Validation", "Each delivery shall pass the agreed IDS checks and a trial load into the owner's asset system before acceptance"],
+                ["Sectional handover", "Asset data for each section shall be accepted by the owner before the section is opened to traffic"],
               ],
             },
             {
@@ -456,6 +723,11 @@ export const infrastructureHub: Hub = {
                 ["Signs and gantries", "Not modelled", "Key locations", "Modelled signs with faces, posts and foundations", "Asset data with sign schedule references"],
                 ["Earthworks", "Approximate volumes from corridor", "Cut and fill surfaces", "Detailed earthworks with layers and treatment", "As-built surfaces and slope records"],
                 ["Lighting", "Not modelled", "Lighting strategy", "Columns, ducts and cabinets modelled", "As-built positions, test certificates, asset data"],
+                ["Kerbs and edges", "Not modelled", "Indicative edge lines from corridor", "Kerb runs with type and upstand, drop kerbs at crossings", "As-built runs with type and survey position"],
+                ["Road markings", "Not modelled", "Lane configuration only", "Marking layout with types and studs", "As-installed marking records and performance data"],
+                ["Technology and ducts", "Strategy only", "Equipment locations and duct corridors", "Ducts, chambers, cabinets and devices with connections", "As-built routes, occupancy and device asset data"],
+                ["Fencing and boundaries", "Land take outline in GIS", "Boundary line and fence type", "Fence runs, gates and accommodation works", "As-built boundary and fence records"],
+                ["Landscaping and environmental mitigation", "Constraint areas in GIS", "Planting and mitigation zones", "Planting schedules, habitats and screening features", "As-planted records and aftercare obligations"],
               ],
             },
             {
@@ -612,6 +884,27 @@ export const infrastructureHub: Hub = {
                 ["Cable route", "Asset ID, route section", "Start and end mileage or kilometre, side", "Route type, capacity, cables carried", "Cable schedules, as-built survey"],
                 ["Platform", "Asset ID, platform number", "Station, mileage or kilometre range", "Length, height, offset from track, surface, edge type", "Gauging records, accessibility information"],
                 ["Culvert", "Asset ID, structure number", "Mileage or kilometre", "Span, shape, material, invert levels", "Inspection records, as-built drawing"],
+                ["Train detection (axle counter or track circuit)", "Asset ID, section reference", "Mileage or kilometre, track", "Detection type, section limits, associated equipment and interlocking", "Test certificates, signalling design records"],
+                ["Level crossing", "Asset ID, crossing name", "Mileage or kilometre, road name, coordinates", "Crossing type, protection, barriers, warning equipment, road traffic data", "Risk assessment, test records"],
+                ["Earthing and bonding", "Asset ID, bond reference", "Mileage or kilometre, track", "Bond type, cross-bonding arrangement, connection points", "Bonding plans, test results"],
+                ["Track drainage", "Asset ID, upstream and downstream nodes", "Mileage or kilometre range, side, node coordinates", "Pipe or ditch type, size, invert levels, catchpits", "CCTV survey, as-built records"],
+                ["Lineside equipment building", "Asset ID", "Mileage or kilometre, coordinates", "Equipment housed, power supply, HVAC, access arrangements", "Equipment schedules, O&M information"],
+                ["Overbridge or footbridge", "Structure ID", "Mileage or kilometre, obstacle crossed", "Span, headroom over rail, parapet type, OLE attachments", "Examination records, as-built drawings"],
+                ["Lineside fencing", "Asset ID, run reference", "Mileage or kilometre range, side", "Fence type, height, access gates", "Installation records"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Typical rail EIR clauses (paraphrase and adapt)",
+              columns: ["Topic", "Example clause intent"],
+              rows: [
+                ["Referencing", "All assets shall be located by the owner's line reference and mileage or kilometre as well as by coordinates; the conversion from design chainage shall be documented"],
+                ["Asset register", "Asset data shall be delivered against the owner's asset classes and attributes, in the owner's loading format, with the dictionary version stated"],
+                ["Assurance", "Each information container supporting engineering acceptance shall be traceable, by revision, to the acceptance record it supports"],
+                ["Possessions", "Survey and as-built capture shall be included in the possession plan, with named resources and agreed data turnaround"],
+                ["Clearances", "Gauging and clearance checks shall be carried out on the federated model against the agreed structure gauge before design is shared for acceptance"],
+                ["Signalling data", "Signalling design data held in specialist formats shall be stored in the CDE with metadata linking it to the relevant route section and assets"],
+                ["Security", "Signalling, telecoms and operational control information shall be handled under the project security management plan with need-to-know access"],
               ],
             },
             {
@@ -682,6 +975,11 @@ export const infrastructureHub: Hub = {
                 ["Signalling", "Concept scheme", "Signal positions and principles", "Equipment positions, cable routes and location cases", "Asset data with test certificates"],
                 ["Platforms", "Indicative extent", "Length and height defined", "Full geometry and edge details", "As-built gauging and asset data"],
                 ["Drainage and culverts", "Outline strategy", "Main elements and outfalls", "Full network with levels", "As-built network and inspection data"],
+                ["Cable routes and troughing", "Not modelled", "Route corridors and crossings", "Troughing, under-track crossings and ducts with capacity", "As-built routes, cable schedules and occupancy"],
+                ["Earthworks and lineside slopes", "Indicative extent", "Cut and fill outline with stability concept", "Slope geometry, drainage and treatments", "As-built surfaces and earthwork asset records"],
+                ["Level crossings", "Location and type options", "Crossing layout and protection type", "Full layout with equipment, road interface and sighting", "Asset data, test records and risk assessment"],
+                ["Power supply and substations", "Feeding strategy", "Substation locations and sectioning", "Equipment layouts, cable routes and earthing", "Equipment asset data and test certificates"],
+                ["Stations", "Footprint and capacity", "Outline building model", "Coordinated building model to building practice", "Building AIM, COBie or owner format where required"],
               ],
             },
             {
@@ -839,6 +1137,25 @@ export const infrastructureHub: Hub = {
                 ["Expansion joint", "Component ID", "Deck end", "Type, manufacturer, movement range", "Manufacturer data, maintenance guidance"],
                 ["Parapet", "Component ID", "Side and span", "Type, containment, height, fixing", "Test certificates, installation records"],
                 ["Retaining wall", "Structure ID", "Chainage range and side", "Type, height, material, drainage", "Design records, inspection records"],
+                ["Foundation pile", "Pile ID", "Support reference, coordinates", "Pile type, diameter, toe level, design and tested capacity", "Pile records, integrity and load test results"],
+                ["Deck waterproofing and surfacing", "Element ID", "Span reference", "Waterproofing system, surfacing type and thickness, date laid", "Product data, installation records"],
+                ["Structure drainage", "Component ID", "Deck end or span, outlet position", "Outlet type, pipe material and size, discharge point", "As-built drawing, maintenance guidance"],
+                ["Inspection access provision", "Component ID", "Span or support reference", "Walkways, hatches, anchor points, access restrictions", "Access and inspection plan"],
+                ["Services on structure", "Component ID, owner reference", "Span and side", "Service type, owner, duct or bracket arrangement", "Third-party agreements, as-built record"],
+                ["Culvert or buried structure", "Structure ID", "Chainage, coordinates, watercourse", "Shape, span, rise, cover depth, material, headwalls", "Design records, inspection records"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Typical structures EIR clauses (paraphrase and adapt)",
+              columns: ["Topic", "Example clause intent"],
+              rows: [
+                ["Element breakdown", "The structure model shall be broken down into the owner's inspection elements, each with a unique identifier usable in the inspection system"],
+                ["Analysis traceability", "Each analysis model and calculation package shall record the revision of the physical model it is based on"],
+                ["Technical approval", "Information containers supporting the owner's technical approval process shall be identified and their approved revision recorded"],
+                ["Product data", "Bearings, joints, parapets and waterproofing shall be delivered with manufacturer, product reference and installation records"],
+                ["Concealment", "A survey or scan before concealment shall be a hold point for reinforcement, bearings and buried drainage"],
+                ["Temporary works", "Temporary works information affecting the permanent structure shall be retained in the AIM at handover"],
               ],
             },
             {
@@ -908,6 +1225,10 @@ export const infrastructureHub: Hub = {
                 ["Expansion joints", "Not modelled", "Type and position", "Specified type and movement range", "Installed product data and maintenance guidance"],
                 ["Parapets", "Not modelled", "Containment requirement", "Modelled type and fixings", "Installed system, certificates"],
                 ["Drainage", "Strategy", "Outlets and outfalls", "Full drainage with levels", "As-built and inspection access data"],
+                ["Waterproofing and surfacing", "Not modelled", "System type assumed", "Layers specified by span with thicknesses", "Installed system, product data and date laid"],
+                ["Inspection access", "Not considered in geometry", "Access strategy", "Walkways, hatches and anchor points modelled", "Access plan linked to inspection elements"],
+                ["Services on structure", "Known services listed", "Service corridors reserved", "Ducts, brackets and fixings modelled", "As-built services with owners and agreements"],
+                ["Monitoring instrumentation (where specified)", "Not modelled", "Monitoring strategy", "Sensor positions and cable routes", "Installed sensor records linked to elements and baseline readings"],
               ],
             },
             {
@@ -1064,6 +1385,26 @@ export const infrastructureHub: Hub = {
                 ["Substation", "Asset ID", "Coordinates, site", "Voltage levels, transformer rating, switchgear", "Equipment schedules, test certificates"],
                 ["Telecoms duct", "Asset ID, route section", "Route, depth, chambers", "Duct count, sizes, occupancy", "As-built route survey"],
                 ["Fibre cable", "Asset ID", "Duct route and chambers", "Fibre count, type, splice points", "Splice and test records"],
+                ["Hydrant", "Asset ID", "Coordinates, network node", "Type, outlet size, connected main, marker post", "Installation record, flow test"],
+                ["Customer meter", "Asset ID, property reference", "Coordinates, service connection", "Meter type, size, reading method", "Installation record"],
+                ["Pumping station", "Asset ID, site reference", "Coordinates, site boundary", "Pumps, duty and standby, capacity, control and telemetry", "O&M manual, commissioning records"],
+                ["Rising main", "Asset ID, upstream and downstream nodes", "Route, depth, air valves and washouts", "Material, diameter, pressure rating", "Pressure test, as-laid survey"],
+                ["Cable joint", "Asset ID, circuit reference", "Coordinates, depth, joint bay", "Joint type, voltage, jointer, date", "Jointing record, test results"],
+                ["Telecoms chamber", "Asset ID", "Coordinates, cover level", "Chamber type, size, cover rating, ducts entering", "Inspection photo, as-built record"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Typical utility EIR clauses (paraphrase and adapt)",
+              columns: ["Topic", "Example clause intent"],
+              rows: [
+                ["GIS schema", "Network data shall be delivered in the receiving owner's GIS schema and code lists, with the schema version stated"],
+                ["Topology", "Linear assets shall connect to nodes with consistent identifiers and flow or supply direction, validated against the owner's topology rules"],
+                ["Positional accuracy", "Buried asset positions shall be surveyed before backfill to the stated accuracy, and the capture method recorded for each feature"],
+                ["Existing utilities", "Each existing utility shown in the model shall carry its record source, date and verification status"],
+                ["Abandoned assets", "Abandoned and decommissioned assets shall be retained in the delivered data with their status and date of abandonment"],
+                ["Third-party diversions", "Data for diverted third-party assets shall be packaged and delivered to each owner in its own required format"],
+                ["Security", "Network location and criticality data shall be shared only under the project security management plan"],
               ],
             },
             {
@@ -1133,6 +1474,9 @@ export const infrastructureHub: Hub = {
                 ["Substations and pumping stations", "Location options", "Outline layout", "Building and equipment modelled", "Equipment asset data and O&M information"],
                 ["Existing utilities", "Records in GIS", "Records with verified key points", "Modelled with confidence and clearances", "Updated records of diverted and abandoned assets"],
                 ["Ducts and chambers (telecoms)", "Not modelled", "Route concept", "Duct counts and chamber positions", "As-built route and occupancy"],
+                ["Service connections", "Not modelled", "Number and approximate locations", "Connection points, sizes and meter positions", "As-laid connections linked to property references"],
+                ["Crossings of roads, rail and watercourses", "Crossing locations identified", "Crossing method and outline profile", "Detailed crossing design with sleeves, depths and clearances", "As-built crossing records and third-party approvals"],
+                ["Telemetry and control", "Strategy only", "Outstation locations", "Instrument and signal lists, panel layouts", "Configured device records and commissioning data"],
               ],
             },
             {
@@ -1226,6 +1570,675 @@ export const infrastructureHub: Hub = {
         },
       ],
     },
+    // ==================================================================== TUNNELS
+    {
+      id: "tunnels",
+      label: "Tunnels",
+      tabs: [
+        {
+          id: "tunnels-overview",
+          label: "Overview",
+          blocks: [
+            {
+              kind: "text",
+              title: "Information management for tunnels",
+              body: [
+                "Tunnels combine a linear alignment with heavy civil engineering, complex ground conditions and dense mechanical, electrical and safety systems. Road, rail, metro, utility and cable tunnels all follow the same pattern: a structure built through uncertain ground, then fitted out with ventilation, drainage, fire and life safety, lighting, communications and control systems that must be integrated and tested before opening.",
+                "Ground information drives everything. The geotechnical and geological model, monitoring data and the construction method (bored with a tunnel boring machine, sprayed concrete lining, drill and blast, cut and cover or immersed tube) shape the design, the risk register and the records the owner needs for decades of inspection.",
+                "IFC 4.3 has no dedicated tunnel domain. buildingSMART's IFC Tunnel project is developing tunnel entities for a future IFC release. Until that is published and supported by your software, agree how tunnels are represented using IFC 4.3 generic facility, facility part, geotechnical and built element concepts, and document the convention in the BEP.",
+              ],
+            },
+            {
+              kind: "cards",
+              title: "Tunnel information priorities",
+              cards: [
+                { title: "Ground model", body: "Boreholes, strata, groundwater and geotechnical parameters along the alignment, with confidence and source for each interpretation.", tone: "green" },
+                { title: "Lining", body: "Segmental rings, sprayed concrete or cast linings with ring numbers, segment types, build records and joint details.", tone: "teal" },
+                { title: "Excavation records", body: "TBM data, face logs, convergence and settlement monitoring that explain how the tunnel was built.", tone: "amber" },
+                { title: "Systems fit-out", body: "Ventilation, fire suppression, drainage, lighting, power, communications and control, often the longest integration effort.", tone: "blue" },
+                { title: "Fire and life safety", body: "Escape routes, cross passages, emergency equipment and the information the operator and emergency services rely on.", tone: "red" },
+                { title: "Third-party impact", body: "Settlement and vibration effects on buildings, utilities and other tunnels above or near the route.", tone: "purple" },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Ring numbers are the tunnel's own chainage",
+              body: "On bored tunnels, people on site and later inspectors locate things by ring number as much as by chainage. Record the relationship between ring numbers, chainage and coordinates as constructed, and keep it as a controlled shared resource.",
+              tone: "info",
+            },
+          ],
+        },
+        {
+          id: "tunnels-requirements",
+          label: "Information requirements",
+          blocks: [
+            {
+              kind: "cards",
+              title: "From OIR to EIR for a tunnel",
+              cards: [
+                { title: "OIR", body: "The owner wants a safe, available tunnel, compliance with fire and life safety obligations, and a reliable basis for inspection and maintenance of the structure and systems.", tone: "blue" },
+                { title: "AIR", body: "Structure records by section and ring, systems asset data, safety equipment inventory, monitoring baselines and as-built ground information.", tone: "teal" },
+                { title: "PIR", body: "Information for ground risk decisions, construction method selection, third-party impact assessment and safety approvals.", tone: "purple" },
+                { title: "EIR", body: "Deliverables, LOIN, ground model management, monitoring data handling, systems integration evidence and handover requirements for this appointment.", tone: "amber" },
+              ],
+            },
+            {
+              kind: "table",
+              title: "Tunnel asset data examples",
+              columns: ["Asset or element", "Identification", "Location", "Key properties", "Documentation"],
+              rows: [
+                ["Tunnel section", "Section ID", "Start and end chainage, bore", "Construction method, internal diameter or profile, lining type, design life", "Design records, as-built survey"],
+                ["Lining ring", "Ring number", "Chainage, bore, coordinates of ring centre", "Ring type, key position, segment types, concrete class, build date", "Ring build records, quality records"],
+                ["Cross passage", "Asset ID", "Chainage, bores connected", "Dimensions, lining type, doors and fire rating, equipment", "As-built drawing, door certificates"],
+                ["Jet fan or ventilation unit", "Asset ID", "Chainage, bore, position in profile", "Type, thrust or flow, power, control mode, fire rating", "Test records, O&M information"],
+                ["Sump and pump", "Asset ID", "Chainage, bore", "Capacity, pumps, level controls, discharge route", "Commissioning records, O&M information"],
+                ["Emergency point", "Asset ID", "Chainage, bore, side", "Telephone, extinguishers, hydrant or hose reel, signage", "Inspection records"],
+                ["Fire main and hydrant", "Asset ID", "Chainage range, bore", "Pipe size, pressure, hydrant spacing, valves", "Pressure test records"],
+                ["Monitoring instrument", "Instrument ID", "Chainage, coordinates, structure monitored", "Type, range, alarm thresholds, baseline reading", "Installation and calibration records"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Typical tunnel EIR clauses (paraphrase and adapt)",
+              columns: ["Topic", "Example clause intent"],
+              rows: [
+                ["Ground model", "The ground model shall be maintained as a controlled shared container, with each interpretation linked to its source investigation data"],
+                ["Ring referencing", "Every lining ring shall be recorded with ring number, as-built chainage and coordinates, and the table shall be delivered at handover"],
+                ["Excavation data", "TBM and excavation records shall be stored in the CDE in an agreed open format and linked to the tunnel section and rings"],
+                ["Monitoring", "Monitoring instruments shall be modelled or listed with identifiers, positions, thresholds and baseline readings, and the data retained after completion"],
+                ["Systems integration", "Integrated systems test evidence shall be linked to the systems assets it covers before handover"],
+                ["Life safety", "Fire and life safety assets shall be delivered as a separate, validated inventory for the operator and emergency services"],
+              ],
+            },
+          ],
+        },
+        {
+          id: "tunnels-cde",
+          label: "CDE & federation",
+          blocks: [
+            {
+              kind: "table",
+              title: "Example federation structure for a tunnel",
+              columns: ["Level", "Example breakdown", "Notes"],
+              rows: [
+                ["Project", "Whole tunnel scheme including portals and shafts", "One project code"],
+                ["Facility element", "Bore, portal, shaft, cross passage, approach ramp", "Use the volume or zone field for each"],
+                ["Chainage or ring range", "Ranges of chainage, or ring numbers on bored sections", "Matches excavation drives and fit-out packages"],
+                ["Discipline", "Tunnelling, geotechnics, structures, MEP systems, rail or highway, control systems", "Role field in names"],
+                ["System", "Ventilation, drainage, fire, lighting, power, communications, control", "Systems often have separate integration and test routes"],
+                ["Shared reference", "Alignment, ground model, existing structures and utilities, settlement contours", "Issued centrally and versioned"],
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Coordinating a tunnel model",
+              steps: [
+                { title: "Issue the alignment and ground model", body: "Publish the alignment and the current ground model as shared references with clear status and confidence." },
+                { title: "Define the profile and envelopes", body: "Share the structure gauge or traffic envelope, systems zones and clearances inside the bore." },
+                { title: "Model the structure by range", body: "Model lining, portals, shafts and cross passages within agreed chainage or ring ranges." },
+                { title: "Coordinate systems in the profile", body: "Federate ventilation, lighting, cable management, drainage and signage within the limited cross-section." },
+                { title: "Bring in construction data", body: "Link as-built ring positions and monitoring data to the model as construction proceeds." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Space in a tunnel is scarce",
+              body: "Inside a bore every millimetre is contested between the envelope, systems, walkways and maintenance access. Agree spatial zones per system early and check them in each federation cycle, rather than relying on clash detection late in design.",
+              tone: "warn",
+            },
+          ],
+        },
+        {
+          id: "tunnels-loin",
+          label: "LOIN examples",
+          blocks: [
+            {
+              kind: "table",
+              title: "Tunnel elements: LOIN by stage",
+              columns: ["Element", "Option selection", "Preliminary design", "Detailed design", "Handover"],
+              rows: [
+                ["Alignment and profile", "Corridor and indicative vertical profile", "Designed alignment and cross-section", "Final alignment, profile and envelopes", "As-built alignment with ring and chainage table"],
+                ["Ground model", "Desk study and existing boreholes", "Interpreted strata and groundwater", "Design ground model with parameters", "As-encountered ground and excavation records"],
+                ["Lining", "Lining type assumed", "Lining thickness and concept", "Ring or lining geometry, segments and joints", "As-built rings with build data"],
+                ["Cross passages and shafts", "Spacing concept", "Locations and outline geometry", "Full geometry with doors, equipment and drainage", "As-built geometry and asset data"],
+                ["Ventilation", "Strategy", "Fan locations and capacities", "Fans, dampers, cabling and controls modelled", "Installed equipment asset data and test records"],
+                ["Drainage and sumps", "Strategy", "Main sumps and outfalls", "Full drainage network with levels and pumps", "As-built network and pump asset data"],
+                ["Fire and life safety equipment", "Concept", "Equipment spacing and types", "All equipment positioned in the profile", "Validated safety equipment inventory"],
+                ["Monitoring", "Monitoring strategy", "Instrument types and zones", "Instrument positions and thresholds", "Installed instruments with baselines and data records"],
+              ],
+            },
+            {
+              kind: "cards",
+              title: "Geometry, data and documentation for a lining ring",
+              cards: [
+                { title: "Geometry", body: "Handover: ring as a simple solid at its as-built position, with key segment position, rather than detailed segment geometry for every ring.", tone: "teal" },
+                { title: "Alphanumeric", body: "Ring number, ring type, segment types, concrete class, build date, chainage and any defects recorded at build.", tone: "blue" },
+                { title: "Documentation", body: "Ring build record, survey of ring position, and any repair or non-conformance records.", tone: "purple" },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Thousands of rings need data, not detail",
+              body: "A long bored tunnel can contain thousands of rings. Ask for detailed segment geometry only where it serves a purpose, such as openings for cross passages, and capture the remaining rings as data-rich simple objects.",
+              tone: "ok",
+            },
+          ],
+        },
+        {
+          id: "tunnels-example",
+          label: "Worked example",
+          blocks: [
+            {
+              kind: "steps",
+              title: "Worked example: twin-bore road tunnel under a river",
+              steps: [
+                { title: "1. Define the outcome", body: "The road authority needs a new crossing with a safe, maintainable tunnel and a clear operating regime for fire and incidents." },
+                { title: "2. Collect reference information", body: "Gather existing ground investigation, river bed survey, utilities, nearby structures and the authority's tunnel operating requirements." },
+                { title: "3. Write the EIR", body: "Set ground model management, ring and chainage referencing, systems asset data, life safety inventory and monitoring requirements." },
+                { title: "4. Mobilize", body: "Agree the IFC 4.3 convention for representing bores, cross passages and rings, and test exchange between tunnel design, systems and coordination tools." },
+                { title: "5. Design and coordinate", body: "Federate structure, ventilation, lighting, drainage and safety systems by bore and chainage range, with zones agreed in the profile." },
+                { title: "6. Construct and record", body: "Load TBM and ring build data into the CDE after each shift, update the as-built ring table, and link monitoring data to nearby assets." },
+                { title: "7. Integrate and test", body: "Link integrated systems test and emergency exercise evidence to the systems assets before opening." },
+                { title: "8. Hand over", body: "Deliver the as-built model, ring table, systems asset data, life safety inventory and monitoring history to the operator." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "What made it work",
+              body: "Treating the ring build record as structured data from the first ring meant the operator received a complete, searchable record of the lining rather than a stack of shift reports.",
+              tone: "ok",
+            },
+            {
+              kind: "checklist",
+              title: "Handover pack for the tunnel",
+              items: [
+                "As-built alignment, ring and chainage table and federated as-built model",
+                "As-encountered ground information and excavation records",
+                "Systems asset data with commissioning and integrated test evidence",
+                "Fire and life safety equipment inventory and emergency procedures information",
+                "Monitoring instruments, thresholds and data history",
+                "Health and safety file information including residual risks",
+              ],
+            },
+          ],
+        },
+        {
+          id: "tunnels-challenges",
+          label: "Challenges",
+          blocks: [
+            {
+              kind: "table",
+              title: "Tunnel challenges and mitigations",
+              columns: ["Challenge", "Why it matters", "Mitigation"],
+              rows: [
+                ["No dedicated tunnel domain in IFC 4.3", "Tools export tunnels inconsistently", "Agree a modelling and classification convention in the BEP and test exchanges; track the IFC Tunnel work"],
+                ["Ground uncertainty", "Design and risk depend on interpretation", "Record source and confidence of the ground model and update it with as-encountered data"],
+                ["Huge volumes of construction data", "TBM and monitoring data overwhelm the CDE", "Store raw data in suitable systems, link summaries and key records to the model"],
+                ["Systems integration late in the programme", "Opening is delayed by test failures", "Plan integration evidence as information deliverables from the start"],
+                ["Cramped cross-section", "Clashes between systems and envelopes", "Spatial zoning by system and early federated reviews"],
+                ["Third-party settlement", "Claims and damage to neighbouring assets", "Model settlement predictions and link monitoring results to affected assets"],
+              ],
+            },
+            {
+              kind: "faq",
+              title: "Tunnel questions",
+              items: [
+                { q: "How should we export a tunnel to IFC 4.3 today?", a: "A common interim approach is IfcFacility with an agreed object type for the tunnel, IfcFacilityPartCommon (for example segment, above-ground and below-ground parts) for bores and sections, built elements for lining and equipment, and the geotechnical classes for ground. Document the convention and test it with every receiving tool." },
+                { q: "Do we hand over TBM data?", a: "Usually the owner wants the key records rather than every machine reading: ring build data, face logs, grouting and any events affecting the lining. Agree the retained set in the AIR." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Safety information must be trusted",
+              body: "Operators and emergency services rely on the tunnel's safety equipment records. Validate the life safety inventory on site before handover and make keeping it current an explicit ISO 19650-3 trigger event.",
+              tone: "warn",
+            },
+          ],
+        },
+      ],
+    },
+    // ==================================================================== MARINE
+    {
+      id: "marine",
+      label: "Ports & waterways",
+      tabs: [
+        {
+          id: "marine-overview",
+          label: "Overview",
+          blocks: [
+            {
+              kind: "text",
+              title: "Information management for ports and waterways",
+              body: [
+                "Ports, harbours, canals and navigable rivers combine marine structures such as quays, jetties and breakwaters with dredged channels, navigation aids, locks, cargo handling equipment and large landside areas for storage, roads and rail. Much of the asset is under water, where survey is harder and conditions change over time.",
+                "IFC 4.3 introduced a ports and waterways domain. IfcMarineFacility covers facilities such as ports, quays, jetties, breakwaters, canals, ship locks, dry docks and slipways, and IfcMarinePart covers parts such as berthing structures, approach channels, chambers, storage areas and zones above or below the waterline. Domain elements include IfcMooringDevice (for example bollards and mooring hooks), IfcNavigationElement (beacons and buoys), IfcConveyorSegment and IfcLiquidTerminal.",
+              ],
+            },
+            {
+              kind: "cards",
+              title: "Port and waterway asset groups",
+              cards: [
+                { title: "Marine structures", body: "Quay walls, piled jetties, dolphins, breakwaters and revetments, with design loads and scour protection.", tone: "teal" },
+                { title: "Berths and mooring", body: "Bollards, fenders, mooring hooks and berth designations with vessel limits.", tone: "blue" },
+                { title: "Channels and basins", body: "Dredged depths, side slopes and maintenance dredging regimes from hydrographic survey.", tone: "green" },
+                { title: "Navigation aids", body: "Beacons, buoys, lights and leading marks maintained to navigation authority requirements.", tone: "amber" },
+                { title: "Locks and gates", body: "Chambers, gates, valves and control systems on canals and enclosed docks.", tone: "purple" },
+                { title: "Landside operations", body: "Yards, cranes, liquid terminals, conveyors, roads, rail sidings and buildings.", tone: "red" },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Mind the vertical datum",
+              body: "Marine work mixes land levels with chart datum, which differs from the land levelling datum and varies along a coast. State which datum each data set uses and the agreed conversion, and record it in the information standard.",
+              tone: "warn",
+            },
+          ],
+        },
+        {
+          id: "marine-requirements",
+          label: "Information requirements",
+          blocks: [
+            {
+              kind: "cards",
+              title: "From OIR to EIR for a port",
+              cards: [
+                { title: "OIR", body: "The port authority wants safe navigation, available berths, efficient operations and evidence for maintenance dredging and structural inspection.", tone: "blue" },
+                { title: "AIR", body: "Structure and berth records, declared depths, navigation aid inventory, equipment data and landside asset data in the port's systems.", tone: "teal" },
+                { title: "PIR", body: "Information for capacity, vessel size, environmental consent and construction method decisions.", tone: "purple" },
+                { title: "EIR", body: "Deliverables, LOIN, hydrographic and topographic survey rules, datum conventions and handover requirements for the appointment.", tone: "amber" },
+              ],
+            },
+            {
+              kind: "table",
+              title: "Port and waterway asset data examples",
+              columns: ["Asset type", "Identification", "Location", "Key properties", "Documentation"],
+              rows: [
+                ["Quay wall section", "Asset ID, berth reference", "Start and end chainage along the quay line, coordinates", "Wall type, cope level, design dredge depth, design loads, scour protection", "Design records, inspection records"],
+                ["Berth", "Berth number", "Quay chainage range", "Length, declared depth, maximum vessel size, services available", "Berth register, operating limits"],
+                ["Bollard", "Asset ID", "Quay chainage, coordinates", "Type, safe working load, fixing", "Load test certificate"],
+                ["Fender", "Asset ID", "Quay chainage, level", "Type, energy absorption, panel size, chains", "Manufacturer data, inspection records"],
+                ["Navigation buoy or beacon", "Asset ID, navigation reference", "Coordinates", "Type, light character, power source, mooring", "Navigation authority records"],
+                ["Dredged area", "Area ID", "Polygon in the agreed CRS", "Design depth relative to chart datum, side slopes, tolerance", "Hydrographic survey, dredging records"],
+                ["Lock gate", "Asset ID", "Lock and gate position", "Type, dimensions, operating mechanism, seals", "O&M information, inspection records"],
+                ["Ship-to-shore crane", "Asset ID", "Rail chainage, berth", "Outreach, lift capacity, rail gauge, power supply", "Certification, O&M information"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Typical port EIR clauses (paraphrase and adapt)",
+              columns: ["Topic", "Example clause intent"],
+              rows: [
+                ["Datums", "Each data set shall state its vertical datum; conversions between chart datum and the land datum shall use the agreed published values"],
+                ["Hydrographic survey", "Pre- and post-dredge surveys shall be delivered to the agreed standard and linked to the dredged areas they cover"],
+                ["Underwater records", "Concealed and underwater elements shall be recorded by survey or dive inspection before acceptance"],
+                ["Berth register", "Berth properties shall be delivered in a form that can update the port's berth register directly"],
+                ["Navigation aids", "Navigation aid data shall be delivered in the format required by the navigation authority"],
+                ["Environmental data", "Environmental monitoring and consent compliance records shall be stored in the CDE and linked to the relevant works"],
+              ],
+            },
+          ],
+        },
+        {
+          id: "marine-cde",
+          label: "CDE & federation",
+          blocks: [
+            {
+              kind: "table",
+              title: "Example federation structure for a port scheme",
+              columns: ["Level", "Example breakdown", "Notes"],
+              rows: [
+                ["Project", "Terminal expansion or new berth", "One project code"],
+                ["Facility", "Quay, jetty, breakwater, lock, landside yard", "Aligns with IfcMarineFacility types"],
+                ["Part or zone", "Berth, approach channel, storage area, above or below waterline", "Aligns with IfcMarinePart types"],
+                ["Discipline", "Maritime structures, dredging, geotechnics, landside civils, MEP, cranes", "Role field in names"],
+                ["Shared reference", "Bathymetry, topography, ground model, quay line alignment", "Record datum and survey date"],
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Federating land and water",
+              steps: [
+                { title: "Agree datums and CRS", body: "Fix the horizontal CRS, land datum and chart datum conversion before combining any survey." },
+                { title: "Merge bathymetry and topography", body: "Combine hydrographic and land survey into one seamless terrain reference with clear dates." },
+                { title: "Set out the quay line", body: "Use a quay line alignment so berths, bollards and crane rails can be referenced by chainage." },
+                { title: "Federate by facility", body: "Coordinate marine structures, dredging, landside civils and equipment facility by facility." },
+                { title: "Refresh survey regularly", body: "Replace bathymetry with new surveys as dredging and siltation change the seabed." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "The seabed moves",
+              body: "Bathymetry is only valid on its survey date. Keep each survey as its own container with date and datum, and never overwrite an older survey that a design decision was based on.",
+              tone: "info",
+            },
+          ],
+        },
+        {
+          id: "marine-loin",
+          label: "LOIN examples",
+          blocks: [
+            {
+              kind: "table",
+              title: "Port elements: LOIN by stage",
+              columns: ["Element", "Option selection", "Preliminary design", "Detailed design", "Handover"],
+              rows: [
+                ["Quay wall", "Wall type and line options", "Outline section and cope level", "Full geometry, piles or blocks, tie-backs and scour protection", "As-built geometry, levels and inspection elements"],
+                ["Dredged areas", "Outline footprint", "Design depths and slopes", "Dredge polygons with tolerances and volumes", "Post-dredge survey and declared depths"],
+                ["Mooring and fendering", "Not modelled", "Spacing and type", "Bollards and fenders positioned with capacities", "Installed product data and test certificates"],
+                ["Navigation aids", "Requirement noted", "Locations agreed with authority", "Specified types and moorings", "Installed positions and authority records"],
+                ["Breakwater", "Alignment options", "Cross-section with armour types", "Full cross-sections and armour unit placement zones", "As-built survey of crest and slopes"],
+                ["Landside pavements and crane rails", "Yard layout", "Pavement types and rail line", "Pavement build-ups, rails and drainage", "As-built pavements and rail survey"],
+              ],
+            },
+            {
+              kind: "cards",
+              title: "Geometry, data and documentation for a fender",
+              cards: [
+                { title: "Geometry", body: "Detailed design: fender unit and panel as simple objects at quay chainage and level, enough to check vessel contact zones.", tone: "teal" },
+                { title: "Alphanumeric", body: "Type, manufacturer, rated energy and reaction, panel size, chain arrangement and installation date.", tone: "blue" },
+                { title: "Documentation", body: "Manufacturer data and test certificates, installation record and inspection guidance.", tone: "purple" },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Surveys are the geometry",
+              body: "For dredged areas and breakwaters, the handover geometry is the as-built survey surface, not a design solid. Specify survey standards and coverage rather than modelled objects.",
+              tone: "ok",
+            },
+          ],
+        },
+        {
+          id: "marine-example",
+          label: "Worked example",
+          blocks: [
+            {
+              kind: "steps",
+              title: "Worked example: new deep-water berth",
+              steps: [
+                { title: "1. Define the need", body: "The port wants a berth for larger vessels, with deeper water, stronger mooring and new cranes." },
+                { title: "2. Gather reference information", body: "Collect bathymetry, ground investigation, existing quay records, metocean data and the port's asset data requirements." },
+                { title: "3. Write the EIR", body: "Set datum rules, survey standards, LOIN for quay, dredging, fendering and crane rails, and berth register handover." },
+                { title: "4. Design and coordinate", body: "Model the quay wall and dredge pocket against merged bathymetry and topography; federate with landside pavements and services." },
+                { title: "5. Construct and record", body: "Record pile positions and levels, dive inspections of underwater work and post-dredge surveys." },
+                { title: "6. Hand over", body: "Deliver as-built model, declared depths, berth register data and equipment asset data to the port." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "What made it work",
+              body: "Agreeing the chart datum conversion and survey standard at the start avoided disputes over achieved dredge depth at completion.",
+              tone: "ok",
+            },
+            {
+              kind: "checklist",
+              title: "Handover pack for the berth",
+              items: [
+                "As-built quay model and inspection element breakdown",
+                "Post-dredge hydrographic survey and declared depths",
+                "Bollard, fender and crane rail asset data with certificates",
+                "Berth register update",
+                "Navigation aid records for the navigation authority",
+                "Health and safety file information",
+              ],
+            },
+          ],
+        },
+        {
+          id: "marine-challenges",
+          label: "Challenges",
+          blocks: [
+            {
+              kind: "table",
+              title: "Port and waterway challenges and mitigations",
+              columns: ["Challenge", "Why it matters", "Mitigation"],
+              rows: [
+                ["Mixed vertical datums", "Levels and depths do not agree", "State the datum of every data set and use agreed conversions"],
+                ["Underwater as-built capture", "Elements cannot be inspected easily", "Plan dive or ROV inspection and multibeam survey as hold points"],
+                ["Changing seabed", "Designs based on old surveys", "Date-stamp surveys and refresh before key decisions"],
+                ["Young IFC domain support", "Marine classes may not export from every tool", "Test exchanges and agree fallbacks in the BEP"],
+                ["Many authorities", "Port, navigation, environmental and harbour regulators each need information", "Interface register and authority-specific deliverables"],
+              ],
+            },
+            {
+              kind: "faq",
+              title: "Port questions",
+              items: [
+                { q: "Can a quay use chainage like a road?", a: "Yes. A quay line alignment lets berths, bollards, fenders and crane rails be referenced by chainage, which matches how ports often describe berth positions." },
+                { q: "Should bathymetry go into the federated model?", a: "As a reference surface, yes, so structures and dredging can be checked against it. Keep the raw survey data in its own container." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Port data is often security sensitive",
+              body: "Port layouts, critical equipment and operational data can be sensitive. Carry out the ISO 19650-5 security triage and agree with the port which information can be shared with whom.",
+              tone: "warn",
+            },
+          ],
+        },
+      ],
+    },
+    // ==================================================================== ENERGY
+    {
+      id: "energy",
+      label: "Energy & power",
+      tabs: [
+        {
+          id: "energy-overview",
+          label: "Overview",
+          blocks: [
+            {
+              kind: "text",
+              title: "Information management for energy and power",
+              body: [
+                "Energy infrastructure covers transmission and distribution substations, overhead lines and underground cables, and generation such as onshore and offshore wind, solar farms and battery storage. It combines linear routes, compact equipment-dense sites and large spread-out arrays, often in remote or offshore locations.",
+                "Electricity network owners usually manage assets through their own asset registers and network models, and many use the IEC Common Information Model (IEC 61970 and IEC 61968) to describe network topology and equipment. Substation protection and control is configured using IEC 61850. ISO 19650 information management needs to feed these systems rather than replace them.",
+                "IFC 4.3 includes general electrical classes such as IfcTransformer, IfcSwitchingDevice, IfcProtectiveDevice, IfcCableSegment, IfcCableCarrierSegment, IfcElectricGenerator, IfcSolarDevice and IfcElectricFlowStorageDevice, but it has no dedicated energy domain. Agree how substations, lines and generation assets are classified and which property sets or owner-specific properties carry their data.",
+              ],
+            },
+            {
+              kind: "cards",
+              title: "Energy asset groups",
+              cards: [
+                { title: "Substations", body: "Transformers, switchgear, busbars, protection and control, earthing, buildings and civils, all inside a secure compound.", tone: "amber" },
+                { title: "Overhead lines", body: "Towers or poles, foundations, conductors, insulators and fittings along a route with clearances to ground and crossings.", tone: "teal" },
+                { title: "Underground cables", body: "Cable circuits, joint bays, link boxes, ducts and crossings with thermal and depth constraints.", tone: "blue" },
+                { title: "Wind generation", body: "Turbines, foundations, array and export cables, offshore or onshore substations and access.", tone: "green" },
+                { title: "Solar and storage", body: "Arrays of panels, mounting structures, inverters, battery containers and grid connection.", tone: "purple" },
+                { title: "Secondary systems", body: "Protection, SCADA, communications and metering whose configuration data is as important as the physical model.", tone: "red" },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Two models of the same asset",
+              body: "Energy owners hold a physical asset model and an electrical network model. Make sure equipment identifiers link the two, so a transformer in the BIM model is the same transformer in the network model and the asset register.",
+              tone: "info",
+            },
+          ],
+        },
+        {
+          id: "energy-requirements",
+          label: "Information requirements",
+          blocks: [
+            {
+              kind: "cards",
+              title: "From OIR to EIR for an energy owner",
+              cards: [
+                { title: "OIR", body: "The network owner wants safe, reliable supply, regulatory compliance and asset data that supports condition-based maintenance and investment planning.", tone: "blue" },
+                { title: "AIR", body: "Equipment records with ratings, connectivity, manufacturer data and test results, line and cable route data, and site records.", tone: "teal" },
+                { title: "PIR", body: "Information for connection offers, consent, outage planning and construction method decisions.", tone: "purple" },
+                { title: "EIR", body: "Deliverables, LOIN, equipment naming, network model links, secondary systems data handling and handover requirements.", tone: "amber" },
+              ],
+            },
+            {
+              kind: "table",
+              title: "Energy asset data examples",
+              columns: ["Asset type", "Identification", "Location", "Key properties", "Documentation"],
+              rows: [
+                ["Power transformer", "Asset ID, plant designation", "Substation, bay, coordinates", "Rating, voltages, vector group, cooling, oil volume, manufacturer, serial number", "Factory and site test reports, O&M manual"],
+                ["Circuit breaker", "Asset ID, plant designation", "Substation, bay", "Voltage, rated current, breaking capacity, insulation medium, mechanism", "Test records, manufacturer data"],
+                ["Busbar section", "Asset ID", "Substation, bay range", "Voltage, rating, configuration", "Single line diagram, test records"],
+                ["Overhead line tower", "Tower number, line reference", "Coordinates, route chainage", "Tower type, height, foundation type, earthing, circuits carried", "Foundation records, as-built profile"],
+                ["Conductor span", "Span ID, line reference", "Between tower numbers", "Conductor type, sag and tension data, clearances, crossings", "Sag and tension records, clearance survey"],
+                ["Cable circuit section", "Circuit reference, section ID", "Route between joint bays, depth", "Voltage, conductor, insulation, bonding arrangement, installation method", "Cable test records, as-laid survey"],
+                ["Wind turbine", "Asset ID, turbine position", "Coordinates", "Model, rated power, hub height, rotor diameter, foundation type", "Commissioning records, O&M information"],
+                ["Inverter or battery unit", "Asset ID", "Site, block, coordinates", "Rating, capacity, manufacturer, firmware version, connection", "Commissioning and test records"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Typical energy EIR clauses (paraphrase and adapt)",
+              columns: ["Topic", "Example clause intent"],
+              rows: [
+                ["Equipment designation", "All primary and secondary equipment shall carry the owner's plant designation, used consistently in models, drawings and asset data"],
+                ["Network model link", "Equipment identifiers shall match those used in the owner's network model so physical and electrical records can be linked"],
+                ["Secondary systems", "Protection and control configuration files shall be stored in the CDE under controlled status and linked to the bays and devices they configure"],
+                ["Test evidence", "Factory and site acceptance test records shall be linked to each equipment asset before handover"],
+                ["Route records", "Overhead line and cable route data shall be delivered with surveyed positions, clearances and crossings in the owner's GIS format"],
+                ["Security", "Substation layouts, protection settings and control system information shall be handled under the project security management plan"],
+              ],
+            },
+          ],
+        },
+        {
+          id: "energy-cde",
+          label: "CDE & federation",
+          blocks: [
+            {
+              kind: "table",
+              title: "Example federation structure for energy schemes",
+              columns: ["Level", "Example breakdown", "Notes"],
+              rows: [
+                ["Project", "Substation upgrade, new circuit or generation site", "One project code"],
+                ["Site or route section", "Substation, line section between angle towers, cable section between joint bays, array block", "Volume or zone field"],
+                ["Bay or block", "Transformer bay, feeder bay, turbine string, solar block", "Matches how the owner designates equipment"],
+                ["Discipline", "Primary electrical, secondary systems, civils and structures, buildings, earthing", "Role field in names"],
+                ["Shared reference", "Route alignment, terrain, ground model, existing plant survey, single line diagram", "Issued centrally"],
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Coordinating a substation",
+              steps: [
+                { title: "Fix the single line diagram", body: "Treat the single line diagram and bay arrangement as controlling references for the physical layout." },
+                { title: "Model primary plant and clearances", body: "Model equipment with electrical safety clearances and maintenance zones as part of the geometry." },
+                { title: "Coordinate civils and earthing", body: "Federate foundations, cable trenches, drainage and the earthing grid with primary plant." },
+                { title: "Link secondary systems", body: "Link protection and control panels and configuration files to the bays they serve." },
+                { title: "Plan outages", body: "Use 4D to sequence work into outage windows agreed with the network operator." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Clearances are geometry too",
+              body: "Electrical safety and maintenance clearances can be modelled as zones around equipment. Including them in coordination catches access and safety problems that ordinary clash detection misses.",
+              tone: "ok",
+            },
+          ],
+        },
+        {
+          id: "energy-loin",
+          label: "LOIN examples",
+          blocks: [
+            {
+              kind: "table",
+              title: "Energy elements: LOIN by stage",
+              columns: ["Element", "Option selection", "Preliminary design", "Detailed design", "Handover"],
+              rows: [
+                ["Substation layout", "Site options and footprint", "Bay arrangement and outline layout", "Full layout with equipment, clearances and civils", "As-built layout with asset data"],
+                ["Primary equipment", "Ratings assumed", "Equipment types and positions", "Specified equipment modelled with connections", "Installed equipment data and test records"],
+                ["Overhead line route", "Corridor in GIS", "Tower positions and profile", "Tower types, foundations, sag and clearance checks", "As-built tower positions and clearance survey"],
+                ["Cable route", "Corridor in GIS", "Route and joint bay locations", "Ducts, joint bays, crossings and bonding", "As-laid route, depths and test results"],
+                ["Wind turbines and foundations", "Layout options", "Turbine positions and foundation concept", "Foundations designed and cable array routed", "As-built positions, foundation records and turbine data"],
+                ["Secondary systems", "Concept", "Protection and control philosophy", "Panel layouts and configuration", "Configured device records and settings references"],
+              ],
+            },
+            {
+              kind: "cards",
+              title: "Geometry, data and documentation for a transformer",
+              cards: [
+                { title: "Geometry", body: "Detailed design: envelope with bushings, coolers and bund, plus clearance and maintenance zones, enough to check layout and access.", tone: "teal" },
+                { title: "Alphanumeric", body: "Plant designation, rating, voltages, vector group, cooling, oil volume, manufacturer and serial number.", tone: "amber" },
+                { title: "Documentation", body: "Factory and site test reports, O&M manual, oil test records and transport records.", tone: "purple" },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Arrays need patterns, not hand modelling",
+              body: "Solar farms and wind arrays repeat the same units many times. Specify LOIN per unit type and let the array layout be generated, with each unit carrying its identifier and data.",
+              tone: "info",
+            },
+          ],
+        },
+        {
+          id: "energy-example",
+          label: "Worked example",
+          blocks: [
+            {
+              kind: "steps",
+              title: "Worked example: grid substation extension for a renewable connection",
+              steps: [
+                { title: "1. Define the need", body: "The network owner must connect a new solar and battery site, requiring a new feeder bay and transformer at an existing substation." },
+                { title: "2. Survey the existing", body: "Scan the live substation from safe positions and gather existing records, single line diagrams and earthing data." },
+                { title: "3. Write the EIR", body: "Set equipment designation rules, network model links, LOIN for primary and secondary systems, test evidence and security handling." },
+                { title: "4. Design and coordinate", body: "Model the new bay against the existing plant with clearance zones, foundations, trenches and earthing." },
+                { title: "5. Plan outages", body: "Sequence construction and connection into agreed outage windows using 4D." },
+                { title: "6. Hand over", body: "Deliver equipment data with test records, as-built layout and updated records for the network model and asset register." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "What made it work",
+              body: "Using the owner's plant designations from the first model meant equipment loaded into the asset register and network model without renaming.",
+              tone: "ok",
+            },
+            {
+              kind: "checklist",
+              title: "Handover pack for the substation extension",
+              items: [
+                "As-built layout model and drawings",
+                "Equipment asset data with factory and site test records",
+                "Updated single line diagram and network model data",
+                "Secondary systems configuration references under controlled status",
+                "Earthing test results and as-built earthing layout",
+                "Health and safety file information",
+              ],
+            },
+          ],
+        },
+        {
+          id: "energy-challenges",
+          label: "Challenges",
+          blocks: [
+            {
+              kind: "table",
+              title: "Energy challenges and mitigations",
+              columns: ["Challenge", "Why it matters", "Mitigation"],
+              rows: [
+                ["No dedicated energy domain in IFC", "Equipment classes and properties vary between tools", "Agree classification and property mapping in the BEP and use owner-specific properties where needed"],
+                ["Physical and network models disconnected", "Records disagree and outages are misplanned", "Use common equipment identifiers across both"],
+                ["Working in live substations", "Survey and construction access is limited", "Plan capture within outage and safety procedures"],
+                ["Secondary systems data in specialist formats", "Configuration is hard to control", "Store configuration files in the CDE with status and link them to bays"],
+                ["Remote and offshore sites", "Survey and as-built capture is costly", "Plan capture campaigns and use remote sensing where suitable"],
+                ["Critical national infrastructure", "Data is security sensitive", "Apply ISO 19650-5 and need-to-know access"],
+              ],
+            },
+            {
+              kind: "faq",
+              title: "Energy questions",
+              items: [
+                { q: "Does BIM replace the owner's network model?", a: "No. The network model handles electrical analysis and operation. BIM supports design, construction and physical asset data, linked to the network model through shared identifiers." },
+                { q: "How detailed should a solar farm model be?", a: "Enough for layout, civils, cabling and asset identification. Panels and mountings are usually repeated units with data rather than individually detailed geometry." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Designations are the backbone",
+              body: "In energy, the plant designation system plays the role that chainage plays on roads. Agree it before design starts and enforce it in naming, models, drawings and asset data.",
+              tone: "warn",
+            },
+          ],
+        },
+      ],
+    },
     // ==================================================================== AI
     {
       id: "ai",
@@ -1264,5 +2277,9 @@ export const infrastructureHub: Hub = {
     "What does IFC 4.3 add for alignment and linear referencing?",
     "What asset data should a rail owner require at handover for overhead line equipment?",
     "How do I write LOIN for buried utilities at each design stage?",
+    "How do I convert design chainage to the owner's network referencing, and how is it stored in IFC 4.3?",
+    "What should the information standard say about the CRS, vertical datum and IfcMapConversion?",
+    "How should a bored tunnel be represented in IFC 4.3 until a tunnel domain is published?",
+    "How do I link substation BIM data to the owner's network model and asset register?",
   ],
 };

@@ -33,6 +33,12 @@ export const cobieHub: Hub = {
               ],
             },
             {
+              kind: "graphic",
+              graphic: "cobie-hierarchy",
+              title: "How COBie sheets link together",
+              caption: "Spaces sit on Floors within the Facility and are grouped into Zones; Components are instances of Types, are located in Spaces and are grouped into Systems. Contact, Document, Attribute and PickLists support every other sheet.",
+            },
+            {
               kind: "cards",
               title: "Why owners ask for COBie",
               cards: [
@@ -89,7 +95,7 @@ export const cobieHub: Hub = {
               columns: ["Sheet", "Purpose", "Key fields", "Who usually fills it", "When"],
               rows: [
                 ["Contact", "People and organisations referenced elsewhere in the workbook", "Email (the unique key), Company, Phone, Category, CreatedBy, CreatedOn", "Every author adds itself; contractor adds manufacturers and installers", "From the first drop, growing through construction"],
-                ["Facility", "The single building or facility being handed over, with project, site and unit settings", "Name, ProjectName, SiteName, LinearUnits, AreaUnits, VolumeUnits, CurrencyUnit, Category", "Lead designer or information manager", "First drop; checked at every drop"],
+                ["Facility", "The single building or facility being handed over, with project, site and unit settings", "Name, Category, ProjectName, SiteName, LinearUnits, AreaUnits, VolumeUnits, CurrencyUnit, AreaMeasurement", "Lead designer or information manager", "First drop; checked at every drop"],
                 ["Floor", "Storeys, levels and other vertical divisions", "Name, Category, Elevation, Height", "Architect", "Concept design onwards"],
                 ["Space", "Rooms and areas that are managed, cleaned, let or maintained", "Name, FloorName, Description, RoomTag, UsableHeight, GrossArea, NetArea, Category", "Architect", "Concept and spatial coordination onwards"],
                 ["Zone", "Named groups of spaces for a purpose such as fire, HVAC, security or occupancy", "Name, Category, SpaceNames", "Architect and building services engineer", "Spatial coordination onwards"],
@@ -107,7 +113,7 @@ export const cobieHub: Hub = {
               rows: [
                 ["Spare", "Spare parts, consumables and replacement items for a type", "Name, Category, TypeName, Suppliers, SetNumber, PartNumber", "Contractor, from manufacturer information", "Construction and handover"],
                 ["Resource", "Materials, tools and training needed for maintenance", "Name, Category, Description", "Contractor or maintenance planner", "Handover, if required"],
-                ["Job", "Planned maintenance, inspection and safety tasks for a type", "Name, Category, Status, TypeName, Description, Duration, Frequency, Priors, ResourceNames", "Contractor with manufacturers and FM team", "Handover"],
+                ["Job", "Planned maintenance, inspection and safety tasks for a type", "Name, Category, Status, TypeName, Description, Duration, Start, Frequency (each with its unit), TaskNumber, Priors, ResourceNames", "Contractor with manufacturers and FM team", "Handover"],
                 ["Impact", "Environmental, cost or other impacts over the life cycle", "Name, ImpactType, ImpactStage, SheetName, RowName, Value, ImpactUnit", "Specialists where the client asks for it", "Rarely used; only when specified"],
                 ["Document", "References to documents that describe any row in another sheet", "Name, Category, ApprovalBy, Stage, SheetName, RowName, Directory, File", "Every author for its own information; contractor for O&M", "Throughout; heavily at handover"],
                 ["Attribute", "Extra properties for any row, beyond the standard columns", "Name, SheetName, RowName, Value, Unit, Category", "Designers and contractor, as listed in the requirements", "Throughout, matched to the stage"],
@@ -124,7 +130,7 @@ export const cobieHub: Hub = {
                 { title: "CreatedBy", body: "The email of the person or organisation that created the row. It must exist on the Contact sheet.", tone: "blue" },
                 { title: "CreatedOn", body: "The date and time the row was created, in a consistent, machine-readable date format.", tone: "teal" },
                 { title: "Category", body: "Classification, usually written as code and title from the agreed system such as Uniclass, for example a code followed by a colon and its description.", tone: "purple" },
-                { title: "External fields", body: "ExtSystem, ExtObject and ExtIdentifier record the authoring tool, object type and GUID the row came from, so it can be traced back to the model.", tone: "amber" },
+                { title: "External fields", body: "ExtSystem, ExtObject and ExtIdentifier record the authoring tool, object type and GUID the row came from, so it can be traced back to the model. The Facility sheet uses longer names, such as ExternalSystem and ExternalFacilityIdentifier, for project, site and building.", tone: "amber" },
                 { title: "Description", body: "A short, human-readable description that makes sense to the facility manager, not an internal family or layer name.", tone: "red" },
               ],
             },
@@ -133,6 +139,28 @@ export const cobieHub: Hub = {
               title: "What the portal's COBie checker looks for",
               body: "The checker treats Contact, Facility, Floor, Space, Type and Component as required worksheets, and checks Zone, System, Document and Attribute when they are present. It tests mandatory columns, unique names, a single Facility row, valid dates, classification in code: title form, and cross-references such as Space to Floor, Component to Type and Space, System to Component and CreatedBy to Contact.",
               tone: "ok",
+            },
+          ],
+        },
+        // ------------------------------------------------------------------ Sheet-by-sheet reference
+        {
+          id: "sheet-reference",
+          label: "Sheet-by-sheet reference",
+          blocks: [
+            {
+              kind: "text",
+              title: "Every sheet, every column",
+              body: [
+                "This reference lists each COBie 2.4 worksheet in workbook order, from Contact to PickLists. For every sheet it explains what one row represents, who usually fills it in and when, and then describes each standard column with an example value and, for reference columns, the sheet or picklist the value must match.",
+                "You can also download a blank COBie workbook with the same sheets and column headers to use as a starting point. Always check it against the template and requirements your client has issued, which take precedence.",
+              ],
+            },
+            { kind: "cobie-schema", title: "Every COBie sheet and its columns" },
+            {
+              kind: "callout",
+              title: "Reading the column colours",
+              body: "Column kinds follow the common template convention: yellow for required values, salmon or orange for references to another sheet or a picklist, purple for external identifiers written by the export tool, and green for optional or as-specified columns that become mandatory when the requirements ask for them. Clients may add their own columns or attributes and may make optional columns mandatory, so the project's template and responsibility matrix always win.",
+              tone: "info",
             },
           ],
         },
@@ -154,8 +182,8 @@ export const cobieHub: Hub = {
               title: "Common header colour convention",
               columns: ["Colour (typical)", "Meaning", "Examples", "What to do"],
               rows: [
-                ["Yellow", "Required: a value must be provided", "Name, CreatedBy, CreatedOn, Description", "Always fill in; use n/a only where the requirements allow it"],
-                ["Orange or salmon", "Reference: the value must match another sheet or a picklist", "FloorName, TypeName, Space, Category, units", "Pick from the referenced sheet or picklist; do not type free text"],
+                ["Yellow", "Required: a value must be provided", "Name, CreatedOn, Description, ModelNumber", "Always fill in; use n/a only where the requirements allow it"],
+                ["Orange or salmon", "Reference: the value must match another sheet or a picklist", "CreatedBy, FloorName, TypeName, Space, Manufacturer, Category, units", "Pick from the referenced sheet or picklist; do not type free text"],
                 ["Purple or lilac", "External: generated by software to trace the source", "ExtSystem, ExtObject, ExtIdentifier", "Leave to the export tool; do not edit by hand"],
                 ["Green", "Optional or as specified: only needed if the requirements ask", "Optional attributes, some warranty or area fields", "Fill in when listed in the AIR or EIR; otherwise leave blank or n/a"],
                 ["Blue or another template-specific colour", "Project or client extension columns added to the standard sheets", "Client asset codes, maintenance contract references", "Follow the client legend; these are defined in the project requirements"],

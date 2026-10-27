@@ -17,7 +17,26 @@ export type HubBlock =
   /** Interactive widget rendered by the page, e.g. the scan-to-BIM cost estimator. */
   | { kind: "widget"; widget: "scan-cost" | "ask-ai" | "generate"; title: string; docType?: string }
   /** Clickable process diagram: steps in swimlanes (parties); clicking a step shows its detail. */
-  | { kind: "process"; title: string; lanes: { id: string; label: string; tone: Tone }[]; steps: ProcessStep[] };
+  | { kind: "process"; title: string; lanes: { id: string; label: string; tone: Tone }[]; steps: ProcessStep[] }
+  /** Stage × party grid of document cards with stage/party filters; clicking a card shows its detail. */
+  | { kind: "rolematrix"; title: string; parties: { id: string; label: string; tone: Tone }[]; stages: { id: string; label: string; clause: string }[]; docs: RoleDoc[] }
+  /** Built-in explanatory illustration drawn by the page (SVG), with an optional caption. */
+  | { kind: "graphic"; graphic: GraphicId; title: string; caption?: string }
+  /** COBie sheet-by-sheet column reference and blank workbook download, rendered from shared/data/cobieSchema.ts. */
+  | { kind: "cobie-schema"; title: string };
+
+export type GraphicId = "lod-progression" | "loin-framework" | "loin-example" | "lod-vs-loi" | "cobie-hierarchy" | "cde-states" | "infra-breakdown" | "mcp-architecture";
+
+export interface RoleDoc {
+  stage: string;         // stage id
+  party: string;         // party id
+  name: string;          // document name, e.g. "Exchange Information Requirements (EIR)"
+  summary: string;       // one line shown on the card
+  purpose: string;
+  keyContent: string[];  // what it must contain
+  clause: string;        // e.g. "ISO 19650-2 5.2.1"
+  template?: string;     // portal template code when one exists (EIR, BEP-PRE, …)
+}
 
 export interface ProcessStep {
   id: string;
@@ -36,7 +55,7 @@ export interface HubTab { id: string; label: string; blocks: HubBlock[] }
 export interface HubSection { id: string; label: string; tabs: HubTab[] }
 
 export interface Hub {
-  id: "scan-to-bim" | "dimensions" | "implementation" | "cobie" | "revit" | "infrastructure" | "loin" | "appointment" | "documents-roles";
+  id: "scan-to-bim" | "dimensions" | "implementation" | "cobie" | "revit" | "infrastructure" | "loin" | "appointment" | "documents-roles" | "mcp";
   /** Accent colour for the hub's header and cards. */
   tone?: Tone;
   eyebrow: string;

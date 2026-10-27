@@ -448,3 +448,8 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .proc-arrow { align-self: center; color: var(--muted); }
 .proc-detail { margin-top: 10px; border-radius: 12px; padding: 16px; border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); background: color-mix(in srgb, var(--c) 6%, var(--surface)); }
 .proc-detail h3 { margin: 0 0 2px; color: color-mix(in srgb, var(--c) 85%, var(--text)); }
+/* checkboxes in hub/parts/tool pages: the global input rule would stretch them to full width */
+.hub-check { font-weight: 400; font-size: 13px; margin: 0 0 4px; text-align: start; }
+.hub-check > span { flex: 1; min-width: 0; }
+.hub input[type="checkbox"], .hub input[type="radio"] { width: auto; flex: 0 0 auto; margin-top: 3px; accent-color: var(--hub); }
+.hub label.row { font-weight: 400; margin: 0; }

@@ -87,7 +87,7 @@ export default function App() {
   else if (parts[0] === "my-day") view = <MyDay />;
   else if (parts[0] === "portfolio") view = <Portfolio />;
   else if (parts[0] === "tools") view = <Tools tool={parts[1]} />;
-  else if (parts[0] === "ai-tools") view = <AiTools tool={parts[1]} arg={parts[2]} />;
+  else if (parts[0] === "ai-tools") view = <AiTools tool={parts[1]} arg={parts[2]} arg2={parts[3]} />;
   else if (parts[0] === "hubs" && hubById(parts[1] ?? "")) view = <HubPage hub={hubById(parts[1])!} sectionId={parts[2]} tabId={parts[3]} />;
   else if (parts[0] === "hubs") view = <HubsIndex hubs={hubs} />;
   else if (parts[0] === "downloads") view = <DownloadsLibrary />;

@@ -5,6 +5,8 @@ import { api } from "../lib/api";
 import { exportCsv } from "../lib/export";
 import { saveMarkdownDocx } from "../lib/mdDocx";
 import { suitabilityCodes } from "../../../shared/data/iso19650";
+import { hubById } from "../../../shared/data/hubs";
+import HubPage from "./HubPage";
 
 // Standalone AI tools: document review, risk register, clash matrix, suitability, COBie, document generator.
 // Every result is decision support for an accountable reviewer, never an approval.
@@ -16,6 +18,7 @@ export const AI_TOOLS = [
   { id: "clash", label: "Clash matrix", hint: "Discipline test matrix with tolerances for your stage and software", can: "build a clash test matrix with tolerances suited to your stage and software" },
   { id: "suitability", label: "Suitability codes", hint: "Quick wizard plus AI advisor for tricky cases", can: "describe a tricky situation and get advice on the right suitability code" },
   { id: "cobie", label: "COBie checker", hint: "Rule checks plus AI readiness review and prioritised fixes", can: "get a readiness review of your COBie workbook with prioritised fixes" },
+  { id: "mcp", label: "Connect via MCP", hint: "Connect Claude to Revit, IFC, CDE and other BIM tools with the Model Context Protocol", can: "follow the guide" },
 ] as const;
 
 function useAiEnabled() {
@@ -441,7 +444,7 @@ export function AskPartChat({ partId, hubId, partLabel, suggestions }: { partId?
 /** Link that opens the generator with a document type filled in. */
 export const generateHref = (docType: string) => `#/ai-tools/generate/${encodeURIComponent(docType)}`;
 
-export default function AiTools({ tool, arg }: { tool?: string; arg?: string }) {
+export default function AiTools({ tool, arg, arg2 }: { tool?: string; arg?: string; arg2?: string }) {
   const cur = AI_TOOLS.find((t) => t.id === tool) ?? AI_TOOLS[0];
   const ai = useAiEnabled();
   return (
@@ -450,6 +453,7 @@ export default function AiTools({ tool, arg }: { tool?: string; arg?: string }) 
         <div className="facts"><span>Powered by Claude</span><span>Review-first: you stay accountable</span><span>Export to Word / CSV</span></div></div>
       <div className="hub-tabs">{AI_TOOLS.map((t) => <a key={t.id} className={cur.id === t.id ? "on" : ""} href={`#/ai-tools/${t.id}`}>{t.label}</a>)}</div>
       <div>{ai === null ? <div className="muted">Loading…</div>
+        : cur.id === "mcp" ? <HubPage hub={hubById("mcp")!} sectionId={arg} tabId={arg2} base="#/ai-tools/mcp" embedded />
         : cur.id === "suitability" ? <SuitabilityTool ai={ai} />
           : !ai ? <AiOff what={cur.can} />
             : cur.id === "review" ? <ReviewTool /> : cur.id === "generate" ? <GenerateTool key={arg ?? ""} initial={arg ? decodeURIComponent(arg) : ""} /> : cur.id === "risks" ? <RiskTool /> : cur.id === "clash" ? <ClashTool /> : <CobieTool />}</div>

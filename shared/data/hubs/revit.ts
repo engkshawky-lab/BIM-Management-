@@ -11,7 +11,7 @@ export const revitHub: Hub = {
   eyebrow: "SOFTWARE · AUTODESK REVIT",
   title: "Revit best practices for ISO 19650",
   intro:
-    "Practical guidance for producing Revit models that are well organised, correctly located, sensibly named, rich in the right information and easy to exchange. Covers model setup and coordinates, modelling by discipline, naming, shared parameters, worksharing, families, IFC export, coordination, performance and QA, with tips, a quiz and AI tools to help you write your own BIM manual.",
+    "Practical guidance for producing Revit models that are well organised, correctly located, sensibly named, rich in the right information and easy to exchange. Covers model setup and coordinates, templates and standards, modelling by discipline, naming, shared parameters, data and schedules, worksharing, families, IFC export and validation, coordination, performance, automation and QA, with tips, a quiz and AI tools to help you write your own BIM manual.",
   sections: [
     {
       id: "main",
@@ -72,6 +72,69 @@ export const revitHub: Hub = {
             },
           ],
         },
+        // ------------------------------------------------------------------ Templates & standards
+        {
+          id: "templates",
+          label: "Templates & standards",
+          blocks: [
+            {
+              kind: "text",
+              title: "Why the project template matters",
+              body: [
+                "A Revit project template (.rte) is the practical way to apply the project information standard and production methods described in ISO 19650-2. Everything a new model inherits, from line weights and title blocks to shared parameters and view templates, comes from the template, so mistakes there are copied into every model.",
+                "Keep one controlled template per Revit release, owned by a named person, with a change log. Upgrade it deliberately when the project agrees a new release, and record the template name and version in the BEP.",
+              ],
+            },
+            {
+              kind: "checklist",
+              title: "Project template contents checklist",
+              items: [
+                "Project information parameters used by title blocks and exports (project number, client, originator, status, revision)",
+                "Title blocks with revision schedule, suitability code and status fields linked to sheet parameters",
+                "Shared parameters loaded and bound to the agreed categories",
+                "Object styles and subcategories with agreed line weights, colours and patterns",
+                "Line styles, line patterns, fill patterns and materials named to the standard",
+                "View templates for each view purpose and scale",
+                "View filters for workset, phase, classification, fire rating and system checks",
+                "Browser organisation schemes for views and sheets",
+                "Annotation families: tags, section heads, level heads, north points and keynote settings",
+                "Starter schedules: rooms, doors, sheets, model QA and COBie checks",
+                "Units, snaps, project phases and phase filters",
+                "IFC export setup files and parameter mapping files stored with the template",
+                "Purged of unused families, types and demonstration content",
+              ],
+            },
+            {
+              kind: "table",
+              title: "View templates by purpose",
+              columns: ["View template", "Controls", "Tips"],
+              rows: [
+                ["Working plan", "Visibility of all model categories, links shown halftone", "Not for issue; keep separate from documentation templates"],
+                ["General arrangement plan", "Scale, detail level, annotation categories, filters", "One template per scale range keeps sheets consistent"],
+                ["Coordination 3D", "Links visible, filters colouring by discipline or system", "Use for interference checks and design reviews"],
+                ["Section and elevation", "Far clip, detail level, cut patterns", "Lock the far clip setting to stop heavy views"],
+                ["Area and fire strategy plans", "Colour schemes, fire rating filters", "Drive colours from parameters rather than manual overrides"],
+                ["Export views", "Exactly the categories that should go to IFC, DWG or NWC", "Name them clearly, for example 'Export - IFC', so exports are repeatable"],
+              ],
+            },
+            {
+              kind: "cards",
+              title: "Object styles and browser organisation",
+              cards: [
+                { title: "Object styles", body: "Set projection and cut line weights, colours and patterns per category and subcategory in the template so drawings look right without overrides.", tone: "blue" },
+                { title: "Subcategories", body: "Agree a short list of subcategories for families, such as clearance zones or hidden lines, so they can be controlled in every view.", tone: "teal" },
+                { title: "Browser organisation", body: "Group views by purpose, discipline and level using a view parameter, for example 'View Purpose', and sort sheets by discipline and number.", tone: "green" },
+                { title: "Keep working views apart", body: "Put working and coordination views in their own browser folders so they never end up on issued sheets.", tone: "amber" },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Templates follow the release",
+              body: "Opening a template in a newer Revit release upgrades it and it cannot be saved back to the older one. Keep a template for each release in use, and agree in the BEP which release every task team will author in.",
+              tone: "warn",
+            },
+          ],
+        },
         // ------------------------------------------------------------------ Modelling by discipline
         {
           id: "disciplines",
@@ -111,7 +174,7 @@ export const revitHub: Hub = {
               kind: "cards",
               title: "Site and toposolid",
               cards: [
-                { title: "Do: model terrain from survey", body: "Create site terrain from the survey data, using toposolid in recent releases or topography surfaces in older ones, in shared coordinates.", tone: "green" },
+                { title: "Do: model terrain from survey", body: "Create site terrain from the survey data in shared coordinates. Revit 2024 introduced the toposolid, a solid terrain element with layers and materials that replaces the older toposurface; existing toposurfaces can be converted, but check building pads and subregions after conversion.", tone: "green" },
                 { title: "Do: separate existing and proposed", body: "Use phases or separate elements so existing and proposed ground can be compared for earthworks.", tone: "blue" },
                 { title: "Don't: model the whole region", body: "Large, dense terrain slows every view. Limit extent and simplify where the purpose allows.", tone: "red" },
                 { title: "Don't: mix datums", body: "Check that survey heights and level elevations use the same datum before modelling.", tone: "amber" },
@@ -228,6 +291,66 @@ export const revitHub: Hub = {
             },
           ],
         },
+        // ------------------------------------------------------------------ Data & schedules
+        {
+          id: "schedules",
+          label: "Data & schedules",
+          blocks: [
+            {
+              kind: "text",
+              title: "Use schedules as your QA engine",
+              body: [
+                "Schedules are live tables of model data, so they are the quickest way inside Revit to see whether the information required by the EIR and the level of information need is actually present. A schedule that shows blanks, duplicates or unexpected values is a list of fixes.",
+                "Build a small set of QA schedules into the template, filter them to the elements in scope and use conditional formatting to highlight missing or invalid values. Review them before every share and keep them out of issued sheets.",
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Schedule-driven QA routine",
+              steps: [
+                { title: "List the required fields", body: "Take the parameters the LOIN and EIR ask for at this stage, by category, and turn each list into a schedule." },
+                { title: "Filter to the scope", body: "Use filters, for example on a classification or 'in COBie scope' yes/no parameter, so the schedule only shows elements that must carry the data." },
+                { title: "Highlight problems", body: "Apply conditional formatting to show blank values or values outside an agreed range, and sort so problems rise to the top." },
+                { title: "Check uniqueness", body: "Sort and group by mark, tag or asset identifier and look for repeats; untick 'Itemize every instance' to see counts per value." },
+                { title: "Fix in place", body: "Edit values directly in the schedule or export to a spreadsheet, fill and re-import with a checked tool where volumes are large." },
+                { title: "Record the result", body: "Note the number of remaining blanks or exceptions in the QA record for the container being shared." },
+              ],
+            },
+            {
+              kind: "table",
+              title: "Useful schedule types",
+              columns: ["Schedule type", "What it is for", "Example use"],
+              rows: [
+                ["Category schedule", "Lists elements of one category with their parameters", "Door schedule with fire rating, acoustic rating and hardware set"],
+                ["Multi-category schedule", "Lists elements across categories with shared parameters", "Classification check across all model elements"],
+                ["Key schedule", "Defines a set of values once and applies them to elements by a key name", "Room finishes or door hardware sets chosen from a controlled list"],
+                ["Material takeoff", "Reports quantities by material", "Concrete and masonry quantities for cost checks"],
+                ["Sheet list", "Lists sheets with their parameters", "Drawing register with suitability codes and revisions"],
+                ["View list", "Lists views with their parameters", "Find working views placed on sheets or views without a template"],
+                ["Note block", "Lists generic annotation instances", "Standard notes or symbol legends"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Parameter naming conventions",
+              columns: ["Rule", "Example", "Why"],
+              rows: [
+                ["Prefix for ownership", "ABC_FireRating", "Separates project parameters from built-in and manufacturer ones"],
+                ["Readable words, consistent case", "ABC_AcousticRating rather than abc_acrtg", "People can find and understand the parameter"],
+                ["Unit hint where it helps", "ABC_ExpectedLife_Years", "Avoids confusion when the data type is a number"],
+                ["No duplicates of built-in names", "Do not create a new 'Manufacturer' if the built-in one is used", "Duplicates split schedules and exports"],
+                ["Map to the target names in mapping files", "ABC_FireRating mapped to FireRating in Pset_WallCommon", "Keeps Revit names stable while exports use standard names"],
+                ["Yes/no flags for scope", "ABC_InCOBieScope", "Makes schedule filters and export filters simple"],
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Key schedules keep values controlled",
+              body: "Where a parameter must take one of a fixed set of values, such as a finish code or hardware set, a key schedule lets users pick from the list rather than type free text, which removes spelling variations before they reach COBie or IFC.",
+              tone: "ok",
+            },
+          ],
+        },
         // ------------------------------------------------------------------ Worksets & collaboration
         {
           id: "worksets",
@@ -238,7 +361,7 @@ export const revitHub: Hub = {
               title: "Worksharing options",
               cards: [
                 { title: "File-based central model", body: "A central model on a network share with local copies for each user. Works well on a fast local network within one office.", tone: "blue" },
-                { title: "Cloud worksharing", body: "The central model is hosted in Autodesk's cloud through Autodesk Docs or BIM Collaborate Pro, allowing teams in different offices and organisations to work in the same model.", tone: "teal" },
+                { title: "Cloud worksharing", body: "Revit Cloud Worksharing hosts the central model in Autodesk Docs within Autodesk Construction Cloud, so teams in different offices and organisations can co-author one model. Each co-author needs a BIM Collaborate Pro subscription; Autodesk Docs alone stores files but does not enable cloud worksharing.", tone: "teal" },
                 { title: "Linked models", body: "Each discipline or organisation keeps its own model and links others. This is the normal way to separate responsibility under ISO 19650.", tone: "green" },
               ],
             },
@@ -335,7 +458,8 @@ export const revitHub: Hub = {
               kind: "steps",
               title: "Setting up IFC export",
               steps: [
-                { title: "Agree the schema and view", body: "Confirm in the EIR and BEP which IFC version and model view the client expects, for example IFC 4 Reference View or IFC 2x3 Coordination View." },
+                { title: "Agree the schema and view", body: "Confirm in the EIR and BEP which IFC version and model view the client expects, for example IFC 4 Reference View or IFC 2x3 Coordination View 2.0, and whether an IDS file defines the required properties." },
+                { title: "Use a current exporter", body: "Revit uses the open-source Autodesk IFC exporter. Updated builds are published for each supported release on the Autodesk revit-ifc GitHub repository and the Autodesk App Store; agree which build every task team uses." },
                 { title: "Map categories to IFC classes", body: "Review the category mapping table and override per family or type with IFC export parameters where needed." },
                 { title: "Map properties", body: "Export the required property sets, including common property sets and user-defined sets mapped from shared parameters." },
                 { title: "Set coordinates", body: "Choose the coordinate base that matches the agreed shared coordinates so models align in coordination tools." },
@@ -361,15 +485,74 @@ export const revitHub: Hub = {
             },
             {
               kind: "table",
-              title: "IFC 4 compared with IFC 2x3",
-              columns: ["Aspect", "IFC 2x3", "IFC 4"],
+              title: "Schemas and model views compared",
+              columns: ["Schema and view", "Status", "Intended use", "Notes for Revit users"],
               rows: [
-                ["Status", "Older, still widely supported", "Current, published as ISO 16739-1"],
-                ["Typical views", "Coordination View 2.0", "Reference View and Design Transfer View"],
-                ["Class coverage", "Fewer specific classes, more proxies", "More specific classes and predefined types, especially for services"],
-                ["Geometry", "Mainly simple boundary and swept geometry", "Richer geometry options, though support varies by tool"],
-                ["Properties", "Common property sets", "Expanded and revised property sets"],
-                ["Use today", "Where receiving tools or clients still require it", "Preferred where the receiving tools support it"],
+                ["IFC 2x3 Coordination View 2.0", "Older schema, still widely supported", "Federation and clash detection where receiving tools or clients require it", "Fewer specific classes, so more elements may need class overrides"],
+                ["IFC 4 Reference View", "IFC 4 (ISO 16739-1:2018 edition)", "Read-only reference, coordination, quantity take-off and handover viewing", "Simplified, tessellated geometry; usually the best default for federation"],
+                ["IFC 4 Design Transfer View", "IFC 4 (ISO 16739-1:2018 edition)", "Passing editable elements to another authoring tool", "Richer parametric geometry; receiving tool support varies, so test first"],
+                ["IFC 4.3", "Published as ISO 16739-1:2024, adding infrastructure such as roads, rail, bridges and ports", "Infrastructure and mixed building and infrastructure projects", "Exporter support is recent and still maturing; see the callout below"],
+              ],
+            },
+            {
+              kind: "table",
+              title: "Export setups per milestone",
+              columns: ["Milestone", "Typical schema and view", "Content", "Key settings"],
+              rows: [
+                ["Coordination rounds", "IFC 4 Reference View or as agreed", "Whole model from a dedicated export 3D view", "Shared coordinates, links excluded, rooms or spaces included, standard property sets"],
+                ["Stage information exchange", "As defined in the EIR for that stage", "Model filtered to the agreed scope and level of information need", "Classification, user-defined property sets from the mapping file, base quantities if requested"],
+                ["Design transfer to another tool", "IFC 4 Design Transfer View, if the receiver supports it", "Only the elements to be handed over", "Test a sample with the receiver before the full exchange"],
+                ["Handover and asset information model", "As required by the AIR, often alongside COBie", "As-built or as-constructed model with in-scope assets", "Asset identifiers, product data and spatial structure complete; IDS check passed"],
+              ],
+            },
+            {
+              kind: "callout",
+              title: "IFC 4.3 and exporter versions",
+              body: "Autodesk's Revit help lists IFC4, IFC2x3 and IFC2x2 as the export standards, while recent builds of the open-source IFC exporter on GitHub have added IFC 4.3 options and fixes, for example IFC 4.3 Reference View exchange requirements. Treat IFC 4.3 export as maturing: agree it in the EIR only after a test exchange with the receiving tools, record the exporter build in the BEP and retest after every upgrade.",
+              tone: "warn",
+            },
+          ],
+        },
+        // ------------------------------------------------------------------ IFC mapping & validation
+        {
+          id: "ifc-validation",
+          label: "IFC mapping & validation",
+          blocks: [
+            {
+              kind: "table",
+              title: "Property set mapping examples",
+              columns: ["Revit parameter", "IFC property set", "IFC property", "Applies to"],
+              rows: [
+                ["Fire Rating (built-in or shared)", "Pset_WallCommon", "FireRating", "IfcWall"],
+                ["Function set to Exterior", "Pset_WallCommon", "IsExternal", "IfcWall"],
+                ["Structural usage or load-bearing flag", "Pset_WallCommon", "LoadBearing", "IfcWall"],
+                ["ABC_AcousticRating", "Pset_DoorCommon", "AcousticRating", "IfcDoor"],
+                ["Manufacturer", "Pset_ManufacturerTypeInformation", "Manufacturer", "Product types"],
+                ["Model number", "Pset_ManufacturerTypeInformation", "ModelReference", "Product types"],
+                ["Classification code", "Classification reference", "Identification and name", "Any classified element"],
+                ["ABC_AssetTag", "Project-defined set, for example ABC_AssetData", "AssetTag", "In-scope components"],
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Mapping properties in the Revit IFC exporter",
+              steps: [
+                { title: "Start from the requirement", body: "List the property sets and properties the EIR or IDS asks for, by IFC class." },
+                { title: "Use standard sets first", body: "Enable the IFC common property sets option so built-in values such as fire rating and external flags populate standard Pset_ properties." },
+                { title: "Add user-defined sets", body: "Write a user-defined property set file that names each set, the IFC classes it applies to, and the Revit parameter feeding each property." },
+                { title: "Store and share the file", body: "Keep the mapping file with the template and reference it in the saved export setup so every task team uses the same mapping." },
+                { title: "Test a sample", body: "Export a small test model and check the properties appear on the right classes with the right data types." },
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Validating IFC against an IDS",
+              steps: [
+                { title: "Get the IDS", body: "buildingSMART's Information Delivery Specification (IDS 1.0, approved as a final standard in 2024) lets the appointing party express required classes, properties, values and classifications in a machine-readable file." },
+                { title: "Check schema validity", body: "Run the IFC through a schema or file validation service, such as the buildingSMART validation service, to catch malformed files." },
+                { title: "Run the IDS check", body: "Use an IDS-capable checker, for example open-source IfcTester from the IfcOpenShell project or a commercial model checker, to test the IFC against each specification." },
+                { title: "Fix at source", body: "Correct failures in the Revit model, the parameter values or the mapping file, never by editing the IFC by hand." },
+                { title: "Keep the report", body: "Attach the IDS report to the container's QA record before sharing or submitting for authorization." },
               ],
             },
             {
@@ -496,6 +679,74 @@ export const revitHub: Hub = {
             },
           ],
         },
+        // ------------------------------------------------------------------ Automation
+        {
+          id: "automation",
+          label: "Automation",
+          blocks: [
+            {
+              kind: "cards",
+              title: "Automation options",
+              cards: [
+                { title: "Dynamo for Revit", body: "Visual programming installed with Revit. Graphs can be run by users through Dynamo Player without opening the editor. The bundled Dynamo version and its Python engine change between Revit releases, so retest graphs after an upgrade.", tone: "blue" },
+                { title: "pyRevit", body: "A free, open-source community add-in framework for writing Python tools that appear as ribbon buttons. Not an Autodesk product; check your IT policy before installing.", tone: "green" },
+                { title: "C# add-ins", body: "Compiled add-ins using the Revit API, suited to tools used across many projects. Revit 2025 moved the API to .NET 8, so add-ins built for earlier releases must be rebuilt.", tone: "purple" },
+                { title: "Cloud automation", body: "Autodesk Platform Services offers automation of Revit files in the cloud for batch work such as exports, without a desktop session.", tone: "teal" },
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Idea: container and sheet naming check",
+              steps: [
+                { title: "Load the rules", body: "Read the allowed field codes for project, originator, volume, level, type and role from a controlled spreadsheet or the project information standard." },
+                { title: "Collect names", body: "Collect the model file name, sheet numbers and names, and views placed on sheets." },
+                { title: "Split and test", body: "Split each name on the agreed separator, check the number of fields, field lengths and each code against the allowed list." },
+                { title: "Report", body: "Write failures to a schedule, a text parameter or a spreadsheet with the element identifier and the rule broken." },
+                { title: "Fix and rerun", body: "Correct names by hand or with a reviewed rename step, then rerun until the report is clean." },
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Idea: parameter fill from a data sheet",
+              steps: [
+                { title: "Prepare the source", body: "Export a list of types or instances with their unique identifiers to a spreadsheet and fill the product or asset data there." },
+                { title: "Validate the sheet", body: "Check required columns, data types and allowed values before anything is written back to the model." },
+                { title: "Write in one transaction", body: "Match rows by identifier and write values inside a single named transaction so the change can be undone." },
+                { title: "Log changes", body: "Record old and new values for each element so the change is auditable." },
+                { title: "Confirm with schedules", body: "Open the QA schedules to confirm blanks have gone and nothing unexpected changed." },
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Idea: sheet issue and revision update",
+              steps: [
+                { title: "Select the issue set", body: "Pick sheets from a saved sheet set or a sheet list filtered by package." },
+                { title: "Set status and revision", body: "Apply the agreed suitability code, revision and revision description to each sheet, using the project's revision sequence." },
+                { title: "Check title block data", body: "Confirm required title block fields are filled and names match the container naming rules." },
+                { title: "Export", body: "Export PDFs, and DWG or IFC where required, with file names built from the sheet or container parameters." },
+                { title: "Prepare the CDE upload", body: "Produce a metadata list of file names, status, revision and title to match the CDE's upload fields." },
+              ],
+            },
+            {
+              kind: "table",
+              title: "More ISO 19650 automation ideas",
+              columns: ["Task", "What the tool does", "Output"],
+              rows: [
+                ["Classification check", "Finds in-scope elements with missing or invalid classification codes", "Exception schedule or spreadsheet"],
+                ["Workset check", "Flags elements and links on the wrong workset", "List with element identifiers"],
+                ["Warnings report", "Counts warnings by type for the audit record", "Trend table for the QA log"],
+                ["Room and space data", "Copies room numbers and names into MEP spaces or component location parameters", "Filled location data for COBie"],
+                ["Purge and tidy before share", "Removes working views by prefix and unused content after confirmation", "Cleaner model and smaller file"],
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Treat scripts as controlled tools",
+              body: "Keep scripts under version control, name an owner, test on a detached copy and record which version was run on a model. A script that writes data is part of your production method and should be described in the BEP or BIM manual.",
+              tone: "warn",
+            },
+          ],
+        },
         // ------------------------------------------------------------------ Model QA checklist
         {
           id: "qa",
@@ -516,7 +767,26 @@ export const revitHub: Hub = {
                 "Classification applied to all in-scope types and rooms",
                 "Required shared parameters filled for this stage",
                 "IFC export checked in an independent viewer",
+                "IFC checked against the project IDS where one is provided",
+                "Agreed Revit release and IFC exporter build used",
+                "No elements on the wrong workset; links and CAD on their own worksets",
+                "View templates applied to all documentation views",
+                "Sheets carry correct suitability code, revision and title block data",
                 "Container status, revision and metadata correct in the CDE",
+              ],
+            },
+            {
+              kind: "table",
+              title: "Checks and how to run them",
+              columns: ["Check", "How to run it in Revit", "Pass condition"],
+              rows: [
+                ["Coordinates", "Compare survey point and project base point values with the BEP; overlay a reference link", "Values match and links align"],
+                ["Required data", "QA schedules filtered to in-scope elements with conditional formatting", "No blanks for this stage's required parameters"],
+                ["Unique identifiers", "Schedules sorted by mark or asset tag, not itemised", "Each value appears once"],
+                ["Warnings", "Review warnings dialog or a warnings report", "No warnings of the types the BIM manual lists as must-fix"],
+                ["Naming", "Sheet list and view list against the naming rules, or an automated check", "All names pass"],
+                ["Rooms and spaces", "Room schedule showing area, and 'Not placed' or 'Not enclosed' entries", "All rooms placed, enclosed and numbered"],
+                ["Exports", "Run the saved IFC setup and check in a viewer and IDS checker", "Correct classes, properties and location"],
               ],
             },
             {
@@ -551,6 +821,7 @@ export const revitHub: Hub = {
                 "Equipment has product, asset and maintenance parameters",
                 "Clearance and access zones modelled for plant",
                 "Components are within spaces for location and COBie export",
+                "Builder's work openings requested through the agreed process",
               ],
             },
             {
@@ -591,8 +862,10 @@ export const revitHub: Hub = {
                 ["CM", "Place a component", "Use type catalogues to load only what you need"],
                 ["AL", "Align", "Lock alignments only where you want a permanent constraint"],
                 ["TR", "Trim and extend to corner", "Quick way to clean wall junctions"],
-                ["VV", "Visibility and graphics", "Prefer view templates for permanent settings"],
+                ["VG", "Visibility and graphics", "Prefer view templates for permanent settings"],
                 ["HH", "Temporarily hide element", "Reset with the temporary hide toggle before issuing"],
+                ["SA", "Select all instances", "Check whether you need visible in view or the whole project"],
+                ["KS", "Keyboard shortcuts dialog", "Import or export the office shortcut file here"],
                 ["SY", "Sync with central (if customised)", "Many teams add a custom shortcut for frequent syncing"],
               ],
             },
@@ -616,8 +889,9 @@ export const revitHub: Hub = {
                 { q: "Should each discipline have its own Revit model?", a: "Yes, normally. ISO 19650 assigns responsibility for information to task teams, so each organisation and discipline authors its own model and links others as reference." },
                 { q: "Where should the project base point go?", a: "At an agreed, meaningful location such as a main grid intersection. Record its position and shared coordinate values in the BEP or information standard." },
                 { q: "Is it acceptable to move the survey point?", a: "Only as part of a deliberate, documented coordinate set-up. Moving it casually breaks alignment with other models and with site data." },
-                { q: "When should we use cloud worksharing?", a: "When team members in different offices or organisations need to work in the same model. It requires the appropriate Autodesk cloud subscription and agreement on who hosts the model." },
-                { q: "Can Revit export IFC 4?", a: "Yes, current releases can export IFC 4 views. Check the exporter version and test the result with the receiving tools." },
+                { q: "When should we use cloud worksharing?", a: "When team members in different offices or organisations need to work in the same model. Revit Cloud Worksharing needs a BIM Collaborate Pro subscription for each co-author and agreement on which organisation hosts the project in Autodesk Construction Cloud." },
+                { q: "Can Revit export IFC 4?", a: "Yes. Current releases export IFC 4 Reference View and Design Transfer View as well as IFC 2x3. Recent exporter builds also add IFC 4.3 options, which should be tested with the receiving tools before being agreed." },
+                { q: "What changed with toposolids?", a: "Revit 2024 introduced the toposolid, a solid terrain element with layers and materials, to replace the toposurface. Older toposurfaces can be converted, but check the result, because building pads are not carried over." },
                 { q: "How do we stop generic models exporting as proxies?", a: "Set the IFC export class parameter on the family or type, or update the category mapping, so elements export to the correct IFC class." },
                 { q: "How many warnings are acceptable?", a: "There is no single right number. Agree in the BIM manual which warning types must be resolved before issue and track the trend over time." },
                 { q: "Should we model to manufacturer families?", a: "Use generic families during design and swap for checked manufacturer content when products are selected, if the LOIN requires it." },
@@ -636,7 +910,7 @@ export const revitHub: Hub = {
               title: "Where to look next",
               cards: [
                 { title: "Coordinates problems", body: "See the Model setup tab for survey point, project base point and shared coordinates.", tone: "blue" },
-                { title: "Export problems", body: "See the IFC export tab for mapping, property sets and the common problems table.", tone: "purple" },
+                { title: "Export problems", body: "See the IFC export tab for schemas and export setups, and the IFC mapping and validation tab for property sets, IDS checks and common problems.", tone: "purple" },
                 { title: "Slow models", body: "See the Performance tab for the audit checklist and warnings table.", tone: "amber" },
                 { title: "Before issuing", body: "See the Model QA checklist tab for general and discipline checks.", tone: "green" },
               ],
@@ -661,7 +935,9 @@ export const revitHub: Hub = {
                 { q: "What is BCF used for?", options: ["Storing families", "Exchanging issues with viewpoints between tools", "Exporting COBie", "Compressing models"], answer: 1, why: "BIM Collaboration Format carries issues, comments and viewpoints between coordination and authoring tools." },
                 { q: "Which of these most commonly harms model performance?", options: ["Pinned grids", "View templates", "Imported and exploded CAD files", "Shared coordinates"], answer: 2, why: "Imported CAD brings heavy geometry and many styles into the model." },
                 { q: "Where should product data such as manufacturer and model number normally be stored?", options: ["Instance parameters", "Type parameters", "View parameters", "Sheet parameters"], answer: 1, why: "Product data is the same for every instance of a type, so it belongs on the type." },
-                { q: "Which IFC version is published as ISO 16739-1 and offers more specific classes?", options: ["IFC 2x3", "IFC 4", "IFC 1.5", "IFC XML only"], answer: 1, why: "IFC 4 is the current schema published as ISO 16739-1, with more classes and predefined types." },
+                { q: "Which IFC version extended the schema to infrastructure and was published as ISO 16739-1:2024?", options: ["IFC 2x3", "IFC 4", "IFC 4.3", "IFC XML only"], answer: 2, why: "IFC 4.3 added infrastructure such as roads, rail, bridges and ports and was published by ISO in 2024, replacing the 2018 edition based on IFC 4." },
+                { q: "Which IFC 4 model view is intended for read-only reference and coordination?", options: ["Design Transfer View", "Reference View", "Coordination View 2.0", "Structural Analysis View"], answer: 1, why: "IFC 4 Reference View uses simplified geometry for reference, coordination and viewing; Design Transfer View aims at editable hand-over." },
+                { q: "What is an IDS file used for?", options: ["Storing Revit families", "Defining information requirements so IFC models can be checked automatically", "Compressing IFC files", "Recording clash results"], answer: 1, why: "buildingSMART's Information Delivery Specification is a machine-readable way to state required classes, properties and values." },
               ],
             },
             {
@@ -672,7 +948,7 @@ export const revitHub: Hub = {
                 "Linking versus importing",
                 "Shared parameters and type versus instance data",
                 "Worksharing habits: borrowing, syncing and relinquishing",
-                "IFC class mapping and IFC 4 versus IFC 2x3",
+                "IFC class mapping, model views, IFC 4.3 status and IDS checks",
                 "Clash workflow and BCF",
               ],
             },

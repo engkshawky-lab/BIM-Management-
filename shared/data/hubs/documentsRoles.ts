@@ -1,9 +1,449 @@
-import type { Hub } from "./types";
+import type { Hub, RoleDoc } from "./types";
 
 // Documents aligned with roles: which ISO 19650 documents each party produces, receives
 // and reviews at each stage of the ISO 19650-2 process (5.1 to 5.8). Clause references
 // follow process19650 in ../iso19650.ts; document names follow the template titles in
 // ../templates*.ts. Content is paraphrased practical guidance, not reproduced standard text.
+
+// Stage × party document cards for the "Document table" tab. Stage ids match the
+// process19650 clause numbers; party ids match the hub sections.
+const roleDocs: RoleDoc[] = [
+  // ------------------------------------------------------------ 5.1 Assessment and need
+  {
+    stage: "5.1", party: "appointing", name: "Information management assignment matrix",
+    summary: "Who carries out each information management task for the appointing party",
+    purpose: "Records which individuals or organisations perform the appointing party's information management function. It is updated as parties are appointed and tasks are delegated.",
+    keyContent: ["Information management tasks", "Party and named individual responsible", "Tasks delegated to third parties", "Authority to accept information", "Revision history"],
+    clause: "ISO 19650-2 5.1.1",
+  },
+  {
+    stage: "5.1", party: "appointing", name: "Organizational Information Requirements (OIR)",
+    summary: "Information the organisation needs to meet its strategic objectives",
+    purpose: "Sets out the information the organisation needs at a strategic level, independent of any single project. It is a key input to the AIR and the project information requirements.",
+    keyContent: ["Business and asset management objectives", "Decisions the information must support", "Reporting and regulatory needs", "Links to asset management systems", "Owner and review cycle"],
+    clause: "ISO 19650-2 5.1.2", template: "OIR",
+  },
+  {
+    stage: "5.1", party: "appointing", name: "Asset Information Requirements (AIR)",
+    summary: "Information needed to operate and maintain the asset after handover",
+    purpose: "States the asset information the operator needs, so that the delivery team can produce it during the project rather than collect it afterwards.",
+    keyContent: ["Asset types and systems covered", "Attributes required for each asset type", "Documents required, such as manuals and certificates", "Formats and target systems", "Timing of delivery"],
+    clause: "ISO 19650-2 5.1.2", template: "AIR",
+  },
+  {
+    stage: "5.1", party: "appointing", name: "Project information requirements (PIR)",
+    summary: "The decisions this project must support and the information they need",
+    purpose: "Defines the information the appointing party needs to make its key decisions on this project. It links the organisational and asset needs to the requirements in each EIR.",
+    keyContent: ["Project scope and purpose", "Key decision points", "Questions the information must answer", "Information purposes, such as approvals, cost and programme", "Links to the OIR and AIR"],
+    clause: "ISO 19650-2 5.1.2",
+  },
+  {
+    stage: "5.1", party: "appointing", name: "Information delivery milestones",
+    summary: "When information is needed, aligned with the project programme",
+    purpose: "Establishes the points at which information must be delivered so that it is available for each key decision. Every EIR and delivery plan is built around these milestones.",
+    keyContent: ["Milestone identifiers and dates", "Linked key decision points", "Stage boundaries", "Information purpose at each milestone", "Alignment with the project programme"],
+    clause: "ISO 19650-2 5.1.3",
+  },
+  {
+    stage: "5.1", party: "appointing", name: "Project Information Standard (PIS)",
+    summary: "Naming, metadata, formats, codes and coordinates for every container",
+    purpose: "Defines how information is structured, classified and exchanged on the project, so that every appointment produces consistent information.",
+    keyContent: ["Exchange formats and versions", "Container naming convention", "Classification system", "Metadata, status and suitability codes", "Method for defining the level of information need", "Units, coordinates and origin"],
+    clause: "ISO 19650-2 5.1.4", template: "PIS",
+  },
+  {
+    stage: "5.1", party: "appointing", name: "Information production methods and procedures",
+    summary: "How information is captured, produced, reviewed, approved and delivered",
+    purpose: "Describes the procedures every task team follows to produce and deliver information, so that review, approval and security are handled the same way across the project.",
+    keyContent: ["Capture of existing asset information", "Container breakdown structure", "Review and approval procedure", "Security and access procedure", "Delivery to the appointing party"],
+    clause: "ISO 19650-2 5.1.5",
+  },
+  {
+    stage: "5.1", party: "appointing", name: "Reference information and shared resources register",
+    summary: "Existing information and resources the delivery team will be given",
+    purpose: "Lists the existing information, libraries and templates the appointing party will make available, with notes on their status and reliability.",
+    keyContent: ["Surveys and existing models", "Existing asset records", "Templates, title blocks and object libraries", "Status and reliability of each item", "How and when each item is made available"],
+    clause: "ISO 19650-2 5.1.6",
+  },
+  {
+    stage: "5.1", party: "appointing", name: "CDE Workflow & Procedure (CDE)",
+    summary: "How the common data environment is set up and used on the project",
+    purpose: "Describes the common data environment the appointing party establishes before tender, so that every party can share and manage information in it from the start.",
+    keyContent: ["States: work in progress, shared, published, archived", "Workflows between states", "Roles and permissions", "Metadata and revision rules", "Onboarding of new parties", "Archive and retention"],
+    clause: "ISO 19650-2 5.1.7", template: "CDE",
+  },
+  {
+    stage: "5.1", party: "appointing", name: "Information Protocol (IP)",
+    summary: "Contractual obligations, licences and liabilities for project information",
+    purpose: "Sets the information-related obligations of each party and is incorporated into every appointment, so the requirements are contractually binding at every tier.",
+    keyContent: ["Parties and appointments covered", "Obligations of each party", "Licences to use information and their limits", "Liabilities relating to information", "Security requirements", "References to the standard and methods"],
+    clause: "ISO 19650-2 5.1.8", template: "IP",
+  },
+  {
+    stage: "5.1", party: "appointing", name: "Security Triage & Security Management Plan (SEC)",
+    summary: "Sensitivity assessment and the security measures that follow from it",
+    purpose: "Assesses whether the project or asset is sensitive and, where it is, sets proportionate security measures for handling information.",
+    keyContent: ["Outcome of the sensitivity assessment", "Security measures required", "Access controls and vetting", "Handling of sensitive containers", "Incident management and reporting"],
+    clause: "ISO 19650-5; ISO 19650-2 5.1.5", template: "SEC",
+  },
+
+  // ------------------------------------------------------------ 5.2 Invitation to tender
+  {
+    stage: "5.2", party: "appointing", name: "Exchange Information Requirements (EIR)",
+    summary: "What one appointment must deliver, when, how and how it will be accepted",
+    purpose: "Defines the information requirements for a specific appointment. It is the document the lead appointed party tenders and contracts against.",
+    keyContent: ["Information requirements for the appointment", "Level of information need", "Acceptance criteria for each requirement", "Information delivery milestones", "Supporting information provided", "Interfaces with other appointments"],
+    clause: "ISO 19650-2 5.2.1", template: "EIR",
+  },
+  {
+    stage: "5.2", party: "appointing", name: "Tender response requirements and evaluation criteria",
+    summary: "What tenderers must submit and how information management will be scored",
+    purpose: "Tells tenderers which information management submissions are required and how they will be evaluated, so responses can be compared fairly.",
+    keyContent: ["Required submissions, such as the pre-appointment BEP", "Scoring method and weightings", "Minimum thresholds", "Format and page limits", "Clarification process"],
+    clause: "ISO 19650-2 5.2.3",
+  },
+  {
+    stage: "5.2", party: "appointing", name: "BIM Specification & Scope of Services (SPEC)",
+    summary: "The information management services required in the appointment",
+    purpose: "Describes the information management tasks and deliverables the appointment includes, so they can be priced and do not fall between appointments.",
+    keyContent: ["Information management tasks", "Deliverables", "Interfaces with other appointments", "Links to the EIR", "Exclusions"],
+    clause: "ISO 19650-2 5.2.4", template: "SPEC",
+  },
+  {
+    stage: "5.2", party: "appointing", name: "Invitation to tender pack",
+    summary: "Everything tenderers need to price and plan information delivery",
+    purpose: "Bundles the requirements, standards, methods, protocol and reference information into one invitation, so all tenderers respond to the same information.",
+    keyContent: ["EIR", "Project information standard", "Production methods and procedures", "Information protocol", "Reference information and shared resources", "Tender response requirements and evaluation criteria"],
+    clause: "ISO 19650-2 5.2.4",
+  },
+  {
+    stage: "5.2", party: "lead", name: "Tender queries and EIR review notes",
+    summary: "Questions and observations raised after reviewing the invitation to tender",
+    purpose: "Records the prospective lead appointed party's review of the invitation to tender and the clarifications it needs before it can commit to the EIR.",
+    keyContent: ["Requirements that are unclear or conflicting", "Questions on the standard, methods and protocol", "Gaps in reference information", "Proposed amendments to raise in the BEP", "Responses received"],
+    clause: "ISO 19650-2 5.2.4",
+  },
+
+  // ------------------------------------------------------------ 5.3 Tender response
+  {
+    stage: "5.3", party: "appointing", name: "Tender clarification responses",
+    summary: "Answers to tenderers' questions, issued to all tenderers",
+    purpose: "Resolves ambiguity in the invitation to tender and keeps the competition fair by giving every tenderer the same answers.",
+    keyContent: ["Question received", "Response", "Documents amended as a result", "Date issued", "Distribution to all tenderers"],
+    clause: "ISO 19650-2 5.2.4",
+  },
+  {
+    stage: "5.3", party: "lead", name: "Nomination of information management individuals",
+    summary: "Who will perform the delivery team's information management function",
+    purpose: "Names the individuals who will carry out information management for the delivery team and shows they have the experience and authority to do it.",
+    keyContent: ["Names and roles", "Relevant experience", "Authority within the delivery team", "Availability for the appointment", "Deputies"],
+    clause: "ISO 19650-2 5.3.1",
+  },
+  {
+    stage: "5.3", party: "lead", name: "BIM Execution Plan (Pre-appointment) (BEP-PRE)",
+    summary: "Proposed approach for meeting the EIR, submitted with the tender",
+    purpose: "Explains how the delivery team proposes to meet the EIR. It is scored at tender and becomes the starting point for the confirmed BEP.",
+    keyContent: ["Proposed information management individuals", "Information delivery strategy", "Federation strategy", "High-level responsibility matrix", "Proposed amendments to the standard and methods", "Proposed software and IT"],
+    clause: "ISO 19650-2 5.3.2", template: "BEP-PRE",
+  },
+  {
+    stage: "5.3", party: "lead", name: "High-level responsibility matrix",
+    summary: "Which task team will deliver which information, at a high level",
+    purpose: "Shows how responsibility for the information deliverables will be split across task teams, so the appointing party can see the delivery team covers the whole EIR.",
+    keyContent: ["Information deliverables", "Task team responsible", "Milestones", "Interfaces between task teams"],
+    clause: "ISO 19650-2 5.3.2",
+  },
+  {
+    stage: "5.3", party: "lead", name: "Delivery team capability and capacity summary",
+    summary: "Aggregated capability and capacity of every task team",
+    purpose: "Combines the task team assessments into one view of whether the delivery team can deliver the information required, and how any gaps will be closed.",
+    keyContent: ["Skills and experience", "Software and IT", "Capacity against the programme", "Gaps identified", "Actions to close gaps"],
+    clause: "ISO 19650-2 5.3.4",
+  },
+  {
+    stage: "5.3", party: "lead", name: "Mobilization Plan (MOB)",
+    summary: "How people, IT and methods will be mobilised and tested after appointment",
+    purpose: "Sets out how the delivery team will get ready to produce information, including how it will test the production methods before production starts.",
+    keyContent: ["Resources and timescales", "Training and induction", "IT and CDE setup", "Tests of the production methods", "Responsibilities"],
+    clause: "ISO 19650-2 5.3.5", template: "MOB",
+  },
+  {
+    stage: "5.3", party: "lead", name: "Information Delivery Risk Register (RR)",
+    summary: "Risks to timely, compliant information delivery and their mitigation",
+    purpose: "Identifies the risks that could stop the delivery team meeting the EIR and milestones, with owners and mitigations. It is maintained throughout delivery.",
+    keyContent: ["Risk description", "Owner", "Likelihood and impact", "Mitigation", "Assumptions about client inputs", "Status"],
+    clause: "ISO 19650-2 5.3.6", template: "RR",
+  },
+  {
+    stage: "5.3", party: "lead", name: "Delivery team tender response",
+    summary: "The compiled information management submission for the tender",
+    purpose: "Brings together the delivery team's information management documents into the response required by the invitation to tender.",
+    keyContent: ["Pre-appointment BEP", "Capability and capacity summary", "Mobilisation plan", "Risk register", "Any other required responses"],
+    clause: "ISO 19650-2 5.3.7",
+  },
+  {
+    stage: "5.3", party: "taskteams", name: "Capability & Capacity Assessment (CCA)",
+    summary: "Evidence that the task team can deliver the information required",
+    purpose: "Assesses the task team's skills, IT and capacity against the requirements, so the lead appointed party can build an honest delivery team summary.",
+    keyContent: ["Skills and experience", "Software and hardware", "IT infrastructure", "Capacity against the programme", "Gaps and training needs"],
+    clause: "ISO 19650-2 5.3.3", template: "CCA",
+  },
+
+  // ------------------------------------------------------------ 5.4 Appointment
+  {
+    stage: "5.4", party: "appointing", name: "Tender evaluation record",
+    summary: "How information management responses were scored and why",
+    purpose: "Records the evaluation of each tender against the published criteria and any amendments agreed before appointment. It is the appointing party's decision record for selection.",
+    keyContent: ["Scores against each criterion", "Clarifications relied on", "Amendments agreed with the preferred tenderer", "Decision and rationale", "Decision maker and date"],
+    clause: "ISO 19650-2 5.2.3",
+  },
+  {
+    stage: "5.4", party: "appointing", name: "Lead appointed party appointment documents",
+    summary: "The appointment that makes the information requirements contractual",
+    purpose: "Incorporates the information management documents into the lead appointed party's appointment, so the requirements and plans are binding.",
+    keyContent: ["EIR", "Project information standard", "Production methods and procedures", "Information protocol", "Confirmed BEP", "MIDP"],
+    clause: "ISO 19650-2 5.4.6",
+  },
+  {
+    stage: "5.4", party: "lead", name: "BIM Execution Plan (Post-appointment) (BEP-POST)",
+    summary: "The confirmed plan for how the delivery team will deliver information",
+    purpose: "Confirms the delivery team's approach after appointment, replacing the tender proposal with an agreed commitment that is kept up to date.",
+    keyContent: ["Named information management individuals", "Information delivery strategy", "Confirmed federation strategy", "Agreed amendments to the standard and methods", "Schedule of software, hardware and IT"],
+    clause: "ISO 19650-2 5.4.1", template: "BEP-POST",
+  },
+  {
+    stage: "5.4", party: "lead", name: "Detailed Responsibility Matrix (DRM)",
+    summary: "Every information deliverable assigned to a task team",
+    purpose: "Refines the high-level matrix so that each deliverable has one responsible task team, a level of information need and a milestone.",
+    keyContent: ["Information deliverables", "Responsible task team", "Level of information need", "Milestone", "Interfaces and exclusions", "Link to the EIR requirement"],
+    clause: "ISO 19650-2 5.4.2", template: "DRM",
+  },
+  {
+    stage: "5.4", party: "lead", name: "Model Production and Delivery Table (MPDT)",
+    summary: "Model element responsibilities and delivery stages for each author",
+    purpose: "Sets out who models which elements at each stage and to what level of information need, supporting the detailed responsibility matrix.",
+    keyContent: ["Elements or systems", "Responsible task team by stage", "Level of information need by stage", "Delivery milestone", "Notes on interfaces"],
+    clause: "ISO 19650-2 5.4.2", template: "MPDT",
+  },
+  {
+    stage: "5.4", party: "lead", name: "Lead appointed party EIR",
+    summary: "Client requirements flowed down to each appointed party",
+    purpose: "Passes the relevant client requirements, plus the lead appointed party's own requirements, to each appointed party in the delivery team.",
+    keyContent: ["Requirements for the appointed party", "Level of information need", "Acceptance criteria", "Milestones", "Supporting information"],
+    clause: "ISO 19650-2 5.4.3", template: "EIR",
+  },
+  {
+    stage: "5.4", party: "lead", name: "Master Information Delivery Plan (MIDP)",
+    summary: "All TIDPs combined into one plan aligned with the client milestones",
+    purpose: "Combines every task team's plan into one schedule of information containers, so the delivery team and client can track delivery against the milestones.",
+    keyContent: ["Containers from every TIDP", "Responsible task team", "Planned delivery dates", "Milestone served", "Dependencies", "Baseline and forecast"],
+    clause: "ISO 19650-2 5.4.5", template: "MIDP",
+  },
+  {
+    stage: "5.4", party: "lead", name: "Appointed party appointment documents",
+    summary: "The appointment that binds each appointed party to its requirements",
+    purpose: "Incorporates the information management documents into each appointed party's appointment, so the requirements are binding at every tier.",
+    keyContent: ["Lead appointed party EIR", "Project information standard", "Production methods and procedures", "Information protocol", "Confirmed BEP", "TIDP"],
+    clause: "ISO 19650-2 5.4.7",
+  },
+  {
+    stage: "5.4", party: "taskteams", name: "Acknowledgement of the lead appointed party EIR",
+    summary: "Confirmation that the task team understands and accepts its requirements",
+    purpose: "Records that the appointed party has reviewed its EIR, raised any queries and accepts the requirements it will deliver against.",
+    keyContent: ["Requirements accepted", "Queries raised", "Clarifications received", "Scope boundaries confirmed", "Date and signatory"],
+    clause: "ISO 19650-2 5.4.3",
+  },
+  {
+    stage: "5.4", party: "taskteams", name: "Task Information Delivery Plan (TIDP)",
+    summary: "The task team's containers, authors, durations and dependencies",
+    purpose: "Plans the information containers one task team will produce and when, including what it needs from other task teams. It feeds the MIDP.",
+    keyContent: ["Container names following the naming convention", "Level of information need", "Author", "Production duration", "Dependencies and need-by dates", "Planned delivery dates"],
+    clause: "ISO 19650-2 5.4.4", template: "TIDP",
+  },
+
+  // ------------------------------------------------------------ 5.5 Mobilisation
+  {
+    stage: "5.5", party: "appointing", name: "CDE access and permissions record",
+    summary: "Who in the delivery team can access the CDE and with what rights",
+    purpose: "Records the CDE accounts and permissions granted to the delivery team, so access matches roles and can be withdrawn when people leave.",
+    keyContent: ["Organisations and users", "Roles and permissions", "Date granted", "Approver", "Review and removal process"],
+    clause: "ISO 19650-2 5.5.2",
+  },
+  {
+    stage: "5.5", party: "lead", name: "Training and induction records",
+    summary: "Evidence that people are available, inducted and trained",
+    purpose: "Shows that the delivery team's resources are confirmed and that everyone has been inducted into the project's requirements and methods.",
+    keyContent: ["Resources confirmed against the mobilisation plan", "Induction content", "Attendance", "Training completed", "Outstanding actions"],
+    clause: "ISO 19650-2 5.5.1",
+  },
+  {
+    stage: "5.5", party: "lead", name: "IT and CDE mobilisation record",
+    summary: "Software, hardware and CDE access set up and confirmed working",
+    purpose: "Records that the information technology the delivery team needs has been procured, configured and tested, including access to the CDE.",
+    keyContent: ["Software and versions", "Hardware and network", "CDE access for each task team", "Interoperability checks", "Issues and resolutions"],
+    clause: "ISO 19650-2 5.5.2",
+  },
+  {
+    stage: "5.5", party: "lead", name: "Production methods test report",
+    summary: "Results of testing naming, breakdown, federation and delivery",
+    purpose: "Records the outcome of testing the production methods and procedures before production starts, and the changes made to the BEP as a result.",
+    keyContent: ["Container breakdown structure tested", "Naming and metadata tested", "Federation tested", "Delivery workflow tested", "Issues found and actions", "Resulting BEP updates"],
+    clause: "ISO 19650-2 5.5.3",
+  },
+  {
+    stage: "5.5", party: "taskteams", name: "Training and competence records",
+    summary: "Task team members inducted and trained on the project methods",
+    purpose: "Shows that each task team member understands the project's standard, methods and CDE before producing information.",
+    keyContent: ["Team members", "Induction attended", "Training completed", "Competence gaps", "Planned actions"],
+    clause: "ISO 19650-2 5.5.1",
+  },
+  {
+    stage: "5.5", party: "taskteams", name: "Test containers and configuration record",
+    summary: "Sample containers and software set-up used to prove the methods",
+    purpose: "Provides the sample information and software configuration that the delivery team uses to test the production methods.",
+    keyContent: ["Sample containers produced", "Templates and settings used", "Software versions", "Test results", "Corrections made"],
+    clause: "ISO 19650-2 5.5.3",
+  },
+
+  // ------------------------------------------------------------ 5.6 Collaborative production
+  {
+    stage: "5.6", party: "appointing", name: "Client review comments and change instructions",
+    summary: "Appointing party feedback and instructed changes during production",
+    purpose: "Records the appointing party's comments on shared information at agreed review points and any changes it instructs, so they can be traced into the plans.",
+    keyContent: ["Containers reviewed", "Comments and responses", "Change instructed", "Impact on the EIR, BEP and MIDP", "Date and author"],
+    clause: "ISO 19650-2 5.6",
+  },
+  {
+    stage: "5.6", party: "lead", name: "Information model review record and issue log",
+    summary: "Federated model review results and coordination issues to resolve",
+    purpose: "Records the lead appointed party's review of the federated information model and tracks the coordination issues it raises through to closure.",
+    keyContent: ["Containers federated", "Coordination and completeness checks", "Issues and owners", "Due dates and status", "Actions agreed"],
+    clause: "ISO 19650-2 5.6.5",
+  },
+  {
+    stage: "5.6", party: "lead", name: "BIM Progress Report (BPR)",
+    summary: "Progress against the MIDP, risks and milestone forecast",
+    purpose: "Reports information delivery progress against the plan, so that milestones at risk are visible to the appointing party early.",
+    keyContent: ["Progress against the MIDP", "Milestone forecast", "Open issues", "Risks", "Actions"],
+    clause: "ISO 19650-2 5.6", template: "BPR",
+  },
+  {
+    stage: "5.6", party: "taskteams", name: "Reference information availability check",
+    summary: "Confirmation that required inputs are accessible before work starts",
+    purpose: "Confirms that the reference information and shared resources the task team needs are available, so production does not start on missing inputs.",
+    keyContent: ["Information required", "Source and status", "Date confirmed", "Gaps", "Actions raised"],
+    clause: "ISO 19650-2 5.6.1",
+  },
+  {
+    stage: "5.6", party: "taskteams", name: "Task information model",
+    summary: "The task team's models, drawings, schedules and documents",
+    purpose: "The information containers the task team produces, generated to the information standard and level of information need and coordinated with other task teams.",
+    keyContent: ["Containers named to the standard", "Level of information need met", "Status and revision", "Coordination with shared information", "Metadata"],
+    clause: "ISO 19650-2 5.6.2",
+  },
+  {
+    stage: "5.6", party: "taskteams", name: "Information Container QA Checklist (QA)",
+    summary: "Check against the information standard before review",
+    purpose: "Records that each container conforms to the information standard and methods before its content is reviewed.",
+    keyContent: ["Container checked", "Naming", "Metadata", "Format", "Status and revision", "Result and checker"],
+    clause: "ISO 19650-2 5.6.3", template: "QA",
+  },
+  {
+    stage: "5.6", party: "taskteams", name: "Review and approval record",
+    summary: "Content review and approval for sharing, with suitability assigned",
+    purpose: "Records the review of container content against the requirements and the approval to move it to the shared state.",
+    keyContent: ["Container reviewed", "Reviewer, other than the author", "Checks against requirements", "Suitability assigned", "Decision and date"],
+    clause: "ISO 19650-2 5.6.4",
+  },
+
+  // ------------------------------------------------------------ 5.7 Information model delivery
+  {
+    stage: "5.7", party: "appointing", name: "Acceptance record",
+    summary: "Appointing party decision to accept the information model at a milestone",
+    purpose: "Records the appointing party's review of the submitted information model against the EIR and its decision to accept it into the published state.",
+    keyContent: ["Milestone", "Containers accepted, with revision", "Acceptance criteria checked", "Decision and date", "Decision maker"],
+    clause: "ISO 19650-2 5.7.4",
+  },
+  {
+    stage: "5.7", party: "appointing", name: "Rejection record (appointing party)",
+    summary: "Reasons the information model was not accepted and what must change",
+    purpose: "Records why a submission was rejected, so the lead appointed party knows exactly what to correct and resubmit.",
+    keyContent: ["Containers rejected", "Reasons, linked to acceptance criteria", "Corrections required", "Resubmission date", "Decision maker"],
+    clause: "ISO 19650-2 5.7.4",
+  },
+  {
+    stage: "5.7", party: "lead", name: "Authorisation record",
+    summary: "Lead appointed party sign-off of the information model before submission",
+    purpose: "Records that the lead appointed party has reviewed the information model against the EIR and authorised it for submission to the appointing party.",
+    keyContent: ["Milestone", "Containers authorised", "Checks against the EIR", "Decision and date", "Decision maker"],
+    clause: "ISO 19650-2 5.7.2",
+  },
+  {
+    stage: "5.7", party: "lead", name: "Rejection record (lead appointed party)",
+    summary: "Reasons a task team submission was not authorised",
+    purpose: "Records why task team information was rejected at authorisation, so it can be corrected before the client milestone.",
+    keyContent: ["Containers rejected", "Reasons", "Corrections required", "Task team responsible", "Resubmission date"],
+    clause: "ISO 19650-2 5.7.2",
+  },
+  {
+    stage: "5.7", party: "lead", name: "Submission for appointing party acceptance",
+    summary: "Authorised information model submitted to the client through the CDE",
+    purpose: "Formally submits the authorised information model to the appointing party for review and acceptance at the milestone.",
+    keyContent: ["Milestone", "Containers submitted, with revision and suitability", "Link to the authorisation record", "Transmittal", "Date"],
+    clause: "ISO 19650-2 5.7.3",
+  },
+  {
+    stage: "5.7", party: "taskteams", name: "Submission for authorisation",
+    summary: "Task team information submitted to the lead appointed party",
+    purpose: "Submits the task team's information containers due at the milestone for the lead appointed party to review and authorise.",
+    keyContent: ["Milestone", "Containers due", "QA and review records", "Suitability for authorisation", "Transmittal"],
+    clause: "ISO 19650-2 5.7.1",
+  },
+
+  // ------------------------------------------------------------ 5.8 Project close-out
+  {
+    stage: "5.8", party: "appointing", name: "Archive record",
+    summary: "What was archived, for how long, and what goes into the AIM",
+    purpose: "Records the archiving of the project information model with its access, retention and future-use rules, and the information transferred to the asset information model.",
+    keyContent: ["Containers archived", "Retention period", "Access rules", "Future-use requirements", "Information transferred to the AIM"],
+    clause: "ISO 19650-2 5.8.1",
+  },
+  {
+    stage: "5.8", party: "appointing", name: "Lessons Learned Report (LL)",
+    summary: "Lessons from all parties to improve the next project",
+    purpose: "Captures what worked and what did not, from the appointing party and the delivery teams, and records the changes to make to requirements and standards.",
+    keyContent: ["What worked", "What did not", "Root causes", "Changes to the OIR, standard, methods and EIR", "Owners of follow-up actions"],
+    clause: "ISO 19650-2 5.8.2", template: "LL",
+  },
+  {
+    stage: "5.8", party: "lead", name: "Final information for archive",
+    summary: "The delivery team's complete, accepted information ready to archive",
+    purpose: "Confirms that the delivery team's information is complete, in the correct states and ready for the appointing party to archive.",
+    keyContent: ["Containers in the published state", "Superseded containers identified", "Metadata complete", "Outstanding items", "Confirmation of completeness"],
+    clause: "ISO 19650-2 5.8.1",
+  },
+  {
+    stage: "5.8", party: "lead", name: "Delivery team lessons learned input",
+    summary: "The delivery team's lessons, compiled from every task team",
+    purpose: "Brings together the delivery team's lessons for the appointing party's lessons learned report.",
+    keyContent: ["Successes", "Problems and causes", "Recommendations", "Task team contributions"],
+    clause: "ISO 19650-2 5.8.2",
+  },
+  {
+    stage: "5.8", party: "taskteams", name: "Final containers for archive",
+    summary: "The task team's final containers, checked and correctly classified",
+    purpose: "Provides the task team's final information in the agreed state and with complete metadata, ready to be archived.",
+    keyContent: ["Final containers", "Revisions and suitability", "Metadata complete", "Superseded containers withdrawn"],
+    clause: "ISO 19650-2 5.8.1",
+  },
+  {
+    stage: "5.8", party: "taskteams", name: "Task team lessons learned input",
+    summary: "What worked and what did not for the task team",
+    purpose: "Shares the task team's lessons with the lead appointed party for inclusion in the delivery team's input.",
+    keyContent: ["What worked", "What did not", "Recommendations", "Contact for follow-up"],
+    clause: "ISO 19650-2 5.8.2",
+  },
+];
 
 export const documentsRolesHub: Hub = {
   id: "documents-roles",
@@ -19,8 +459,48 @@ export const documentsRolesHub: Hub = {
       label: "Workflow overview",
       tabs: [
         {
+          id: "table",
+          label: "Document table",
+          blocks: [
+            {
+              kind: "text",
+              title: "How to read the table",
+              body: [
+                "Each row is a stage of the ISO 19650-2 delivery process, from assessment and need (5.1) to project close-out (5.8). Each column is a party. A card shows a document that party produces or owns at that stage, so reading across a row shows how information passes between parties, and reading down a column shows one party's full set of documents.",
+                "Select a card to see its purpose, key content and the clause it relates to. Use the stage and party filters to focus on your own role. Empty cells mean the party has no document of its own at that stage, usually because it is not yet appointed or is reviewing another party's work.",
+              ],
+            },
+            {
+              kind: "rolematrix",
+              title: "Documents by stage and party",
+              parties: [
+                { id: "appointing", label: "Appointing party", tone: "amber" },
+                { id: "lead", label: "Lead appointed party", tone: "green" },
+                { id: "taskteams", label: "Task teams / sub-appointed", tone: "teal" },
+              ],
+              stages: [
+                { id: "5.1", label: "Assessment & need", clause: "ISO 19650-2 5.1" },
+                { id: "5.2", label: "Invitation to tender", clause: "ISO 19650-2 5.2" },
+                { id: "5.3", label: "Tender response", clause: "ISO 19650-2 5.3" },
+                { id: "5.4", label: "Appointment", clause: "ISO 19650-2 5.4" },
+                { id: "5.5", label: "Mobilisation", clause: "ISO 19650-2 5.5" },
+                { id: "5.6", label: "Collaborative production", clause: "ISO 19650-2 5.6" },
+                { id: "5.7", label: "Information model delivery", clause: "ISO 19650-2 5.7" },
+                { id: "5.8", label: "Project close-out", clause: "ISO 19650-2 5.8" },
+              ],
+              docs: roleDocs,
+            },
+            {
+              kind: "callout",
+              title: "Practical guidance, not a fixed RACI",
+              body: "ISO 19650-2 defines activities and parties, not a document list or job titles. The stage and party mapping here is practical guidance: some records, such as clarification responses or progress reports, are common practice rather than named outputs of the standard. Agree the actual responsibilities in the information management assignment matrix and the BEP, as job titles and tiers vary between projects.",
+              tone: "info",
+            },
+          ],
+        },
+        {
           id: "matrix",
-          label: "Document matrix",
+          label: "Summary matrix",
           blocks: [
             {
               kind: "text",
