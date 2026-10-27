@@ -1,4 +1,5 @@
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { markVisited } from "../lib/progress";
 import { navigate } from "../App";
 import { partDetailById, partDetails19650, type PartDetail } from "../../../shared/data/parts19650Detail";
 import { templates } from "../../../shared/data/templates";
@@ -57,9 +58,11 @@ export default function PartsHub({ partId }: { partId?: string }) {
   const part = partId ? partDetailById(partId) : undefined;
   const [level, setLevelState] = useState<Level>(() => (part ? load<Level>(`bim:part-level:${part.id}`, "beginner") : "beginner"));
   const [checked, setChecked] = useState<number[]>(() => (part ? load<number[]>(`bim:part-check:${part.id}`, []) : []));
+  useEffect(() => { if (part) markVisited("parts", part.id, `/parts/${part.id}`, `ISO 19650 Part ${part.number} — ${part.title}`); }, [part]);
   if (!part) return <Overview />;
 
   const c = PART_COLOR[part.number];
+  const prevPart = partDetails19650[part.number - 2], nextPart = partDetails19650[part.number];
   const setLevel = (l: Level) => { setLevelState(l); store(`bim:part-level:${part.id}`, l); };
   const toggle = (i: number) => { const next = checked.includes(i) ? checked.filter((x) => x !== i) : [...checked, i]; setChecked(next); store(`bim:part-check:${part.id}`, next); };
   const lv = part.levels[level];
@@ -160,6 +163,11 @@ export default function PartsHub({ partId }: { partId?: string }) {
           `Common mistakes with ${part.keyDocuments[0]?.name ?? "the key documents"}`,
         ]} />
       </Box></div>
+      <div className="row spread">
+        {prevPart ? <a href={`#/parts/${prevPart.id}`} className="hub-tile" style={{ ...cv(PART_COLOR[prevPart.number]), color: "inherit", flex: "1 1 220px" }}><span className="small muted">← Previous part</span><div><b>Part {prevPart.number} — {prevPart.title}</b></div></a> : <span />}
+        {nextPart ? <a href={`#/parts/${nextPart.id}`} className="hub-tile" style={{ ...cv(PART_COLOR[nextPart.number]), color: "inherit", flex: "1 1 220px", textAlign: "end" }}><span className="small muted">Next part →</span><div><b>Part {nextPart.number} — {nextPart.title}</b></div></a>
+          : <a href="#/hubs" className="hub-tile" style={{ ...cv(TONES.green), color: "inherit", flex: "1 1 220px", textAlign: "end" }}><span className="small muted">All six parts done?</span><div><b>Go deeper in the topic hubs →</b></div></a>}
+      </div>
       <p className="tiny muted">Paraphrased guidance, not the standard's text. Always verify against the licensed edition of {part.edition}.</p>
     </div>
   );

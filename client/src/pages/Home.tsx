@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { hubs } from "../../../shared/data/hubs";
+import { lastVisited, visitedTabs } from "../lib/progress";
 import { navigate, useSession } from "../App";
 import { StdBadge } from "../components/common";
 import { api, type Notification, type Project } from "../lib/api";
@@ -54,6 +56,30 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
         </a>
       ))}
     </div>
+  );
+}
+
+/** Learning shortcuts with the viewer's progress through the parts hub and topic hubs. */
+function KeepLearning() {
+  const last = lastVisited();
+  const partsSeen = visitedTabs("parts").size;
+  const hubsStarted = hubs.filter((h) => visitedTabs(h.id).size > 0).length;
+  const tiles: { c: string; title: string; text: string; meta: ReactNode; href: string }[] = [
+    { c: "#16a34a", title: "ISO 19650 Parts 1–6", text: "Beginner to expert, clause deep dives, checklists and an AI tutor.", meta: partsSeen ? <>{partsSeen} of 6 parts opened</> : "Start with Part 1", href: "/parts" },
+    { c: "#3b82f6", title: "Topic hubs", text: "Appointment process, LOIN, COBie, infrastructure, Revit, scan to BIM and more.", meta: hubsStarted ? <>{hubsStarted} of {hubs.length} hubs started</> : <>{hubs.length} hubs to explore</>, href: "/hubs" },
+    { c: "#9333ea", title: "AI tools", text: "Review an EIR or BEP, draft documents, build a risk register or clash matrix.", meta: "Review-first, you stay in control", href: "/ai-tools/review" },
+    { c: "#d97706", title: "Samples & downloads", text: "Structured Word samples for EIR, AIR, OIR, BEP and more, plus curated files.", meta: "Ready to use", href: "/samples" },
+  ];
+  return (
+    <>
+      <h2 className="section-title">Keep learning</h2>
+      {last && <a href={"#" + last.path} className="hub-tile row spread" style={{ "--c": "#16a34a", color: "inherit", marginBottom: 12 } as CSSProperties}>
+        <span><span className="small muted">Pick up your learning</span><span style={{ display: "block" }}><b>{last.label}</b></span></span><span className="btn primary">Resume →</span></a>}
+      <div className="grid g4">{tiles.map((t) => (
+        <a key={t.title} href={"#" + t.href} className="hub-card" style={{ "--c": t.c, color: "inherit", display: "grid", gap: 6, alignContent: "start" } as CSSProperties}>
+          <b style={{ color: t.c, fontSize: 15 }}>{t.title}</b><span className="small">{t.text}</span><span className="small muted">{t.meta} →</span>
+        </a>))}</div>
+    </>
   );
 }
 
@@ -141,6 +167,7 @@ export default function Home({ projectsOnly }: { projectsOnly?: boolean }) {
         <StartCard icon="check" title="Check a model" text="Upload an IFC or COBie file and see LOIN, IDS and data checks in seconds." meta="Model validation" onClick={() => navigate(first ? `/projects/${first.id}/validation` : "/projects/new")} />
         <StartCard icon="layers" title="Learn the CDE workflow" text="The four CDE states and the status codes that move information between them." meta="ISO 19650 library" onClick={() => navigate("/knowledge/iso19650/library/2")} />
       </div>
+      <KeepLearning />
       {picker && <RolePicker onClose={() => setPicker(false)} />}
     </div>
   );

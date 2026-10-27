@@ -10,12 +10,12 @@ import { suitabilityCodes } from "../../../shared/data/iso19650";
 // Every result is decision support for an accountable reviewer, never an approval.
 
 export const AI_TOOLS = [
-  { id: "review", label: "Document review", hint: "Review an EIR, BEP, MIDP…; EIR ↔ BEP check; BEP version compare" },
-  { id: "generate", label: "Document generator", hint: "Draft EIR, AIR, PIR, OIR, BEP, TIDP, MIDP or any custom template" },
-  { id: "risks", label: "Risk register", hint: "Project-specific information-management risks with scores and mitigations" },
-  { id: "clash", label: "Clash matrix", hint: "Discipline test matrix with tolerances for your stage and software" },
-  { id: "suitability", label: "Suitability codes", hint: "Quick wizard plus AI advisor for tricky cases" },
-  { id: "cobie", label: "COBie checker", hint: "Rule checks plus AI readiness review and prioritised fixes" },
+  { id: "review", label: "Document review", hint: "Review an EIR, BEP, MIDP…; EIR ↔ BEP check; BEP version compare", can: "upload an EIR, BEP or MIDP and get a clause-referenced review, or check a BEP against its EIR" },
+  { id: "generate", label: "Document generator", hint: "Draft EIR, AIR, PIR, OIR, BEP, TIDP, MIDP or any custom template", can: "describe any ISO 19650 document and get a structured draft to download as Word" },
+  { id: "risks", label: "Risk register", hint: "Project-specific information-management risks with scores and mitigations", can: "generate a project-specific risk register with scores, owners and mitigations" },
+  { id: "clash", label: "Clash matrix", hint: "Discipline test matrix with tolerances for your stage and software", can: "build a clash test matrix with tolerances suited to your stage and software" },
+  { id: "suitability", label: "Suitability codes", hint: "Quick wizard plus AI advisor for tricky cases", can: "describe a tricky situation and get advice on the right suitability code" },
+  { id: "cobie", label: "COBie checker", hint: "Rule checks plus AI readiness review and prioritised fixes", can: "get a readiness review of your COBie workbook with prioritised fixes" },
 ] as const;
 
 function useAiEnabled() {
@@ -24,8 +24,22 @@ function useAiEnabled() {
   return enabled;
 }
 
-function AiOff() {
-  return <div className="card"><b>AI is not configured.</b><p className="muted" style={{ marginBottom: 0 }}>Set <code>CLAUDE_API_KEY</code> in the server's <code>.env</code> and restart the server to use the AI tools.</p></div>;
+function AiOff({ what }: { what?: string }) {
+  const { user } = useSession();
+  return (
+    <div className="hub-tile" style={{ "--c": "#7c3aed", display: "grid", gap: 10 } as CSSProperties}>
+      <div className="row" style={{ flexWrap: "nowrap", alignItems: "start", gap: 12 }}>
+        <span style={{ fontSize: 26, lineHeight: 1 }}>✨</span>
+        <div><b style={{ fontSize: 15 }}>AI isn't switched on yet</b>
+          <div className="small" style={{ marginTop: 2 }}>{what ? `Once it is, you can ${what}.` : "Once it is, the AI tools and tutors on this platform start working."} Everything else on the platform works without it.</div></div>
+      </div>
+      {user.role === "admin" ? <ol className="small" style={{ margin: 0 }}>
+        <li>Get an API key from the Claude Console.</li>
+        <li>Open the server's <code>.env</code> file and set <code>CLAUDE_API_KEY=</code> followed by your key.</li>
+        <li>Restart the server, then reload this page.</li>
+      </ol> : <div className="small">Ask your platform administrator to add a Claude API key to the server.</div>}
+    </div>
+  );
 }
 
 /** Runs an AI request with busy state and error toasts. */
@@ -404,7 +418,7 @@ export function AskPartChat({ partId, hubId, partLabel, suggestions }: { partId?
       setTurns([...next, { role: "assistant", content: r.answer }]);
     } catch (e) { toast((e as Error).message, "error"); setTurns(turns); setQ(text); } finally { setBusy(false); }
   };
-  if (ai === false) return <AiOff />;
+  if (ai === false) return <AiOff what={`ask questions about ${partLabel} and get answers grounded in this guide`} />;
   return (
     <div className="chat">
       <div className="chat-log" style={{ maxHeight: 420 }}>
@@ -437,7 +451,7 @@ export default function AiTools({ tool, arg }: { tool?: string; arg?: string }) 
       <div className="hub-tabs">{AI_TOOLS.map((t) => <a key={t.id} className={cur.id === t.id ? "on" : ""} href={`#/ai-tools/${t.id}`}>{t.label}</a>)}</div>
       <div>{ai === null ? <div className="muted">Loading…</div>
         : cur.id === "suitability" ? <SuitabilityTool ai={ai} />
-          : !ai ? <AiOff />
+          : !ai ? <AiOff what={cur.can} />
             : cur.id === "review" ? <ReviewTool /> : cur.id === "generate" ? <GenerateTool key={arg ?? ""} initial={arg ? decodeURIComponent(arg) : ""} /> : cur.id === "risks" ? <RiskTool /> : cur.id === "clash" ? <ClashTool /> : <CobieTool />}</div>
     </div>
   );

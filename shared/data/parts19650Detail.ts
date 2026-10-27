@@ -103,7 +103,7 @@ const part1: PartDetail = {
     },
     {
       ref: "Cl. 4",
-      title: "Asset and project information, perspectives and information management",
+      title: "Asset and project information, perspectives and collaborative working",
       summary: "Explains how asset and project information relate, the different perspectives of interested parties and the purpose of information management.",
       requirements: [
         "Recognise that project information is produced for a defined asset and eventually informs operation.",
@@ -156,7 +156,7 @@ const part1: PartDetail = {
       outputs: ["Capability and capacity assessment"],
     },
     {
-      ref: "Cl. 9",
+      ref: "Cl. 10",
       title: "Information delivery planning",
       summary: "Covers timing of delivery, responsibility matrices and information delivery plans (MIDP and TIDPs) as planning concepts.",
       requirements: [
@@ -168,7 +168,7 @@ const part1: PartDetail = {
       outputs: ["Responsibility matrix", "TIDP", "MIDP"],
     },
     {
-      ref: "Cl. 10",
+      ref: "Cl. 11",
       title: "Management of the collaborative production of information",
       summary: "Sets principles for producing information collaboratively, including level of information need, information quality and container status and revision.",
       requirements: [
@@ -597,7 +597,7 @@ const part3: PartDetail = {
     },
     {
       ref: "§5.2",
-      title: "Invitation to tender",
+      title: "Invitation to tender / request to provide service",
       summary: "The appointing party prepares tender information for operational appointments, including EIR linked to the relevant trigger events.",
       requirements: [
         "Establish the EIR for the appointment, including acceptance criteria.",
@@ -608,7 +608,7 @@ const part3: PartDetail = {
     },
     {
       ref: "§5.3",
-      title: "Tender response",
+      title: "Response",
       summary: "The prospective appointed party shows how it will meet the EIR and update the AIM.",
       requirements: [
         "Nominate individuals to perform information management.",
@@ -642,7 +642,7 @@ const part3: PartDetail = {
     },
     {
       ref: "§5.6",
-      title: "Collaborative production of information",
+      title: "Information production",
       summary: "Information is produced in response to trigger events and checked before being shared.",
       requirements: [
         "Check that the relevant AIM extract and shared resources are available.",
@@ -653,7 +653,7 @@ const part3: PartDetail = {
     },
     {
       ref: "§5.7",
-      title: "Information model delivery",
+      title: "Information model acceptance by the appointing party",
       summary: "Information is submitted, reviewed and accepted by the appointing party before it enters the AIM.",
       requirements: [
         "Submit information for authorisation and acceptance, for example at suitability S7.",
@@ -664,7 +664,7 @@ const part3: PartDetail = {
     },
     {
       ref: "§5.8",
-      title: "Information model aggregation and appointment close-out",
+      title: "AIM aggregation",
       summary: "Accepted information is aggregated into the AIM and lessons from the appointment are captured.",
       requirements: [
         "Aggregate accepted information into the AIM and connected systems.",

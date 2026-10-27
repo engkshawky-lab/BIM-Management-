@@ -7,6 +7,7 @@ import type { DocTemplate } from "../../../shared/data/types";
 import type { FieldValue } from "../../../shared/documents";
 import { generateHref } from "./AiTools";
 import { saveAs } from "file-saver";
+import { tr } from "../i18nDom";
 
 // Resources: curated downloads library, AI-compiled BIM news, and sample ISO 19650 documents.
 
@@ -59,15 +60,15 @@ export function DownloadsLibrary() {
           <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Title (defaults to file name)" />
           <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{cats.map((c) => <option key={c}>{c}</option>)}</select>
-          <select value={form.part} onChange={(e) => setForm({ ...form, part: e.target.value })}>{PARTS.map((p) => <option key={p} value={p}>{p ? `ISO ${p}` : "Any part"}</option>)}</select>
+          <select value={form.part} onChange={(e) => setForm({ ...form, part: e.target.value })}>{PARTS.map((p) => <option key={p} value={p}>{p ? `ISO ${p}` : tr("Any part")}</option>)}</select>
         </div>
         <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short description" />
         <div className="row"><button className="primary" disabled={busy || !file} onClick={add}>{busy ? "Uploading…" : "Add to library"}</button><span className="small muted">Only upload material you have the right to share.</span></div>
       </div>}
       <div className="row" style={{ marginBottom: 12 }}>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search resources…" style={{ flex: 1, minWidth: 200 }} />
-        <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} style={{ width: "auto" }}><option value="new">Newest first</option><option value="popular">Most downloaded</option><option value="name">A–Z</option></select>
-        <select value={cat} onChange={(e) => setCat(e.target.value)} style={{ width: "auto" }}><option value="">All categories</option>{cats.map((c) => <option key={c}>{c}</option>)}</select>
+        <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} style={{ width: "auto" }}><option value="new">{tr("Newest first")}</option><option value="popular">{tr("Most downloaded")}</option><option value="name">A–Z</option></select>
+        <select value={cat} onChange={(e) => setCat(e.target.value)} style={{ width: "auto" }}><option value="">{tr("All categories")}</option>{cats.map((c) => <option key={c}>{c}</option>)}</select>
       </div>
       {!shown.length ? <div className="card muted">{rows.length ? "No resources match." : admin ? "The library is empty. Add the first resource above." : "The library is empty. Administrators add resources here."}</div>
         : <div className="grid g4">{shown.map((r) => { const e = ext(r.fileName); return (
@@ -126,7 +127,7 @@ export function NewsFeed() {
         <div className="row">
           <button className={"chip" + (!topic ? " on" : "")} onClick={() => setTopic("")}>All</button>
           {data?.topics.map((t) => <button key={t} className={"chip" + (topic === t ? " on" : "")} onClick={() => setTopic(t)}>{t}</button>)}
-          <select value={rel} onChange={(e) => setRel(e.target.value)} style={{ width: "auto" }}><option value="">Any relevance</option><option>High</option><option>Medium</option><option>Low</option></select>
+          <select value={rel} onChange={(e) => setRel(e.target.value)} style={{ width: "auto" }}><option value="">{tr("Any relevance")}</option><option value="High">{tr("High")}</option><option value="Medium">{tr("Medium")}</option><option value="Low">{tr("Low")}</option></select>
         </div>
         <div className="row small muted">
           {data?.updatedAt && <span>Updated {fmtDate(data.updatedAt)}{data.scheduled ? " · refreshes hourly" : ""}</span>}

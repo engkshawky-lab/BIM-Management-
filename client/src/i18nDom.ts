@@ -14,7 +14,8 @@ function translateText(node: Text) {
   const text = raw.trim();
   if (!text || !/[A-Za-z]/.test(text)) return;
   const ar = dict[text];
-  if (!ar) return;
+  // writing back an identical value still fires a mutation, which would translate it again forever
+  if (!ar || ar === text) return;
   const parent = node.parentElement;
   if (!parent || parent.closest(SKIP)) return;
   node.nodeValue = raw.replace(text, ar);
@@ -24,7 +25,8 @@ function translateElement(el: Element) {
   if (!dict) return;
   for (const a of ATTRS) {
     const v = el.getAttribute(a);
-    if (v && dict[v.trim()] && !el.closest(".no-i18n")) el.setAttribute(a, dict[v.trim()]);
+    const ar = v ? dict[v.trim()] : undefined;
+    if (ar && ar !== v!.trim() && !el.closest(".no-i18n")) el.setAttribute(a, ar);
   }
 }
 
