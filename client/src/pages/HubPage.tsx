@@ -154,6 +154,9 @@ function Block({ b, hub, i, k }: { b: HubBlock; hub: Hub; i: number; k: string }
     case "process": return card(<Process b={b} />);
     case "rolematrix": return card(<RoleMatrix b={b} />);
     case "graphic": return card(<><HubGraphic id={b.graphic} />{b.caption && <p className="small muted" style={{ margin: "8px 0 0" }}>{b.caption}</p>}</>);
+    case "links": return <div>{title}<div className="grid g3">{b.links.map((x, k) => { const col = TONES[x.tone ?? ORDER[(k + i) % ORDER.length]]; return (
+      <a key={k} href={x.href} target="_blank" rel="noopener noreferrer" className="hub-tile" style={{ ...cv(col), color: "inherit" }}><b style={{ color: col }}>{x.label} ↗</b>{x.note && <div className="small" style={{ marginTop: 4 }}>{x.note}</div>}
+        <div className="tiny muted" style={{ marginTop: 4, wordBreak: "break-all" }} translate="no">{x.href.replace(/^https?:\/\//, "").replace(/\?public$/, "")}</div></a>); })}</div></div>;
     case "cobie-schema": return card(<Suspense fallback={<div className="muted">Loading the COBie reference…</div>}><CobieReference /></Suspense>);
     case "widget":
       if (b.widget === "scan-cost") return card(<ScanCost />);

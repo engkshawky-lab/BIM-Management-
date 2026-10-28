@@ -191,9 +191,33 @@ function McpArchitecture() {
   );
 }
 
+/** How an Autodesk MCP connector runs: Claude on the PC, the add-in inside the app, the hub syncing the command library. */
+function AutodeskMcpFlow() {
+  return (
+    <Frame w={920} h={300} label="Autodesk MCP flow">
+      <Box x={20} y={40} w={170} h={64} c={C.purple} title="You" sub="prompt in plain language" />
+      <Box x={20} y={150} w={170} h={70} c={C.purple} title="Claude Code / Codex" sub="AI agent on your PC" filled />
+      <Arrow x1={105} y1={106} x2={105} y2={148} c={C.purple} />
+      <Box x={260} y={150} w={180} h={70} c={C.blue} title="MCP connector" sub="one per application" />
+      <Arrow x1={192} y1={185} x2={258} y2={185} c={C.blue} />
+      <Box x={510} y={150} w={190} h={70} c={C.teal} title="Add-in in the app" sub="pyRevit Routes · .NET API" />
+      <Arrow x1={442} y1={185} x2={508} y2={185} c={C.teal} />
+      {[["Revit", 20], ["AutoCAD · Civil 3D", 78], ["Plant 3D · Navisworks", 136]].map(([t, y]) => (
+        <g key={t as string}><Box x={760} y={(y as number) + 92} w={150} h={44} c={C.green} title={t as string} /><Arrow x1={702} y1={185} x2={758} y2={(y as number) + 114} c={C.green} /></g>
+      ))}
+      <Box x={260} y={30} w={440} h={70} c={C.amber} title="FirstOption MCP Hub (cloud)" sub="command library · skill tree · reviewed releases · audit log" />
+      <Arrow x1={350} y1={148} x2={350} y2={102} c={C.amber} /><Arrow x1={605} y1={102} x2={605} y2={148} c={C.amber} />
+      <text x={480} y={128} textAnchor="middle" fontSize={11} fill={muted}>Sync: commands and skills only</text>
+      <text x={460} y={256} textAnchor="middle" fontSize={11} fill={muted}>Code runs inside the app as one undo step, with a dry run first. The model stays on the PC;</text>
+      <text x={460} y={274} textAnchor="middle" fontSize={11} fill={muted}>the hub never receives model content or prompts.</text>
+    </Frame>
+  );
+}
+
 const GRAPHICS: Record<GraphicId, () => ReactNode> = {
   "lod-progression": LodProgression, "loin-framework": LoinFramework, "loin-example": LoinExample, "lod-vs-loi": LodVsLoi,
   "cobie-hierarchy": CobieHierarchy, "cde-states": CdeStates, "infra-breakdown": InfraBreakdown, "mcp-architecture": McpArchitecture,
+  "autodesk-mcp-flow": AutodeskMcpFlow,
 };
 
 export function HubGraphic({ id }: { id: GraphicId }) {

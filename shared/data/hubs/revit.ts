@@ -1,3 +1,4 @@
+import { revitAdvancedSection, revitMcpSection } from "./revitAdvanced";
 import type { Hub } from "./types";
 
 // Revit hub: practical Autodesk Revit guidance for projects following ISO 19650.
@@ -11,7 +12,7 @@ export const revitHub: Hub = {
   eyebrow: "SOFTWARE · AUTODESK REVIT",
   title: "Revit best practices for ISO 19650",
   intro:
-    "Practical guidance for producing Revit models that are well organised, correctly located, sensibly named, rich in the right information and easy to exchange. Covers model setup and coordinates, templates and standards, modelling by discipline, naming, shared parameters, data and schedules, worksharing, families, IFC export and validation, coordination, performance, automation and QA, with tips, a quiz and AI tools to help you write your own BIM manual.",
+    "Practical guidance for producing Revit models that are well organised, correctly located, sensibly named, rich in the right information and easy to exchange. Covers model setup and coordinates, templates and standards, modelling by discipline, naming, shared parameters, data and schedules, worksharing, families, IFC export and validation, coordination, performance, automation and QA, then advanced topics (federation and the CDE, IDS-driven data governance, model health KPIs, phases and options, the Revit API) and a full guide to connecting Claude to Revit and other Autodesk products through MCP.",
   sections: [
     {
       id: "main",
@@ -977,11 +978,15 @@ export const revitHub: Hub = {
         },
       ],
     },
+    revitAdvancedSection,
+    revitMcpSection,
   ],
   aiPrompts: [
     "How should I set up shared coordinates for a multi-discipline Revit project?",
     "Which shared parameters do I need for COBie and IFC export from Revit?",
     "How do I stop my Revit IFC export producing so many proxies?",
     "What should a Revit model QA check include before sharing under ISO 19650?",
+    "How do I connect Claude to Revit with the FirstOption Revit MCP?",
+    "Which model health KPIs should we track for each Revit share?",
   ],
 };

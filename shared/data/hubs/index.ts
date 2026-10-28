@@ -35,6 +35,7 @@ export function hubDigest(hub: Hub, limit = 60_000) {
       else if (b.kind === "stats") out.push(`${b.title}: ${b.stats.map((x) => `${x.value} ${x.label}`).join("; ")}`);
       else if (b.kind === "rolematrix") out.push(`${b.title}: ${b.docs.map((d) => `${d.name} (${b.parties.find((p) => p.id === d.party)?.label}, ${b.stages.find((s) => s.id === d.stage)?.label}, ${d.clause}): ${d.purpose}`).join("\n")}`);
       else if (b.kind === "graphic") out.push(`${b.title}: ${b.caption ?? ""}`);
+      else if (b.kind === "links") out.push(`${b.title}: ${b.links.map((l) => `${l.label} (${l.href})${l.note ? ` — ${l.note}` : ""}`).join("; ")}`);
       else if (b.kind === "process") out.push(`${b.title}: ${b.steps.map((s) => `${s.title} (${s.clause}, ${b.lanes.find((l) => l.id === s.lane)?.label}): ${s.activities.join("; ")} → ${s.outputs.join("; ")}`).join("\n")}`);
     }
   }

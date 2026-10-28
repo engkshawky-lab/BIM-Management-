@@ -23,9 +23,11 @@ export type HubBlock =
   /** Built-in explanatory illustration drawn by the page (SVG), with an optional caption. */
   | { kind: "graphic"; graphic: GraphicId; title: string; caption?: string }
   /** COBie sheet-by-sheet column reference and blank workbook download, rendered from shared/data/cobieSchema.ts. */
-  | { kind: "cobie-schema"; title: string };
+  | { kind: "cobie-schema"; title: string }
+  /** External resources shown as tiles that open in a new tab. */
+  | { kind: "links"; title: string; links: { label: string; href: string; note?: string; tone?: Tone }[] };
 
-export type GraphicId = "lod-progression" | "loin-framework" | "loin-example" | "lod-vs-loi" | "cobie-hierarchy" | "cde-states" | "infra-breakdown" | "mcp-architecture";
+export type GraphicId = "lod-progression" | "loin-framework" | "loin-example" | "lod-vs-loi" | "cobie-hierarchy" | "cde-states" | "infra-breakdown" | "mcp-architecture" | "autodesk-mcp-flow";
 
 export interface RoleDoc {
   stage: string;         // stage id
