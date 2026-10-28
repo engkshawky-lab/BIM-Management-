@@ -11,7 +11,7 @@ import {
 import { TONES } from "./hubTheme";
 import { DocDataPanel, useDocData } from "../components/DocDataPanel";
 import { tr } from "../i18nDom";
-import { markGenerated } from "../lib/projectStore";
+import { markGenerated, setProjectData } from "../lib/projectStore";
 import { projectDataText } from "../../../shared/projectData";
 import { ProjectDataGate, useGenerationReady } from "./ProjectData";
 
@@ -82,6 +82,14 @@ function wordMarkdown(kind: PlanKind, s: State, title: string) {
   return lines.join("\n");
 }
 
+/** Why a button is disabled, with a jump to where the missing items are filled in. */
+function Blockers({ items, what, onShow }: { items: string[]; what: string; onShow: () => void }) {
+  if (!items.length) return null;
+  return <div className="hub-tile small row spread" style={cv(TONES.amber)}>
+    <span><b>{tr(what)} {tr("unlocks when these are filled in:")}</b> {items.join(" · ")}</span>
+    <button className="small" onClick={onShow}>Show me ↑</button></div>;
+}
+
 export default function DeliveryPlans() {
   const { toast } = useSession();
   const [kind, setKind] = useState<PlanKind>(() => { try { return (localStorage.getItem("bim:plan:kind") as PlanKind) || "tidp"; } catch { return "tidp"; } });
@@ -96,6 +104,22 @@ export default function DeliveryPlans() {
   const gen = useGenerationReady(kind === "mpdt" ? undefined : meta.label);
   const ready = doc.ready && gen.ready;
   const projectStages = gen.p.stages.filter((x) => x.name.trim());
+  // what still blocks AI rows and exports, shown next to the buttons so a disabled button is never a mystery
+  const blockers = [
+    ...(gen.gaps.length ? [`${tr("Project data: hard-minimum items missing")} (${gen.gaps.length}/8)`] : []),
+    ...gen.inputs.map((l) => `${meta.label} · ${tr(l)}`),
+    ...(!doc.ready ? [tr("Document data: required fields missing")] : []),
+  ];
+  const showGate = () => document.getElementById("plan-gate")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // the TIDP inputs repeat details already entered on this page: copy them across rather than ask twice
+  const teamLine = s.header.taskTeam.trim() ? `${s.header.taskTeam.trim()} — ${DISCIPLINES[s.header.discipline]?.label ?? s.header.discipline}` : "";
+  useEffect(() => {
+    if (kind !== "tidp") return;
+    const fill: Record<string, string> = { ...(teamLine && { taskTeam: teamLine }), ...(doc.d.preparedBy.trim() && { author: doc.d.preparedBy.trim() }) };
+    const cur = gen.p.docInputs.TIDP ?? {};
+    const add = Object.fromEntries(Object.entries(fill).filter(([k]) => !(cur[k] ?? "").trim()));
+    if (Object.keys(add).length) setProjectData((p) => ({ ...p, docInputs: { ...p.docInputs, TIDP: { ...(p.docInputs.TIDP ?? {}), ...add } } }));
+  }, [kind, teamLine, doc.d.preparedBy]); // eslint-disable-line react-hooks/exhaustive-deps
   const hdr: PlanHeader = { ...s.header, projectName: doc.d.projectName, projectCode: doc.d.projectCode, appointingParty: doc.d.appointingParty, preparedBy: doc.d.preparedBy, revision: doc.d.version };
   const sx: State = { ...s, header: hdr };
   const title = `${meta.full} (${meta.label})${kind === "tidp" && s.header.taskTeam ? ` — ${s.header.taskTeam}` : ""}`;
@@ -142,7 +166,7 @@ export default function DeliveryPlans() {
       <div className="row">{KINDS.map((k) => <button key={k.id} onClick={() => switchKind(k.id)} style={kind === k.id ? { background: k.c, color: "#fff", borderColor: k.c } : { borderColor: k.c, color: k.c }}><b>{k.label}</b> <span className="small" style={{ opacity: .85 }}>· {k.full}</span></button>)}
         <span className="small muted">{meta.clause}</span></div>
 
-      <ProjectDataGate docType={kind === "mpdt" ? undefined : meta.label} what={`the ${meta.label}`} />
+      <div id="plan-gate" style={{ scrollMarginTop: 12 }}><ProjectDataGate docType={kind === "mpdt" ? undefined : meta.label} what={`the ${meta.label}`} /></div>
       <DocDataPanel data={doc} what={`generating the ${meta.label}`} code={meta.label} />
 
       <div className="hub-card" style={{ ...cv(meta.c), display: "grid", gap: 10 }}>
@@ -173,13 +197,14 @@ export default function DeliveryPlans() {
       <div className="hub-card" style={{ ...cv(meta.c), display: "grid", gap: 10 }}>
         <div className="row spread"><div className="hub-title" style={{ ...cv(meta.c), margin: 0 }}>3. {kind === "mpdt" ? "Elements and systems" : "Information containers"} · {count}</div>
           <div className="row">
-            <button disabled={!ready} onClick={starter} title="Typical deliverables for the selected disciplines — no AI">Standard starter list</button>
+            <button onClick={starter} title="Typical deliverables for the selected disciplines — no AI, available any time">Standard starter list</button>
             <button className="primary" disabled={busy || !ready} onClick={aiRows}>{busy ? "Generating… (about a minute)" : "Generate with AI"}</button>
             {kind !== "mpdt" && <label className="small" style={{ margin: 0 }}><input type="file" accept=".csv,.txt" multiple={kind === "midp"} style={{ display: "none" }} onChange={(e) => { void importCsv(e.target.files); e.target.value = ""; }} /><span className="btn">{kind === "midp" ? "Import TIDP CSVs" : "Import CSV"}</span></label>}
             <button onClick={() => kind === "mpdt" ? setS({ ...s, mpdt: [...s.mpdt, { element: "", classification: "", author: "", notes: "", loin: {} }] }) : setS({ ...s, rows: numberRows([...s.rows, emptyRow(s.rows.length, DISCIPLINES[s.header.discipline]?.role)]) })}>+ Add row</button>
             {!confirmReset ? <button className="ghost danger" onClick={() => setConfirmReset(true)}>Reset</button>
               : <span className="row hub-tile" style={{ ...cv(TONES.red), padding: "4px 8px" }}><span className="small">Clear this {meta.label} and start again?</span><button className="small" style={{ background: TONES.red, color: "#fff", borderColor: TONES.red }} onClick={reset}>Yes, reset</button><button className="ghost small" onClick={() => setConfirmReset(false)}>Cancel</button></span>}
           </div></div>
+        {!ready && <Blockers items={blockers} what="Generate with AI" onShow={showGate} />}
         <div className="small muted">{kind === "mpdt" ? "Who models each element, and the level of information need at each stage." : "Container names are built from project code, originator, volume, level, type, role and number (ISO 19650-2 naming). Edit any cell."}{" "}The standard starter list works without AI; "Generate with AI" uses one AI request.</div>
 
         {kind !== "mpdt" && s.rows.length > 0 && <div className="row">
@@ -220,6 +245,7 @@ export default function DeliveryPlans() {
           <button disabled={!ready} onClick={() => saveMarkdownDocx(wordMarkdown(kind, sx, title), `${hdr.projectCode || "PRJ"}-${kind.toUpperCase()}-${hdr.revision}`, { title, project: doc.d.projectName, appointingParty: doc.d.appointingParty, organisation: doc.d.organisation, orgRole: doc.d.orgRole, reference: doc.d.reference, revision: doc.d.version, status: doc.d.status, stage: doc.d.stage, date: doc.d.issueDate || undefined, preparedBy: doc.d.preparedBy, checkedBy: doc.d.checkedBy, approvedBy: doc.d.approvedBy, security: doc.d.security })}>Word (.docx)</button>
           <button disabled={!ready} onClick={csv}>CSV</button>
         </div>
+        {!ready && <div style={{ flexBasis: "100%" }}><Blockers items={blockers} what="Export" onShow={showGate} /></div>}
       </div>}
     </div>
   );
