@@ -424,6 +424,8 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .hub-flow > div { flex: 1 0 160px; position: relative; padding: 14px 22px 14px 18px; color: #fff; min-height: 96px;
   background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 65%, #0b1220)); clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%, 14px 50%); }
 .hub-flow > div:first-child { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 0 100%); border-radius: 10px 0 0 10px; }
+[dir="rtl"] .hub-flow > div { padding: 14px 18px 14px 22px; clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 14px 100%, 0 50%); }
+[dir="rtl"] .hub-flow > div:first-child { clip-path: polygon(14px 0, 100% 0, 100% 100%, 14px 100%, 0 50%); border-radius: 0 10px 10px 0; }
 .hub-flow > div b { display: block; font-size: 13px; }
 .hub-flow > div span { display: block; font-size: 12px; opacity: .9; margin-top: 4px; }
 .hub-table th { background: color-mix(in srgb, var(--hub) 16%, var(--surface)); color: var(--text); }
@@ -446,6 +448,7 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .proc-step.on small { color: rgba(255,255,255,.85); }
 .proc-step.dim { opacity: .35; }
 .proc-arrow { align-self: center; color: var(--muted); }
+[dir="rtl"] .proc-arrow { transform: scaleX(-1); }
 .proc-detail { margin-top: 10px; border-radius: 12px; padding: 16px; border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); background: color-mix(in srgb, var(--c) 6%, var(--surface)); }
 .proc-detail h3 { margin: 0 0 2px; color: color-mix(in srgb, var(--c) 85%, var(--text)); }
 /* checkboxes in hub/parts/tool pages: the global input rule would stretch them to full width */
@@ -481,3 +484,20 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .gen-step.busy .gen-dot { background: var(--hub, var(--accent)); color: #fff; animation: pulse 1.2s ease-in-out infinite; }
 .gen-step.error .gen-dot { background: var(--danger); color: #fff; }
 @keyframes pulse { 50% { opacity: .45; } }
+
+/* Topic hubs: breadcrumb, related links, themes */
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--muted); margin-bottom: 8px; }
+.crumbs a { color: var(--muted); }
+.crumbs a:hover { color: var(--hub); text-decoration: underline; }
+.crumbs b { color: var(--text); font-weight: 600; }
+[dir="rtl"] .crumbs > span { transform: scaleX(-1); }
+.chip-link { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--hub);
+  border: 1px solid color-mix(in srgb, var(--hub) 40%, transparent); background: color-mix(in srgb, var(--hub) 8%, var(--surface)); }
+.chip-link:hover { background: var(--hub); color: #fff; }
+.chip-link.on-hero { color: #fff; border-color: rgba(255,255,255,.45); background: rgba(255,255,255,.14); }
+.chip-link.on-hero:hover { background: #fff; color: var(--hub); }
+.hub-card.related { border-top-width: 4px; }
+.hub-theme { display: grid; gap: 12px; scroll-margin-top: 16px; }
+.hub-theme-head { display: flex; align-items: center; gap: 12px; padding-top: 8px; }
+.hub-theme-head h2 { margin: 0; font-size: 18px; }
+.hub-theme-n { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; background: var(--c); }

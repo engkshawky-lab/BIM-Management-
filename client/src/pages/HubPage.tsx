@@ -5,6 +5,13 @@ import { AskPartChat, generateHref } from "./AiTools";
 import { HubGraphic } from "./HubGraphics";
 import { ORDER, TONES } from "./hubTheme";
 import { RoleMatrix } from "./RoleMatrix";
+import { hubById } from "../../../shared/data/hubs";
+import { HUB_LINKS, HUB_ORDER, THEMES, themeOf } from "../../../shared/data/hubs/map";
+import { hrefFor, pageByKey } from "../shell/nav";
+import { tr } from "../i18nDom";
+
+// translate before shortening: the Arabic layer matches whole strings, so a cut-off intro would stay in English
+const short = (s: string, n: number) => (s.length > n ? s.slice(0, n - 3).trimEnd() + "…" : s);
 
 // the COBie reference carries the whole schema; load it only on the tab that shows it
 const CobieReference = lazy(() => import("./CobieReference"));
@@ -194,6 +201,7 @@ function blockText(b: HubBlock): string {
     case "process": return b.title + " " + b.steps.map((s) => [s.title, s.subtitle, s.clause, ...s.activities, ...s.outputs, ...s.documents].join(" ")).join(" ");
     case "rolematrix": return b.title + " " + b.docs.map((d) => [d.name, d.summary, d.purpose, ...d.keyContent].join(" ")).join(" ");
     case "graphic": return b.title + " " + (b.caption ?? "");
+    case "links": return b.title + " " + b.links.map((l) => l.label + " " + (l.note ?? "")).join(" ");
     default: return b.title;
   }
 }
@@ -237,6 +245,7 @@ export default function HubPage({ hub, sectionId, tabId, base = `#/hubs/${hub.id
   const goTab = (x: (typeof order)[number]) => `${base}/${x.s.id}/${x.t.id}`;
   return (
     <div className="hub" style={{ "--hub": TONES[hub.tone ?? "blue"] } as CSSProperties}>
+      {!embedded && <Breadcrumb hub={hub} base={base} section={hub.sections.length > 1 ? section.label : undefined} tab={tab.label} />}
       {!embedded && <div className="hub-hero">
         <div className="eyebrow">{hub.eyebrow}</div><h1>{hub.title}</h1><p>{hub.intro}</p>
         <div className="facts">{hub.sections.length > 1 && <span>{hub.sections.length} sections</span>}<span>{order.length} topics</span>{quizzes > 0 && <span>{quizzes} {quizzes > 1 ? "quizzes" : "quiz"}</span>}<span>AI tutor</span>
@@ -255,29 +264,86 @@ export default function HubPage({ hub, sectionId, tabId, base = `#/hubs/${hub.id
       <div className="row spread" style={{ marginTop: 6 }}>
         {prev ? <a href={goTab(prev)} className="hub-tile" style={{ ...cv("var(--hub)"), color: "inherit", flex: "1 1 220px" }}><span className="small muted">← Previous</span><div><b>{prev.t.label}</b></div></a> : <span />}
         {next ? <a href={goTab(next)} className="hub-tile" style={{ ...cv("var(--hub)"), color: "inherit", flex: "1 1 220px", textAlign: "end" }}><span className="small muted">Next →</span><div><b>{next.s.id !== section.id ? `${next.s.label} › ` : ""}{next.t.label}</b></div></a>
-          : <a href="#/hubs" className="hub-tile" style={{ ...cv(TONES.green), color: "inherit", flex: "1 1 220px", textAlign: "end" }}><span className="small muted">You reached the end</span><div><b>Explore another hub →</b></div></a>}
+          : <NextHub hub={hub} />}
       </div>
+      {!embedded && <RelatedPanel hub={hub} />}
     </div>
   );
 }
 
-/** Landing page listing every topic hub as a coloured card, with progress and a resume link. */
-export function HubsIndex({ hubs }: { hubs: Hub[] }) {
+/** Where you are: Topic hubs › theme › hub › section › tab. */
+function Breadcrumb({ hub, base, section, tab }: { hub: Hub; base: string; section?: string; tab: string }) {
+  const theme = themeOf(hub.id);
+  return (
+    <nav className="crumbs small" aria-label="Breadcrumb">
+      <a href="#/hubs">Topic hubs</a>
+      {theme && <><span>›</span><a href={`#/hubs/theme/${theme.id}`}>{theme.label}</a></>}
+      <span>›</span><a href={base}>{hub.title}</a>
+      {section && <><span>›</span><span>{section}</span></>}
+      <span>›</span><b>{tab}</b>
+    </nav>
+  );
+}
+
+/** End of a hub: carry on to the next hub in the learning order. */
+function NextHub({ hub }: { hub: Hub }) {
+  const next = hubById(HUB_ORDER[(HUB_ORDER.indexOf(hub.id) + 1) % HUB_ORDER.length]);
+  if (!next) return null;
+  return <a href={`#/hubs/${next.id}`} className="hub-tile" style={{ ...cv(TONES.green), color: "inherit", flex: "1 1 220px", textAlign: "end" }}>
+    <span className="small muted">You reached the end · next hub</span><div><b>{next.title} →</b></div></a>;
+}
+
+/** Links out of a hub: related hubs, the tools that put it into practice and the ISO 19650 parts behind it. */
+function RelatedPanel({ hub }: { hub: Hub }) {
+  const links = HUB_LINKS[hub.id];
+  if (!links) return null;
+  const tools = links.tools.map(pageByKey).filter((x) => !!x);
+  return (
+    <div className="hub-card related" style={cv("var(--hub)")}>
+      <div className="hub-title" style={cv("var(--hub)")}>Related topics</div>
+      <div className="grid g3">{links.related.map(({ hub: id, why }) => { const h = hubById(id); if (!h) return null; const c = TONES[h.tone ?? "blue"]; return (
+        <a key={id} href={`#/hubs/${id}`} className="hub-tile" style={{ ...cv(c), color: "inherit" }}><b style={{ color: c }}>{h.title} →</b><div className="small" style={{ marginTop: 4 }}>{why}</div></a>); })}</div>
+      {tools.length > 0 && <>
+        <div className="small muted" style={{ margin: "12px 0 6px", fontWeight: 600 }}>Put it into practice</div>
+        <div className="row" style={{ flexWrap: "wrap", gap: 8 }}>{tools.map((t) => <a key={t.key} href={"#" + hrefFor(t)} className="chip-link" title={t.hint}>{t.label}</a>)}</div>
+      </>}
+      {links.parts.length > 0 && <>
+        <div className="small muted" style={{ margin: "12px 0 6px", fontWeight: 600 }}>ISO 19650 parts behind this topic</div>
+        <div className="row" style={{ flexWrap: "wrap", gap: 8 }}>{links.parts.map((n) => <a key={n} href={`#/parts/19650-${n}`} className="chip-link">ISO 19650-{n}</a>)}</div>
+      </>}
+    </div>
+  );
+}
+
+/** Landing page: hubs grouped by theme in a suggested learning order, with progress and a resume link. */
+export function HubsIndex({ hubs, focus }: { hubs: Hub[]; focus?: string }) {
   const last = lastVisited();
+  useEffect(() => { if (focus) document.getElementById("theme-" + focus)?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [focus]);
+  const byId = new Map(hubs.map((h) => [h.id, h]));
+  const ungrouped = hubs.filter((h) => !themeOf(h.id));
+  let n = 0;
+  const HubCard = ({ h, step }: { h: Hub; step?: number }) => { const c = TONES[h.tone ?? "blue"]; const total = allTabs(h).length; const seen = Math.min(visitedTabs(h.id).size, total); return (
+    <a href={`#/hubs/${h.id}`} className="hub-card" style={{ ...cv(c), color: "inherit", display: "grid", gap: 6, alignContent: "start" }}>
+      <div className="hub-title" style={cv(c)}>{step ? `${step} · ` : ""}{h.eyebrow}</div><b style={{ fontSize: 16 }}>{h.title}</b>
+      <div className="small muted">{short(tr(h.intro), 160)}</div>
+      <div className="progress" style={{ marginTop: 4 }}><div style={{ width: `${Math.round((seen / total) * 100)}%`, background: c }} /></div>
+      <div className="small" style={{ color: c, fontWeight: 600 }}>{seen ? <>{seen} of {total} topics explored →</> : <>{total} topics · Start →</>}</div>
+    </a>); };
   return (
     <div className="hub" style={{ "--hub": TONES.blue } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">ISO 19650 · TOPIC HUBS</div><h1>Advanced topics</h1>
-        <p>Practical, in-depth guides that sit alongside the ISO 19650 parts: each has topics, worked examples, checklists, quizzes and an AI tutor. Your progress is saved in this browser.</p>
-        <div className="facts"><span>{hubs.length} hubs</span><span>{hubs.reduce((a, h) => a + allTabs(h).length, 0)} topics</span><span>Quizzes and checklists</span></div></div>
+        <p>Practical, in-depth guides that sit alongside the ISO 19650 parts, grouped into four themes in a suggested order. Each hub has topics, worked examples, checklists, quizzes and an AI tutor, and links to related hubs and tools. Your progress is saved in this browser.</p>
+        <div className="facts"><span>{hubs.length} hubs</span><span>{THEMES.length} themes</span><span>{hubs.reduce((a, h) => a + allTabs(h).length, 0)} topics</span></div>
+        <div className="row" style={{ position: "relative", zIndex: 1, marginTop: 12, flexWrap: "wrap", gap: 8 }}>{THEMES.map((t, i) => <a key={t.id} href={`#/hubs/theme/${t.id}`} className="chip-link on-hero">{i + 1}. {t.label}</a>)}</div>
+      </div>
       {last && <a href={"#" + last.path} className="hub-tile row spread" style={{ ...cv(TONES.green), color: "inherit" }}>
         <span><span className="small muted">Continue where you left off</span><span style={{ display: "block" }}><b>{last.label}</b></span></span><span className="btn primary">Resume →</span></a>}
-      <div className="grid g3">{hubs.map((h) => { const c = TONES[h.tone ?? "blue"]; const n = allTabs(h).length; const seen = Math.min(visitedTabs(h.id).size, n); return (
-        <a key={h.id} href={`#/hubs/${h.id}`} className="hub-card" style={{ ...cv(c), color: "inherit", display: "grid", gap: 6, alignContent: "start" }}>
-          <div className="hub-title" style={cv(c)}>{h.eyebrow}</div><b style={{ fontSize: 16 }}>{h.title}</b>
-          <div className="small muted">{h.intro.length > 180 ? h.intro.slice(0, 177) + "…" : h.intro}</div>
-          <div className="progress" style={{ marginTop: 4 }}><div style={{ width: `${Math.round((seen / n) * 100)}%`, background: c }} /></div>
-          <div className="small" style={{ color: c, fontWeight: 600 }}>{seen ? <>{seen} of {n} topics explored →</> : <>{n} topics · Start →</>}</div>
-        </a>); })}</div>
+      {THEMES.map((t, i) => (
+        <section key={t.id} id={"theme-" + t.id} className="hub-theme" style={cv(cycle(i))}>
+          <div className="hub-theme-head"><span className="hub-theme-n">{i + 1}</span><div><h2>{t.label}</h2><div className="small muted">{t.blurb}</div></div></div>
+          <div className="grid g3">{t.hubs.map((id) => { const h = byId.get(id); return h ? <HubCard key={id} h={h} step={++n} /> : null; })}</div>
+        </section>))}
+      {ungrouped.length > 0 && <div className="grid g3">{ungrouped.map((h) => <HubCard key={h.id} h={h} />)}</div>}
     </div>
   );
 }

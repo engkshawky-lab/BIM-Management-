@@ -51,20 +51,14 @@ export const PROJECT_PAGES: NavItem[] = [
   p("p.settings", "Project settings", "settings", "settings", "Quality & team"),
 ];
 
+// Topic hubs are grouped by theme in the same order as the hubs index (shared/data/hubs/map.ts).
+const HUB_GROUP = { process: "Topic hubs · ISO 19650 process", requirements: "Topic hubs · Information requirements", software: "Topic hubs · Software, models & AI", strategy: "Topic hubs · Sectors & strategy" };
+
 export const STANDARD_PAGES: NavItem[] = [
-  g("s.learn", "Learn: quizzes, mock exam, scenarios", "/learn", "sparkles", "Learn", "Practice questions, timed exam, skill profile"),
-  g("s.guides", "Best-practice guides", "/learn/guides", "book", "Learn", "Practical guidance for modellers, coordinators and managers"),
-  g("s.hubs", "All topic hubs", "/hubs", "grid", "Advanced topics", "Every in-depth guide in one place"),
-  g("s.hub.appointment", "Appointment process diagram", "/hubs/appointment", "flow", "Advanced topics", "Interactive ISO 19650-2 process: who does what, inputs, outputs"),
-  g("s.hub.docroles", "Documents aligned with roles", "/hubs/documents-roles", "file", "Advanced topics", "Which party produces which document at each stage"),
-  g("s.hub.loin", "LOD / LOI / LOIN hub", "/hubs/loin", "layers", "Advanced topics", "Level of information need, LOD 100–500, element library"),
-  g("s.hub.cobie", "COBie practical guide", "/hubs/cobie", "table", "Advanced topics", "Sheets, timing, authoring, quality checks"),
-  g("s.hub.infra", "Infrastructure BIM & ISO 19650", "/hubs/infrastructure", "layers", "Advanced topics", "Roads, rail, bridges, utilities"),
-  g("s.hub.revit", "Revit best practices", "/hubs/revit", "settings", "Advanced topics", "Setup, naming, parameters, IFC export, QA"),
-  g("s.hub.implementation", "BIM implementation best practices", "/hubs/implementation", "flow", "Advanced topics", "Strategy, maturity, people, process, technology, KPIs"),
-  g("s.hub.scan", "Scan to BIM", "/hubs/scan-to-bim", "layers", "Advanced topics", "Reality capture, accuracy, workflow, cost estimator"),
-  g("s.hub.dimensions", "BIM dimensions (4D–7D, net zero)", "/hubs/dimensions", "layers", "Advanced topics", "4D time, 5D cost, 6D carbon, 7D FM, net zero"),
-  g("s.adoption", "Implementation guide", "/learn/adoption", "flow", "Learn", "Adopt ISO 19650 across your organization, step by step"),
+  g("s.learn", "Learn: quizzes, mock exam, scenarios", "/learn", "sparkles", "Start here", "Practice questions, timed exam, skill profile"),
+  g("s.adoption", "Implementation guide", "/learn/adoption", "flow", "Start here", "Adopt ISO 19650 across your organization, step by step"),
+  g("s.guides", "Best-practice guides", "/learn/guides", "book", "Start here", "Practical guidance for modellers, coordinators and managers"),
+  g("s.hubs", "All topic hubs", "/hubs", "grid", "Start here", "Every in-depth guide, grouped by theme"),
   g("s.19650.parts", "All parts (1–6): learning hub", "/parts", "book", "ISO 19650", "Beginner to expert, clause deep dives, checklists, Ask AI"),
   ...[1, 2, 3, 4, 5, 6].map((n) => g(`s.19650.part${n}`, `Part ${n}`, `/parts/19650-${n}`, "book", "ISO 19650")),
   g("s.19650.summary", "Parts at a glance", "/knowledge/iso19650/library/0", "book", "ISO 19650"),
@@ -73,6 +67,16 @@ export const STANDARD_PAGES: NavItem[] = [
   g("s.19650.glossary", "Glossary & acronyms", "/knowledge/iso19650/library/3", "text", "ISO 19650"),
   g("s.uses", "Information uses library", "/knowledge/iso19650/uses", "target", "ISO 19650"),
   g("s.naming", "Naming & status code tool", "/knowledge/iso19650/naming", "tag", "ISO 19650"),
+  g("s.hub.appointment", "Appointment process diagram", "/hubs/appointment", "flow", HUB_GROUP.process, "Interactive ISO 19650-2 process: who does what, inputs, outputs"),
+  g("s.hub.docroles", "Documents aligned with roles", "/hubs/documents-roles", "file", HUB_GROUP.process, "Which party produces which document at each stage"),
+  g("s.hub.loin", "LOD / LOI / LOIN hub", "/hubs/loin", "layers", HUB_GROUP.requirements, "Level of information need, LOD 100–500, element library"),
+  g("s.hub.cobie", "COBie practical guide", "/hubs/cobie", "table", HUB_GROUP.requirements, "Sheets, timing, authoring, quality checks"),
+  g("s.hub.revit", "Revit best practices", "/hubs/revit", "settings", HUB_GROUP.software, "Setup, naming, parameters, IFC, advanced topics, MCP for Autodesk"),
+  g("s.hub.mcp", "Connect AI to BIM tools (MCP)", "/hubs/mcp", "link", HUB_GROUP.software, "What MCP is, Claude Desktop and Code, BIM servers, security"),
+  g("s.hub.scan", "Scan to BIM", "/hubs/scan-to-bim", "layers", HUB_GROUP.software, "Reality capture, accuracy, workflow, cost estimator"),
+  g("s.hub.infra", "Infrastructure BIM & ISO 19650", "/hubs/infrastructure", "layers", HUB_GROUP.strategy, "Roads, rail, bridges, utilities"),
+  g("s.hub.dimensions", "BIM dimensions (4D–7D, net zero)", "/hubs/dimensions", "layers", HUB_GROUP.strategy, "4D time, 5D cost, 6D carbon, 7D FM, net zero"),
+  g("s.hub.implementation", "BIM implementation best practices", "/hubs/implementation", "flow", HUB_GROUP.strategy, "Strategy, maturity, people, process, technology, KPIs"),
   g("s.42001.clauses", "Clauses 4–10", "/knowledge/iso42001/library/0", "book", "ISO/IEC 42001"),
   g("s.42001.annex", "Annex A controls", "/knowledge/iso42001/library/1", "shield", "ISO/IEC 42001"),
   g("s.42001.aibim", "AI in BIM", "/knowledge/iso42001/library/2", "sparkles", "ISO/IEC 42001"),
@@ -82,31 +86,34 @@ export const STANDARD_PAGES: NavItem[] = [
 export const TEMPLATE_PAGES: NavItem[] = templates.map((t) =>
   g(`t.${t.id}`, `${t.code} — ${t.title}`, `/knowledge/${t.standard}/templates/${t.id}`, "file", `${t.standard === "iso19650" ? "ISO 19650" : "ISO/IEC 42001"} · ${t.category}`, t.purpose));
 
+export const TOOL_PAGES: NavItem[] = [
+  g("ai.projectdata", "Project data (enter once)", "/project-data", "table", "AI document tools", "Mandatory inputs every document reuses: the eight-item hard minimum and per-document inputs"),
+  g("ai.review", "Document review & compare", "/ai-tools/review", "sparkles", "AI document tools", "Review EIR/BEP/MIDP; EIR ↔ BEP check; BEP versions"),
+  g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "AI document tools", "EIR, AIR, PIR, OIR, BEP, TIDP, MIDP or any custom template"),
+  g("ai.plans", "TIDP / MIDP / MPDT generator", "/ai-tools/plans", "calendar", "AI document tools", "Delivery plan tables with naming, checks and Excel export"),
+  g("ai.risks", "Risk register generator", "/ai-tools/risks", "sparkles", "AI document tools"),
+  g("ai.clash", "Clash matrix builder", "/ai-tools/clash", "sparkles", "AI document tools"),
+  g("ai.suitability", "Suitability code hub", "/ai-tools/suitability", "sparkles", "AI document tools"),
+  g("ai.cobie", "COBie data checker", "/ai-tools/cobie", "sparkles", "AI document tools"),
+  g("ai.mcp", "Connect via MCP", "/ai-tools/mcp", "link", "AI document tools", "Connect Claude to Revit, IFC and CDE tools with MCP"),
+  g("m.ifc", "IFC Hub", "/model-tools/ifc", "layers", "Model tools", "Analyse IFC models, check LOIN/IDS, compare with your EIR"),
+  g("m.qaqc", "QA/QC model checker", "/model-tools/qaqc", "check", "Model tools", "Grade IFC models A–F, compare up to 10"),
+  g("r.fee", "BIM fee estimator", "/tools/fee", "table", "Calculators & assessments"),
+  g("r.carbon", "Embodied carbon (6D)", "/tools/carbon", "layers", "Calculators & assessments"),
+  g("r.maturity", "BIM maturity assessment", "/tools/maturity", "check", "Calculators & assessments"),
+  g("r.dt", "Digital twin readiness", "/tools/dt", "check", "Calculators & assessments"),
+  g("r.scan", "Scan-to-BIM readiness", "/tools/scan", "check", "Calculators & assessments"),
+];
+
 export const RESOURCE_PAGES: NavItem[] = [
+  g("r.wizard", "Setup wizard", "/wizard", "sparkles", "My work", "Answer a few questions; get the documents and workflow you need"),
+  g("r.myday", "My Day", "/my-day", "calendar", "My work", "Everything waiting on you"),
+  g("r.portfolio", "Portfolio dashboard", "/portfolio", "grid", "My work", "Health across your projects"),
   g("r.downloads", "Downloads library", "/downloads", "library", "References", "Templates, checklists and guides curated by administrators"),
   g("r.samples", "Sample documents (EIR, AIR, OIR, BEP…)", "/samples", "file", "References", "Structured Word samples with guidance"),
   g("r.news", "BIM & ISO 19650 news", "/news", "activity", "References", "AI-compiled news with relevance ratings"),
   g("r.19650", "ISO 19650 references", "/knowledge/iso19650/references", "library", "References"),
   g("r.42001", "ISO/IEC 42001 references", "/knowledge/iso42001/references", "library", "References"),
-  g("r.wizard", "Setup wizard", "/wizard", "sparkles", "My work", "Answer a few questions; get the documents and workflow you need"),
-  g("r.myday", "My Day", "/my-day", "calendar", "My work", "Everything waiting on you"),
-  g("r.portfolio", "Portfolio dashboard", "/portfolio", "grid", "My work", "Health across your projects"),
-  g("ai.projectdata", "Project data (enter once)", "/project-data", "table", "AI tools", "Mandatory inputs every document reuses: the eight-item hard minimum and per-document inputs"),
-  g("ai.review", "Document review & compare", "/ai-tools/review", "sparkles", "AI tools", "Review EIR/BEP/MIDP; EIR ↔ BEP check; BEP versions"),
-  g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "AI tools", "EIR, AIR, PIR, OIR, BEP, TIDP, MIDP or any custom template"),
-  g("ai.plans", "TIDP / MIDP / MPDT generator", "/ai-tools/plans", "calendar", "AI tools", "Delivery plan tables with naming, checks and Excel export"),
-  g("ai.risks", "Risk register generator", "/ai-tools/risks", "sparkles", "AI tools"),
-  g("ai.clash", "Clash matrix builder", "/ai-tools/clash", "sparkles", "AI tools"),
-  g("ai.suitability", "Suitability code hub", "/ai-tools/suitability", "sparkles", "AI tools"),
-  g("ai.cobie", "COBie data checker", "/ai-tools/cobie", "sparkles", "AI tools"),
-  g("ai.mcp", "Connect via MCP", "/ai-tools/mcp", "link", "AI tools", "Connect Claude to Revit, IFC and CDE tools with MCP"),
-  g("m.ifc", "IFC Hub", "/model-tools/ifc", "layers", "Model tools", "Analyse IFC models, check LOIN/IDS, compare with your EIR"),
-  g("m.qaqc", "QA/QC model checker", "/model-tools/qaqc", "check", "Model tools", "Grade IFC models A–F, compare up to 10"),
-  g("r.fee", "BIM fee estimator", "/tools/fee", "table", "Tools"),
-  g("r.carbon", "Embodied carbon (6D)", "/tools/carbon", "layers", "Tools"),
-  g("r.maturity", "BIM maturity assessment", "/tools/maturity", "check", "Tools"),
-  g("r.dt", "Digital twin readiness", "/tools/dt", "check", "Tools"),
-  g("r.scan", "Scan-to-BIM readiness", "/tools/scan", "check", "Tools"),
   g("r.talentme", "My talent profile", "/talent/me", "user", "Careers", "Opt-in profile for recruiters"),
   g("r.talent", "Talent pool (recruiters)", "/talent", "users", "Careers"),
   g("r.standards", "Client standards", "/standards", "book", "Client requirements"),
@@ -114,7 +121,7 @@ export const RESOURCE_PAGES: NavItem[] = [
   g("r.support", "Help & support", "/support", "help", "Account", "Ask a question or report a problem; see replies"),
 ];
 
-export const ALL_PAGES = [...PROJECT_PAGES, ...STANDARD_PAGES, ...TEMPLATE_PAGES, ...RESOURCE_PAGES];
+export const ALL_PAGES = [...PROJECT_PAGES, ...STANDARD_PAGES, ...TEMPLATE_PAGES, ...TOOL_PAGES, ...RESOURCE_PAGES];
 export const pageByKey = (key: string) => ALL_PAGES.find((x) => x.key === key);
 
 export interface RailSection { id: string; label: string; icon: IconName; title: string }
@@ -123,6 +130,7 @@ export const RAIL: RailSection[] = [
   { id: "standards", label: "Standards", icon: "book", title: "ISO standards & guides" },
   { id: "documents", label: "Documents", icon: "files", title: "Documents & templates" },
   { id: "projects", label: "Projects", icon: "folder", title: "Projects" },
+  { id: "tools", label: "Tools", icon: "sparkles", title: "AI & model tools" },
   { id: "resources", label: "Resources", icon: "library", title: "Resources" },
 ];
 
@@ -130,7 +138,8 @@ export const RAIL: RailSection[] = [
 export function sectionFor(route: string): string {
   if (route.startsWith("/projects")) return "projects";
   if (/^\/knowledge\/[^/]+\/templates/.test(route)) return "documents";
-  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|ai-tools|model-tools|project-data|downloads|samples|news|standards|talent|admin|wizard|support)/.test(route)) return "resources";
+  if (/^\/(tools|ai-tools|model-tools|project-data)(\/|$)/.test(route)) return "tools";
+  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|downloads|samples|news|standards|talent|admin|wizard|support)/.test(route)) return "resources";
   if (route.startsWith("/knowledge") || route.startsWith("/learn") || route.startsWith("/parts") || route.startsWith("/hubs")) return "standards";
   return "home";
 }

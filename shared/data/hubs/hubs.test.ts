@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { partDetails19650 } from "../parts19650Detail";
 import { templates } from "../templates";
+import { ALL_PAGES } from "../../../client/src/shell/nav";
 import { hubDigest, hubs } from "./index";
+import { HUB_LINKS, HUB_ORDER } from "./map";
 
 describe("topic hubs", () => {
   for (const hub of hubs) {
@@ -25,6 +27,22 @@ describe("topic hubs", () => {
       expect(hubDigest(hub).length).toBeGreaterThan(2000);
     });
   }
+});
+
+describe("topic map", () => {
+  it("puts every hub in exactly one theme and links only to real hubs and pages", () => {
+    const ids = hubs.map((h) => h.id).sort();
+    expect([...HUB_ORDER].sort()).toEqual(ids);
+    const keys = new Set(ALL_PAGES.map((p) => p.key));
+    for (const h of hubs) {
+      const l = HUB_LINKS[h.id];
+      expect(l, `${h.id} has links`).toBeTruthy();
+      for (const r of l.related) { expect(ids, `${h.id} → ${r.hub}`).toContain(r.hub); expect(r.hub).not.toBe(h.id); }
+      for (const k of l.tools) expect(keys.has(k), `${h.id} tool ${k}`).toBe(true);
+      for (const n of l.parts) expect(n).toBeGreaterThanOrEqual(1);
+      expect(ALL_PAGES.some((p) => p.path === `/hubs/${h.id}`), `${h.id} is in the side panel`).toBe(true);
+    }
+  });
 });
 
 describe("ISO 19650 part details", () => {

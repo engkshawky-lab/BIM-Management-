@@ -5,7 +5,7 @@ import { glossary19650, process19650 } from "../../../shared/data/iso19650";
 import { clauses42001, glossary42001 } from "../../../shared/data/iso42001";
 import { api, canManage, type Notification, type Project } from "../lib/api";
 import { Icon } from "./icons";
-import { ALL_PAGES, PROJECT_PAGES, RAIL, RESOURCE_PAGES, STANDARD_PAGES, TEMPLATE_PAGES, hrefFor, labelForRoute, pageByKey, sectionFor, type NavItem } from "./nav";
+import { ALL_PAGES, PROJECT_PAGES, RAIL, RESOURCE_PAGES, STANDARD_PAGES, TEMPLATE_PAGES, TOOL_PAGES, hrefFor, labelForRoute, pageByKey, sectionFor, type NavItem } from "./nav";
 import { BIM_ROLES, roleById } from "./roles";
 import { SupportForm } from "../pages/Support";
 
@@ -89,6 +89,7 @@ function Panel({ section, route, projects, project, onRole, onClose }: { section
     </>;
   } else if (section === "standards") body = <Groups items={filter(STANDARD_PAGES)} route={route} favs={favs} empty="No pages match." />;
   else if (section === "documents") body = <Groups items={filter(TEMPLATE_PAGES)} route={route} favs={favs} empty="No templates match." />;
+  else if (section === "tools") body = <Groups items={filter(TOOL_PAGES)} route={route} favs={favs} empty="No tools match." />;
   else if (section === "resources") body = <Groups items={filter(RESOURCE_PAGES)} route={route} favs={favs} empty="No pages match." />;
   else if (section === "projects") {
     body = <>

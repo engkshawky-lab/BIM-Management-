@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { GraphicId } from "../../../shared/data/hubs/types";
 
 // Built-in explanatory illustrations for the hubs. Drawn as SVG with theme colours so they read in
@@ -7,10 +7,51 @@ import type { GraphicId } from "../../../shared/data/hubs/types";
 const C = { blue: "#3b82f6", green: "#16a34a", amber: "#d97706", purple: "#9333ea", red: "#dc2626", teal: "#0d9488" };
 const ink = "var(--text)", muted = "var(--muted)", card = "var(--surface-2)";
 
+/**
+ * Shrinks any label that is wider than its box (or, outside a box, than the frame) so nothing runs
+ * into its neighbours. Runs again whenever the text changes, e.g. when the Arabic layer swaps it.
+ */
+function fitLabels(svg: SVGSVGElement) {
+  const frame = svg.getBoundingClientRect();
+  if (!frame.width) return;
+  const scale = frame.width / svg.viewBox.baseVal.width;
+  const rects = [...svg.querySelectorAll("rect")].map((r) => r.getBoundingClientRect()).filter((r) => r.width > 20 && r.height > 14);
+  for (const t of svg.querySelectorAll("text")) {
+    const base = Number(t.dataset.fs ?? (t.dataset.fs = String(parseFloat(t.getAttribute("font-size") ?? "12"))));
+    t.style.fontSize = base + "px"; t.removeAttribute("textLength"); t.removeAttribute("lengthAdjust");
+    const r = t.getBoundingClientRect();
+    if (!r.width) continue;
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const host = rects.filter((b) => cx > b.left && cx < b.right && cy > b.top && cy < b.bottom).sort((a, b) => a.width * a.height - b.width * b.height)[0];
+    const anchor = t.getAttribute("text-anchor") ?? "start";
+    const room = host ? host.width - 12 * scale
+      : anchor === "middle" ? 2 * Math.min(cx - frame.left, frame.right - cx) - 12 * scale
+      : frame.right - r.left - 8 * scale;
+    if (r.width <= room) continue;
+    const f = Math.max(0.7, room / r.width);
+    t.style.fontSize = base * f + "px";
+    if (t.getBoundingClientRect().width > room) { t.setAttribute("textLength", String(room / scale)); t.setAttribute("lengthAdjust", "spacingAndGlyphs"); }
+  }
+}
+
 function Frame({ w, h, children, label }: { w: number; h: number; children: ReactNode; label: string }) {
+  const ref = useRef<SVGSVGElement>(null);
+  useLayoutEffect(() => {
+    const svg = ref.current;
+    if (!svg) return;
+    let raf = 0;
+    const run = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => fitLabels(svg)); };
+    run();
+    const mo = new MutationObserver(run);
+    mo.observe(svg, { characterData: true, childList: true, subtree: true });
+    const ro = new ResizeObserver(run);
+    ro.observe(svg);
+    return () => { cancelAnimationFrame(raf); mo.disconnect(); ro.disconnect(); };
+  }, []);
+  // Always laid out left to right: labels are positioned by coordinates, and an RTL page would flip their anchors
   return (
     <div className="table-wrap" style={{ borderRadius: 12, background: "var(--surface)", padding: 8 }}>
-      <svg viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label} style={{ width: "100%", minWidth: Math.min(w, 640), height: "auto", display: "block" }} fontFamily="inherit">{children}</svg>
+      <svg ref={ref} viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label} direction="ltr" style={{ width: "100%", minWidth: Math.min(w, 640), height: "auto", display: "block", direction: "ltr" }} fontFamily="inherit">{children}</svg>
     </div>
   );
 }
@@ -129,22 +170,22 @@ function LodVsLoi() {
 
 function CobieHierarchy() {
   return (
-    <Frame w={900} h={300} label="COBie sheet relationships">
+    <Frame w={900} h={330} label="COBie sheet relationships">
       <Box x={370} y={14} w={160} h={44} c={C.blue} title="Facility" filled />
       <Box x={120} y={96} w={150} h={44} c={C.teal} title="Floor" />
       <Box x={120} y={176} w={150} h={44} c={C.teal} title="Space" />
-      <Box x={120} y={250} w={150} h={40} c={C.teal} title="Zone" sub="groups spaces" />
+      <Box x={120} y={256} w={150} h={44} c={C.teal} title="Zone" sub="groups spaces" />
       <Box x={620} y={96} w={150} h={44} c={C.purple} title="Type" sub="product spec" />
       <Box x={620} y={176} w={150} h={44} c={C.purple} title="Component" sub="installed item" />
-      <Box x={620} y={250} w={150} h={40} c={C.purple} title="System" sub="groups components" />
-      <Box x={370} y={176} w={160} h={44} c={C.amber} title="Spare · Resource · Job" sub="operations" />
-      <Arrow x1={420} y1={58} x2={230} y2={96} /><Arrow x1={480} y1={58} x2={670} y2={96} />
-      <Arrow x1={195} y1={140} x2={195} y2={176} /><Arrow x1={195} y1={220} x2={195} y2={250} />
-      <Arrow x1={695} y1={140} x2={695} y2={176} /><Arrow x1={695} y1={220} x2={695} y2={250} />
-      <Arrow x1={620} y1={198} x2={272} y2={198} c={C.red} />
-      <text x={446} y={238} textAnchor="middle" fontSize={11} fill={C.red}>Component.Space → Space.Name</text>
-      <Arrow x1={620} y1={118} x2={532} y2={190} c={C.amber} />
-      <text x={20} y={290} fontSize={11} fill={muted}>Contact, Document, Attribute, Coordinate and Issue rows attach to any of these.</text>
+      <Box x={620} y={256} w={150} h={44} c={C.purple} title="System" sub="groups components" />
+      <Box x={360} y={96} w={180} h={44} c={C.amber} title="Spare · Resource · Job" sub="operations" />
+      <Arrow x1={410} y1={58} x2={230} y2={94} /><Arrow x1={490} y1={58} x2={670} y2={94} />
+      <Arrow x1={195} y1={140} x2={195} y2={174} /><Arrow x1={195} y1={220} x2={195} y2={254} />
+      <Arrow x1={695} y1={140} x2={695} y2={174} /><Arrow x1={695} y1={220} x2={695} y2={254} />
+      <Arrow x1={618} y1={198} x2={274} y2={198} c={C.red} />
+      <text x={446} y={190} textAnchor="middle" fontSize={11} fill={C.red}>Component.Space → Space.Name</text>
+      <Arrow x1={618} y1={118} x2={544} y2={118} c={C.amber} />
+      <text x={450} y={322} textAnchor="middle" fontSize={11} fill={muted}>Contact, Document, Attribute, Coordinate and Issue rows attach to any of these.</text>
     </Frame>
   );
 }
