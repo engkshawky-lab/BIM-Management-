@@ -263,6 +263,7 @@ r.post(T + "/plan-rows", h(async (req, res) => {
     disciplines: z.array(z.string().max(60)).min(1).max(12), taskTeam: z.string().max(120).default(""),
     milestones: z.array(z.object({ code: z.string().max(12), name: z.string().max(120), date: z.string().max(10) })).max(12),
     stages: z.array(z.string().max(40)).max(8).default([]), notes: z.string().max(4000).default(""), count: z.number().int().min(5).max(80).default(30),
+    projectData: z.string().max(20_000).default(""),
   }), req.body, res); if (!body) return;
   const ms = body.milestones.map((m) => `${m.code} ${m.name}${m.date ? ` (${m.date})` : ""}`).join("; ");
   const typeCodes = Object.entries(TYPE_CODES).map(([k, v]) => `${k} ${v}`).join(", ");
@@ -275,7 +276,7 @@ Each loin value is short and specific: geometry level (e.g. "LOD 300") plus the 
 Build the information containers of a ${body.kind === "tidp" ? "Task Information Delivery Plan for one task team" : "Master Information Delivery Plan across the task teams"} (ISO 19650-2 5.4.4 / 5.4.5). ${JSON_ONLY}
 Schema: {"rows": [{"taskTeam": string, "title": string, "type": string (one of: ${typeCodes}), "role": string (one-letter role code), "volume": string (2 chars, "ZZ" if whole project), "level": string (2 chars, "XX" if not level-specific), "format": string, "loin": string, "milestone": string (milestone code), "start": "YYYY-MM-DD" or "", "due": "YYYY-MM-DD" or "", "dependsOn": string (refs like "C003", comma-separated, or ""), "responsible": string (role), "suitability": "S1" | "S2" | "S3" | "S4"}]}
 Rows are given refs C001, C002 … in order, so dependsOn must use those refs. Make containers specific to the project (real deliverables, not generic). Respect the milestone dates: every due date on or before its milestone date, and start dates before due dates. ${body.count} rows.`;
-  const user = `Project: ${body.projectName || "n/a"} — ${body.projectType || "building project"}\nDisciplines / task teams: ${body.disciplines.join(", ")}${body.taskTeam ? `\nTask team: ${body.taskTeam}` : ""}\nMilestones: ${ms || "none given"}${body.kind === "mpdt" ? `\nStages: ${body.stages.join(", ")}` : ""}\nNotes: ${body.notes || "none"}`;
+  const user = `Project: ${body.projectName || "n/a"} — ${body.projectType || "building project"}\nDisciplines / task teams: ${body.disciplines.join(", ")}${body.taskTeam ? `\nTask team: ${body.taskTeam}` : ""}\nMilestones: ${ms || "none given"}${body.kind === "mpdt" ? `\nStages: ${body.stages.join(", ")}` : ""}\nNotes: ${body.notes || "none"}${body.projectData ? `\n\n${body.projectData}\n\nUse the deliverables, disciplines and stages above as the basis for the rows.` : ""}`;
   const { text } = await ask({ system, messages: [{ role: "user", content: user }], maxTokens: 16000 });
   let out: { rows?: Record<string, unknown>[] };
   try { out = parseJson(text); } catch { return res.status(502).json({ error: "The AI response could not be read. Try again." }); }
@@ -316,11 +317,13 @@ const docBrief = z.object({
   style: z.enum(["template", "draft"]).default("draft"),
   /** controlled document data (reference, version, author role, status…) as text */
   docData: z.string().max(3000).default(""),
+  /** common project data and this document's inputs (the mandatory input set) as text */
+  projectData: z.string().max(20_000).default(""),
 });
 const outlineSection = z.object({ title: z.string().max(200), purpose: z.string().max(2000), contents: z.array(z.string().max(400)).max(30), clauses: z.array(z.string().max(80)).max(12) });
 const briefText = (b: z.infer<typeof docBrief>) =>
   `Document: ${b.docType}\n${b.docData || `Project: ${b.projectName || "[Project name]"}\nOrganisation (author): ${b.organisation || "[Organisation]"}\nStage: ${b.stage || "not stated"}`}\nAppointing party: ${b.appointingParty || "[Appointing party]"}
-Write from the point of view of the author organisation in its stated role, and pitch the content to the stated project stage and document status.
+${b.projectData ? `\n${b.projectData}\n\nTreat the project data above as fact and do not mark it [CONFIRM]; propose and mark [CONFIRM] only what it does not give.\n` : ""}Write from the point of view of the author organisation in its stated role, and pitch the content to the stated project stage and document status.
 Author's requirements:\n${b.brief || "none given"}`;
 
 r.post(T + "/generate/outline", h(async (req, res) => {

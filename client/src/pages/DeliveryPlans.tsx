@@ -11,6 +11,9 @@ import {
 import { TONES } from "./hubTheme";
 import { DocDataPanel, useDocData } from "../components/DocDataPanel";
 import { tr } from "../i18nDom";
+import { markGenerated } from "../lib/projectStore";
+import { projectDataText } from "../../../shared/projectData";
+import { ProjectDataGate, useGenerationReady } from "./ProjectData";
 
 // TIDP / MIDP / MPDT generator: editable tables with ISO 19650 container naming, checks, starter lists,
 // optional AI rows, Excel / CSV / Word export and a reset.
@@ -90,6 +93,9 @@ export default function DeliveryPlans() {
   const switchKind = (k: PlanKind) => { setKind(k); setS(load(k)); setConfirmReset(false); };
   const meta = KINDS.find((k) => k.id === kind)!;
   const doc = useDocData(meta.label);
+  const gen = useGenerationReady(kind === "mpdt" ? undefined : meta.label);
+  const ready = doc.ready && gen.ready;
+  const projectStages = gen.p.stages.filter((x) => x.name.trim());
   const hdr: PlanHeader = { ...s.header, projectName: doc.d.projectName, projectCode: doc.d.projectCode, appointingParty: doc.d.appointingParty, preparedBy: doc.d.preparedBy, revision: doc.d.version };
   const sx: State = { ...s, header: hdr };
   const title = `${meta.full} (${meta.label})${kind === "tidp" && s.header.taskTeam ? ` — ${s.header.taskTeam}` : ""}`;
@@ -103,7 +109,7 @@ export default function DeliveryPlans() {
   const aiRows = async () => {
     setBusy(true);
     try {
-      const r = await api<{ rows: (Partial<ContainerRow> & Partial<MpdtRow>)[] }>("/ai/tools/plan-rows", { body: { kind, projectName: doc.d.projectName, projectType: s.notes.split("\n")[0] ?? "", disciplines: (kind === "tidp" ? [s.header.discipline] : s.disciplines).map((d) => DISCIPLINES[d]?.label ?? d), taskTeam: s.header.taskTeam, milestones: s.milestones.filter((m) => m.code), stages: s.stages, notes: s.notes, count: kind === "tidp" ? 20 : 40 } });
+      const r = await api<{ rows: (Partial<ContainerRow> & Partial<MpdtRow>)[] }>("/ai/tools/plan-rows", { body: { kind, projectName: doc.d.projectName, projectType: s.notes.split("\n")[0] ?? "", disciplines: (kind === "tidp" ? [s.header.discipline] : s.disciplines).map((d) => DISCIPLINES[d]?.label ?? d), taskTeam: s.header.taskTeam, milestones: s.milestones.filter((m) => m.code), stages: s.stages, notes: s.notes, count: kind === "tidp" ? 20 : 40, projectData: projectDataText(gen.p, gen.kind) } });
       if (kind === "mpdt") setS({ ...s, mpdt: r.rows.map((x) => ({ element: x.element ?? "", classification: x.classification ?? "", author: x.author ?? "", notes: x.notes ?? "", loin: (x.loin as Record<string, string>) ?? {} })) });
       else setS({ ...s, rows: numberRows(r.rows.map((x, i) => ({ ...emptyRow(i), ...Object.fromEntries(Object.entries(x).filter(([, v]) => v !== "")), number: "", status: "Planned", taskTeam: x.taskTeam || (kind === "tidp" ? s.header.taskTeam : ""), type: TYPE_CODES[String(x.type)] ? String(x.type) : "M3" }) as ContainerRow)) });
       toast(`${r.rows.length} rows generated — review them before issue.`);
@@ -136,6 +142,7 @@ export default function DeliveryPlans() {
       <div className="row">{KINDS.map((k) => <button key={k.id} onClick={() => switchKind(k.id)} style={kind === k.id ? { background: k.c, color: "#fff", borderColor: k.c } : { borderColor: k.c, color: k.c }}><b>{k.label}</b> <span className="small" style={{ opacity: .85 }}>· {k.full}</span></button>)}
         <span className="small muted">{meta.clause}</span></div>
 
+      <ProjectDataGate docType={kind === "mpdt" ? undefined : meta.label} what={`the ${meta.label}`} />
       <DocDataPanel data={doc} what={`generating the ${meta.label}`} code={meta.label} />
 
       <div className="hub-card" style={{ ...cv(meta.c), display: "grid", gap: 10 }}>
@@ -155,7 +162,8 @@ export default function DeliveryPlans() {
         <div className="hub-title" style={cv(meta.c)}>2. Information delivery milestones</div>
         <div className="table-wrap"><table className="data hub-table" style={{ maxWidth: 640 }}><thead><tr><th>Code</th><th>Milestone</th><th>Date</th><th /></tr></thead>
           <tbody>{s.milestones.map((m, i) => <tr key={i}>{(["code", "name", "date"] as const).map((f) => <td key={f}><input className="cell-input" type={f === "date" ? "date" : "text"} value={m[f]} onChange={(e) => setS({ ...s, milestones: s.milestones.map((x, j) => (j === i ? { ...x, [f]: e.target.value } : x)) })} /></td>)}<td><button className="ghost small" onClick={() => setS({ ...s, milestones: s.milestones.filter((_, j) => j !== i) })}>✕</button></td></tr>)}</tbody></table></div>
-        <div><button className="small" onClick={() => setS({ ...s, milestones: [...s.milestones, { code: `M${s.milestones.length + 1}`, name: "", date: "" }] })}>+ Add milestone</button></div>
+        <div className="row"><button className="small" onClick={() => setS({ ...s, milestones: [...s.milestones, { code: `M${s.milestones.length + 1}`, name: "", date: "" }] })}>+ Add milestone</button>
+          {projectStages.length > 0 && <button className="small" onClick={() => setS({ ...s, milestones: projectStages.map((x, i) => ({ code: `M${i + 1}`, name: x.name, date: x.end || x.start })) })}>Use the project stages ({projectStages.length})</button>}</div>
       </div> : <div className="hub-card" style={{ ...cv(meta.c), display: "grid", gap: 8 }}>
         <div className="hub-title" style={cv(meta.c)}>2. Stages (one LOIN column each)</div>
         <div className="row">{s.stages.map((st, i) => <span key={i} className="row" style={{ gap: 2 }}><input className="cell-input" value={st} style={{ width: 110 }} onChange={(e) => { const v = e.target.value; setS({ ...s, stages: s.stages.map((x, j) => (j === i ? v : x)), mpdt: s.mpdt.map((r) => ({ ...r, loin: Object.fromEntries(Object.entries(r.loin).map(([k, val]) => [k === st ? v : k, val])) })) }); }} /><button className="ghost small" onClick={() => setS({ ...s, stages: s.stages.filter((_, j) => j !== i) })}>✕</button></span>)}
@@ -165,8 +173,8 @@ export default function DeliveryPlans() {
       <div className="hub-card" style={{ ...cv(meta.c), display: "grid", gap: 10 }}>
         <div className="row spread"><div className="hub-title" style={{ ...cv(meta.c), margin: 0 }}>3. {kind === "mpdt" ? "Elements and systems" : "Information containers"} · {count}</div>
           <div className="row">
-            <button disabled={!doc.ready} onClick={starter} title="Typical deliverables for the selected disciplines — no AI">Standard starter list</button>
-            <button className="primary" disabled={busy || !doc.ready} onClick={aiRows}>{busy ? "Generating… (about a minute)" : "Generate with AI"}</button>
+            <button disabled={!ready} onClick={starter} title="Typical deliverables for the selected disciplines — no AI">Standard starter list</button>
+            <button className="primary" disabled={busy || !ready} onClick={aiRows}>{busy ? "Generating… (about a minute)" : "Generate with AI"}</button>
             {kind !== "mpdt" && <label className="small" style={{ margin: 0 }}><input type="file" accept=".csv,.txt" multiple={kind === "midp"} style={{ display: "none" }} onChange={(e) => { void importCsv(e.target.files); e.target.value = ""; }} /><span className="btn">{kind === "midp" ? "Import TIDP CSVs" : "Import CSV"}</span></label>}
             <button onClick={() => kind === "mpdt" ? setS({ ...s, mpdt: [...s.mpdt, { element: "", classification: "", author: "", notes: "", loin: {} }] }) : setS({ ...s, rows: numberRows([...s.rows, emptyRow(s.rows.length, DISCIPLINES[s.header.discipline]?.role)]) })}>+ Add row</button>
             {!confirmReset ? <button className="ghost danger" onClick={() => setConfirmReset(true)}>Reset</button>
@@ -208,9 +216,9 @@ export default function DeliveryPlans() {
       {count > 0 && <div className="hub-card row spread" style={cv(meta.c)}>
         <div className="small">Export the {meta.label}: {count} rows{kind !== "mpdt" && (errors ? ` · ${errors} errors to fix first` : " · no errors")}</div>
         <div className="row">
-          <button className="primary" disabled={!doc.ready} onClick={() => toExcel(kind, sx, title)}>Excel (.xlsx)</button>
-          <button disabled={!doc.ready} onClick={() => saveMarkdownDocx(wordMarkdown(kind, sx, title), `${hdr.projectCode || "PRJ"}-${kind.toUpperCase()}-${hdr.revision}`, { title, project: doc.d.projectName, appointingParty: doc.d.appointingParty, organisation: doc.d.organisation, orgRole: doc.d.orgRole, reference: doc.d.reference, revision: doc.d.version, status: doc.d.status, stage: doc.d.stage, date: doc.d.issueDate || undefined, preparedBy: doc.d.preparedBy, checkedBy: doc.d.checkedBy, approvedBy: doc.d.approvedBy, security: doc.d.security })}>Word (.docx)</button>
-          <button disabled={!doc.ready} onClick={csv}>CSV</button>
+          <button className="primary" disabled={!ready} onClick={() => { void toExcel(kind, sx, title); markGenerated(meta.label); }}>Excel (.xlsx)</button>
+          <button disabled={!ready} onClick={() => saveMarkdownDocx(wordMarkdown(kind, sx, title), `${hdr.projectCode || "PRJ"}-${kind.toUpperCase()}-${hdr.revision}`, { title, project: doc.d.projectName, appointingParty: doc.d.appointingParty, organisation: doc.d.organisation, orgRole: doc.d.orgRole, reference: doc.d.reference, revision: doc.d.version, status: doc.d.status, stage: doc.d.stage, date: doc.d.issueDate || undefined, preparedBy: doc.d.preparedBy, checkedBy: doc.d.checkedBy, approvedBy: doc.d.approvedBy, security: doc.d.security })}>Word (.docx)</button>
+          <button disabled={!ready} onClick={csv}>CSV</button>
         </div>
       </div>}
     </div>

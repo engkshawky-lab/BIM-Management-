@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { tr } from "../i18nDom";
+import { useProjectData } from "../lib/projectStore";
 import { DOC_STATUSES, OPTIONAL, ORG_ROLES, REQUIRED, SECURITY, STAGES, emptyDocData, missingDocData, suggestReference, type DocData } from "../../../shared/docData";
 
 // "Document data — required before generation": the controlled identity of a document, entered once and
@@ -11,7 +12,13 @@ const load = (): DocData => { try { return { ...emptyDocData(), ...JSON.parse(lo
 /** Shared document data; `code` (e.g. "EIR") suggests a reference when none is set. */
 export function useDocData(code?: string) {
   const [d, setD] = useState<DocData>(load);
+  const [p] = useProjectData();
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch { /* storage unavailable */ } }, [d]);
+  // project name, code, client and CDE come from the common project data when not typed here
+  useEffect(() => {
+    const fill = { projectName: d.projectName || p.name, projectCode: d.projectCode || p.code, appointingParty: d.appointingParty || p.client, cde: d.cde || p.cde };
+    if (Object.entries(fill).some(([k, v]) => v !== d[k as keyof DocData])) setD({ ...d, ...fill });
+  }, [p.name, p.code, p.client, p.cde]); // eslint-disable-line react-hooks/exhaustive-deps
   const missing = missingDocData(d);
   return { d, setD, missing, ready: missing.length === 0, suggested: code ? suggestReference(d, code) : "" };
 }

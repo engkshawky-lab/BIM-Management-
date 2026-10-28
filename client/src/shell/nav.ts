@@ -91,6 +91,7 @@ export const RESOURCE_PAGES: NavItem[] = [
   g("r.wizard", "Setup wizard", "/wizard", "sparkles", "My work", "Answer a few questions; get the documents and workflow you need"),
   g("r.myday", "My Day", "/my-day", "calendar", "My work", "Everything waiting on you"),
   g("r.portfolio", "Portfolio dashboard", "/portfolio", "grid", "My work", "Health across your projects"),
+  g("ai.projectdata", "Project data (enter once)", "/project-data", "table", "AI tools", "Mandatory inputs every document reuses: the eight-item hard minimum and per-document inputs"),
   g("ai.review", "Document review & compare", "/ai-tools/review", "sparkles", "AI tools", "Review EIR/BEP/MIDP; EIR ↔ BEP check; BEP versions"),
   g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "AI tools", "EIR, AIR, PIR, OIR, BEP, TIDP, MIDP or any custom template"),
   g("ai.plans", "TIDP / MIDP / MPDT generator", "/ai-tools/plans", "calendar", "AI tools", "Delivery plan tables with naming, checks and Excel export"),
@@ -129,7 +130,7 @@ export const RAIL: RailSection[] = [
 export function sectionFor(route: string): string {
   if (route.startsWith("/projects")) return "projects";
   if (/^\/knowledge\/[^/]+\/templates/.test(route)) return "documents";
-  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|ai-tools|model-tools|downloads|samples|news|standards|talent|admin|wizard|support)/.test(route)) return "resources";
+  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|ai-tools|model-tools|project-data|downloads|samples|news|standards|talent|admin|wizard|support)/.test(route)) return "resources";
   if (route.startsWith("/knowledge") || route.startsWith("/learn") || route.startsWith("/parts") || route.startsWith("/hubs")) return "standards";
   return "home";
 }

@@ -7,6 +7,9 @@ import { saveMarkdownDocx, type DocMeta } from "../lib/mdDocx";
 import { placeholders } from "../../../shared/mdBlocks";
 import { docDataText } from "../../../shared/docData";
 import { DocDataPanel, useDocData } from "../components/DocDataPanel";
+import { markGenerated } from "../lib/projectStore";
+import { projectDataText } from "../../../shared/projectData";
+import { ProjectDataGate, useGenerationReady } from "./ProjectData";
 
 // AI document generator (outline → section-by-section drafting) and AI document review (compliance matrix).
 
@@ -59,7 +62,10 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
   // controlled document data (project, reference, version, organisation, role, stage, status, prepared by) is required first
   const code = /(([A-Z][A-Z-]{1,8}))/.exec(f.docType)?.[1];
   const doc = useDocData(code);
-  const req = { ...f, projectName: doc.d.projectName, organisation: doc.d.organisation, appointingParty: doc.d.appointingParty, stage: doc.d.stage, docData: docDataText(doc.d) };
+  // the hard minimum and this document's own inputs (common project data, entered once) are required too
+  const gen = useGenerationReady(f.docType);
+  const ready = doc.ready && gen.ready;
+  const req = { ...f, projectName: doc.d.projectName, organisation: doc.d.organisation, appointingParty: doc.d.appointingParty, stage: doc.d.stage, docData: docDataText(doc.d), projectData: projectDataText(gen.p, gen.kind) };
 
   const active = outline?.sections.filter((s) => s.on) ?? [];
   const done = drafts.filter((d) => d.status === "done").length;
@@ -105,6 +111,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
     <div style={{ display: "grid", gap: 12 }}>
       <div className="row">{STEPS.map((s, i) => <span key={s} className="chip" style={i + 1 === step ? { background: "var(--hub)", color: "#fff" } : i + 1 < step ? { color: "var(--ok)" } : undefined}>{i + 1 < step ? "✓" : i + 1}. {s}</span>)}</div>
 
+      {!outline && <ProjectDataGate docType={f.docType} what={f.docType || "this document"} />}
       {!outline && <DocDataPanel data={doc} what="generating the document" code={code} />}
       {!outline && <div className="hub-card" style={{ display: "grid", gap: 10 }}>
         <div className="row spread"><b>Which ISO 19650 document do you need?</b>
@@ -115,8 +122,8 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
           <Field label="Document type *"><input value={f.docType} onChange={set("docType")} placeholder="e.g. Information delivery risk register" /></Field>
         </div>
         <Field label="Project facts and requirements (the more you give, the less is marked [CONFIRM])"><textarea value={f.brief} onChange={set("brief")} placeholder="e.g. 12,000 m² clinic, D&B, ACC as CDE, Uniclass 2015, IFC 4 Reference View, COBie at stages 4 and 6, client FM system Planon, 4 task teams…" style={{ minHeight: 90 }} /></Field>
-        <div className="row"><button className="primary" disabled={planning || f.docType.trim().length < 2 || !doc.ready} onClick={plan}>{planning ? `Planning the outline… ${elapsed}` : "Plan the document →"}</button>
-          <span className="small muted">{doc.ready ? "You'll check the outline before anything is drafted." : "Complete the required document data above first."}</span></div>
+        <div className="row"><button className="primary" disabled={planning || f.docType.trim().length < 2 || !ready} onClick={plan}>{planning ? `Planning the outline… ${elapsed}` : "Plan the document →"}</button>
+          <span className="small muted">{ready ? "You'll check the outline before anything is drafted." : !gen.ready ? "Complete the project data hard minimum and this document's required inputs first." : "Complete the required document data above first."}</span></div>
       </div>}
 
       {outline && !drafts.length && <div className="hub-card" style={{ display: "grid", gap: 10 }}>
@@ -134,7 +141,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
           </div>))}</div>
         <div className="row">
           <button onClick={() => outline && setOutline({ ...outline, sections: [...outline.sections, { title: "New section", purpose: "", contents: [], clauses: outline.clauses, on: true }] })}>+ Add a section</button>
-          <button className="primary" disabled={!active.length || !doc.ready} onClick={draftAll}>Draft {active.length} sections →</button>
+          <button className="primary" disabled={!active.length || !ready} onClick={draftAll}>Draft {active.length} sections →</button>
           <span className="small muted">Sections are drafted {CONCURRENCY} at a time; you can watch them appear.</span>
         </div>
       </div>}
@@ -156,7 +163,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
             <div className="row"><button className="primary small" onClick={() => { const r = redo; setRedo(null); void draftOne(r.i, active, r.text); }}>Redo now</button><button className="ghost small" onClick={() => setRedo(null)}>Cancel</button></div>
           </div>}
           {finished && <>
-            <button className="primary" disabled={!doc.ready} onClick={() => saveMarkdownDocx(assembled, slug(outline.title), meta())}>Download Word (.docx)</button>
+            <button className="primary" disabled={!ready} onClick={() => { void saveMarkdownDocx(assembled, slug(outline.title), meta()); markGenerated(gen.kind); }}>Download Word (.docx)</button>
             <div className="row">
               <button className="small" onClick={() => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([assembled], { type: "text/markdown" })); a.download = slug(outline.title) + ".md"; a.click(); }}>Markdown</button>
               <button className="small" onClick={() => { void navigator.clipboard?.writeText(assembled); toast("Copied."); }}>Copy</button>
