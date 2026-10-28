@@ -9,6 +9,8 @@ import {
   type ContainerRow, type MpdtRow, type PlanHeader, type PlanKind, type PlanMilestone,
 } from "../../../shared/planRows";
 import { TONES } from "./hubTheme";
+import { DocDataPanel, useDocData } from "../components/DocDataPanel";
+import { tr } from "../i18nDom";
 
 // TIDP / MIDP / MPDT generator: editable tables with ISO 19650 container naming, checks, starter lists,
 // optional AI rows, Excel / CSV / Word export and a reset.
@@ -87,9 +89,12 @@ export default function DeliveryPlans() {
   useEffect(() => { try { localStorage.setItem(key(kind), JSON.stringify(s)); localStorage.setItem("bim:plan:kind", kind); } catch { /* storage unavailable */ } }, [kind, s]);
   const switchKind = (k: PlanKind) => { setKind(k); setS(load(k)); setConfirmReset(false); };
   const meta = KINDS.find((k) => k.id === kind)!;
+  const doc = useDocData(meta.label);
+  const hdr: PlanHeader = { ...s.header, projectName: doc.d.projectName, projectCode: doc.d.projectCode, appointingParty: doc.d.appointingParty, preparedBy: doc.d.preparedBy, revision: doc.d.version };
+  const sx: State = { ...s, header: hdr };
   const title = `${meta.full} (${meta.label})${kind === "tidp" && s.header.taskTeam ? ` — ${s.header.taskTeam}` : ""}`;
   const H = (k: keyof PlanHeader) => ({ value: s.header[k], onChange: (e: { target: { value: string } }) => setS({ ...s, header: { ...s.header, [k]: e.target.value } }) });
-  const issues = useMemo(() => (kind === "mpdt" ? [] : checkContainers(s.header, s.rows, s.milestones)), [kind, s]);
+  const issues = useMemo(() => (kind === "mpdt" ? [] : checkContainers(hdr, s.rows, s.milestones)), [kind, s, hdr.projectCode]); // eslint-disable-line react-hooks/exhaustive-deps
   const rowIssues = (i: number) => issues.filter((x) => x.row === i);
   const setRow = (i: number, patch: Partial<ContainerRow>) => setS({ ...s, rows: s.rows.map((r, j) => (j === i ? { ...r, ...patch } : r)) });
   const setMpdt = (i: number, patch: Partial<MpdtRow>) => setS({ ...s, mpdt: s.mpdt.map((r, j) => (j === i ? { ...r, ...patch } : r)) });
@@ -98,7 +103,7 @@ export default function DeliveryPlans() {
   const aiRows = async () => {
     setBusy(true);
     try {
-      const r = await api<{ rows: (Partial<ContainerRow> & Partial<MpdtRow>)[] }>("/ai/tools/plan-rows", { body: { kind, projectName: s.header.projectName, projectType: s.notes.split("\n")[0] ?? "", disciplines: (kind === "tidp" ? [s.header.discipline] : s.disciplines).map((d) => DISCIPLINES[d]?.label ?? d), taskTeam: s.header.taskTeam, milestones: s.milestones.filter((m) => m.code), stages: s.stages, notes: s.notes, count: kind === "tidp" ? 20 : 40 } });
+      const r = await api<{ rows: (Partial<ContainerRow> & Partial<MpdtRow>)[] }>("/ai/tools/plan-rows", { body: { kind, projectName: doc.d.projectName, projectType: s.notes.split("\n")[0] ?? "", disciplines: (kind === "tidp" ? [s.header.discipline] : s.disciplines).map((d) => DISCIPLINES[d]?.label ?? d), taskTeam: s.header.taskTeam, milestones: s.milestones.filter((m) => m.code), stages: s.stages, notes: s.notes, count: kind === "tidp" ? 20 : 40 } });
       if (kind === "mpdt") setS({ ...s, mpdt: r.rows.map((x) => ({ element: x.element ?? "", classification: x.classification ?? "", author: x.author ?? "", notes: x.notes ?? "", loin: (x.loin as Record<string, string>) ?? {} })) });
       else setS({ ...s, rows: numberRows(r.rows.map((x, i) => ({ ...emptyRow(i), ...Object.fromEntries(Object.entries(x).filter(([, v]) => v !== "")), number: "", status: "Planned", taskTeam: x.taskTeam || (kind === "tidp" ? s.header.taskTeam : ""), type: TYPE_CODES[String(x.type)] ? String(x.type) : "M3" }) as ContainerRow)) });
       toast(`${r.rows.length} rows generated — review them before issue.`);
@@ -121,8 +126,8 @@ export default function DeliveryPlans() {
   };
   const reset = () => { const f = fresh(); setS(f); setConfirmReset(false); toast(`${meta.label} reset to a blank plan.`); };
   const csv = () => kind === "mpdt"
-    ? exportCsv(`${s.header.projectCode || "PRJ"}-MPDT`, ["Element / system", "Classification", "Model author", ...s.stages, "Notes"], s.mpdt.map((r) => [r.element, r.classification, r.author, ...s.stages.map((st) => r.loin[st] ?? ""), r.notes]))
-    : exportCsv(`${s.header.projectCode || "PRJ"}-${kind.toUpperCase()}`, ["Container name", ...CONTAINER_COLUMNS.map((c) => c.label)], s.rows.map((r) => [containerName(s.header, r), ...CONTAINER_COLUMNS.map((c) => r[c.key])]));
+    ? exportCsv(`${hdr.projectCode || "PRJ"}-MPDT`, ["Element / system", "Classification", "Model author", ...s.stages, "Notes"], s.mpdt.map((r) => [r.element, r.classification, r.author, ...s.stages.map((st) => r.loin[st] ?? ""), r.notes]))
+    : exportCsv(`${hdr.projectCode || "PRJ"}-${kind.toUpperCase()}`, ["Container name", ...CONTAINER_COLUMNS.map((c) => c.label)], s.rows.map((r) => [containerName(hdr, r), ...CONTAINER_COLUMNS.map((c) => r[c.key])]));
   const count = kind === "mpdt" ? s.mpdt.length : s.rows.length;
   const errors = issues.filter((x) => x.level === "error").length, warnings = issues.length - errors;
 
@@ -131,18 +136,16 @@ export default function DeliveryPlans() {
       <div className="row">{KINDS.map((k) => <button key={k.id} onClick={() => switchKind(k.id)} style={kind === k.id ? { background: k.c, color: "#fff", borderColor: k.c } : { borderColor: k.c, color: k.c }}><b>{k.label}</b> <span className="small" style={{ opacity: .85 }}>· {k.full}</span></button>)}
         <span className="small muted">{meta.clause}</span></div>
 
+      <DocDataPanel data={doc} what={`generating the ${meta.label}`} code={meta.label} />
+
       <div className="hub-card" style={{ ...cv(meta.c), display: "grid", gap: 10 }}>
-        <div className="hub-title" style={cv(meta.c)}>1. Project details</div>
+        <div className="hub-title" style={cv(meta.c)}>1. Plan details</div>
         <div className="grid g4">
-          <label className="small">Project name<input {...H("projectName")} placeholder="e.g. Riverside Clinic" /></label>
-          <label className="small">Project code<input {...H("projectCode")} placeholder="e.g. RVC" /></label>
+          <label className="small">Project code (for container names)<input value={doc.d.projectCode} onChange={(e) => doc.setD({ ...doc.d, projectCode: e.target.value })} placeholder="e.g. RVC" /></label>
           <label className="small">Originator code<input {...H("originator")} placeholder="e.g. ABC" /></label>
-          <label className="small">Revision<input {...H("revision")} /></label>
-          <label className="small">Appointing party<input {...H("appointingParty")} /></label>
           <label className="small">Lead appointed party<input {...H("leadAppointedParty")} /></label>
           {kind === "tidp" && <label className="small">Task team<input {...H("taskTeam")} placeholder="e.g. Architecture — XYZ Architects" /></label>}
           {kind === "tidp" && <label className="small">Discipline<select value={s.header.discipline} onChange={H("discipline").onChange}>{Object.entries(DISCIPLINES).map(([k, d]) => <option key={k} value={k}>{d.label}</option>)}</select></label>}
-          <label className="small">Prepared by<input {...H("preparedBy")} /></label>
         </div>
         {kind !== "tidp" && <div><span className="small muted">Disciplines / task teams</span><div className="row" style={{ marginTop: 4 }}>{Object.entries(DISCIPLINES).map(([k, d]) => <label key={k} className="row small" style={{ gap: 4, margin: 0, fontWeight: 400 }}><input type="checkbox" checked={s.disciplines.includes(k)} onChange={(e) => setS({ ...s, disciplines: e.target.checked ? [...s.disciplines, k] : s.disciplines.filter((x) => x !== k) })} />{d.label}</label>)}</div></div>}
         <label className="small">Project notes for AI (type, size, procurement, CDE, special requirements)<textarea value={s.notes} onChange={(e) => setS({ ...s, notes: e.target.value })} placeholder="e.g. 12,000 m² outpatient clinic, design and build, ACC as CDE, COBie at stages 4 and 6" style={{ minHeight: 50 }} /></label>
@@ -162,8 +165,8 @@ export default function DeliveryPlans() {
       <div className="hub-card" style={{ ...cv(meta.c), display: "grid", gap: 10 }}>
         <div className="row spread"><div className="hub-title" style={{ ...cv(meta.c), margin: 0 }}>3. {kind === "mpdt" ? "Elements and systems" : "Information containers"} · {count}</div>
           <div className="row">
-            <button onClick={starter} title="Typical deliverables for the selected disciplines — no AI">Standard starter list</button>
-            <button className="primary" disabled={busy} onClick={aiRows}>{busy ? "Generating… (about a minute)" : "Generate with AI"}</button>
+            <button disabled={!doc.ready} onClick={starter} title="Typical deliverables for the selected disciplines — no AI">Standard starter list</button>
+            <button className="primary" disabled={busy || !doc.ready} onClick={aiRows}>{busy ? "Generating… (about a minute)" : "Generate with AI"}</button>
             {kind !== "mpdt" && <label className="small" style={{ margin: 0 }}><input type="file" accept=".csv,.txt" multiple={kind === "midp"} style={{ display: "none" }} onChange={(e) => { void importCsv(e.target.files); e.target.value = ""; }} /><span className="btn">{kind === "midp" ? "Import TIDP CSVs" : "Import CSV"}</span></label>}
             <button onClick={() => kind === "mpdt" ? setS({ ...s, mpdt: [...s.mpdt, { element: "", classification: "", author: "", notes: "", loin: {} }] }) : setS({ ...s, rows: numberRows([...s.rows, emptyRow(s.rows.length, DISCIPLINES[s.header.discipline]?.role)]) })}>+ Add row</button>
             {!confirmReset ? <button className="ghost danger" onClick={() => setConfirmReset(true)}>Reset</button>
@@ -191,10 +194,10 @@ export default function DeliveryPlans() {
             <thead style={{ position: "sticky", top: 0, zIndex: 1 }}><tr><th>Container name</th>{CONTAINER_COLUMNS.filter((c) => kind === "midp" || c.key !== "taskTeam").map((c) => <th key={c.key} className="small">{c.label}</th>)}<th /></tr></thead>
             <tbody>{s.rows.map((r, i) => { const ri = rowIssues(i); const err = ri.some((x) => x.level === "error"); return (
               <tr key={i} style={ri.length ? { boxShadow: `inset 3px 0 0 ${err ? "var(--danger)" : "var(--warn)"}` } : undefined} title={ri.map((x) => x.message).join("\n")}>
-                <td><code className="no-i18n" style={{ fontSize: 11.5, whiteSpace: "nowrap" }}>{containerName(s.header, r)}</code></td>
+                <td><code className="no-i18n" style={{ fontSize: 11.5, whiteSpace: "nowrap" }}>{containerName(hdr, r)}</code></td>
                 {CONTAINER_COLUMNS.filter((c) => kind === "midp" || c.key !== "taskTeam").map((c) => <td key={c.key}>{
-                  c.key === "status" ? <select className="cell-input" value={r.status} onChange={(e) => setRow(i, { status: e.target.value })}>{STATUSES.map((x) => <option key={x}>{x}</option>)}</select>
-                  : c.key === "suitability" ? <select className="cell-input" value={r.suitability} onChange={(e) => setRow(i, { suitability: e.target.value })}>{SUITABILITY.map((x) => <option key={x}>{x}</option>)}</select>
+                  c.key === "status" ? <select className="cell-input" value={r.status} onChange={(e) => setRow(i, { status: e.target.value })}>{STATUSES.map((x) => <option key={x} value={x}>{tr(x)}</option>)}</select>
+                  : c.key === "suitability" ? <select className="cell-input" value={r.suitability} onChange={(e) => setRow(i, { suitability: e.target.value })}>{SUITABILITY.map((x) => <option key={x} value={x}>{x}</option>)}</select>
                   : c.key === "type" ? <select className="cell-input" value={r.type} title={TYPE_CODES[r.type]} onChange={(e) => setRow(i, { type: e.target.value })}>{Object.keys(TYPE_CODES).map((x) => <option key={x} value={x}>{x}</option>)}</select>
                   : c.key === "milestone" ? <select className="cell-input" value={r.milestone} onChange={(e) => setRow(i, { milestone: e.target.value })}><option value="">—</option>{s.milestones.map((m) => <option key={m.code} value={m.code}>{m.code}</option>)}</select>
                   : <input className="cell-input" type={c.key === "start" || c.key === "due" ? "date" : "text"} value={r[c.key]} style={{ minWidth: c.width * 6 }} onChange={(e) => setRow(i, { [c.key]: e.target.value } as Partial<ContainerRow>)} />}</td>)}
@@ -205,9 +208,9 @@ export default function DeliveryPlans() {
       {count > 0 && <div className="hub-card row spread" style={cv(meta.c)}>
         <div className="small">Export the {meta.label}: {count} rows{kind !== "mpdt" && (errors ? ` · ${errors} errors to fix first` : " · no errors")}</div>
         <div className="row">
-          <button className="primary" onClick={() => toExcel(kind, s, title)}>Excel (.xlsx)</button>
-          <button onClick={() => saveMarkdownDocx(wordMarkdown(kind, s, title), `${s.header.projectCode || "PRJ"}-${kind.toUpperCase()}-${s.header.revision}`, { title, project: s.header.projectName, appointingParty: s.header.appointingParty, organisation: s.header.leadAppointedParty, revision: s.header.revision, preparedBy: s.header.preparedBy })}>Word (.docx)</button>
-          <button onClick={csv}>CSV</button>
+          <button className="primary" disabled={!doc.ready} onClick={() => toExcel(kind, sx, title)}>Excel (.xlsx)</button>
+          <button disabled={!doc.ready} onClick={() => saveMarkdownDocx(wordMarkdown(kind, sx, title), `${hdr.projectCode || "PRJ"}-${kind.toUpperCase()}-${hdr.revision}`, { title, project: doc.d.projectName, appointingParty: doc.d.appointingParty, organisation: doc.d.organisation, orgRole: doc.d.orgRole, reference: doc.d.reference, revision: doc.d.version, status: doc.d.status, stage: doc.d.stage, date: doc.d.issueDate || undefined, preparedBy: doc.d.preparedBy, checkedBy: doc.d.checkedBy, approvedBy: doc.d.approvedBy, security: doc.d.security })}>Word (.docx)</button>
+          <button disabled={!doc.ready} onClick={csv}>CSV</button>
         </div>
       </div>}
     </div>

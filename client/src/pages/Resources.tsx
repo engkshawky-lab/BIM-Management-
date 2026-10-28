@@ -6,6 +6,7 @@ import { templateById } from "../../../shared/data/templates";
 import type { DocTemplate } from "../../../shared/data/types";
 import type { FieldValue } from "../../../shared/documents";
 import { generateHref } from "./AiTools";
+import { useDocData } from "../components/DocDataPanel";
 import { saveAs } from "file-saver";
 import { tr } from "../i18nDom";
 
@@ -175,8 +176,12 @@ function sampleDoc(t: DocTemplate): ExportDoc {
 export function SampleDocuments() {
   const { toast } = useSession();
   const [open, setOpen] = useState<string | null>(null);
+  const doc = useDocData();
+  // samples are blank structures; when the document data is complete it fills their cover and document control
   const download = async (t: DocTemplate) => {
-    try { saveAs(await buildDocx(sampleDoc(t), t, { name: "[Project name]", code: "PRJ", appointingParty: "[Appointing party]", location: "[Location]" }), `Sample_${t.code}.docx`); }
+    const d = doc.d, filled = doc.ready;
+    const sample = filled ? { ...sampleDoc(t), containerName: d.reference, revision: d.version, authorName: d.preparedBy } : sampleDoc(t);
+    try { saveAs(await buildDocx(sample, t, { name: filled ? d.projectName : "[Project name]", code: d.projectCode || "PRJ", appointingParty: d.appointingParty || "[Appointing party]", location: "[Location]" }), `${filled ? (d.projectCode || "PRJ") + "_" : "Sample_"}${t.code}.docx`); }
     catch (e) { toast((e as Error).message, "error"); }
   };
   return (

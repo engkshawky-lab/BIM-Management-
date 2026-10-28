@@ -27,3 +27,13 @@ describe("markdownToDocx", () => {
     expect(xml.match(/Information Protocol/g)!.length).toBe(1);
   });
 });
+
+describe("markdownToDocx document data", () => {
+  it("writes the controlled document data on the cover and in document control", async () => {
+    const xml = await xmlOf(markdownToDocx("# EIR\n\n## 1 Scope\n\nText.", {
+      title: "Exchange Information Requirements", project: "Riverside Clinic", reference: "RVC-EIR-001", revision: "P02", status: "S3 Shared for review and comment",
+      organisation: "Example Health Trust", orgRole: "Appointing party", stage: "2 Concept design", preparedBy: "A. Author", checkedBy: "B. Checker", approvedBy: "C. Approver", security: "Not sensitive",
+    }));
+    for (const v of ["RVC-EIR-001", "P02", "S3 Shared for review and comment", "Example Health Trust (Appointing party)", "2 Concept design", "A. Author", "B. Checker", "C. Approver", "Not sensitive"]) expect(xml).toContain(v);
+  });
+});

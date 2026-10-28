@@ -5,6 +5,8 @@ import { api } from "../lib/api";
 import { exportCsv } from "../lib/export";
 import { saveMarkdownDocx, type DocMeta } from "../lib/mdDocx";
 import { placeholders } from "../../../shared/mdBlocks";
+import { docDataText } from "../../../shared/docData";
+import { DocDataPanel, useDocData } from "../components/DocDataPanel";
 
 // AI document generator (outline → section-by-section drafting) and AI document review (compliance matrix).
 
@@ -35,7 +37,7 @@ interface Brief { docType: string; projectName: string; organisation: string; ap
 interface Sec { title: string; purpose: string; contents: string[]; clauses: string[]; on: boolean }
 interface Outline { title: string; source: "template" | "ai"; templateCode?: string; clauses: string[]; sections: Sec[] }
 interface Draft { status: "wait" | "busy" | "done" | "error"; md: string; error?: string }
-interface GenState { f: Brief; outline: Outline | null; drafts: Draft[]; reference: string }
+interface GenState { f: Brief; outline: Outline | null; drafts: Draft[] }
 const KEY = "bim:gen:last";
 const CONCURRENCY = 3;
 
@@ -46,7 +48,6 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
   const [f, setF] = useState<Brief>(() => (initial ? { ...(saved?.f ?? fresh), docType: initial } : saved?.f ?? fresh));
   const [outline, setOutline] = useState<Outline | null>(() => (initial && saved?.f.docType !== initial ? null : saved?.outline ?? null));
   const [drafts, setDrafts] = useState<Draft[]>(() => (initial && saved?.f.docType !== initial ? [] : (saved?.drafts ?? []).map((d) => (d.status === "busy" ? { ...d, status: "wait" } : d))));
-  const [reference, setReference] = useState(saved?.reference ?? "");
   const [group, setGroup] = useState(0);
   const [planning, setPlanning] = useState(false);
   const [running, setRunning] = useState(false);
@@ -54,7 +55,11 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
   const draftsRef = useRef(drafts); draftsRef.current = drafts;
   const elapsed = useElapsed(running || planning).label;
   const set = (k: keyof Brief) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
-  useEffect(() => { save(KEY, { f, outline, drafts, reference } satisfies GenState); }, [f, outline, drafts, reference]);
+  useEffect(() => { save(KEY, { f, outline, drafts } satisfies GenState); }, [f, outline, drafts]);
+  // controlled document data (project, reference, version, organisation, role, stage, status, prepared by) is required first
+  const code = /(([A-Z][A-Z-]{1,8}))/.exec(f.docType)?.[1];
+  const doc = useDocData(code);
+  const req = { ...f, projectName: doc.d.projectName, organisation: doc.d.organisation, appointingParty: doc.d.appointingParty, stage: doc.d.stage, docData: docDataText(doc.d) };
 
   const active = outline?.sections.filter((s) => s.on) ?? [];
   const done = drafts.filter((d) => d.status === "done").length;
@@ -65,7 +70,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
   const plan = async () => {
     setPlanning(true);
     try {
-      const r = await api<Omit<Outline, "sections"> & { sections: Omit<Sec, "on">[] }>("/ai/tools/generate/outline", { body: f });
+      const r = await api<Omit<Outline, "sections"> & { sections: Omit<Sec, "on">[] }>("/ai/tools/generate/outline", { body: req });
       setOutline({ ...r, sections: r.sections.map((s) => ({ ...s, on: true })) }); setDrafts([]);
     } catch (e) { toast((e as Error).message, "error"); } finally { setPlanning(false); }
   };
@@ -74,7 +79,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
     setDrafts((d) => d.map((x, j) => (j === i ? { ...x, status: "busy", error: undefined } : x)));
     try {
       const s = sections[i];
-      const r = await api<{ markdown: string }>("/ai/tools/generate/section", { body: { ...f, title: outline!.title, index: i, outline: sections.map((x) => x.title), section: { title: s.title, purpose: s.purpose, contents: s.contents, clauses: s.clauses }, instruction } });
+      const r = await api<{ markdown: string }>("/ai/tools/generate/section", { body: { ...req, title: outline!.title, index: i, outline: sections.map((x) => x.title), section: { title: s.title, purpose: s.purpose, contents: s.contents, clauses: s.clauses }, instruction } });
       setDrafts((d) => d.map((x, j) => (j === i ? { status: "done", md: r.markdown } : x)));
     } catch (e) { setDrafts((d) => d.map((x, j) => (j === i ? { ...x, status: "error", error: (e as Error).message } : x))); }
   };
@@ -89,7 +94,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
     setRunning(false);
   };
 
-  const meta = (): DocMeta => ({ title: outline?.title ?? f.docType, project: f.projectName, organisation: f.organisation, appointingParty: f.appointingParty, reference: reference || undefined, revision: "P01", status: "Draft for review", preparedBy: f.organisation || undefined });
+  const meta = (): DocMeta => ({ title: outline?.title ?? f.docType, project: doc.d.projectName, organisation: doc.d.organisation, orgRole: doc.d.orgRole, appointingParty: doc.d.appointingParty, reference: doc.d.reference, revision: doc.d.version, status: doc.d.status, stage: doc.d.stage, date: doc.d.issueDate || undefined, preparedBy: doc.d.preparedBy, checkedBy: doc.d.checkedBy, approvedBy: doc.d.approvedBy, security: doc.d.security });
   const editSec = (i: number, patch: Partial<Sec>) => outline && setOutline({ ...outline, sections: outline.sections.map((s, j) => (j === i ? { ...s, ...patch } : s)) });
   const startOver = () => { setOutline(null); setDrafts([]); };
 
@@ -100,6 +105,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
     <div style={{ display: "grid", gap: 12 }}>
       <div className="row">{STEPS.map((s, i) => <span key={s} className="chip" style={i + 1 === step ? { background: "var(--hub)", color: "#fff" } : i + 1 < step ? { color: "var(--ok)" } : undefined}>{i + 1 < step ? "✓" : i + 1}. {s}</span>)}</div>
 
+      {!outline && <DocDataPanel data={doc} what="generating the document" code={code} />}
       {!outline && <div className="hub-card" style={{ display: "grid", gap: 10 }}>
         <div className="row spread"><b>Which ISO 19650 document do you need?</b>
           <div className="seg"><button className={f.style === "draft" ? "on" : ""} onClick={() => setF({ ...f, style: "draft" })}>Project draft</button><button className={f.style === "template" ? "on" : ""} onClick={() => setF({ ...f, style: "template" })}>Reusable template</button></div></div>
@@ -107,15 +113,10 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
         <div className="row">{QUICK[group].docs.map((d) => <button key={d} className="small" style={f.docType === d ? { borderColor: "var(--hub)", color: "var(--hub)", fontWeight: 600 } : undefined} onClick={() => setF({ ...f, docType: d })}>{d}</button>)}</div>
         <div className="grid g2">
           <Field label="Document type *"><input value={f.docType} onChange={set("docType")} placeholder="e.g. Information delivery risk register" /></Field>
-          <Field label="Project name"><input value={f.projectName} onChange={set("projectName")} placeholder="e.g. New Hospital Block B" /></Field>
-          <Field label="Your organisation (author)"><input value={f.organisation} onChange={set("organisation")} /></Field>
-          <Field label="Appointing party (client)"><input value={f.appointingParty} onChange={set("appointingParty")} /></Field>
-          <Field label="Project stage"><input value={f.stage} onChange={set("stage")} placeholder="e.g. RIBA Stage 3 / Concept design" /></Field>
-          <Field label="Document reference (optional)"><input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="e.g. PRJ-ABC-ZZ-XX-RP-Z-0001" /></Field>
         </div>
         <Field label="Project facts and requirements (the more you give, the less is marked [CONFIRM])"><textarea value={f.brief} onChange={set("brief")} placeholder="e.g. 12,000 m² clinic, D&B, ACC as CDE, Uniclass 2015, IFC 4 Reference View, COBie at stages 4 and 6, client FM system Planon, 4 task teams…" style={{ minHeight: 90 }} /></Field>
-        <div className="row"><button className="primary" disabled={planning || f.docType.trim().length < 2} onClick={plan}>{planning ? `Planning the outline… ${elapsed}` : "Plan the document →"}</button>
-          <span className="small muted">You'll check the outline before anything is drafted.</span></div>
+        <div className="row"><button className="primary" disabled={planning || f.docType.trim().length < 2 || !doc.ready} onClick={plan}>{planning ? `Planning the outline… ${elapsed}` : "Plan the document →"}</button>
+          <span className="small muted">{doc.ready ? "You'll check the outline before anything is drafted." : "Complete the required document data above first."}</span></div>
       </div>}
 
       {outline && !drafts.length && <div className="hub-card" style={{ display: "grid", gap: 10 }}>
@@ -133,7 +134,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
           </div>))}</div>
         <div className="row">
           <button onClick={() => outline && setOutline({ ...outline, sections: [...outline.sections, { title: "New section", purpose: "", contents: [], clauses: outline.clauses, on: true }] })}>+ Add a section</button>
-          <button className="primary" disabled={!active.length} onClick={draftAll}>Draft {active.length} sections →</button>
+          <button className="primary" disabled={!active.length || !doc.ready} onClick={draftAll}>Draft {active.length} sections →</button>
           <span className="small muted">Sections are drafted {CONCURRENCY} at a time; you can watch them appear.</span>
         </div>
       </div>}
@@ -155,7 +156,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
             <div className="row"><button className="primary small" onClick={() => { const r = redo; setRedo(null); void draftOne(r.i, active, r.text); }}>Redo now</button><button className="ghost small" onClick={() => setRedo(null)}>Cancel</button></div>
           </div>}
           {finished && <>
-            <button className="primary" onClick={() => saveMarkdownDocx(assembled, slug(outline.title), meta())}>Download Word (.docx)</button>
+            <button className="primary" disabled={!doc.ready} onClick={() => saveMarkdownDocx(assembled, slug(outline.title), meta())}>Download Word (.docx)</button>
             <div className="row">
               <button className="small" onClick={() => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([assembled], { type: "text/markdown" })); a.download = slug(outline.title) + ".md"; a.click(); }}>Markdown</button>
               <button className="small" onClick={() => { void navigator.clipboard?.writeText(assembled); toast("Copied."); }}>Copy</button>
@@ -171,8 +172,8 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
         </div>
         <div style={{ minWidth: 0 }}>
           <div className="hub-tile row spread" style={{ "--c": "var(--hub)", marginBottom: 10 } as CSSProperties}>
-            <span className="small"><b>{outline.title}</b>{f.projectName && ` · ${f.projectName}`}{f.appointingParty && ` · for ${f.appointingParty}`}</span>
-            <span className="small muted">Revision P01 · Draft for review</span>
+            <span className="small"><b>{outline.title}</b> · {doc.d.projectName}{doc.d.appointingParty && ` · for ${doc.d.appointingParty}`} · <span className="no-i18n">{doc.d.reference}</span></span>
+            <span className="small muted">{doc.d.version} · {doc.d.status}</span>
           </div>
           <DocMarkdown text={assembled} />
         </div>

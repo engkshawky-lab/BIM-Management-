@@ -314,10 +314,14 @@ const docBrief = z.object({
   docType: z.string().trim().min(2).max(160), projectName: z.string().max(200).default(""), organisation: z.string().max(200).default(""),
   appointingParty: z.string().max(200).default(""), stage: z.string().max(120).default(""), brief: z.string().max(6000).default(""),
   style: z.enum(["template", "draft"]).default("draft"),
+  /** controlled document data (reference, version, author role, status…) as text */
+  docData: z.string().max(3000).default(""),
 });
 const outlineSection = z.object({ title: z.string().max(200), purpose: z.string().max(2000), contents: z.array(z.string().max(400)).max(30), clauses: z.array(z.string().max(80)).max(12) });
 const briefText = (b: z.infer<typeof docBrief>) =>
-  `Document: ${b.docType}\nProject: ${b.projectName || "[Project name]"}\nOrganisation (author): ${b.organisation || "[Organisation]"}\nAppointing party: ${b.appointingParty || "[Appointing party]"}\nStage: ${b.stage || "not stated"}\nAuthor's requirements:\n${b.brief || "none given"}`;
+  `Document: ${b.docType}\n${b.docData || `Project: ${b.projectName || "[Project name]"}\nOrganisation (author): ${b.organisation || "[Organisation]"}\nStage: ${b.stage || "not stated"}`}\nAppointing party: ${b.appointingParty || "[Appointing party]"}
+Write from the point of view of the author organisation in its stated role, and pitch the content to the stated project stage and document status.
+Author's requirements:\n${b.brief || "none given"}`;
 
 r.post(T + "/generate/outline", h(async (req, res) => {
   const body = parse(docBrief, req.body, res); if (!body) return;

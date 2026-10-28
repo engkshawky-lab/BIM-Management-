@@ -9,8 +9,8 @@ import { parseInline, parseMarkdown, type Block } from "../../../shared/mdBlocks
 // bordered tables with a repeating header row, numbered/bulleted lists, quotes and highlighted [PLACEHOLDER]s.
 
 export interface DocMeta {
-  title: string; project?: string; organisation?: string; appointingParty?: string;
-  reference?: string; revision?: string; status?: string; date?: string; preparedBy?: string;
+  title: string; project?: string; organisation?: string; orgRole?: string; appointingParty?: string; stage?: string;
+  reference?: string; revision?: string; status?: string; date?: string; preparedBy?: string; checkedBy?: string; approvedBy?: string; security?: string;
 }
 
 const NAVY = "1E3A5F", GRID = "B8C2CC";
@@ -81,14 +81,16 @@ export function markdownToDocx(md: string, meta?: DocMeta): Document {
       new Paragraph({ alignment: AlignmentType.LEFT, spacing: { after: 200 }, children: [new TextRun({ text: meta.title, bold: true, size: 52, color: NAVY })] }),
       ...(meta.project ? [new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text: meta.project, size: 32, color: "334155" })] })] : []),
       new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 18, color: NAVY, space: 4 } }, spacing: { after: 400 }, children: [] }),
-      kv([["Appointing party", meta.appointingParty ?? ""], ["Prepared by", meta.organisation ?? ""], ["Reference", meta.reference ?? ""], ["Revision", meta.revision ?? "P01"], ["Status", meta.status ?? "Draft for review"], ["Date", meta.date ?? new Date().toISOString().slice(0, 10)]]),
+      kv(([["Document reference", meta.reference ?? ""], ["Version / revision", meta.revision ?? "P01"], ["Status", meta.status ?? "Draft for review"], ["Project stage", meta.stage ?? ""],
+        ["Organisation", [meta.organisation, meta.orgRole && `(${meta.orgRole})`].filter(Boolean).join(" ")], ["Appointing party", meta.appointingParty ?? ""], ["Prepared by", meta.preparedBy ?? ""],
+        ["Issue date", meta.date ?? new Date().toISOString().slice(0, 10)], ["Security classification", meta.security ?? ""]] as [string, string][]).filter(([k, v]) => v || ["Document reference", "Version / revision", "Status"].includes(k))),
       new Paragraph({ spacing: { before: 400 }, children: [new TextRun({ text: "This is a working draft for review. It is not approved and is not a statement of compliance.", italics: true, size: 18, color: "64748B" })] }),
       new Paragraph({ children: [new PageBreak()] }),
       new Paragraph({ heading: HeadingLevel.HEADING_1, children: [new TextRun("Document control")] }),
       new Table({
         width: { size: 100, type: WidthType.PERCENTAGE }, borders,
         rows: [new TableRow({ tableHeader: true, children: ["Revision", "Date", "Status", "Description", "Prepared", "Checked", "Approved"].map((h) => cell(h, true)) }),
-          new TableRow({ children: [meta.revision ?? "P01", meta.date ?? new Date().toISOString().slice(0, 10), meta.status ?? "Draft for review", "First issue for review", meta.preparedBy ?? "[Name]", "[Name]", "[Name]"].map((v) => cell(v, false)) })],
+          new TableRow({ children: [meta.revision ?? "P01", meta.date ?? new Date().toISOString().slice(0, 10), meta.status ?? "Draft for review", "First issue for review", meta.preparedBy || "[Name]", meta.checkedBy || "[Name]", meta.approvedBy || "[Name]"].map((v) => cell(v, false)) })],
       }),
       new Paragraph({ spacing: { before: 300 }, heading: HeadingLevel.HEADING_1, children: [new TextRun("Contents")] }),
       new TableOfContents("Contents", { hyperlink: true, headingStyleRange: "1-2" }),
