@@ -343,7 +343,11 @@ export interface IfcReport {
 const GENERIC_NAME = /^(default|generic|unnamed|new |copy of|basic wall|undefined|none)\b/i;
 
 export function analyseIfc(text: string, opts: { requirements?: Requirement[] } = {}): IfcReport {
-  const model = buildModel(parseStep(text));
+  return analyseModel(buildModel(parseStep(text)), opts);
+}
+
+/** The same checks on an already-parsed model (lets callers reuse the model, e.g. to list elements). */
+export function analyseModel(model: IfcModel, opts: { requirements?: Requirement[] } = {}): IfcReport {
   const f: Finding[] = [];
   const checks: IfcCheck[] = [];
   const add = (id: string, name: string, passed: number, failed: number, detail: string) => checks.push({ id, name, passed, failed, detail });

@@ -8,6 +8,7 @@ import { suitabilityCodes } from "../../../shared/data/iso19650";
 import { hubById } from "../../../shared/data/hubs";
 import HubPage from "./HubPage";
 import { GenerateTool, ReviewTool } from "./AiDocTools";
+import DeliveryPlans from "./DeliveryPlans";
 
 // Standalone AI tools: document review, risk register, clash matrix, suitability, COBie, document generator.
 // Every result is decision support for an accountable reviewer, never an approval.
@@ -15,6 +16,7 @@ import { GenerateTool, ReviewTool } from "./AiDocTools";
 export const AI_TOOLS = [
   { id: "review", label: "Document review", hint: "Review an EIR, BEP, MIDP…; EIR ↔ BEP check; BEP version compare", can: "upload an EIR, BEP or MIDP and get a clause-referenced review, or check a BEP against its EIR" },
   { id: "generate", label: "Document generator", hint: "Draft EIR, AIR, PIR, OIR, BEP, TIDP, MIDP or any custom template", can: "describe any ISO 19650 document and get a structured draft to download as Word" },
+  { id: "plans", label: "Delivery plans", hint: "TIDP, MIDP and MPDT tables with ISO 19650 container naming, checks and Excel export", can: "generate plan rows with AI" },
   { id: "risks", label: "Risk register", hint: "Project-specific information-management risks with scores and mitigations", can: "generate a project-specific risk register with scores, owners and mitigations" },
   { id: "clash", label: "Clash matrix", hint: "Discipline test matrix with tolerances for your stage and software", can: "build a clash test matrix with tolerances suited to your stage and software" },
   { id: "suitability", label: "Suitability codes", hint: "Quick wizard plus AI advisor for tricky cases", can: "describe a tricky situation and get advice on the right suitability code" },
@@ -326,6 +328,7 @@ export default function AiTools({ tool, arg, arg2 }: { tool?: string; arg?: stri
         <div className="facts"><span>Powered by Claude</span><span>Review-first: you stay accountable</span><span>Export to Word / CSV</span></div></div>
       <div className="hub-tabs">{AI_TOOLS.map((t) => <a key={t.id} className={cur.id === t.id ? "on" : ""} href={`#/ai-tools/${t.id}`}>{t.label}</a>)}</div>
       <div>{ai === null ? <div className="muted">Loading…</div>
+        : cur.id === "plans" ? <DeliveryPlans />
         : cur.id === "mcp" ? <HubPage hub={hubById("mcp")!} sectionId={arg} tabId={arg2} base="#/ai-tools/mcp" embedded />
         : cur.id === "suitability" ? <SuitabilityTool ai={ai} />
           : !ai ? <AiOff what={cur.can} />

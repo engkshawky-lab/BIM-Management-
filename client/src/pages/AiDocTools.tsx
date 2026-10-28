@@ -25,7 +25,7 @@ function useElapsed(active: boolean) {
 
 const QUICK: { group: string; docs: string[] }[] = [
   { group: "Information requirements", docs: ["Organisational Information Requirements (OIR)", "Asset Information Requirements (AIR)", "Project Information Requirements (PIR)", "Exchange Information Requirements (EIR)"] },
-  { group: "Execution plans", docs: ["Pre-appointment BIM Execution Plan", "Post-appointment BIM Execution Plan", "Model Production and Delivery Table (MPDT)", "Mobilisation plan"] },
+  { group: "Execution plans", docs: ["Pre-appointment BIM Execution Plan", "Post-appointment BIM Execution Plan", "Mobilisation plan", "Information production methods and procedures"] },
   { group: "CDE & protocols", docs: ["CDE procedure and workflow", "Information protocol", "Project information standard", "Information production methods and procedures"] },
   { group: "Data & compliance", docs: ["COBie data requirements schedule", "Level of information need specification", "Security management plan (ISO 19650-5)", "Health and safety information requirements (ISO 19650-6)"] },
   { group: "Risk & handover", docs: ["Information delivery risk register", "Information handover strategy", "Capability and capacity assessment", "Lessons learned report"] },

@@ -2,9 +2,11 @@ import type { CobieColumn, CobieColumnKind, CobieSheet } from "./cobieTypes";
 
 // COBie 2.4 sheet-by-sheet column reference, in workbook order (the Instruction sheet is omitted).
 // Column names and order follow the widely used COBie 2.4 spreadsheet template (NBIMS-US v3 section 4.2,
-// as used with BS 1192-4). The column kinds follow the common template colour convention: yellow
-// required, salmon reference, purple external, green optional or as specified. Templates differ in
-// detail, and clients may add columns, so always follow the project's own template and requirements.
+// as used with BS 1192-4), checked against the NIBS COBie 2.4 example workbooks and the xBIM COBie UK 2012
+// template and mapping. The column kinds follow the template colour convention as applied in the UK 2012
+// template: yellow required, salmon reference, purple external, green optional or as specified. Templates
+// differ in detail (for example Assembly column order and picklist names), and clients may add columns,
+// so always follow the project's own template and requirements.
 // Descriptions are paraphrased practical guidance, not the text of any standard.
 
 const col = (name: string, kind: CobieColumnKind, description: string, example: string, references?: string): CobieColumn =>
@@ -74,7 +76,7 @@ export const cobieSchema: CobieSheet[] = [
       col("Category", "reference", "Classification of the facility type, from the agreed classification system.", "En_25_10: Primary schools", "PickLists.Category-Facility"),
       col("ProjectName", "required", "Name of the project that delivered the facility.", "Riverside Primary School New Build"),
       col("SiteName", "required", "Name of the site on which the facility stands.", "Riverside Campus"),
-      col("LinearUnits", "reference", "Unit for all lengths, heights and elevations in the workbook.", "millimetres", "PickLists.LinearUnits"),
+      col("LinearUnits", "reference", "Unit for all lengths, heights and elevations in the workbook.", "millimetres", "PickLists.LinearUnit"),
       col("AreaUnits", "reference", "Unit for all areas in the workbook.", "square metres", "PickLists.AreaUnit"),
       col("VolumeUnits", "reference", "Unit for all volumes in the workbook.", "cubic metres", "PickLists.VolumeUnit"),
       col("CurrencyUnit", "reference", "Currency for all costs in the workbook, such as replacement costs.", "GBP", "PickLists.CostUnit"),
@@ -178,7 +180,7 @@ export const cobieSchema: CobieSheet[] = [
       "Make type names readable and unique; avoid names such as Type 1 or Default.",
       "Manufacturer and warranty guarantor fields expect Contact emails, not company names.",
       "Replace generic design data with the approved product data as submittals are approved, not just at handover.",
-      "Many of the later columns, from ReplacementCost onwards, are only needed when the client's requirements ask for them.",
+      "Most of the later columns, from ReplacementCost onwards, are only needed when the client's requirements ask for them; NominalLength, NominalWidth and NominalHeight are marked as required in the template.",
     ],
     columns: [
       col("Name", "required", "Unique, readable name of the type.", "Gas Boiler 120kW"),
@@ -199,9 +201,9 @@ export const cobieSchema: CobieSheet[] = [
       col("ExpectedLife", "optional", "Expected service life of the type, in the duration unit.", "20"),
       col("DurationUnit", "reference", "Unit used for ExpectedLife.", "year", "PickLists.DurationUnit"),
       col("WarrantyDescription", "optional", "Summary of the warranty terms and conditions.", "Parts and labour; annual service by approved engineer required"),
-      col("NominalLength", "optional", "Nominal length of the product, in the facility linear units.", "450"),
-      col("NominalWidth", "optional", "Nominal width of the product, in the facility linear units.", "400"),
-      col("NominalHeight", "optional", "Nominal height of the product, in the facility linear units.", "850"),
+      col("NominalLength", "required", "Nominal length of the product, in the facility linear units.", "450"),
+      col("NominalWidth", "required", "Nominal width of the product, in the facility linear units.", "400"),
+      col("NominalHeight", "required", "Nominal height of the product, in the facility linear units.", "850"),
       col("ModelReference", "optional", "Manufacturer's product name or range reference.", "CondensaPro 120"),
       col("Shape", "optional", "Shape of the product, where relevant.", "Rectangular"),
       col("Size", "optional", "Nominal size description.", "120 kW"),
@@ -237,9 +239,9 @@ export const cobieSchema: CobieSheet[] = [
       col("Space", "reference", "The space or spaces the component is in or serves. Each must match a Space name.", "00-020", "Space.Name"),
       col("Description", "required", "Short description of this particular item.", "Boiler 1, main plant room"),
       ...ext("Autodesk Revit", "IfcBoiler", "3b7Yk2Tq9F0Hx6Lm1Pz4Rd"),
-      col("SerialNumber", "required", "Manufacturer's serial number of the installed item. Usually only known at construction.", "CB120X-2026-004417"),
-      col("InstallationDate", "required", "Date the item was installed.", "2026-05-20"),
-      col("WarrantyStartDate", "required", "Date the warranty begins, often the installation, commissioning or practical completion date.", "2026-07-01"),
+      col("SerialNumber", "optional", "Manufacturer's serial number of the installed item. Usually only known at construction, and normally asked for at handover by the client's requirements.", "CB120X-2026-004417"),
+      col("InstallationDate", "optional", "Date the item was installed. Normally asked for at handover.", "2026-05-20"),
+      col("WarrantyStartDate", "optional", "Date the warranty begins, often the installation, commissioning or practical completion date. Normally asked for at handover.", "2026-07-01"),
       col("TagNumber", "optional", "Tag or label fixed to the item on site.", "B-01"),
       col("BarCode", "optional", "Barcode or QR code value on the item's label.", "5012345678900"),
       col("AssetIdentifier", "optional", "The owner's asset number in its CAFM or asset management system.", "RPS-HTG-0001"),
@@ -279,6 +281,7 @@ export const cobieSchema: CobieSheet[] = [
     tips: [
       "Often left empty. Only complete it when the FM team needs to manage parts of a larger item separately.",
       "SheetName tells you whether the parent and children are rows on the Type sheet or the Component sheet.",
+      "Column order varies between templates: the US COBie 2.4 examples put AssemblyType after ChildNames, while the UK 2012 template puts it straight after CreatedOn. Match the project's template.",
     ],
     columns: [
       col("Name", "required", "Name of the assembly relationship.", "AHU-01 Assembly"),
@@ -312,9 +315,9 @@ export const cobieSchema: CobieSheet[] = [
       col("SheetName", "reference", "The sheet holding the two connected rows, normally Component.", "Component", "PickLists.SheetType"),
       col("RowName1", "reference", "Name of the first connected row.", "Panel-01", "Component.Name"),
       col("RowName2", "reference", "Name of the second connected row.", "DB-1A", "Component.Name"),
-      col("RealizingElement", "optional", "The element that makes the connection, such as a cable, duct or pipe, if recorded.", "Cable C-104"),
-      col("PortName1", "optional", "Name of the port on the first component.", "Outgoing way 3"),
-      col("PortName2", "optional", "Name of the port on the second component.", "Incoming supply"),
+      col("RealizingElement", "reference", "The element that makes the connection, such as a cable, duct or pipe, named as a row on the sheet given in SheetName.", "Cable C-104", "Name on the sheet given in SheetName"),
+      col("PortName1", "reference", "Name of the port on the first component.", "Outgoing way 3", "Port on the component named in RowName1"),
+      col("PortName2", "reference", "Name of the port on the second component.", "Incoming supply", "Port on the component named in RowName2"),
       ...ext("Autodesk Revit", "IfcRelConnectsElements", "1Vz4Rt7Yq0Mx3Bn6Lc9KwF"),
       col("Description", "optional", "Short description of the connection.", "Sub-main supply to first floor distribution board"),
     ],
@@ -394,7 +397,7 @@ export const cobieSchema: CobieSheet[] = [
       col("Frequency", "required", "How often the task repeats, in FrequencyUnit.", "1"),
       col("FrequencyUnit", "reference", "Unit for Frequency.", "year", "PickLists.DurationUnit"),
       ...ext("n/a", "n/a", "n/a"),
-      col("TaskNumber", "required", "Number of this step within the job, where the job is split into steps.", "1"),
+      col("TaskNumber", "optional", "Number of this step within the job, where the job is split into steps.", "1"),
       col("Priors", "reference", "The task number or numbers that must be completed before this one.", "n/a", "Job.TaskNumber (same job)"),
       col("ResourceNames", "reference", "The resource or resources needed for the task. Each must match a Resource name.", "Flue gas analyser", "Resource.Name"),
     ],
@@ -474,11 +477,11 @@ export const cobieSchema: CobieSheet[] = [
       col("Name", "required", "Name of the property.", "NominalOutput"),
       createdBy("services@mepco.co.uk"),
       createdOn(),
-      col("Category", "optional", "How the value should be read, for example as a requirement or as submitted product data. Use the categories agreed for the project.", "Submitted"),
+      col("Category", "reference", "How the value should be read, for example as a requirement or as submitted product data, chosen from the category list agreed for the project.", "Submitted", "PickLists (category list agreed for the project)"),
       col("SheetName", "reference", "The sheet holding the row the property belongs to.", "Type", "PickLists.SheetType"),
       col("RowName", "reference", "Name of the row on that sheet.", "Gas Boiler 120kW", "Name on the sheet given in SheetName"),
       col("Value", "required", "The value of the property.", "120"),
-      col("Unit", "optional", "Unit of the value, if it has one.", "kW"),
+      col("Unit", "required", "Unit of the value. Enter n/a when the value has no unit.", "kW"),
       ...ext("Autodesk Revit", "IfcPropertySingleValue", "n/a"),
       col("Description", "optional", "Short description of the property.", "Rated heat output at 80/60 degrees C"),
       col("AllowedValues", "optional", "Permitted values for the property, if restricted.", "n/a"),
@@ -507,9 +510,9 @@ export const cobieSchema: CobieSheet[] = [
       col("CoordinateYAxis", "required", "Y coordinate, in the facility linear units.", "8740"),
       col("CoordinateZAxis", "required", "Z coordinate, in the facility linear units.", "150"),
       ...ext("Autodesk Revit", "IfcCartesianPoint", "n/a"),
-      col("ClockwiseRotation", "optional", "Rotation about the vertical axis, in degrees.", "90"),
-      col("ElevationalRotation", "optional", "Rotation about the horizontal axis, in degrees.", "0"),
-      col("YawRotation", "optional", "Rotation about the remaining axis, in degrees.", "0"),
+      col("ClockwiseRotation", "required", "Rotation about the vertical axis, in degrees. Enter 0 when the item is not rotated.", "90"),
+      col("ElevationalRotation", "required", "Rotation about the horizontal axis, in degrees.", "0"),
+      col("YawRotation", "required", "Rotation about the remaining axis, in degrees.", "0"),
     ],
   },
   // ------------------------------------------------------------------ Issue
@@ -552,14 +555,13 @@ export const cobieSchema: CobieSheet[] = [
     firstDelivered: "Before the first data drop",
     tips: [
       "Load the agreed classification tables, for example Uniclass, into the category lists before anyone exports data.",
-      "Templates differ: some include extra lists, some older templates include object-name lists starting with obj. Use the lists in your project's template.",
+      "Templates differ in list names and content. COBie 2.4 templates also carry object-name lists starting with obj (objType, objComponent and so on) for the ExtObject columns; they are omitted here. Some templates write the category lists without the hyphen (CategoryProduct) or name them after the classification table. Use the lists in your project's template.",
       "Clients may extend lists with their own values; record any extension in the information requirements.",
     ],
     columns: [
       col("ApprovalBy", "optional", "Allowed approval types for Document.ApprovalBy.", "Information only"),
       col("AreaUnit", "optional", "Allowed area units for Facility.AreaUnits.", "square metres"),
       col("AssetType", "optional", "Allowed asset types for Type.AssetType.", "Fixed"),
-      col("AssemblyType", "optional", "Allowed assembly types for Assembly.AssemblyType.", "Fixed"),
       col("Category-Facility", "optional", "Classification codes for Facility.Category.", "En_25_10: Primary schools"),
       col("Category-Space", "optional", "Classification codes for Space.Category.", "SL_25_10_14: Classrooms"),
       col("Category-Element", "optional", "Classification codes for System.Category.", "Ss_60_40_36: Heating systems"),
@@ -577,17 +579,18 @@ export const cobieSchema: CobieSheet[] = [
       col("IssueRisk", "optional", "Allowed risk values for Issue.Risk.", "Moderate"),
       col("JobStatusType", "optional", "Allowed job status values for Job.Status.", "Not yet started"),
       col("JobType", "optional", "Allowed job categories for Job.Category.", "PPM"),
-      col("ImpactType", "optional", "Allowed impact types for Impact.ImpactType.", "Carbon"),
-      col("ImpactStage", "optional", "Allowed life-cycle stages for Impact.ImpactStage.", "Production"),
-      col("ImpactUnit", "optional", "Allowed units for Impact.ImpactUnit.", "kgCO2e"),
-      col("LinearUnits", "optional", "Allowed length units for Facility.LinearUnits.", "millimetres"),
       col("ResourceType", "optional", "Allowed resource categories for Resource.Category.", "Tools"),
       col("SheetType", "optional", "Sheet names that SheetName columns may refer to.", "Type"),
       col("SpareType", "optional", "Allowed spare categories for Spare.Category.", "Part"),
       col("StageType", "optional", "Allowed stage values for Document.Stage.", "As built"),
+      col("ZoneType", "optional", "Allowed zone categories for Zone.Category.", "Fire"),
+      col("LinearUnit", "optional", "Allowed length units for Facility.LinearUnits.", "millimetres"),
       col("VolumeUnit", "optional", "Allowed volume units for Facility.VolumeUnits.", "cubic metres"),
       col("CostUnit", "optional", "Allowed currencies for Facility.CurrencyUnit.", "GBP"),
-      col("ZoneType", "optional", "Allowed zone categories for Zone.Category.", "Fire"),
+      col("AssemblyType", "optional", "Allowed assembly types for Assembly.AssemblyType.", "Fixed"),
+      col("ImpactType", "optional", "Allowed impact types for Impact.ImpactType.", "Carbon"),
+      col("ImpactStage", "optional", "Allowed life-cycle stages for Impact.ImpactStage.", "Production"),
+      col("ImpactUnit", "optional", "Allowed units for Impact.ImpactUnit.", "kgCO2e"),
     ],
   },
 ];

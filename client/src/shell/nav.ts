@@ -93,11 +93,14 @@ export const RESOURCE_PAGES: NavItem[] = [
   g("r.portfolio", "Portfolio dashboard", "/portfolio", "grid", "My work", "Health across your projects"),
   g("ai.review", "Document review & compare", "/ai-tools/review", "sparkles", "AI tools", "Review EIR/BEP/MIDP; EIR ↔ BEP check; BEP versions"),
   g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "AI tools", "EIR, AIR, PIR, OIR, BEP, TIDP, MIDP or any custom template"),
+  g("ai.plans", "TIDP / MIDP / MPDT generator", "/ai-tools/plans", "calendar", "AI tools", "Delivery plan tables with naming, checks and Excel export"),
   g("ai.risks", "Risk register generator", "/ai-tools/risks", "sparkles", "AI tools"),
   g("ai.clash", "Clash matrix builder", "/ai-tools/clash", "sparkles", "AI tools"),
   g("ai.suitability", "Suitability code hub", "/ai-tools/suitability", "sparkles", "AI tools"),
   g("ai.cobie", "COBie data checker", "/ai-tools/cobie", "sparkles", "AI tools"),
   g("ai.mcp", "Connect via MCP", "/ai-tools/mcp", "link", "AI tools", "Connect Claude to Revit, IFC and CDE tools with MCP"),
+  g("m.ifc", "IFC Hub", "/model-tools/ifc", "layers", "Model tools", "Analyse IFC models, check LOIN/IDS, compare with your EIR"),
+  g("m.qaqc", "QA/QC model checker", "/model-tools/qaqc", "check", "Model tools", "Grade IFC models A–F, compare up to 10"),
   g("r.fee", "BIM fee estimator", "/tools/fee", "table", "Tools"),
   g("r.carbon", "Embodied carbon (6D)", "/tools/carbon", "layers", "Tools"),
   g("r.maturity", "BIM maturity assessment", "/tools/maturity", "check", "Tools"),
@@ -126,7 +129,7 @@ export const RAIL: RailSection[] = [
 export function sectionFor(route: string): string {
   if (route.startsWith("/projects")) return "projects";
   if (/^\/knowledge\/[^/]+\/templates/.test(route)) return "documents";
-  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|ai-tools|downloads|samples|news|standards|talent|admin|wizard|support)/.test(route)) return "resources";
+  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|tools|ai-tools|model-tools|downloads|samples|news|standards|talent|admin|wizard|support)/.test(route)) return "resources";
   if (route.startsWith("/knowledge") || route.startsWith("/learn") || route.startsWith("/parts") || route.startsWith("/hubs")) return "standards";
   return "home";
 }

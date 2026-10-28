@@ -10,6 +10,7 @@ import { partDetailById, partDetails19650 } from "../../shared/data/parts19650De
 import { suitabilityCodes } from "../../shared/data/iso19650";
 import { hubById, hubDigest } from "../../shared/data/hubs";
 import { complianceScore, matchTemplate, reviewChecklists, templateOutline } from "../../shared/aiDocs";
+import { TYPE_CODES } from "../../shared/planRows";
 import { AiError, ask, parseJson } from "../claude";
 import { h, parse } from "./auth";
 import { readWorkbook } from "./validation";
@@ -251,6 +252,56 @@ Schema: {"readiness": "Ready" | "Minor fixes" | "Not ready", "summary": string, 
       priority: ["P1", "P2", "P3"].includes(String(x.priority)) ? String(x.priority) : "P2", sheet: str(x.sheet, 40), issue: str(x.issue), fix: str(x.fix), owner: str(x.owner, 120),
     })),
     goodPractice: strs(out.goodPractice, 10),
+  });
+}));
+
+// ---------------------------------------------------------------- Delivery plans (TIDP / MIDP / MPDT rows)
+
+r.post(T + "/plan-rows", h(async (req, res) => {
+  const body = parse(z.object({
+    kind: z.enum(["tidp", "midp", "mpdt"]), projectName: z.string().max(200).default(""), projectType: z.string().max(200).default(""),
+    disciplines: z.array(z.string().max(60)).min(1).max(12), taskTeam: z.string().max(120).default(""),
+    milestones: z.array(z.object({ code: z.string().max(12), name: z.string().max(120), date: z.string().max(10) })).max(12),
+    stages: z.array(z.string().max(40)).max(8).default([]), notes: z.string().max(4000).default(""), count: z.number().int().min(5).max(80).default(30),
+  }), req.body, res); if (!body) return;
+  const ms = body.milestones.map((m) => `${m.code} ${m.name}${m.date ? ` (${m.date})` : ""}`).join("; ");
+  const typeCodes = Object.entries(TYPE_CODES).map(([k, v]) => `${k} ${v}`).join(", ");
+  const system = body.kind === "mpdt"
+    ? `${EXPERT}
+Build a Model Production and Delivery Table: which task team models each element or system, with its level of information need at each stage. ${JSON_ONLY}
+Schema: {"rows": [{"element": string, "classification": string (Uniclass 2015 code and title, e.g. "Ss_25_10_32 Curtain wall systems"), "author": string (task team), "loin": {${body.stages.map((s) => `"${s}": string`).join(", ")}}, "notes": string}]}
+Each loin value is short and specific: geometry level (e.g. "LOD 300") plus the key properties needed at that stage (e.g. "LOD 300; FireRating, U-value"). Cover every discipline given; ${body.count} rows.`
+    : `${EXPERT}
+Build the information containers of a ${body.kind === "tidp" ? "Task Information Delivery Plan for one task team" : "Master Information Delivery Plan across the task teams"} (ISO 19650-2 5.4.4 / 5.4.5). ${JSON_ONLY}
+Schema: {"rows": [{"taskTeam": string, "title": string, "type": string (one of: ${typeCodes}), "role": string (one-letter role code), "volume": string (2 chars, "ZZ" if whole project), "level": string (2 chars, "XX" if not level-specific), "format": string, "loin": string, "milestone": string (milestone code), "start": "YYYY-MM-DD" or "", "due": "YYYY-MM-DD" or "", "dependsOn": string (refs like "C003", comma-separated, or ""), "responsible": string (role), "suitability": "S1" | "S2" | "S3" | "S4"}]}
+Rows are given refs C001, C002 … in order, so dependsOn must use those refs. Make containers specific to the project (real deliverables, not generic). Respect the milestone dates: every due date on or before its milestone date, and start dates before due dates. ${body.count} rows.`;
+  const user = `Project: ${body.projectName || "n/a"} — ${body.projectType || "building project"}\nDisciplines / task teams: ${body.disciplines.join(", ")}${body.taskTeam ? `\nTask team: ${body.taskTeam}` : ""}\nMilestones: ${ms || "none given"}${body.kind === "mpdt" ? `\nStages: ${body.stages.join(", ")}` : ""}\nNotes: ${body.notes || "none"}`;
+  const { text } = await ask({ system, messages: [{ role: "user", content: user }], maxTokens: 16000 });
+  let out: { rows?: Record<string, unknown>[] };
+  try { out = parseJson(text); } catch { return res.status(502).json({ error: "The AI response could not be read. Try again." }); }
+  const date = (v: unknown) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v)) ? String(v) : "");
+  const rows = (out.rows ?? []).slice(0, 100).map((x) => body.kind === "mpdt"
+    ? { element: str(x.element, 200), classification: str(x.classification, 120), author: str(x.author, 120), notes: str(x.notes, 400), loin: Object.fromEntries(body.stages.map((s) => [s, str((x.loin as Record<string, unknown> | undefined)?.[s], 300)])) }
+    : { taskTeam: str(x.taskTeam, 120), title: str(x.title, 300), type: str(x.type, 4).toUpperCase(), role: str(x.role, 2).toUpperCase(), volume: str(x.volume, 4), level: str(x.level, 4), format: str(x.format, 60), loin: str(x.loin, 200), milestone: str(x.milestone, 12), start: date(x.start), due: date(x.due), dependsOn: str(x.dependsOn, 80), responsible: str(x.responsible, 120), suitability: str(x.suitability, 4) });
+  res.json({ rows });
+}));
+
+// ---------------------------------------------------------------- Model vs requirements (IFC Hub)
+
+r.post(T + "/model-compare", h(async (req, res) => {
+  const body = parse(z.object({ summary: z.string().min(20).max(45_000), requirements: z.string().trim().min(20).max(30_000), fileName: z.string().max(255).default("model.ifc") }), req.body, res); if (!body) return;
+  const system = `${EXPERT}
+You compare an information model with the information requirements it must meet (EIR / LOIN / client data requirements).
+You only see a SUMMARY of the IFC model: element classes with how often each property is filled, classification systems, storeys and automated check results. Judge from that summary; say "cannot tell from the summary" rather than guessing. ${JSON_ONLY}
+Schema: {"summary": string (3–5 sentences), "rows": [{"requirement": string, "status": "met" | "partial" | "missing" | "unclear", "evidence": string (what the summary shows, with fill rates), "action": string (what the model author should fix)}]}
+One row per distinct requirement in the text (at most 40). Use IFC class and property set names as they appear in the summary.`;
+  const user = `Model: ${body.fileName}\n\nMODEL SUMMARY\n${body.summary}\n\nREQUIREMENTS\n${body.requirements}`;
+  const { text } = await ask({ system, messages: [{ role: "user", content: user }], maxTokens: 12000 });
+  let out: { summary?: unknown; rows?: Record<string, unknown>[] };
+  try { out = parseJson(text); } catch { return res.status(502).json({ error: "The AI response could not be read. Try again." }); }
+  res.json({
+    summary: str(out.summary, 2000),
+    rows: (out.rows ?? []).slice(0, 60).map((x) => ({ requirement: str(x.requirement, 600), status: ["met", "partial", "missing", "unclear"].includes(String(x.status)) ? String(x.status) : "unclear", evidence: str(x.evidence, 600), action: str(x.action, 600) })),
   });
 }));
 

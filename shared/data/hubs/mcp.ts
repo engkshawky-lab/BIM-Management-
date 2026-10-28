@@ -2,7 +2,7 @@ import type { Hub } from "./types";
 
 // MCP hub: how to connect AI assistants to BIM tools using the Model Context Protocol.
 // Facts are drawn from modelcontextprotocol.io (specification and connection guides), Anthropic's
-// Claude Code and Claude help documentation, and Autodesk announcements. MCP clients, commands and
+// Claude Code and Claude help documentation, and Autodesk's MCP help pages and blogs (checked October 2026). MCP clients, commands and
 // server availability change quickly: keep descriptions general, label community projects clearly
 // and confirm details against the current documentation before relying on them.
 
@@ -76,12 +76,12 @@ export const mcpHub: Hub = {
               kind: "steps",
               title: "Add a local MCP server",
               steps: [
-                { title: "Install the desktop app", body: "Download Claude Desktop from claude.ai/download for macOS or Windows (a Linux build is also listed) and sign in. Update to the latest version." },
+                { title: "Install the desktop app", body: "Download Claude Desktop from claude.ai/download (macOS, Windows and Linux are listed) and sign in. Update to the latest version." },
                 { title: "Install the server's prerequisites", body: "Many servers need Node.js or Python with the uv tool. Some BIM servers also need an add-in installed in the host application, such as a Revit or Blender add-on. Follow the server's own instructions." },
-                { title: "Open the configuration file", body: "In Claude Desktop open Settings, go to the Developer section and choose Edit Config. This creates or opens claude_desktop_config.json." },
+                { title: "Open the configuration file", body: "Open Settings from the Claude menu in the system menu bar (not the settings inside the chat window), go to the Developer tab and choose Edit Config. This creates or opens claude_desktop_config.json. Some installers, such as Autodesk's Revit MCP server, write this entry for you." },
                 { title: "Add the server entry", body: "Add an entry under mcpServers with the command, arguments and any environment variables. Use absolute paths and valid JSON." },
                 { title: "Restart completely", body: "Quit Claude Desktop fully, not just the window, and start it again so it launches the server." },
-                { title: "Check the tools", body: "Open the menu at the bottom of the message box, go to Connectors and select the server to see its tools. Approve tool calls only when you understand what they will do." },
+                { title: "Check the tools", body: "Click the add files and connectors button at the bottom left of the message box, go to Connectors, choose Manage connectors and select the server to see its tools. Approve tool calls only when you understand what they will do." },
               ],
             },
             {
@@ -117,10 +117,10 @@ export const mcpHub: Hub = {
               kind: "steps",
               title: "Add a remote connector",
               steps: [
-                { title: "Check your plan", body: "Custom connectors to remote MCP servers are available on paid Claude plans; on Team and Enterprise plans an owner adds them for the organisation first. Availability changes, so check the Claude help centre." },
-                { title: "Add the connector", body: "In Settings open Connectors, choose to add a custom connector and enter the remote server URL. Advanced settings allow an OAuth client ID and secret if the server needs them." },
+                { title: "Check your plan", body: "Custom connectors to remote MCP servers are listed for Free, Pro, Max, Team and Enterprise plans, with Free limited to one custom connector. On Team and Enterprise plans an owner adds them in Organization settings first. Availability changes, so check the Claude help centre." },
+                { title: "Add the connector", body: "Open Customize, then Connectors, choose Add and then Add custom connector, and enter a name and the remote server URL. Claude detects the sign-in method; you can choose how to sign in, use your own OAuth client, or add request headers such as an API key if the server does not use OAuth." },
                 { title: "Connect and sign in", body: "Each user connects and authenticates with their own account, so Claude can reach only what that user is allowed to see." },
-                { title: "Enable per conversation", body: "Turn the connector on or off for a conversation from the menu in the message box." },
+                { title: "Enable per conversation", body: "Click the + button at the bottom left of the message box, open Connectors and use the toggle to turn the connector on or off for that conversation." },
               ],
             },
             {
@@ -142,7 +142,7 @@ export const mcpHub: Hub = {
               columns: ["Server type", "Command form", "Notes"],
               rows: [
                 ["Remote HTTP (recommended for remote)", "claude mcp add --transport http <name> <url>", "Add --header \"Authorization: Bearer <token>\" if the server uses a token rather than OAuth"],
-                ["Remote SSE (deprecated)", "claude mcp add --transport sse <name> <url>", "Only for servers that do not yet support HTTP"],
+                ["Remote SSE (deprecated)", "claude mcp add --transport sse <name> <url>", "Only for servers that do not yet support HTTP; recent Claude Code versions try HTTP first and fall back to SSE"],
                 ["Local stdio", "claude mcp add --transport stdio <name> -- <command> [args...]", "Everything after -- is the command that starts the server"],
                 ["Local with secrets", "claude mcp add --env KEY=value --transport stdio <name> -- <command>", "Short forms are -t, -H and -e; keep another option between --env and the name"],
                 ["From JSON", "claude mcp add-json <name> '<json>'", "Pass the object for one server, not the whole mcpServers wrapper"],
@@ -182,7 +182,7 @@ export const mcpHub: Hub = {
             {
               kind: "callout",
               title: "Check against your version",
-              body: "Command options in Claude Code change between versions. Run claude mcp --help to see the options your installation supports. On native Windows, some local servers started with npx need to be wrapped with cmd /c; check the Claude Code MCP documentation if a server fails to start.",
+              body: "Command options in Claude Code change between versions. Run claude mcp --help to see the options your installation supports. On native Windows, some local servers started with npx may need to be wrapped with cmd /c; check the Claude Code MCP documentation if a server fails to start.",
               tone: "warn",
             },
           ],
@@ -197,14 +197,15 @@ export const mcpHub: Hub = {
               title: "Servers you may come across",
               columns: ["Name", "What it exposes", "Official or community", "Source"],
               rows: [
-                ["Revit MCP server (Revit Public MCP Server)", "Read-focused access to inspect Revit model data; installed as a separate add-on for Revit 2027 and communicating over stdio", "Official, Autodesk (technical preview)", "Autodesk AEC blog, June 2026; Autodesk Platform Services blog, April 2026"],
-                ["Autodesk Product Help MCP", "Access to Autodesk's product documentation for agents", "Official, Autodesk (technical preview)", "Autodesk Platform Services blog, April 2026"],
-                ["Fusion MCP and Fusion Data MCP", "Fusion design and data operations; relevant to product and fabrication workflows rather than BIM authoring", "Official, Autodesk (technical preview)", "Autodesk Platform Services blog, April 2026"],
+                ["Autodesk Revit MCP Server (Revit Public MCP Server)", "Local server over stdio, installed as a separate Revit add-on from Autodesk Account. Tools query the model, read element data, open, export and zoom to views and select elements. Offered as Read-Tools (read only), Write-Tools and Experimental-Tools installers; the write and experimental versions can change the model. The help pages list Revit 2027.2 for the current preview", "Official, Autodesk (Tech Preview, public beta)", "Autodesk MCP Server help (help.autodesk.com, ADSKMCP); Autodesk AEC blog, June 2026; Autodesk developer blog, April and September 2026"],
+                ["Autodesk AutoCAD and Civil 3D MCP Server", "Local server for AutoCAD and Civil 3D; check Autodesk's help for supported releases and tools", "Official, Autodesk (Tech Preview, public beta)", "Autodesk MCP Server help (help.autodesk.com, ADSKMCP)"],
+                ["Autodesk Product Help MCP", "Remote server giving agents access to Autodesk product help content", "Official, Autodesk (generally available)", "Autodesk MCP Server help (help.autodesk.com, ADSKMCP)"],
+                ["Autodesk Fusion MCP and Fusion Data MCP", "Fusion MCP runs locally with a live Fusion session; Fusion Data MCP is a remote server for Fusion data. Relevant to product and fabrication workflows rather than BIM authoring", "Official, Autodesk (generally available)", "Autodesk MCP Server help (help.autodesk.com, ADSKMCP)"],
                 ["mcp-servers-for-revit", "An MCP server, a Revit plug-in and a command set for querying and editing Revit models", "Community, unofficial", "GitHub organisation mcp-servers-for-revit"],
                 ["speckle-mcp", "List Speckle projects, retrieve model versions and query object properties using a personal access token", "Community, unofficial", "GitHub bimgeek/speckle-mcp"],
                 ["Bonsai_mcp", "Read and modify IFC models through the Bonsai add-on in Blender; a fork of BlenderMCP", "Community, unofficial", "GitHub JotaDeRodriguez/Bonsai_mcp"],
                 ["ifc-bonsai-mcp", "Create and edit IFC elements such as walls, doors and roofs through Bonsai", "Community, unofficial", "GitHub Show2Instruct/ifc-bonsai-mcp"],
-                ["BlenderMCP", "Inspect and change Blender scenes, including running Python code in Blender", "Community, not affiliated with the Blender Foundation", "GitHub ahujasid/blender-mcp"],
+                ["BlenderMCP", "Inspect and change Blender scenes, including running Python code in Blender", "Community, not affiliated with the Blender Foundation", "GitHub ahujasid/mcp-for-blender (formerly blender-mcp)"],
                 ["Filesystem server", "Read, write and search files in folders you allow, such as a local copy of CDE exports", "Official reference server from the MCP project", "GitHub modelcontextprotocol/servers"],
               ],
             },
@@ -221,7 +222,7 @@ export const mcpHub: Hub = {
             {
               kind: "callout",
               title: "This list changes quickly",
-              body: "MCP servers for AEC software appear and change every few months, and several of the official ones are previews. Confirm status, supported versions and licensing at the source before adopting a server on a project.",
+              body: "MCP servers for AEC software appear and change every few months, and the official Revit and AutoCAD servers are still previews. Confirm status, supported versions and licensing at the source before adopting a server on a project.",
               tone: "warn",
             },
           ],
@@ -381,7 +382,7 @@ export const mcpHub: Hub = {
               items: [
                 { q: "Do I need to be a developer to use MCP?", a: "No, but you need to be comfortable editing a configuration file or running a command. Remote connectors added through Claude's settings need the least technical effort." },
                 { q: "Is MCP only for Claude?", a: "No. MCP is an open protocol and many AI applications act as MCP clients. This hub uses Claude Desktop and Claude Code as examples." },
-                { q: "Does Autodesk provide an official Revit MCP server?", a: "Autodesk has announced a Revit MCP server as a technical preview, described as an add-on for Revit 2027 focused on reading and inspecting model data. Check Autodesk's current documentation for availability and supported versions." },
+                { q: "Does Autodesk provide an official Revit MCP server?", a: "Yes, as a Tech Preview (public beta). The Autodesk Revit MCP Server is a separate add-on for Revit 2027 that runs locally over stdio. The first release in April 2026 was read only; since the Revit 2027.2 update it is offered as Read-Tools, Write-Tools and Experimental-Tools versions, and the write versions can change the model. Check Autodesk's MCP help for the supported Revit updates before installing." },
                 { q: "Can an MCP server change my model?", a: "It depends on the tools the server provides. Some community servers include write tools. The client asks for approval before tool calls; review each one, and test write tools on a copy first." },
                 { q: "Where does my model data go?", a: "Data returned by a tool is passed to the AI service as part of the conversation. Check that the AI service and plan are approved for the information involved, especially for sensitive assets." },
                 { q: "What is the difference between a local and a remote server?", a: "A local server runs on your computer and talks to the client over stdio. A remote server runs as a web service and is reached over HTTP, usually with a sign-in." },
