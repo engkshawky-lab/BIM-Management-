@@ -33,6 +33,7 @@ function Overview() {
         <p>Structured learning for every part of ISO 19650. Pick your level per part — you can be expert on Part 2 while starting out on Part 5. Each part has a clause-by-clause deep dive, a compliance checklist you can tick off, key documents, common mistakes, a worked example and an AI tutor.</p>
         <div className="facts"><span>6 parts</span><span>{partDetails19650.reduce((a, p) => a + p.clauses.length, 0)} clause notes</span><span>{partDetails19650.reduce((a, p) => a + p.checklist.length, 0)} checklist items</span><span>AI tutor</span></div>
       </div>
+      <RevisionNotice />
       <div className="grid g3">
         {partDetails19650.map((p) => { const c = PART_COLOR[p.number]; return (
           <a key={p.id} className="hub-card" href={`#/parts/${p.id}`} style={{ ...cv(c), color: "inherit", display: "grid", gap: 8 }}>
@@ -45,6 +46,22 @@ function Overview() {
           </a>); })}
       </div>
     </div>
+  );
+}
+
+const REVISION_NOTE: Record<number, string> = {
+  1: "The 2026 draft revises the concepts for whole-life information management and simplifies the terms.",
+  2: "The 2026 draft widens this process to the whole asset life and is retitled 'Information management process'.",
+  3: "The 2026 draft turns this part into guidance for the unified process in Part 2.",
+};
+
+/** Points to the 2026 revision hub; on a part page, says what the draft changes for that part. */
+function RevisionNotice({ part }: { part?: number }) {
+  return (
+    <a href="#/hubs/revision-2026" className="hub-tile row spread" style={{ ...cv(TONES.red), color: "inherit" }}>
+      <span><b>ISO 19650 is being revised (2026 drafts)</b><span className="small" style={{ display: "block", marginTop: 2 }}>{part ? REVISION_NOTE[part] : "Parts 1, 2 and 3 are being revised into one whole-life process."} The current editions stay in force until the new ones are published.</span></span>
+      <span className="btn">What is changing →</span>
+    </a>
   );
 }
 
@@ -82,7 +99,9 @@ export default function PartsHub({ partId }: { partId?: string }) {
       <div className="hub-sections">
         <a href="#/parts" style={cv("var(--muted)")}>All parts</a>
         {partDetails19650.map((p) => <a key={p.id} className={p.id === part.id ? "on" : ""} href={`#/parts/${p.id}`} style={cv(PART_COLOR[p.number])}>Part {p.number}</a>)}
+        <a href="#/hubs/revision-2026" style={cv(TONES.red)}>2026 revision</a>
       </div>
+      {part.number <= 3 && <RevisionNotice part={part.number} />}
 
       <div className="grid g2">
         <div className="hub-tile" style={cv(TONES.green)}><b>In plain terms</b><div style={{ marginTop: 4 }}>{part.plainTerms}</div></div>

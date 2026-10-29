@@ -6,12 +6,13 @@ import { implementationHub } from "./implementation";
 import { infrastructureHub } from "./infrastructure";
 import { loinHub } from "./loin";
 import { mcpHub } from "./mcp";
+import { revision2026Hub } from "./revision2026";
 import { revitHub } from "./revit";
 import { scanToBimHub } from "./scanToBim";
 import type { Hub } from "./types";
 
 export const hubs: Hub[] = [
-  appointmentHub, documentsRolesHub, loinHub, cobieHub, infrastructureHub,
+  revision2026Hub, appointmentHub, documentsRolesHub, loinHub, cobieHub, infrastructureHub,
   { ...scanToBimHub, tone: scanToBimHub.tone ?? "red" },
   { ...dimensionsHub, tone: dimensionsHub.tone ?? "green" },
   revitHub, mcpHub,

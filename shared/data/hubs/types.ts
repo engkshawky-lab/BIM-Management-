@@ -57,7 +57,7 @@ export interface HubTab { id: string; label: string; blocks: HubBlock[] }
 export interface HubSection { id: string; label: string; tabs: HubTab[] }
 
 export interface Hub {
-  id: "scan-to-bim" | "dimensions" | "implementation" | "cobie" | "revit" | "infrastructure" | "loin" | "appointment" | "documents-roles" | "mcp";
+  id: "scan-to-bim" | "dimensions" | "implementation" | "cobie" | "revit" | "infrastructure" | "loin" | "appointment" | "documents-roles" | "mcp" | "revision-2026";
   /** Accent colour for the hub's header and cards. */
   tone?: Tone;
   eyebrow: string;

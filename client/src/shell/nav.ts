@@ -61,6 +61,7 @@ export const STANDARD_PAGES: NavItem[] = [
   g("s.hubs", "All topic hubs", "/hubs", "grid", "Start here", "Every in-depth guide, grouped by theme"),
   g("s.19650.parts", "All parts (1–6): learning hub", "/parts", "book", "ISO 19650", "Beginner to expert, clause deep dives, checklists, Ask AI"),
   ...[1, 2, 3, 4, 5, 6].map((n) => g(`s.19650.part${n}`, `Part ${n}`, `/parts/19650-${n}`, "book", "ISO 19650")),
+  g("s.19650.revision", "2026 revision (draft): what is changing", "/hubs/revision-2026", "alert", "ISO 19650", "Status of the Parts 1–3 revision, confirmed vs proposed changes, what to do now"),
   g("s.19650.summary", "Parts at a glance", "/knowledge/iso19650/library/0", "book", "ISO 19650"),
   g("s.19650.process", "Delivery process (19650-2)", "/knowledge/iso19650/library/1", "flow", "ISO 19650"),
   g("s.19650.cde", "CDE & status codes", "/knowledge/iso19650/library/2", "layers", "ISO 19650"),

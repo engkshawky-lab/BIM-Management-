@@ -9,7 +9,7 @@ export type HubId = Hub["id"];
 export interface Theme { id: string; label: string; blurb: string; hubs: HubId[] }
 
 export const THEMES: Theme[] = [
-  { id: "process", label: "The ISO 19650 process", blurb: "Who does what, when, and which documents each party produces.", hubs: ["appointment", "documents-roles"] },
+  { id: "process", label: "The ISO 19650 process", blurb: "Who does what, when, and which documents each party produces.", hubs: ["revision-2026", "appointment", "documents-roles"] },
   { id: "requirements", label: "Information requirements", blurb: "How much information is needed, and how it is handed over.", hubs: ["loin", "cobie"] },
   { id: "software", label: "Software, models & AI", blurb: "Producing and checking information with Revit, reality capture and AI.", hubs: ["revit", "mcp", "scan-to-bim"] },
   { id: "strategy", label: "Sectors & strategy", blurb: "Applying ISO 19650 to infrastructure, beyond 3D, and across an organisation.", hubs: ["infrastructure", "dimensions", "implementation"] },
@@ -29,6 +29,15 @@ export interface HubLinks {
 }
 
 export const HUB_LINKS: Record<HubId, HubLinks> = {
+  "revision-2026": {
+    related: [
+      { hub: "appointment", why: "The 2018 process that stays in force until the new editions" },
+      { hub: "documents-roles", why: "The documents whose names may change" },
+      { hub: "loin", why: "ISO 7817-1, which the drafts align with" },
+    ],
+    tools: ["s.19650.parts", "s.19650.glossary", "ai.generate"],
+    parts: [1, 2, 3],
+  },
   appointment: {
     related: [
       { hub: "documents-roles", why: "The documents each step produces, by party" },
