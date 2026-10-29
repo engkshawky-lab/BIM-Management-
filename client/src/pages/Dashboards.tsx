@@ -1,32 +1,90 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ASSESSMENTS, CARBON_MATERIALS, COMPLEXITY, FEE_SERVICES, estimateCarbon, estimateFee, scoreAssessment } from "../../../shared/tools";
 import { useSession } from "../App";
 import { api, fmtDate } from "../lib/api";
 import { exportCsv } from "../lib/export";
+import { activePlan, updatePlanRow } from "../lib/planStore";
+import { STATUSES, containerName, dueBucket, type DueBucket } from "../../../shared/planRows";
 
 // ---------------------------------------------------------------- My Day
 
 interface InboxItem { kind: string; title: string; project: string; due: string; link: string; overdue: boolean }
 const KIND_LABEL: Record<string, string> = { review: "Review", container: "Container", issue: "Issue", action: "Action", risk: "Risk review" };
 
+const QUICK: { label: string; text: string; href: string }[] = [
+  { label: "Check file names", text: "Paste or drop names; get fixes", href: "/tools/naming-check" },
+  { label: "Check a model", text: "Grade an IFC model A–F", href: "/model-tools/qaqc" },
+  { label: "Delivery plans", text: "TIDP, MIDP and MPDT", href: "/ai-tools/plans" },
+  { label: "Project data", text: "Codes, stages, standards", href: "/project-data" },
+];
+const BUCKETS: { id: DueBucket; label: string; color: string }[] = [
+  { id: "overdue", label: "Overdue", color: "var(--danger)" }, { id: "week", label: "Due in the next 7 days", color: "var(--warn)" },
+  { id: "fortnight", label: "Due in 8–14 days", color: "var(--accent)" }, { id: "undated", label: "No due date", color: "var(--muted)" },
+];
+
+/** Open containers from the TIDP/MIDP saved in this browser, grouped by due date, with a one-click status update. */
+function PlanToday() {
+  const [plan, setPlan] = useState(() => activePlan());
+  const [open, setOpen] = useState<DueBucket | "">("");
+  if (!plan) return (
+    <div className="card dashed" style={{ marginBottom: 12 }}><b>No delivery plan yet.</b> <span className="muted">Create a TIDP or MIDP and its containers appear here every day, sorted by due date.</span> <a href="#/ai-tools/plans">Open the plan generator →</a></div>
+  );
+  const day = new Date().toISOString().slice(0, 10);
+  const rows = plan.rows.map((r) => ({ r, b: dueBucket(r, day) })).filter((x) => x.b && x.b !== "later");
+  const later = plan.rows.filter((r) => dueBucket(r, day) === "later").length;
+  const done = plan.rows.filter((r) => r.status === "Published").length;
+  const setStatus = (ref: string, status: string) => { updatePlanRow(plan.kind, ref, { status }); setPlan(activePlan()); };
+  const shown = BUCKETS.filter((b) => (open ? b.id === open : b.id !== "undated"));
+  return (
+    <section style={{ marginBottom: 16 }}>
+      <div className="row spread"><h2 style={{ margin: "8px 0" }}>{plan.kind.toUpperCase()} · {plan.header.projectCode || plan.header.projectName || "Delivery plan"}</h2>
+        <span className="small muted">{done} of {plan.rows.length} published · {later} due later</span></div>
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10, marginBottom: 10 }}>
+        {BUCKETS.map((b) => <button key={b.id} className={"card stat-card" + (open === b.id ? " on" : "")} style={{ textAlign: "start" }} onClick={() => setOpen(open === b.id ? "" : b.id)}>
+          <div className="stat" style={{ color: b.color }}>{rows.filter((x) => x.b === b.id).length}</div><div className="small muted">{b.label}</div></button>)}
+      </div>
+      {shown.map((b) => { const list = rows.filter((x) => x.b === b.id).sort((x, y) => (x.r.due || "").localeCompare(y.r.due || "")); return list.length ? (
+        <div key={b.id} className="card" style={{ marginBottom: 10 }}>
+          <b style={{ color: b.color }}>{b.label}</b>
+          <div className="table-wrap"><table className="data"><tbody>{list.map(({ r }) => (
+            <tr key={r.ref} className={b.id === "overdue" ? "late" : ""}>
+              <td className="mono small no-i18n nowrap">{containerName(plan.header, r)}</td>
+              <td className="small">{r.title}<div className="tiny muted">{[r.taskTeam, r.responsible, r.milestone].filter(Boolean).join(" · ")}</div></td>
+              <td className="small nowrap">{r.due || "—"}</td>
+              <td style={{ width: 140 }}><select value={r.status} onChange={(e) => setStatus(r.ref, e.target.value)} aria-label="Status">{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></td>
+            </tr>))}</tbody></table></div>
+        </div>) : null; })}
+      {!rows.some((x) => x.b !== "undated") && !open && <p style={{ color: "var(--ok)" }}>✔ Nothing due in the next 14 days.</p>}
+      {rows.some((x) => x.b === "undated") && !open && <div className="hub-tile small" style={{ "--c": "var(--warn)", marginBottom: 8 } as CSSProperties}>Containers without a due date never show as due. Add due dates in the <a href="#/ai-tools/plans">plan generator</a> (the Due column), or set the milestone dates before you load the starter list.</div>}
+      <p className="tiny muted">Status changes update the {plan.kind.toUpperCase()} saved in this browser. <a href="#/ai-tools/plans">Open the full plan →</a></p>
+    </section>
+  );
+}
+
 export function MyDay() {
   const [items, setItems] = useState<InboxItem[] | null>(null);
   const [kind, setKind] = useState("");
-  useEffect(() => { api<{ items: InboxItem[] }>("/me/inbox").then((r) => setItems(r.items)); }, []);
-  if (!items) return <p className="muted">Loading…</p>;
-  const kinds = [...new Set(items.map((i) => i.kind))];
-  const list = items.filter((i) => !kind || i.kind === kind);
+  useEffect(() => { api<{ items: InboxItem[] }>("/me/inbox").then((r) => setItems(r.items)).catch(() => setItems([])); }, []);
+  const kinds = [...new Set((items ?? []).map((i) => i.kind))];
+  const list = (items ?? []).filter((i) => !kind || i.kind === kind);
   return (
     <>
-      <div className="page-head"><h1>My Day</h1><p className="muted">Everything waiting on you across your projects — reviews, containers, issues, meeting actions and risk reviews. Overdue first.</p></div>
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
-        <div className="card"><div className="stat">{items.length}</div><div className="small muted">open items</div></div>
-        <div className="card"><div className="stat" style={{ color: "var(--danger)" }}>{items.filter((i) => i.overdue).length}</div><div className="small muted">overdue</div></div>
-        {kinds.map((k) => <button key={k} className={"card stat-card" + (kind === k ? " on" : "")} style={{ textAlign: "left" }} onClick={() => setKind(kind === k ? "" : k)}><div className="stat">{items.filter((i) => i.kind === k).length}</div><div className="small muted">{KIND_LABEL[k]}</div></button>)}
+      <div className="page-head"><h1>My Day</h1><p className="muted">{new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })} · What is due from your delivery plan and what is waiting on you in projects.</p></div>
+      <div className="grid g4" style={{ marginBottom: 16 }}>
+        {QUICK.map((q) => <a key={q.href} href={"#" + q.href} className="card stat-card" style={{ color: "inherit", display: "grid", gap: 2 }}><b style={{ color: "var(--accent)" }}>{q.label} →</b><span className="small muted">{q.text}</span></a>)}
       </div>
-      <div className="card">{list.length ? <table className="data"><tbody>{list.map((i, n) => (
-        <tr key={n} className={i.overdue ? "late" : ""}><td style={{ width: 110 }}><span className="chip">{KIND_LABEL[i.kind]}</span></td><td><a href={`#${i.link}`}>{i.title}</a></td><td className="small mono">{i.project}</td><td className="small nowrap">{i.due || "—"}{i.overdue && <div className="tiny error">overdue</div>}</td></tr>
-      ))}</tbody></table> : <p style={{ color: "var(--ok)" }}>✔ Nothing waiting on you.</p>}</div>
+      <PlanToday />
+      <h2 style={{ margin: "8px 0" }}>Assigned to you in projects</h2>
+      {!items ? <p className="muted">Loading…</p> : <>
+        {items.length > 0 && <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10, marginBottom: 12 }}>
+          <div className="card"><div className="stat">{items.length}</div><div className="small muted">open items</div></div>
+          <div className="card"><div className="stat" style={{ color: "var(--danger)" }}>{items.filter((i) => i.overdue).length}</div><div className="small muted">overdue</div></div>
+          {kinds.map((k) => <button key={k} className={"card stat-card" + (kind === k ? " on" : "")} style={{ textAlign: "start" }} onClick={() => setKind(kind === k ? "" : k)}><div className="stat">{items.filter((i) => i.kind === k).length}</div><div className="small muted">{KIND_LABEL[k]}</div></button>)}
+        </div>}
+        <div className="card">{list.length ? <table className="data"><tbody>{list.map((i, n) => (
+          <tr key={n} className={i.overdue ? "late" : ""}><td style={{ width: 110 }}><span className="chip">{KIND_LABEL[i.kind]}</span></td><td><a href={`#${i.link}`}>{i.title}</a></td><td className="small mono">{i.project}</td><td className="small nowrap">{i.due || "—"}{i.overdue && <div className="tiny error">overdue</div>}</td></tr>
+        ))}</tbody></table> : <p style={{ color: "var(--ok)" }}>✔ Nothing waiting on you: reviews, issues, meeting actions and risk reviews assigned to you appear here.</p>}</div>
+      </>}
     </>
   );
 }

@@ -7,6 +7,8 @@ import { api, type Notification, type Project } from "../lib/api";
 import { Icon, type IconName } from "../shell/icons";
 import { RolePicker, useRecent } from "../shell/Shell";
 import { roleById } from "../shell/roles";
+import { activePlan } from "../lib/planStore";
+import { dueBucket } from "../../../shared/planRows";
 
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; };
 
@@ -56,6 +58,33 @@ export function ProjectGrid({ projects }: { projects: Project[] }) {
         </a>
       ))}
     </div>
+  );
+}
+
+/** Today at a glance: containers due from the saved delivery plan and items assigned in projects, with the daily tools one click away. */
+function TodayCard() {
+  const [assigned, setAssigned] = useState<{ total: number; overdue: number } | null>(null);
+  useEffect(() => { api<{ items: { overdue: boolean }[] }>("/me/inbox").then((r) => setAssigned({ total: r.items.length, overdue: r.items.filter((i) => i.overdue).length })).catch(() => setAssigned({ total: 0, overdue: 0 })); }, []);
+  const plan = activePlan();
+  const day = new Date().toISOString().slice(0, 10);
+  const buckets = plan ? plan.rows.map((r) => dueBucket(r, day)) : [];
+  const overdue = buckets.filter((b) => b === "overdue").length + (assigned?.overdue ?? 0);
+  const week = buckets.filter((b) => b === "week").length;
+  return (
+    <section className="card">
+      <div className="row spread"><h2>Today</h2><a href="#/my-day" className="small">Open My Day →</a></div>
+      <div className="grid g3" style={{ marginBottom: 10 }}>
+        <a href="#/my-day" className="hub-stat" style={{ "--c": overdue ? "var(--danger)" : "var(--ok)", color: "inherit" } as CSSProperties}><div className="v">{overdue}</div><div className="small">overdue</div></a>
+        <a href="#/my-day" className="hub-stat" style={{ "--c": "var(--accent)", color: "inherit" } as CSSProperties}><div className="v">{week}</div><div className="small">due this week</div></a>
+        <a href="#/my-day" className="hub-stat" style={{ "--c": "var(--accent)", color: "inherit" } as CSSProperties}><div className="v">{assigned?.total ?? "…"}</div><div className="small">assigned to you</div></a>
+      </div>
+      {!plan && <div className="small muted" style={{ marginBottom: 8 }}>Save a TIDP or MIDP in the <a href="#/ai-tools/plans">plan generator</a> to see what is due each day.</div>}
+      <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+        <a className="btn" href="#/tools/naming-check">Check file names</a>
+        <a className="btn" href="#/model-tools/qaqc">Check a model</a>
+        <a className="btn" href="#/ai-tools/plans">Delivery plans</a>
+      </div>
+    </section>
   );
 }
 
@@ -143,6 +172,7 @@ export default function Home({ projectsOnly }: { projectsOnly?: boolean }) {
           </section>
         </div>
         <div className="home-col">
+          <TodayCard />
           <section className="card">
             <div className="row spread"><h2>Needs your attention</h2>{notes.length > 0 && <span className="chip">{notes.length}</span>}</div>
             {notes.length ? notes.map((n) => <a key={n.id} href={"#" + n.link} className="recent-item"><Icon name="bell" size={15} /><span>{n.message}</span></a>)
@@ -162,6 +192,7 @@ export default function Home({ projectsOnly }: { projectsOnly?: boolean }) {
 
       <h2 className="section-title">Start something</h2>
       <div className="start-grid">
+        <StartCard icon="tag" title="Check file names" text="Paste or drop hundreds of names; get every mistake and the corrected name." meta="Daily · No upload" onClick={() => navigate("/tools/naming-check")} />
         <StartCard icon="shield" title="Review a document" text="Quality hub checks every EIR, BEP and MIDP with clause-referenced findings." meta="Quality hub · Most used" onClick={() => navigate(first ? `/projects/${first.id}/quality` : "/projects/new")} />
         <StartCard icon="file" title="Draft an EIR" text="Build a controlled working draft, section by section, with AI help." meta="Template · AI drafting" onClick={() => navigate("/knowledge/iso19650/templates/eir")} />
         <StartCard icon="check" title="Check a model" text="Upload an IFC or COBie file and see LOIN, IDS and data checks in seconds." meta="Model validation" onClick={() => navigate(first ? `/projects/${first.id}/validation` : "/projects/new")} />

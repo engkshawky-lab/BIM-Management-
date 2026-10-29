@@ -20,7 +20,9 @@ export const markGenerated = (kind: string | undefined) => kind && setProjectDat
 
 if (typeof window !== "undefined") window.addEventListener("storage", (e) => { if (e.key === KEY) { current = read(); emit(); } });
 
-export function useProjectData(): [ProjectData, typeof setProjectData] {
+export const getProjectData = () => current;
+
+export function useProjectData():[ProjectData, typeof setProjectData] {
   const p = useSyncExternalStore((f) => { subs.add(f); return () => subs.delete(f); }, () => current);
   return [p, setProjectData];
 }

@@ -88,6 +88,8 @@ export const TEMPLATE_PAGES: NavItem[] = templates.map((t) =>
   g(`t.${t.id}`, `${t.code} — ${t.title}`, `/knowledge/${t.standard}/templates/${t.id}`, "file", `${t.standard === "iso19650" ? "ISO 19650" : "ISO/IEC 42001"} · ${t.category}`, t.purpose));
 
 export const TOOL_PAGES: NavItem[] = [
+  g("r.myday", "My Day", "/my-day", "calendar", "Daily work", "What is due from your delivery plan and what is waiting on you"),
+  g("m.naming", "File naming checker", "/tools/naming-check", "tag", "Daily work", "Check hundreds of file names at once; get corrected names and match them to the plan"),
   g("ai.projectdata", "Project data (enter once)", "/project-data", "table", "AI document tools", "Mandatory inputs every document reuses: the eight-item hard minimum and per-document inputs"),
   g("ai.review", "Document review & compare", "/ai-tools/review", "sparkles", "AI document tools", "Review EIR/BEP/MIDP; EIR ↔ BEP check; BEP versions"),
   g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "AI document tools", "EIR, AIR, PIR, OIR, BEP, TIDP, MIDP or any custom template"),
@@ -108,7 +110,6 @@ export const TOOL_PAGES: NavItem[] = [
 
 export const RESOURCE_PAGES: NavItem[] = [
   g("r.wizard", "Setup wizard", "/wizard", "sparkles", "My work", "Answer a few questions; get the documents and workflow you need"),
-  g("r.myday", "My Day", "/my-day", "calendar", "My work", "Everything waiting on you"),
   g("r.portfolio", "Portfolio dashboard", "/portfolio", "grid", "My work", "Health across your projects"),
   g("r.downloads", "Downloads library", "/downloads", "library", "References", "Templates, checklists and guides curated by administrators"),
   g("r.samples", "Sample documents (EIR, AIR, OIR, BEP…)", "/samples", "file", "References", "Structured Word samples with guidance"),
@@ -139,8 +140,8 @@ export const RAIL: RailSection[] = [
 export function sectionFor(route: string): string {
   if (route.startsWith("/projects")) return "projects";
   if (/^\/knowledge\/[^/]+\/templates/.test(route)) return "documents";
-  if (/^\/(tools|ai-tools|model-tools|project-data)(\/|$)/.test(route)) return "tools";
-  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(my-day|portfolio|downloads|samples|news|standards|talent|admin|wizard|support)/.test(route)) return "resources";
+  if (/^\/(tools|ai-tools|model-tools|project-data|my-day)(\/|$)/.test(route)) return "tools";
+  if (/^\/knowledge\/[^/]+\/references/.test(route) || route.startsWith("/profile") || /^\/(portfolio|downloads|samples|news|standards|talent|admin|wizard|support)/.test(route)) return "resources";
   if (route.startsWith("/knowledge") || route.startsWith("/learn") || route.startsWith("/parts") || route.startsWith("/hubs")) return "standards";
   return "home";
 }

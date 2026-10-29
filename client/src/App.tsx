@@ -24,6 +24,7 @@ import { DownloadsLibrary, NewsFeed, SampleDocuments } from "./pages/Resources";
 import HubPage, { HubsIndex } from "./pages/HubPage";
 import ModelTools from "./pages/ModelTools";
 import ProjectDataPage from "./pages/ProjectData";
+import NamingCheck from "./pages/NamingCheck";
 import { hubById, hubs } from "../../shared/data/hubs";
 
 interface Session { user: User; setUser: (u: User | null) => void; toast: (msg: string, kind?: "ok" | "error") => void }
@@ -88,6 +89,7 @@ export default function App() {
   else if (parts[0] === "support") view = <Support />;
   else if (parts[0] === "my-day") view = <MyDay />;
   else if (parts[0] === "portfolio") view = <Portfolio />;
+  else if (parts[0] === "tools" && parts[1] === "naming-check") view = <NamingCheck />;
   else if (parts[0] === "tools") view = <Tools tool={parts[1]} />;
   else if (parts[0] === "ai-tools") view = <AiTools tool={parts[1]} arg={parts[2]} arg2={parts[3]} />;
   else if (parts[0] === "hubs" && hubById(parts[1] ?? "")) view = <HubPage hub={hubById(parts[1])!} sectionId={parts[2]} tabId={parts[3]} />;

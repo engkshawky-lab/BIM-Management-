@@ -112,6 +112,16 @@ export const DEFAULT_MILESTONES: PlanMilestone[] = [
 export const aggregateTidps = (plans: { taskTeam: string; rows: ContainerRow[] }[]): ContainerRow[] =>
   plans.flatMap((p) => p.rows.map((r) => ({ ...r, taskTeam: r.taskTeam || p.taskTeam }))).map((r, i) => ({ ...r, ref: `C${String(i + 1).padStart(3, "0")}` }));
 
+export type DueBucket = "overdue" | "week" | "fortnight" | "later" | "undated";
+/** Where an open container falls relative to today (ISO dates): overdue, due within 7 days, within 14 days, later or undated. Published rows return null. */
+export function dueBucket(r: Pick<ContainerRow, "due" | "status">, today: string): DueBucket | null {
+  if (r.status === "Published") return null;
+  if (!r.due) return "undated";
+  if (r.due < today) return "overdue";
+  const days = (Date.parse(r.due) - Date.parse(today)) / 86_400_000;
+  return days <= 7 ? "week" : days <= 14 ? "fortnight" : "later";
+}
+
 export const CONTAINER_COLUMNS: { key: keyof ContainerRow; label: string; width: number }[] = [
   { key: "ref", label: "Ref", width: 7 }, { key: "taskTeam", label: "Task team", width: 16 }, { key: "title", label: "Title / description", width: 36 },
   { key: "volume", label: "Volume", width: 8 }, { key: "level", label: "Level", width: 7 }, { key: "type", label: "Type", width: 7 }, { key: "role", label: "Role", width: 6 },
