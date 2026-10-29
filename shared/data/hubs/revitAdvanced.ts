@@ -522,6 +522,67 @@ export const revitMcpSection: HubSection = {
         },
       ],
     },
+    // ------------------------------------------------------------------ Free videos
+    {
+      id: "videos",
+      label: "Videos & references",
+      blocks: [
+        {
+          kind: "callout",
+          title: "Free public videos, made by others",
+          body: "These videos are free on YouTube and were made by independent creators, not by FirstOption or this portal. Tools change quickly: check the Revit version each video uses before you follow it, and try new set-ups on a copy of the model. Links checked in October 2026.",
+          tone: "warn",
+        },
+        {
+          kind: "links",
+          title: "Autodesk's official Revit MCP server: documentation",
+          links: [
+            { label: "Revit Public MCP Server (Autodesk Help)", href: "https://help.autodesk.com/cloudhelp/ENU/ADSKMCP-RevitMcp/files/ADSKMCP_RevitMcp_revit_mcp_server_html.html", note: "Official set-up guide. Technical Preview for Revit 2027.2, with Read, Write and Experimental modes", tone: "blue" },
+            { label: "Introducing the Revit Public MCP Server (Autodesk blog)", href: "https://www.autodesk.com/blogs/aec/2026/06/17/revit-public-mcp-server/", note: "Autodesk's announcement, 17 June 2026", tone: "blue" },
+            { label: "APS sample: MCP server for Revit Automation", href: "https://github.com/autodesk-platform-services/aps-sample-mcp-server-revit-automation", note: "Autodesk Platform Services sample on GitHub; runs Revit in the cloud through the Automation API (for developers)", tone: "purple" },
+          ],
+        },
+        {
+          kind: "links",
+          title: "Videos: connecting Revit 2027 with Autodesk's official MCP server",
+          links: [
+            { label: "New in Revit 2027 - Revit MCP Server + Claude", href: "https://www.youtube.com/watch?v=Neb7g5xPfFk", note: "BIM Pure · English", tone: "red" },
+            { label: "Cómo conectar Revit 2027 a Claude con el MCP Oficial de Autodesk", href: "https://www.youtube.com/watch?v=LjDPTc1Lq1k", note: "De punto y línea · Spanish", tone: "red" },
+            { label: "Claude AI + Revit 2027 vía MCP Público · Tutorial completo", href: "https://www.youtube.com/watch?v=s_9966Fvsxc", note: "StruktureLab Academy · Spanish", tone: "red" },
+          ],
+        },
+        {
+          kind: "links",
+          title: "Videos: step-by-step set-up for beginners",
+          links: [
+            { label: "Revit + Claude MCP Set Up for Beginners – Step-by-Step Tutorial", href: "https://www.youtube.com/watch?v=Qm_vRncHHGU", note: "AYDrafting · English", tone: "green" },
+            { label: "Revit + Claude MCP for Beginners | Step-by-Step", href: "https://www.youtube.com/watch?v=MAQ9hm3Crao", note: "Prof Rino and Caroline the boss · English", tone: "green" },
+            { label: "How to Install Revit MCP with Claude Code (Full Setup Tutorial)", href: "https://www.youtube.com/watch?v=3fYxg7iIJZA", note: "Prof Rino and Caroline the boss · English", tone: "green" },
+            { label: "Connect Claude AI to Revit — Full Setup, No Code", href: "https://www.youtube.com/watch?v=YklvqIz8PBI", note: "AI BIM Lab | iWorkstation · English", tone: "green" },
+          ],
+        },
+        {
+          kind: "links",
+          title: "Videos: pyRevit, community servers and connectors",
+          links: [
+            { label: "Revit AI Tutorial: pyRevit MCP + Claude Code", href: "https://www.youtube.com/watch?v=STy8v26dOfw", note: "BIM Pure · pyRevit Routes, the same base the FirstOption Revit MCP uses", tone: "teal" },
+            { label: "CLAUDE Controls Revit! (AI & MCP Tutorial)", href: "https://www.youtube.com/watch?v=Pj_OGbCHYys", note: "Pro BIM NK · English", tone: "teal" },
+            { label: "How To Make Claude Do Anything You Want Inside Revit", href: "https://www.youtube.com/watch?v=lX2sVJeZo4g", note: "Nagash Architecture · English", tone: "teal" },
+            { label: "Control Revit with Claude — Pilot Connector (MCP)", href: "https://www.youtube.com/watch?v=qszhueSWYYM", note: "AEC Pilot · a commercial connector", tone: "amber" },
+          ],
+        },
+        {
+          kind: "list",
+          title: "Which video to watch first",
+          items: [
+            "On Revit 2027.2 or later: start with BIM Pure's \"New in Revit 2027\" video, then read Autodesk's help page.",
+            "On Revit 2026 or earlier: Autodesk's server does not support these versions. Use the pyRevit video, or the FirstOption Revit MCP (Revit 2017–2027) from the Install & connect tab.",
+            "New to MCP: watch one beginner video from start to finish before installing anything.",
+            "Whichever video you follow, connect a Read-only set-up first and switch on changes only when you trust it.",
+          ],
+        },
+      ],
+    },
     // ------------------------------------------------------------------ FAQ and quiz
     {
       id: "faq",
