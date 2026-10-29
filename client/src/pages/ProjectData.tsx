@@ -171,7 +171,7 @@ export default function ProjectDataPage() {
 
       <Section n={9} title="Generation order">
         <div className="small muted">Under ISO 19650 these documents feed each other in a fixed order, so the inputs build up step by step.</div>
-        <div className="hub-flow">{ORDER.map((o, i) => { const done = !!p.generated[o.kind] || (o.kind === "AIR" && !!p.generated.PIR); return <div key={o.kind} style={cv(done ? TONES.green : Object.values(TONES)[i % 6])}><b>{i + 1}. {done ? "✓ " : ""}{o.label}</b><span>{done ? `Produced ${p.generated[o.kind] ?? p.generated.PIR}` : o.needs.length ? `Needs: ${o.needs.map((n) => DOC_LABEL[n]).join(", ")}` : "Start here"}</span></div>; })}</div>
+        <div className="hub-flow">{ORDER.map((o, i) => { const done = !!p.generated[o.kind] || (o.kind === "AIR" && !!p.generated.PIR); return <div key={o.kind} style={cv(done ? TONES.green : "var(--hub)")}><b>{i + 1}. {done ? "✓ " : ""}{o.label}</b><span>{done ? `Produced ${p.generated[o.kind] ?? p.generated.PIR}` : o.needs.length ? `Needs: ${o.needs.map((n) => DOC_LABEL[n]).join(", ")}` : "Start here"}</span></div>; })}</div>
         <div className="row"><a href="#/ai-tools/generate"><button className="primary">Open the document generator</button></a><a href="#/ai-tools/plans"><button>Open delivery plans (TIDP / MIDP)</button></a>
           {Object.keys(p.generated).length > 0 && <button className="ghost small" onClick={() => setP({ ...p, generated: {} })}>Clear the produced marks</button>}</div>
       </Section>

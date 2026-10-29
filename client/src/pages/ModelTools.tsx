@@ -113,7 +113,7 @@ function ElementBrowser({ r }: { r: IfcJobResult }) {
       {sel && <div className="proc-detail" style={cv("var(--hub)")}>
         <div className="row spread"><h3 className="no-i18n">{sel.name || "(no name)"} · {pretty(sel.type)}</h3><button className="ghost" onClick={() => setSel(null)}>Close</button></div>
         <div className="small muted no-i18n">GUID {sel.guid} · {sel.storey || "no storey"}{sel.classification && ` · ${sel.classification}`}</div>
-        <div className="grid g3" style={{ marginTop: 8 }}>{Object.entries(sel.psets).map(([ps, props]) => <div key={ps} className="hub-tile no-i18n" style={cv(TONES.purple)}><b className="small">{ps}</b>{Object.entries(props).slice(0, 20).map(([k, v]) => <div key={k} className="small"><span className="muted">{k}:</span> {v || "—"}</div>)}</div>)}</div>
+        <div className="grid g3" style={{ marginTop: 8 }}>{Object.entries(sel.psets).map(([ps, props]) => <div key={ps} className="hub-tile no-i18n" style={cv("var(--hub)")}><b className="small">{ps}</b>{Object.entries(props).slice(0, 20).map(([k, v]) => <div key={k} className="small"><span className="muted">{k}:</span> {v || "—"}</div>)}</div>)}</div>
       </div>}
     </div>
   );
@@ -177,7 +177,7 @@ function IfcHub() {
       {r && <>
         <div className="hub-tabs">{tabs.map(([id, l]) => <a key={id} className={tab === id ? "on" : ""} href="#" onClick={(e) => { e.preventDefault(); setTab(id); }}>{l}</a>)}</div>
         {tab === "overview" && <div style={{ display: "grid", gap: 12 }}>
-          <div className="grid g4">{[["Elements", r.report.elementCount.toLocaleString(), TONES.blue], ["Storeys", String(r.report.storeys.length), TONES.teal], ["Classification", r.report.classificationSystems[0] ?? "None", TONES.purple], ["Georeferenced", r.report.checks.find((c) => c.id === "georef")?.failed ? "No" : "Yes", TONES.amber]].map(([l, v, c]) => <div key={l} className="hub-stat" style={cv(c)}><div className="v no-i18n">{v}</div><div className="small">{l}</div></div>)}</div>
+          <div className="grid g4">{[["Elements", r.report.elementCount.toLocaleString(), "var(--hub)"], ["Storeys", String(r.report.storeys.length), "var(--hub)"], ["Classification", r.report.classificationSystems[0] ?? "None", "var(--hub)"], ["Georeferenced", r.report.checks.find((c) => c.id === "georef")?.failed ? "No" : "Yes", "var(--hub)"]].map(([l, v, c]) => <div key={l} className="hub-stat" style={cv(c)}><div className="v no-i18n">{v}</div><div className="small">{l}</div></div>)}</div>
           <div className="grid g2" style={{ alignItems: "start" }}>
             <div className="hub-card"><div className="hub-title">Elements by class</div>{Object.entries(r.report.classCounts).sort((a, b) => b[1] - a[1]).slice(0, 14).map(([t, n], i, all) => (
               <div key={t} className="row small" style={{ flexWrap: "nowrap", marginBottom: 4 }}><span className="no-i18n" style={{ width: 150, flexShrink: 0 }}>{pretty(t)}</span><div style={{ flex: 1, height: 12, borderRadius: 3, background: "var(--surface-2)" }}><div style={{ width: `${(n / all[0][1]) * 100}%`, height: "100%", borderRadius: 3, background: Object.values(TONES)[i % 6] }} /></div><b style={{ width: 50, textAlign: "end" }}>{n}</b></div>))}</div>

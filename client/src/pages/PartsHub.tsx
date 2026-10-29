@@ -11,12 +11,13 @@ import { TONES } from "./HubPage";
 
 type Level = "beginner" | "intermediate" | "expert";
 const LEVELS: { id: Level; label: string; c: string; hint: string }[] = [
-  { id: "beginner", label: "Beginner", c: TONES.green, hint: "Core ideas in plain English" },
-  { id: "intermediate", label: "Intermediate", c: TONES.blue, hint: "Applying it on a project" },
-  { id: "expert", label: "Expert", c: TONES.purple, hint: "Clause nuance, edge cases, audit" },
+  { id: "beginner", label: "Beginner", c: "var(--hub)", hint: "Core ideas in plain English" },
+  { id: "intermediate", label: "Intermediate", c: "var(--hub)", hint: "Applying it on a project" },
+  { id: "expert", label: "Expert", c: "var(--hub)", hint: "Clause nuance, edge cases, audit" },
 ];
 /** One colour per part, used across the hub. */
-const PART_COLOR: Record<number, string> = { 1: TONES.blue, 2: TONES.green, 3: TONES.teal, 4: TONES.purple, 5: TONES.red, 6: TONES.amber };
+// Every part uses the page accent; colour is kept for meaning (the red 2026 revision notice, mistakes).
+const PART_COLOR: Record<number, string> = { 1: "var(--hub)", 2: "var(--hub)", 3: "var(--hub)", 4: "var(--hub)", 5: "var(--hub)", 6: "var(--hub)" };
 const cv = (c: string) => ({ "--c": c }) as CSSProperties;
 
 const load = <T,>(key: string, fallback: T): T => { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) as T : fallback; } catch { return fallback; } };
@@ -104,8 +105,8 @@ export default function PartsHub({ partId }: { partId?: string }) {
       {part.number <= 3 && <RevisionNotice part={part.number} />}
 
       <div className="grid g2">
-        <div className="hub-tile" style={cv(TONES.green)}><b>In plain terms</b><div style={{ marginTop: 4 }}>{part.plainTerms}</div></div>
-        <div className="hub-tile" style={cv(TONES.amber)}><b>Why it matters</b><div style={{ marginTop: 4 }}>{part.whyItMatters}</div></div>
+        <div className="hub-tile" style={cv("var(--hub)")}><b>In plain terms</b><div style={{ marginTop: 4 }}>{part.plainTerms}</div></div>
+        <div className="hub-tile" style={cv("var(--hub)")}><b>Why it matters</b><div style={{ marginTop: 4 }}>{part.whyItMatters}</div></div>
       </div>
       <div className="row small">{part.whoUsesIt.map((w, i) => <span key={w} className="badge" style={{ borderColor: Object.values(TONES)[i % 6], color: Object.values(TONES)[i % 6], background: "transparent" }}>{w}</span>)}</div>
 
@@ -125,15 +126,15 @@ export default function PartsHub({ partId }: { partId?: string }) {
       </Box>
 
       <div className="grid g2" style={{ alignItems: "start" }}>
-        <Box title="Key requirements" c={TONES.blue}><ul style={{ margin: 0 }}>{part.keyRequirements.map((x, i) => <li key={i} style={{ marginBottom: 4 }}>{x}</li>)}</ul></Box>
-        <Box title={`Compliance checklist · ${checked.length}/${part.checklist.length}`} c={TONES.green}>
+        <Box title="Key requirements" c="var(--hub)"><ul style={{ margin: 0 }}>{part.keyRequirements.map((x, i) => <li key={i} style={{ marginBottom: 4 }}>{x}</li>)}</ul></Box>
+        <Box title={`Compliance checklist · ${checked.length}/${part.checklist.length}`} c="var(--hub)">
           <div className="progress" style={{ marginBottom: 8 }}><div style={{ width: `${pct}%`, background: "var(--ok)" }} /></div>
           {part.checklist.map((x, i) => <label key={i} className={"hub-check small" + (checked.includes(i) ? " done" : "")}><input type="checkbox" checked={checked.includes(i)} onChange={() => toggle(i)} style={{ marginTop: 2 }} /><span>{x}</span></label>)}
           <div className="tiny muted">Ticks are saved in this browser.</div>
         </Box>
       </div>
 
-      <Box title="Key concepts" c={TONES.purple}>
+      <Box title="Key concepts" c="var(--hub)">
         <div className="grid g3">{part.keyConcepts.map((k, i) => <div key={k.term} className="hub-tile" style={cv(Object.values(TONES)[i % 6])}><b>{k.term}</b><div className="small" style={{ marginTop: 4 }}>{k.explanation}</div></div>)}</div>
       </Box>
 
@@ -151,16 +152,16 @@ export default function PartsHub({ partId }: { partId?: string }) {
       </Box>
 
       <div className="grid g2" style={{ alignItems: "start" }}>
-        <Box title="Key documents" c={TONES.teal}>
+        <Box title="Key documents" c="var(--hub)">
           {part.keyDocuments.map((d) => { const t = tplFor(d.templateCode); return (
-            <div key={d.name} className="hub-tile" style={{ ...cv(TONES.teal), marginBottom: 8 }}>
+            <div key={d.name} className="hub-tile" style={{ ...cv("var(--hub)"), marginBottom: 8 }}>
               <div className="row spread"><b>{d.name}</b>{t && <a className="small" href={`#/knowledge/${t.standard}/templates/${t.id}`}>Open template ↗</a>}</div>
               <div className="small">{d.purpose}</div>
             </div>); })}
           <a className="small" href="#/ai-tools/generate">Draft any of these with the AI document generator ↗</a>
         </Box>
-        <Box title="Links to other parts and standards" c={TONES.blue}>
-          {part.interfaces.map((x) => <div key={x.ref} style={{ marginBottom: 8, borderInlineStart: `3px solid ${TONES.blue}`, paddingInlineStart: 10 }}><b>{x.ref}</b><div className="small muted">{x.relation}</div></div>)}
+        <Box title="Links to other parts and standards" c="var(--hub)">
+          {part.interfaces.map((x) => <div key={x.ref} style={{ marginBottom: 8, borderInlineStart: `3px solid var(--hub)`, paddingInlineStart: 10 }}><b>{x.ref}</b><div className="small muted">{x.relation}</div></div>)}
         </Box>
       </div>
 
@@ -169,13 +170,13 @@ export default function PartsHub({ partId }: { partId?: string }) {
           <tbody>{part.commonMistakes.map((m, i) => <tr key={i}><td style={{ color: "var(--danger)" }}>{m.mistake}</td><td>{m.fix}</td></tr>)}</tbody></table></div>
       </Box>
 
-      <Box title={`Worked example — ${part.workedExample.title}`} c={TONES.amber}>
+      <Box title={`Worked example — ${part.workedExample.title}`} c="var(--hub)">
         <p style={{ marginTop: 0 }}>{part.workedExample.scenario}</p>
         <div className="hub-flow" style={{ marginBottom: 10 }}>{part.workedExample.steps.map((s, i) => <div key={i} style={cv(Object.values(TONES)[i % 6])}><b>Step {i + 1}</b><span>{s}</span></div>)}</div>
         <div className="hub-tile" style={cv(TONES.green)}><b>Outcome:</b> {part.workedExample.outcome}</div>
       </Box>
 
-      <div id="ask-ai"><Box title={`Ask AI about Part ${part.number}`} c={TONES.purple}>
+      <div id="ask-ai"><Box title={`Ask AI about Part ${part.number}`} c="var(--hub)">
         <AskPartChat partId={part.id} partLabel={`Part ${part.number}`} suggestions={[
           `Explain Part ${part.number} to a new BIM coordinator`,
           `What evidence would an auditor ask for on Part ${part.number}?`,
@@ -185,7 +186,7 @@ export default function PartsHub({ partId }: { partId?: string }) {
       <div className="row spread">
         {prevPart ? <a href={`#/parts/${prevPart.id}`} className="hub-tile" style={{ ...cv(PART_COLOR[prevPart.number]), color: "inherit", flex: "1 1 220px" }}><span className="small muted">← Previous part</span><div><b>Part {prevPart.number} — {prevPart.title}</b></div></a> : <span />}
         {nextPart ? <a href={`#/parts/${nextPart.id}`} className="hub-tile" style={{ ...cv(PART_COLOR[nextPart.number]), color: "inherit", flex: "1 1 220px", textAlign: "end" }}><span className="small muted">Next part →</span><div><b>Part {nextPart.number} — {nextPart.title}</b></div></a>
-          : <a href="#/hubs" className="hub-tile" style={{ ...cv(TONES.green), color: "inherit", flex: "1 1 220px", textAlign: "end" }}><span className="small muted">All six parts done?</span><div><b>Go deeper in the topic hubs →</b></div></a>}
+          : <a href="#/hubs" className="hub-tile" style={{ ...cv("var(--hub)"), color: "inherit", flex: "1 1 220px", textAlign: "end" }}><span className="small muted">All six parts done?</span><div><b>Go deeper in the topic hubs →</b></div></a>}
       </div>
       <p className="tiny muted">Paraphrased guidance, not the standard's text. Always verify against the licensed edition of {part.edition}.</p>
     </div>

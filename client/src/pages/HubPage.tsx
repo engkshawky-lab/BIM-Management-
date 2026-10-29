@@ -19,7 +19,8 @@ const CobieReference = lazy(() => import("./CobieReference"));
 // Renders a topic hub (Scan to BIM, BIM dimensions, COBie, LOIN…): coloured header, section switch, tabs, content blocks.
 
 export { TONES, ORDER };
-const cycle = (i: number) => TONES[ORDER[i % ORDER.length]];
+// One accent per page: decorative elements use the hub colour; other colours are kept for meaning (ok, warning, error).
+const cycle = (_i: number) => "var(--hub, var(--accent))";
 const cv = (c: string) => ({ "--c": c }) as CSSProperties;
 
 export function Quiz({ questions, storeKey }: { questions: { q: string; options: string[]; answer: number; why: string }[]; storeKey: string }) {
@@ -148,20 +149,20 @@ function Block({ b, hub, i, k }: { b: HubBlock; hub: Hub; i: number; k: string }
     case "text": return card(b.body.map((p, k) => <p key={k} style={{ marginTop: 0 }}>{p}</p>));
     case "list": return card(<ul style={{ margin: 0 }}>{b.items.map((x, k) => <li key={k} style={{ marginBottom: 4 }}>{x}</li>)}</ul>);
     case "checklist": return card(<Checklist items={b.items} storeKey={k} />);
-    case "cards": return <div>{title}<div className="grid g3">{b.cards.map((x, k) => { const col = TONES[x.tone ?? ORDER[(k + i) % ORDER.length]]; return (
+    case "cards": return <div>{title}<div className="grid g3">{b.cards.map((x, k) => { const col = cycle(k + i); return (
       <div key={k} className="hub-tile" style={cv(col)}><b>{x.title}</b><div className="small" style={{ marginTop: 4 }}>{x.body}</div></div>); })}</div></div>;
     case "stats": return card(<div className="grid g4">{b.stats.map((s, k) => (
       <div key={k} className="hub-stat" style={cv(cycle(k + i))}><div className="v">{s.value}</div><div className="small">{s.label}</div>{s.source && <div className="tiny muted">{s.source}</div>}</div>))}</div>);
     case "steps": return card(<div className="hub-flow">{b.steps.map((s, k) => <div key={k} style={cv(cycle(k))}><b>{k + 1}. {s.title}</b><span>{s.body}</span></div>)}</div>);
     case "table": return card(<div className="table-wrap"><table className="data hub-table"><thead><tr>{b.columns.map((x) => <th key={x}>{x}</th>)}</tr></thead>
       <tbody>{b.rows.map((r, k) => <tr key={k}>{r.map((x, j) => <td key={j} className={j ? "small" : undefined}>{j === 0 ? <b>{x}</b> : x}</td>)}</tr>)}</tbody></table></div>);
-    case "callout": { const col = b.tone === "warn" ? TONES.amber : b.tone === "ok" ? TONES.green : TONES.blue; return <div className="hub-tile" style={{ ...cv(col), borderInlineStart: `4px solid ${col}` }}><b>{b.title}</b><div style={{ marginTop: 4 }}>{b.body}</div></div>; }
+    case "callout": { const col = b.tone === "warn" ? TONES.amber : b.tone === "ok" ? TONES.green : "var(--hub, var(--accent))"; return <div className="hub-tile" style={{ ...cv(col), borderInlineStart: `4px solid ${col}` }}><b>{b.title}</b><div style={{ marginTop: 4 }}>{b.body}</div></div>; }
     case "faq": return card(b.items.map((x, k) => <details key={k} className="clause"><summary>{x.q}</summary><div style={{ padding: "4px 0 8px" }}>{x.a}</div></details>));
     case "quiz": return card(<Quiz questions={b.questions} storeKey={k} />);
     case "process": return card(<Process b={b} />);
     case "rolematrix": return card(<RoleMatrix b={b} />);
     case "graphic": return card(<><HubGraphic id={b.graphic} />{b.caption && <p className="small muted" style={{ margin: "8px 0 0" }}>{b.caption}</p>}</>);
-    case "links": return <div>{title}<div className="grid g3">{b.links.map((x, k) => { const col = TONES[x.tone ?? ORDER[(k + i) % ORDER.length]]; return (
+    case "links": return <div>{title}<div className="grid g3">{b.links.map((x, k) => { const col = cycle(k + i); return (
       <a key={k} href={x.href} target="_blank" rel="noopener noreferrer" className="hub-tile" style={{ ...cv(col), color: "inherit" }}><b style={{ color: col }}>{x.label} ↗</b>{x.note && <div className="small" style={{ marginTop: 4 }}>{x.note}</div>}
         <div className="tiny muted" style={{ marginTop: 4, wordBreak: "break-all" }} translate="no">{x.href.replace(/^https?:\/\//, "").replace(/\?public$/, "")}</div></a>); })}</div></div>;
     case "cobie-schema": return card(<Suspense fallback={<div className="muted">Loading the COBie reference…</div>}><CobieReference /></Suspense>);
@@ -301,7 +302,7 @@ function RelatedPanel({ hub }: { hub: Hub }) {
   return (
     <div className="hub-card related" style={cv("var(--hub)")}>
       <div className="hub-title" style={cv("var(--hub)")}>Related topics</div>
-      <div className="grid g3">{links.related.map(({ hub: id, why }) => { const h = hubById(id); if (!h) return null; const c = TONES[h.tone ?? "blue"]; return (
+      <div className="grid g3">{links.related.map(({ hub: id, why }) => { const h = hubById(id); if (!h) return null; const c = "var(--hub)"; return (
         <a key={id} href={`#/hubs/${id}`} className="hub-tile" style={{ ...cv(c), color: "inherit" }}><b style={{ color: c }}>{h.title} →</b><div className="small" style={{ marginTop: 4 }}>{why}</div></a>); })}</div>
       {tools.length > 0 && <>
         <div className="small muted" style={{ margin: "12px 0 6px", fontWeight: 600 }}>Put it into practice</div>
@@ -322,7 +323,7 @@ export function HubsIndex({ hubs, focus }: { hubs: Hub[]; focus?: string }) {
   const byId = new Map(hubs.map((h) => [h.id, h]));
   const ungrouped = hubs.filter((h) => !themeOf(h.id));
   let n = 0;
-  const HubCard = ({ h, step }: { h: Hub; step?: number }) => { const c = TONES[h.tone ?? "blue"]; const total = allTabs(h).length; const seen = Math.min(visitedTabs(h.id).size, total); return (
+  const HubCard = ({ h, step }: { h: Hub; step?: number }) => { const c = "var(--accent)"; const total = allTabs(h).length; const seen = Math.min(visitedTabs(h.id).size, total); return (
     <a href={`#/hubs/${h.id}`} className="hub-card" style={{ ...cv(c), color: "inherit", display: "grid", gap: 6, alignContent: "start" }}>
       <div className="hub-title" style={cv(c)}>{step ? `${step} · ` : ""}{h.eyebrow}</div><b style={{ fontSize: 16 }}>{h.title}</b>
       <div className="small muted">{short(tr(h.intro), 160)}</div>

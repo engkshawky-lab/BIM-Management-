@@ -418,7 +418,7 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .hub-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; border-top: 3px solid var(--c, var(--hub)); }
 .hub-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--c, var(--hub)); margin-bottom: 10px; }
 .hub-title::before { content: ""; width: 4px; height: 16px; border-radius: 2px; background: var(--c, var(--hub)); }
-.hub-tile { border-radius: 12px; padding: 14px; background: color-mix(in srgb, var(--c) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); }
+.hub-tile { border-radius: 12px; padding: 14px; background: color-mix(in srgb, var(--c) 6%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 22%, var(--border)); }
 .hub-tile b { color: color-mix(in srgb, var(--c) 80%, var(--text)); }
 .hub-flow { display: flex; gap: 0; overflow-x: auto; padding-bottom: 4px; }
 .hub-flow > div { flex: 1 0 160px; position: relative; padding: 14px 22px 14px 18px; color: #fff; min-height: 96px;
@@ -430,7 +430,7 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .hub-flow > div span { display: block; font-size: 12px; opacity: .9; margin-top: 4px; }
 .hub-table th { background: color-mix(in srgb, var(--hub) 16%, var(--surface)); color: var(--text); }
 .hub-table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--hub) 4%, transparent); }
-.hub-stat { border-radius: 12px; padding: 14px; text-align: center; background: color-mix(in srgb, var(--c) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 28%, transparent); }
+.hub-stat { border-radius: 12px; padding: 14px; text-align: center; background: color-mix(in srgb, var(--c) 6%, var(--surface)); border: 1px solid color-mix(in srgb, var(--c) 22%, var(--border)); }
 .hub-stat .v { font-size: 22px; font-weight: 800; color: var(--c); line-height: 1.2; }
 .hub-check { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; }
 .hub-check:hover { background: var(--surface-2); }
