@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><APIBusinessObjects xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.oracle.com/Primavera/P6/V18.1/API/BusinessObjects http://xmlns.oracle.com/Primavera/P6/V18.1/API/p6apibo.xsd">
+  <ProjectList>
+    <Project ObjectId="34136">
+      <Id>201020</Id>
+      <Name>Test Project</Name>
+    <Id>201020</Id>
+    <Name>Test Project</Name>
+    <ObjectId>34136</ObjectId>
+    <PlannedStartDate>2020-09-01T00:00:00</PlannedStartDate>
+    <Status>Active</Status>
+    <WBS>
+      <Code>1</Code>
+      <Name>Test Project</Name>
+      <ObjectId>36331</ObjectId>
+      <ProjectObjectId>34136</ProjectObjectId>
+      <SequenceNumber>1500</SequenceNumber>
+    </WBS>
+    <Activity>
+      <ActualDuration>415.0</ActualDuration>
+      <ActualFinishDate>2021-04-19T15:30:00</ActualFinishDate>
+      <ActualLaborCost>0.0</ActualLaborCost>
+      <ActualLaborUnits>0.0</ActualLaborUnits>
+      <ActualNonLaborCost>0.0</ActualNonLaborCost>
+      <ActualNonLaborUnits>0.0</ActualNonLaborUnits>
+      <ActualStartDate>2021-02-05T08:00:00</ActualStartDate>
+      <AtCompletionDuration>415.0</AtCompletionDuration>
+      <AtCompletionLaborCost>0.0</AtCompletionLaborCost>
+      <AtCompletionLaborUnits>0.0</AtCompletionLaborUnits>
+      <AtCompletionNonLaborCost>0.0</AtCompletionNonLaborCost>
+      <AtCompletionNonLaborUnits>0.0</AtCompletionNonLaborUnits>
+      <CalendarObjectId>12002</CalendarObjectId>
+      <DurationPercentComplete>1.0</DurationPercentComplete>
+      <DurationType>Fixed Duration and Units/Time</DurationType>
+      <EarlyFinishDate>2021-05-17T22:00:00</EarlyFinishDate>
+      <EarlyStartDate>2021-05-17T22:00:00</EarlyStartDate>
+      <FinishDate>2021-04-19T15:30:00</FinishDate>
+      <Id>A1000</Id>
+      <IsStarred>0</IsStarred>
+      <LateFinishDate>2021-05-18T07:00:00</LateFinishDate>
+      <LateStartDate>2021-05-18T07:00:00</LateStartDate>
+      <LevelingPriority>Normal</LevelingPriority>
+      <Name>Test</Name>
+      <ObjectId>140001</ObjectId>
+      <PercentComplete>1.0</PercentComplete>
+      <PercentCompleteType>Duration</PercentCompleteType>
+      <PhysicalPercentComplete>1.0</PhysicalPercentComplete>
+      <PlannedDuration>360.0</PlannedDuration>
+      <PlannedFinishDate>2021-05-18T08:00:00</PlannedFinishDate>
+      <PlannedLaborCost>0.0</PlannedLaborCost>
+      <PlannedLaborUnits>0.0</PlannedLaborUnits>
+      <PlannedNonLaborCost>0.0</PlannedNonLaborCost>
+      <PlannedNonLaborUnits>0.0</PlannedNonLaborUnits>
+      <PlannedStartDate>2021-03-16T08:00:00</PlannedStartDate>
+      <PrimaryConstraintType/>
+      <ProjectObjectId>34136</ProjectObjectId>
+      <RemainingDuration>0.0</RemainingDuration>
+      <RemainingLaborCost>0.0</RemainingLaborCost>
+      <RemainingLaborUnits>0.0</RemainingLaborUnits>
+      <RemainingNonLaborCost>0.0</RemainingNonLaborCost>
+      <RemainingNonLaborUnits>0.0</RemainingNonLaborUnits>
+      <ScopePercentComplete>0.0</ScopePercentComplete>
+      <SecondaryConstraintType/>
+      <StartDate>2021-02-05T08:00:00</StartDate>
+      <Status>Completed</Status>
+      <Type>Task Dependent</Type>
+      <UnitsPercentComplete>0.0</UnitsPercentComplete>
+      <WBSObjectId>36331</WBSObjectId>
+    </Activity>
+  </Project>
+</APIBusinessObjects>

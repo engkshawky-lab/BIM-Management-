@@ -67,12 +67,6 @@ async function exportXlsx(rows: { groups: string[][]; clashes: string[][] }, nam
   saveAs(new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `${name}.xlsx`);
 }
 
-/** Navisworks can write UTF-16 reports; honour a BOM, default to UTF-8. */
-function decode(buf: ArrayBuffer): string {
-  const b = new Uint8Array(buf.slice(0, 2));
-  const enc = b[0] === 0xff && b[1] === 0xfe ? "utf-16le" : b[0] === 0xfe && b[1] === 0xff ? "utf-16be" : "utf-8";
-  return new TextDecoder(enc).decode(buf).replace(/^﻿/, "");
-}
 
 const mm = (m: number | null) => (m === null ? "—" : `${Math.round(m * 1000)}`);
 const today = () => new Date().toISOString().slice(0, 10);
@@ -157,7 +151,7 @@ export default function ClashTriage() {
         if (/\.xlsx$/i.test(f.name)) {
           for (const s of await readSheets(await f.arrayBuffer())) cs.push(...parseCsvClashes(s.rows, s.name, f.name));
         } else if (/\.(xml|html?|csv|tsv|txt)$/i.test(f.name)) {
-          cs = parseClashFile(f.name, decode(await f.arrayBuffer()), parseCsv);
+          cs = parseClashFile(f.name, await f.arrayBuffer(), parseCsv);
         } else { toast(`${f.name}: ${t("unsupported file type")}`, "error"); continue; }
         if (!cs.length) { toast(`${f.name}: ${t("no clashes found")}`, "error"); continue; }
         added.push({ name: f.name, clashes: cs.map((c) => ({ ...c, id: `${f.name}|${c.id}`, source: f.name })) });

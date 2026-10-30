@@ -78,6 +78,7 @@ export const DOCUMENT_PAGES: NavItem[] = [
   g("ai.projectdata", "Project data (enter once)", "/project-data", "table", "Project data & setup", "Mandatory inputs every document reuses"),
   g("r.standards", "Client standards", "/standards", "book", "Project data & setup", "Client information standards and requirements"),
   g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "Create", "Any ISO 19650 document from a description; for a full EIR or a BEP from the EIR, use the AI studio writers"),
+  g("x.bepwriter", "BEP writer", "/ai-studio/bep-writer", "sparkles", "Create", "Write a BEP from the client's EIR (point by point) or from a short project brief"),
   g("ai.plans", "TIDP / MIDP / MPDT generator", "/ai-tools/plans", "calendar", "Create", "Delivery plan tables with naming, checks and Excel export"),
   g("ai.risks", "Risk register starter", "/ai-tools/risks", "sparkles", "Create", "Draft a starter list of information delivery risks; manage the live register in the project"),
   g("ai.clash", "Clash test matrix (plan the tests)", "/ai-tools/clash", "sparkles", "Create", "Before clash runs: which discipline pairs, tolerances and priorities to test"),
@@ -102,6 +103,8 @@ export const MODEL_PAGES: NavItem[] = [
   g("ai.cobie", "COBie data checker", "/ai-tools/cobie", "sparkles", "Check models", "Sheets, required fields and handover readiness"),
   g("b.ids", "IDS builder", "/bim-tools/ids", "check", "Coordination", "Write model requirements as a buildingSMART IDS file"),
   g("b.bcf", "BCF studio", "/bim-tools/bcf", "flag", "Coordination", "Open, review, edit and convert BCF issue files"),
+  g("c.acc", "Autodesk ACC / BIM 360", "/connectors/acc", "link", "Connectors", "Browse ACC Docs folders, check file names, export lists, start transmittals"),
+  g("c.speckle", "Speckle", "/connectors/speckle", "link", "Connectors", "Open Speckle models, count categories and check parameter completeness"),
 ];
 
 /** Learn: where to start, the standard itself, the in-depth topic hubs (hubs index order), ISO/IEC 42001, references. */
@@ -153,7 +156,6 @@ export const RESOURCE_PAGES: NavItem[] = [
 /** AI: the AI studio tools, connecting AI to authoring software, and AI governance. */
 export const AI_PAGES: NavItem[] = [
   g("x.eirwriter", "EIR writer", "/ai-studio/eir-writer", "sparkles", "AI studio", "A full EIR and AIR from a short project brief"),
-  g("x.bepwriter", "BEP from EIR", "/ai-studio/bep-writer", "sparkles", "AI studio", "A BEP that answers the EIR point by point"),
   g("x.compliance", "EIR ↔ BEP compliance", "/ai-studio/compliance", "sparkles", "AI studio", "Requirement-by-requirement matrix with gaps and BEP wording"),
   g("x.modelqa", "Model QA from IDS (AI + BCF)", "/ai-studio/model-qa", "sparkles", "AI studio", "Check IFC against your IDS requirements, failures explained, issues as BCF"),
   g("x.clash", "Clash triage (sort the results)", "/ai-studio/clash", "sparkles", "AI studio", "After clash runs: group results by root cause, assign teams, export BCF"),
@@ -181,14 +183,14 @@ export const ALL_PAGES = [...PROJECT_PAGES, ...HOME_PAGES, ...DOCUMENT_PAGES, ..
 export const pageByKey = (key: string) => ALL_PAGES.find((x) => x.key === key);
 
 export interface NavSection { id: string; label: string; icon: IconName; items: NavItem[]; numbered?: boolean }
-/** Sidebar sections, one open at a time. Projects sits after My work and is built from the user's projects. */
+/** Sidebar sections, one open at a time, in the order the user chose: learn first, then documents, models, AI, resources, your own work, and projects (built from the user's projects) last. */
 export const SECTIONS: NavSection[] = [
-  { id: "home", label: "My work", icon: "home", items: HOME_PAGES },
+  { id: "learn", label: "ISO standards & learning", icon: "book", items: LEARN_PAGES },
   { id: "documents", label: "Documents & delivery", icon: "files", items: DOCUMENT_PAGES, numbered: true },
   { id: "models", label: "Models & coordination", icon: "layers", items: MODEL_PAGES },
   { id: "ai", label: "AI", icon: "sparkles", items: AI_PAGES },
-  { id: "learn", label: "ISO standards & learning", icon: "book", items: LEARN_PAGES },
   { id: "resources", label: "Resources", icon: "library", items: RESOURCE_PAGES },
+  { id: "home", label: "My work", icon: "home", items: HOME_PAGES },
 ];
 
 export const groupsOf = (items: NavItem[]) => [...new Set(items.map((i) => i.group))];

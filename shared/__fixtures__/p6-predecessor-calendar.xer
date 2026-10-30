@@ -1,0 +1,12 @@
+ERMHDR	8.2.0	2020-03-17	Project	admin	Primavera Admin	dbxDatabaseNoName	Project Management	USD
+%T	CURRTYPE
+%F	curr_id	decimal_digit_cnt	curr_symbol	decimal_symbol	digit_group_symbol	pos_curr_fmt_type	neg_curr_fmt_type	curr_type	curr_short_name	group_digit_cnt	base_exch_rate
+%T	PROJWBS
+%F	wbs_id	proj_id	obs_id	seq_num	proj_node_flag	sum_data_flag	status_code	wbs_short_name	wbs_name	phase_id	parent_wbs_id	ev_user_pct	ev_etc_user_value	orig_cost	indep_remain_total_cost	ann_dscnt_rate_pct	dscnt_period_type	indep_remain_work_qty	anticip_start_date	anticip_end_date	ev_compute_type	ev_etc_compute_type	guid	tmpl_guid	plan_open_state
+%R	355248	34738	565	2019	Y	N	WS_Open	TEST	TEST PROJECT		355247			0.00	0.00						EC_Cmp_pct	EE_Rem_hr	0/Zpmr8vWES1lvDJ2Yk1nQ
+%T	TASK
+%F	task_id	proj_id	wbs_id	clndr_id	phys_complete_pct	rev_fdbk_flag	lock_plan_flag	auto_compute_act_flag	complete_pct_type	task_type	duration_type	status_code	task_code	task_name	rsrc_id	total_float_hr_cnt	free_float_hr_cnt	remain_drtn_hr_cnt	act_work_qty	remain_work_qty	target_work_qty	target_drtn_hr_cnt	target_equip_qty	act_equip_qty	remain_equip_qty	cstr_date	act_start_date	act_end_date	late_start_date	late_end_date	expect_end_date	early_start_date	early_end_date	restart_date	reend_date	target_start_date	target_end_date	rem_late_start_date	rem_late_end_date	cstr_type	priority_type	suspend_date	resume_date	float_path	float_path_order	guid	tmpl_guid	cstr_date2	cstr_type2	driving_path_flag	act_this_per_work_qty	act_this_per_equip_qty	external_early_start_date	external_late_end_date	create_date	update_date	create_user	update_user	location_id
+%R	1338401	34738	355248	44739	0	N	N	N	CP_Drtn	TT_Task	DT_FixedDrtn	TK_Complete	A1000	Test				0	0	0	0	24	0	0	0	2019-06-10 00:00	2019-06-10 08:00	2019-06-12 17:00	2020-12-30 08:00	2020-12-30 08:00		2019-10-02 00:00	2019-10-02 00:00			2019-06-10 08:00	2019-06-12 17:00			CS_MSOA	PT_Normal					AJArd2UNNkKUSaTYrFjK+A				N	0	0			2020-03-16 13:11	2020-03-17 13:25	admin	admin
+%T	TASKPRED
+%F	task_pred_id	task_id	pred_task_id	proj_id	pred_proj_id	pred_type	lag_hr_cnt	float_path	aref	arls
+%E

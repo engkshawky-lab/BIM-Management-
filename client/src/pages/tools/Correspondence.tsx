@@ -53,7 +53,10 @@ export default function Correspondence() {
   // ---------------------------------------------------------------- transmittal builder
   const [h, setH] = useState({ project: "", from: user.organization || "", to: "", date: today, reason: "", notes: "" });
   const [number, setNumber] = useState("");
-  const [names, setNames] = useState("");
+  const [names, setNames] = useState(() => {
+    // file names handed over from the ACC connector's "Create transmittal"
+    try { const v = sessionStorage.getItem("bim:transmittal:names"); if (!v) return ""; sessionStorage.removeItem("bim:transmittal:names"); const a = JSON.parse(v); return Array.isArray(a) ? a.join("\n") : ""; } catch { return ""; }
+  });
   const [used, setUsed] = useState<string[]>(readUsed);
   const suggested = nextTransmittalNumber(h.project, used);
   const trn = number.trim() || suggested;

@@ -3,6 +3,7 @@
 // spreadsheet rows and a coordination-meeting agenda. Pure functions, used by the client and the server.
 
 import { parseClashReport, type BcfTopic } from "./bcf";
+import { decodeText } from "./programme";
 
 export interface ClashItem { name: string; layer: string; file: string; guid: string; elementId: string; category: string }
 export interface Clash {
@@ -14,6 +15,8 @@ export interface Clash {
   x: number | null; y: number | null; z: number | null;
   itemA: ClashItem; itemB: ClashItem;
   source?: string;
+  /** Navisworks clash group the result was exported under, when it was grouped. */
+  group?: string;
 }
 
 export type GroupKind = "duplicate" | "cluster" | "pair";
@@ -81,6 +84,46 @@ export function splitGrid(s: string): { grid: string; level: string } {
   return { grid: s.trim(), level: "" };
 }
 
+/* ---------------------------------------------------------------- localised exports */
+
+/** Lower case, accents removed, apostrophes / punctuation collapsed to single spaces: "ID d'élément" → "id d element". */
+const fold = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+// Column headings and smart-tag names of non-English Navisworks / Solibri / Revizto exports, keyed by their folded form.
+const HEADER_ALIASES: [string, string[]][] = [
+  ["Clash Name", ["nom de conflit", "nom du conflit", "nom de la collision", "kollisionsname", "name der kollision", "nombre de conflicto", "nombre del conflicto", "nombre de la interferencia", "nome conflitto", "nome del conflitto", "nome da colisao", "nome do conflito", "naam van conflict", "conflictnaam"]],
+  ["Status", ["etat", "statut", "estado", "stato", "situacao", "zustand"]],
+  ["Distance", ["abstand", "distancia", "distanza"]],
+  ["Grid Location", ["emplacement de grille", "emplacement de la grille", "position de la grille", "rasterposition", "rasterschnittpunkt", "ubicacion de rejilla", "ubicacion de la rejilla", "posizione griglia", "localizacao da grade"]],
+  ["Clash Point", ["point de conflit", "point du conflit", "kollisionspunkt", "punto de conflicto", "punto di conflitto", "ponto de conflito", "ponto de colisao"]],
+  ["Description", ["beschreibung", "descripcion", "descrizione", "descricao"]],
+  ["Item ID", ["id d element", "id de l element", "element id", "elementid", "id de elemento", "id elemento", "id do elemento"]],
+  ["Layer", ["calque", "ebene", "capa", "livello", "camada"]],
+  ["Item Name", ["element nom", "nom de l element", "nom d element", "elementname", "nombre de elemento", "nombre del elemento", "elemento nome", "nome elemento", "nome do elemento"]],
+  ["Item Type", ["element type", "type d element", "type de l element", "elementtyp", "tipo de elemento", "tipo elemento", "elemento tipo", "tipo do elemento"]],
+  ["Source File", ["fichier source", "quelldatei", "archivo de origen", "file di origine", "arquivo de origem"]],
+  ["Item 1", ["element 1", "elemento 1", "objet 1", "objekt 1"]],
+  ["Item 2", ["element 2", "elemento 2", "objet 2", "objekt 2"]],
+];
+const HEADER_MAP = new Map<string, string>(HEADER_ALIASES.flatMap(([en, xs]) => xs.map((x) => [x, en] as [string, string])));
+/** A localised heading → its English Navisworks equivalent; English and unknown headings are returned trimmed. */
+export const canonHeader = (h: string) => HEADER_MAP.get(fold(h)) ?? h.trim();
+
+const STATUS_ALIASES: Record<string, string> = {
+  nouveau: "New", neu: "New", nuevo: "New", nuovo: "New", novo: "New", nieuw: "New",
+  actif: "Active", aktiv: "Active", activo: "Active", attivo: "Active", ativo: "Active", actief: "Active",
+  verifie: "Reviewed", revise: "Reviewed", uberpruft: "Reviewed", gepruft: "Reviewed", revisado: "Reviewed", revisionato: "Reviewed", rivisto: "Reviewed", beoordeeld: "Reviewed",
+  approuve: "Approved", genehmigt: "Approved", aprobado: "Approved", approvato: "Approved", aprovado: "Approved", goedgekeurd: "Approved",
+  resolu: "Resolved", behoben: "Resolved", gelost: "Resolved", resuelto: "Resolved", risolto: "Resolved", resolvido: "Resolved", opgelost: "Resolved",
+};
+
+// Navisworks "Item Type" is the geometry kind, not a model category.
+const GEOMETRY_TYPES = /^(solid|solide|solido|volumenkorper|korper|shell|coque|line|lines|ligne|linie|point|points|punkt|text|texte|composite object|objet composite|zusammengesetztes objekt|block|insert|geometry|geometrie|geometria)$/;
+const realCategory = (s: string) => (GEOMETRY_TYPES.test(fold(s)) ? "" : s);
+
+/** "Element ID: 1234", "ID d'élément: 1234" → "1234". */
+const stripIdLabel = (s: string) => s.replace(/^[^:\d]*:\s*/, "").trim();
+
 const looksLikeLevel = (s: string) => /level|storey|story|floor|roof|basement|mezz|podium|ground|^(l|b|lv|lvl)\s?-?\d+|^gf$|^\d{2}$/i.test(s.trim());
 
 /** Make clash ids unique (reports can repeat names, several reports can be loaded together). */
@@ -96,21 +139,41 @@ export function uniqueIds(clashes: Clash[]): Clash[] {
 /* ---------------------------------------------------------------- Navisworks XML */
 
 /** Navisworks Clash Detective XML export (exchange › batchtest › clashtests › clashtest › clashresults › clashresult). */
-export function parseNavisworksXml(xml: string, source?: string): Clash[] {
+export function parseNavisworksXml(input: string | ArrayBuffer | Uint8Array, source?: string): Clash[] {
+  // comments can quote element names ("<clashtest>") and would derail the regex readers
+  const xml = (typeof input === "string" ? input : decodeText(input)).replace(/^\uFEFF/, "").replace(/<!--[\s\S]*?-->/g, "");
   const head = /<exchange\b[^>]*>/i.exec(xml)?.[0] ?? "";
   const f = unitFactor(attr(head, "units") || "m");
   const out: Clash[] = [];
   const tests = [...xml.matchAll(/<clashtest\b([^>]*)>([\s\S]*?)<\/clashtest>/gi)];
   const blocks = tests.length ? tests.map((m) => ({ name: attr(m[1], "name") || "Clash test", body: m[2] })) : [{ name: "Clash test", body: xml }];
   for (const tb of blocks) {
-    // Clash groups wrap clashresults; the regex only takes <clashresult> (not <clashresults> or <clashgroup>).
-    for (const m of tb.body.matchAll(/<clashresult\b([^>]*)>([\s\S]*?)<\/clashresult>/gi)) {
-      const tag = m[1], body = m[2];
+    // Results in document order. A <clashgroup> wrapping <clashresult>s names their group; a group exported with
+    // "group headers only" has no results inside and stands in for its clashes (it carries its own point, status, items).
+    const results: { tag: string; body: string; group?: string }[] = [];
+    let rest = tb.body;
+    rest = rest.replace(/<clashgroup\b([^>]*)>([\s\S]*?)<\/clashgroup>/gi, (_, gtag: string, gbody: string) => {
+      const gname = attr(gtag, "name");
+      const inner = [...gbody.matchAll(/<clashresult\b([^>]*)>([\s\S]*?)<\/clashresult>/gi)];
+      if (inner.length) inner.forEach((m) => results.push({ tag: m[1], body: m[2], group: gname || undefined }));
+      else results.push({ tag: gtag, body: gbody, group: gname || undefined });
+      return `\u0000${results.length}\u0000`;
+    });
+    // ungrouped results, kept in order relative to the groups
+    const ordered: typeof results = [];
+    let used = 0;
+    for (const m of rest.matchAll(/\u0000(\d+)\u0000|<clashresult\b([^>]*)>([\s\S]*?)<\/clashresult>/gi)) {
+      if (m[1]) { const upto = Number(m[1]); while (used < upto) ordered.push(results[used++]); }
+      else ordered.push({ tag: m[2], body: m[3] });
+    }
+    while (used < results.length) ordered.push(results[used++]);
+    for (const { tag, body, group } of ordered) {
       const name = attr(tag, "name") || child(body, "name") || `Clash ${out.length + 1}`;
       const status = attr(tag, "status") || child(body, "resultstatus") || attr(tag, "resultstatus");
       const distRaw = attr(tag, "distance") || child(body, "distance");
       const gl = splitGrid(child(body, "gridlocation"));
-      const pt = /<clashpoint\b[^>]*>[\s\S]*?<pos3f\b([^>]*)\/?>/i.exec(body)?.[1] ?? "";
+      // <clashpoint><pos3f x y z/></clashpoint>; some writers put x / y / z on <clashpoint> itself
+      const pt = /<clashpoint\b[^>]*>[\s\S]*?<pos3f\b([^>]*)\/?>/i.exec(body)?.[1] ?? /<clashpoint\b([^>]*\bx\s*=[^>]*)>/i.exec(body)?.[1] ?? "";
       const num = (k: string) => { const v = attr(pt, k); return v === "" ? null : parseLength(v, f); };
       const objs = [...body.matchAll(/<clashobject\b[^>]*>([\s\S]*?)<\/clashobject>/gi)].map((o) => xmlItem(o[1]));
       const itemA = objs[0] ?? emptyItem(), itemB = objs[1] ?? emptyItem();
@@ -118,7 +181,7 @@ export function parseNavisworksXml(xml: string, source?: string): Clash[] {
         id: `${tb.name}#${attr(tag, "guid") || name}`, test: tb.name, name, status: normStatus(status),
         distance: distRaw ? parseLength(distRaw, f) : null, grid: gl.grid,
         level: gl.level || (looksLikeLevel(itemA.layer) ? itemA.layer : looksLikeLevel(itemB.layer) ? itemB.layer : ""),
-        x: num("x"), y: num("y"), z: num("z"), itemA, itemB, source,
+        x: num("x"), y: num("y"), z: num("z"), itemA, itemB, source, ...(group ? { group } : {}),
       });
     }
   }
@@ -127,66 +190,84 @@ export function parseNavisworksXml(xml: string, source?: string): Clash[] {
 
 function xmlItem(body: string): ClashItem {
   const props: [string, string][] = [];
-  for (const m of body.matchAll(/<(objectattribute|smarttag)\b[^>]*>([\s\S]*?)<\/\1>/gi)) props.push([child(m[2], "name"), child(m[2], "value")]);
+  // smart-tag names follow the Navisworks UI language ("Elément Nom", "ID d'élément"): compare them in English
+  for (const m of body.matchAll(/<(objectattribute|smarttag)\b[^>]*>([\s\S]*?)<\/\1>/gi)) props.push([canonHeader(child(m[2], "name")), child(m[2], "value")]);
   const prop = (re: RegExp) => props.find(([n, v]) => re.test(n) && v)?.[1] ?? "";
   const layer = child(body, "layer") || prop(/^(item )?layer$/i);
-  const nodes = [...(/<pathlink\b[^>]*>([\s\S]*?)<\/pathlink>/i.exec(body)?.[1] ?? "").matchAll(/<node\b[^>]*>([\s\S]*?)<\/node>/gi)].map((n) => clean(n[1]));
-  const fileNode = nodes.find((n) => /\.(nwc|nwd|nwf|rvt|ifc|dwg|dgn|dxf|skp|fbx|3dm|ifczip)$/i.test(n)) ?? (nodes[0] === "File" ? nodes[1] : "") ?? "";
+  const path = /<pathlink\b[^>]*>([\s\S]*?)<\/pathlink>/i.exec(body)?.[1] ?? "";
+  let nodes = [...path.matchAll(/<node\b[^>]*>([\s\S]*?)<\/node>/gi)].map((n) => clean(n[1]));
+  // some writers flatten the path to text: "Model.rvt > Ducts > Rectangular Duct > 300x200"
+  if (!nodes.length && clean(path)) nodes = clean(path).split(/\s*(?:>|›|»|\/)\s*/).filter(Boolean);
+  const isFile = (n: string) => /\.(nwc|nwd|nwf|rvt|ifc|dwg|dgn|dxf|skp|fbx|3dm|ifczip)$/i.test(n);
+  const fileNode = nodes.find(isFile) ?? (nodes[0] === "File" ? nodes.find((n) => n !== "File") : "") ?? "";
   // Revit NWC hierarchy is file › level (layer) › category › family › type › instance.
   const li = layer ? nodes.indexOf(layer) : -1;
   const pathCategory = li >= 0 ? nodes[li + 1] ?? "" : "";
-  const elementId = prop(/^(element id|id|item id|object id)$/i).replace(/^[^:]*id\s*:\s*/i, "");
+  const elementId = stripIdLabel(prop(/^(element id|id|item id|object id)$/i));
+  const last = nodes.filter((n) => n !== "File").at(-1) ?? "";
   return {
-    name: prop(/^(item name|name)$/i) || nodes.at(-1) || "",
+    name: prop(/^(item name|name)$/i) || child(body, "itemname") || (last && !isFile(last) ? last : ""),
     layer,
     file: prop(/source file|^file( name)?$/i) || fileNode || "",
     guid: prop(/ifc ?guid|globalid|global id|^(item )?guid$|authoring guid/i),
     elementId,
-    category: prop(/category/i) || pathCategory || prop(/^item type$/i),
+    category: realCategory(prop(/category/i)) || pathCategory || realCategory(prop(/^item type$/i)),
   };
 }
 
 const normStatus = (s: string) => {
   const v = s.trim().toLowerCase();
-  return ({ new: "New", active: "Active", reviewed: "Reviewed", approved: "Approved", resolved: "Resolved" } as Record<string, string>)[v] ?? (s.trim() ? s.trim()[0].toUpperCase() + s.trim().slice(1) : "");
+  return ({ new: "New", active: "Active", reviewed: "Reviewed", approved: "Approved", resolved: "Resolved" } as Record<string, string>)[v] ?? STATUS_ALIASES[fold(s)]
+    ?? (s.trim() ? s.trim()[0].toUpperCase() + s.trim().slice(1) : "");
 };
 export const isClosedStatus = (s: string) => /approved|resolved|closed|fixed|done/i.test(s);
 
 /* ---------------------------------------------------------------- Navisworks HTML */
 
 /** Navisworks HTML (tabular) clash report, best effort: every table with a "Clash Name"/"Name" + "Status"/"Distance" header row. */
-export function parseNavisworksHtml(html: string, source?: string): Clash[] {
+export function parseNavisworksHtml(input: string | ArrayBuffer | Uint8Array, source?: string): Clash[] {
+  const html = typeof input === "string" ? input.replace(/^\uFEFF/, "") : decodeText(input);
   const out: Clash[] = [];
   const tables = [...html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)];
-  let fallbackTest = clean(/<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? "") || "Clash test";
+  const reportTitle = /clash report|report|navisworks|rapport|bericht|informe|relatorio|conflit|kollision|conflicto|conflitto/i;
+  const title = clean(/<title\b[^>]*>([\s\S]*?)<\/title>/i.exec(html)?.[1] ?? "");
+  let fallbackTest = title && !reportTitle.test(title) ? title : title || "Clash test";
   let kvAt = -1;
   for (const t of tables) {
-    const rows = [...t[1].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((r) => {
-      const cells: string[] = [];
+    // `rows` repeats a colspan cell's text across its columns (for "Item 1" / "Item 2" spans); `heads` keeps it in the
+    // first column only, in English, so a "Clash Point" spanning three columns is still one heading.
+    const rows: string[][] = [], heads: string[][] = [];
+    let testName = "";
+    for (const r of t[1].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
+      const cells: string[] = [], hcells: string[] = [];
       for (const c of r[1].matchAll(/<t([hd])\b([^>]*)>([\s\S]*?)<\/t\1>/gi)) {
-        const span = Math.max(1, Math.min(20, Number(attr(c[2], "colspan")) || 1));
+        const span = Math.max(1, Math.min(60, Number(attr(c[2], "colspan")) || 1));
         const txt = clean(c[3]);
-        for (let i = 0; i < span; i++) cells.push(txt);
+        if (/\btestname\b/i.test(attr(c[2], "class")) && txt) testName = txt;
+        for (let i = 0; i < span; i++) { cells.push(txt); hcells.push(i ? "" : canonHeader(txt)); }
       }
-      return cells;
-    });
+      rows.push(cells); heads.push(hcells);
+    }
+    // the summary table above each test's results ("<test name> | Tolerance | Clashes | New …") names the test
+    if (testName) { fallbackTest = testName; kvAt = t.index ?? 0; }
     const before = html.slice(0, t.index);
-    const heads = [...before.matchAll(/<h[1-4]\b[^>]*>([\s\S]*?)<\/h[1-4]>/gi)];
-    const last = heads.at(-1);
+    const hs = [...before.matchAll(/<h[1-4]\b[^>]*>([\s\S]*?)<\/h[1-4]>/gi)];
+    const last = hs.at(-1);
     const heading = last && (last.index ?? 0) > kvAt ? clean(last[1]) : "";
     // a small key/value table ("Test name | ARC vs STR") names the test of the next results table
-    const hi = rows.findIndex((r) => r.some((c) => /^(clash ?name|name|clash)$/i.test(c)) && r.some((c) => /^(status|distance)$/i.test(c)));
+    const hi = heads.findIndex((r) => r.some((c) => /^(clash ?name|name|clash)$/i.test(c)) && r.some((c) => /^(status|distance)$/i.test(c)));
     if (hi < 0) {
-      const kv = rows.find((r) => r.length >= 2 && /^(test|test name|clash test)\s*:?$/i.test(r[0]));
+      const kv = rows.find((r) => r.length >= 2 && /^(test|test name|clash test|nom du test|testname|nombre de prueba)\s*:?$/i.test(r[0]));
       if (kv) { fallbackTest = kv[1]; kvAt = t.index ?? 0; }
       continue;
     }
     // a second header row under "Item 1" / "Item 2" spans ("Item ID | Layer | Item Name")
-    const sub = rows[hi + 1];
+    const sub = heads[hi + 1];
     const twoRow = !!sub && sub.some((c) => /^(item id|element id|layer|item name|item type|name|type|guid|source file)$/i.test(c)) && !sub.some((c) => /^clash/i.test(c));
-    const header = twoRow ? rows[hi].map((h, i) => (sub[i] && sub[i] !== h ? `${h} ${sub[i]}` : h)) : disambiguate(rows[hi], rows[hi - 1]);
+    const above = hi > 0 ? rows[hi - 1].map(canonHeader) : undefined;
+    const header = twoRow ? rows[hi].map(canonHeader).map((h, i) => (sub[i] && sub[i] !== h ? `${h} ${sub[i]}` : h)) : disambiguate(heads[hi], above);
     const body = rows.slice(hi + (twoRow ? 2 : 1)).filter((r) => r.length >= Math.min(3, header.length) && !r.every((c) => c === r[0]));
-    const test = heading && !/clash report|report|navisworks/i.test(heading) ? heading : fallbackTest;
+    const test = heading && !reportTitle.test(heading) ? heading : fallbackTest;
     out.push(...rowsToClashes([header, ...body], test, source));
   }
   return uniqueIds(out);
@@ -198,6 +279,7 @@ function disambiguate(header: string[], above?: string[]): string[] {
   header.forEach((h) => counts.set(h.toLowerCase(), (counts.get(h.toLowerCase()) ?? 0) + 1));
   const seen = new Map<string, number>();
   return header.map((h, i) => {
+    if (!h) return h;
     const sup = above?.[i] ?? "";
     const side = /item\s*1|element\s*1|object\s*1/i.test(sup) ? 1 : /item\s*2|element\s*2|object\s*2/i.test(sup) ? 2 : 0;
     if (side && !/[12]/.test(h)) return `Item${side} ${h}`;
@@ -235,7 +317,11 @@ function itemColumn(h: string): { side: 0 | 1; field: ItemField } | null {
 /** Header row + body rows → clashes; recognises common Navisworks, Solibri, Revizto, BIMcollab and Excel exports. */
 export function rowsToClashes(rows: string[][], test = "", source?: string): Clash[] {
   if (rows.length < 2) return [];
-  const header = rows[0].map(norm);
+  // localised headings in English; repeated item headings ("Item ID, Layer … Item ID, Layer") split into Item1 / Item2
+  const head0 = rows[0].map((h) => canonHeader(String(h ?? "")));
+  const named = head0.filter(Boolean).map((h) => h.toLowerCase());
+  const headRow = named.length !== new Set(named).size ? disambiguate(head0) : head0;
+  const header = headRow.map(norm);
   const find = (re: RegExp) => header.findIndex((h) => re.test(h));
   const col = {
     test: find(/^(test|testname|clashtest|clashtestname|batchtest)$/), name: find(/^(clashname|name|clash|clashid|issuename|title)$/),
@@ -248,14 +334,14 @@ export function rowsToClashes(rows: string[][], test = "", source?: string): Cla
   header.forEach((h, i) => { const c = itemColumn(h); if (c && !items.has(`${c.side}.${c.field}`)) items.set(`${c.side}.${c.field}`, i); });
   const at = (r: string[], i: number | undefined) => (i !== undefined && i >= 0 ? (r[i] ?? "").trim() : "");
   const body = rows.slice(1).filter((r) => r.some((c) => (c ?? "").trim()));
-  const base = parseClashReport([rows[0], ...body]);
+  const base = parseClashReport([headRow, ...body]);
   return uniqueIds(body.map((r, i) => {
     const b = base[i];
     const item = (side: 0 | 1): ClashItem => {
       const v = (f: ItemField) => at(r, items.get(`${side}.${f}`));
       return {
         name: v("name") || (side ? b?.itemB : b?.itemA) || "", layer: v("layer"), file: v("file"),
-        guid: v("guid") || (side ? b?.guidB : b?.guidA) || "", elementId: v("elementId").replace(/^[^:]*id\s*:\s*/i, ""), category: v("category"),
+        guid: v("guid") || (side ? b?.guidB : b?.guidA) || "", elementId: stripIdLabel(v("elementId")), category: realCategory(v("category")),
       };
     };
     const itemA = item(0), itemB = item(1);
@@ -274,12 +360,14 @@ export function rowsToClashes(rows: string[][], test = "", source?: string): Cla
 
 /** CSV/TSV/Excel rows (first row = header, preamble rows above it are skipped). Builds on parseClashReport. */
 export function parseCsvClashes(rows: string[][], test = "", source?: string): Clash[] {
-  const hi = Math.max(0, rows.slice(0, 15).findIndex((r) => r.some((c) => /^(clash ?name|name|clash|clash ?id)$/i.test((c ?? "").trim()))));
+  const hi = Math.max(0, rows.slice(0, 15).findIndex((r) => r.some((c) => /^(clash ?name|name|clash|clash ?id)$/i.test(canonHeader(String(c ?? ""))))));
   return rowsToClashes(rows.slice(hi), test, source);
 }
 
 /** Sniff the format from the file name / content. */
-export function parseClashFile(name: string, text: string, csvRows?: (t: string) => string[][]): Clash[] {
+export function parseClashFile(name: string, input: string | ArrayBuffer | Uint8Array, csvRows?: (t: string) => string[][]): Clash[] {
+  // bytes are decoded here (BOM, UTF-16, Windows-1252 fallback); a string only loses a leading byte-order mark
+  const text = typeof input === "string" ? input.replace(/^\uFEFF/, "") : decodeText(input);
   const head = text.slice(0, 4000).toLowerCase();
   if (/\.xml$/i.test(name) || (head.includes("<exchange") && head.includes("clash"))) return parseNavisworksXml(text, name);
   if (/\.html?$/i.test(name) || head.includes("<html") || head.includes("<table")) return parseNavisworksHtml(text, name);

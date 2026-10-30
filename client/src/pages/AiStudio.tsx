@@ -16,7 +16,7 @@ import SheetQa from "./tools/SheetQa";
 
 const TOOLS = [
   { id: "eir-writer", label: "EIR writer", title: "Write the EIR and AIR from a short brief", hint: "Answer a few questions about the project and get a complete EIR and a matching AIR in the platform's templates, with assumptions and items to confirm listed.", body: () => <EirWriter /> },
-  { id: "bep-writer", label: "BEP from EIR", title: "Answer the EIR with a BEP", hint: "Upload the client's EIR and your company profile, and get a BEP that answers every requirement, with an EIR response matrix and the questions to raise at tender.", body: () => <BepWriter /> },
+  { id: "bep-writer", label: "BEP writer", title: "Write the BEP", hint: "From the client's EIR, answered point by point with a response matrix and tender questions — or from a short project brief when there is no EIR yet.", body: () => <BepWriter /> },
   { id: "compliance", label: "EIR ↔ BEP compliance", title: "Does the BEP answer every EIR requirement?", hint: "A requirement-by-requirement matrix with evidence, gaps and ready-to-paste BEP wording, exported to Excel and as a BEP addendum.", body: () => <ComplianceMatrix /> },
   { id: "model-qa", label: "Model QA from IDS", title: "Check a model against IDS, explained", hint: "Check an IFC model against IDS requirements in your browser, get each failure explained with how to fix it, and send the issues out as BCF.", body: () => <ModelQa /> },
   { id: "clash", label: "Clash triage", title: "From thousands of clashes to a short list", hint: "Read Navisworks or CSV clash reports, group duplicates and clusters, find the root cause, assign teams and priorities, and export BCF and a meeting agenda.", body: () => <ClashTriage /> },

@@ -7,11 +7,11 @@ import { WF_ROLES } from "./workflow/roles";
 import { FAQ, FIRST_DAY, FIRST_WEEK, FLOWS, ROLE_ROUTES, SECTION_GUIDE, guidePageKeys, unknownGuideKeys } from "./platformGuide";
 
 // The sidebar as rendered: My work, then Projects, then the other sections.
-const sidebar = [
-  { id: SECTIONS[0].id, label: SECTIONS[0].label, items: SECTIONS[0].items },
-  { id: "projects", label: "Projects", items: PROJECT_PAGES },
-  ...SECTIONS.slice(1).map((s) => ({ id: s.id, label: s.label, items: s.items })),
-];
+// the sidebar shows Projects right after My work
+const sidebar = SECTIONS.flatMap((s) => [
+  { id: s.id, label: s.label, items: s.items },
+  ...(s.id === "home" ? [{ id: "projects", label: "Projects", items: PROJECT_PAGES }] : []),
+]);
 
 describe("platform guide", () => {
   it("has one entry per sidebar section, in sidebar order, titled as in the sidebar", () => {

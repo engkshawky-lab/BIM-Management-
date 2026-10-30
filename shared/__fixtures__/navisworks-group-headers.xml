@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Synthetic: element layout of a real grouped Navisworks export (clash groups written as headers only, ungrouped results
+     after them); every value is invented. A comment that quotes <clashtest> or <clashresult> must not confuse the reader. -->
+<exchange xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" units="ft" filename="Example_Coordination.nwd" filepath="">
+  <batchtest name="Report" internal_name="Report" units="ft">
+    <clashtests>
+      <clashtest name="03.04 Fire Protection vs HVAC" test_type="hard" status="ok" tolerance="0.000" merge_composites="1">
+        <linkage mode="none"/>
+        <summary total="4" new="0" active="2" reviewed="1" approved="0" resolved="1">
+          <testtype>Hard</testtype>
+          <teststatus>OK</teststatus>
+        </summary>
+        <clashresults>
+          <clashgroup name="H-7 : CLEAR HEIGHT" guid="0aa1c7d2-1111-4c21-9000-000000000001" status="active">
+            <description>Hard</description>
+            <resultstatus>Active</resultstatus>
+            <clashpoint>
+              <pos3f x="100.000" y="-50.000" z="10.000"/>
+            </clashpoint>
+            <gridlocation>H-7 : LEVEL 1</gridlocation>
+            <createddate>
+              <date year="2020" month="2" day="19" hour="17" minute="37" second="16"/>
+            </createddate>
+            <clashobjects>
+              <clashobject>
+                <objectattribute>
+                  <name>Element ID</name>
+                  <value>1000001</value>
+                </objectattribute>
+              </clashobject>
+              <clashobject>
+                <objectattribute>
+                  <name>Element ID</name>
+                  <value>2000001</value>
+                </objectattribute>
+              </clashobject>
+            </clashobjects>
+          </clashgroup>
+          <clashgroup name="J-5 : SPRINKLER MAINS" guid="0aa1c7d2-1111-4c21-9000-000000000002" status="reviewed">
+            <description>Hard</description>
+            <resultstatus>Reviewed</resultstatus>
+            <clashresults>
+              <clashresult name="Clash7" guid="0aa1c7d2-2222-4c21-9000-000000000007" status="reviewed" distance="-0.164">
+                <description>Hard</description>
+                <resultstatus>Reviewed</resultstatus>
+                <clashpoint>
+                  <pos3f x="249.919" y="-111.778" z="20.667"/>
+                </clashpoint>
+                <gridlocation>J-5 : LEVEL 1</gridlocation>
+                <clashobjects>
+                  <clashobject>
+                    <objectattribute><name>Element ID</name><value>1000007</value></objectattribute>
+                  </clashobject>
+                  <clashobject>
+                    <objectattribute><name>Element ID</name><value>2000007</value></objectattribute>
+                  </clashobject>
+                </clashobjects>
+              </clashresult>
+              <clashresult name="Clash8" guid="0aa1c7d2-2222-4c21-9000-000000000008" status="active" distance="-0.082">
+                <description>Hard</description>
+                <resultstatus>Active</resultstatus>
+                <clashpoint>
+                  <pos3f x="250.500" y="-111.000" z="20.667"/>
+                </clashpoint>
+                <gridlocation>J-5 : LEVEL 1</gridlocation>
+                <clashobjects>
+                  <clashobject>
+                    <objectattribute><name>Element ID</name><value>1000008</value></objectattribute>
+                  </clashobject>
+                  <clashobject>
+                    <objectattribute><name>Element ID</name><value>2000008</value></objectattribute>
+                  </clashobject>
+                </clashobjects>
+              </clashresult>
+            </clashresults>
+          </clashgroup>
+          <clashresult name="Clash43" guid="0aa1c7d2-3333-4c21-9000-000000000043" status="resolved">
+            <description>Hard</description>
+            <resultstatus>Resolved</resultstatus>
+            <clashpoint>
+              <pos3f x="311.130" y="-88.757" z="28.935"/>
+            </clashpoint>
+            <gridlocation>L-6 : LEVEL 1</gridlocation>
+            <clashobjects>
+              <clashobject>
+                <objectattribute><name>Element ID</name><value>1000043</value></objectattribute>
+              </clashobject>
+              <clashobject>
+                <objectattribute><name>Element ID</name><value>2000043</value></objectattribute>
+              </clashobject>
+            </clashobjects>
+          </clashresult>
+        </clashresults>
+      </clashtest>
+    </clashtests>
+    <selectionsets/>
+  </batchtest>
+</exchange>

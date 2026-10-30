@@ -29,7 +29,10 @@ export function parseMarkup(raw: string): { topic: BcfTopic; viewpoints: { file:
   const base = markupToTopic(markup);
   const body = /<Topic\b[^>]*>([\s\S]*?)<\/Topic>/.exec(markup)?.[1] ?? "";
   // header fields only (before any Comments block), so a comment's <Date>/<Author> never leaks into the topic
-  const head = body.split(/<Comments\b|<Comment\b|<Viewpoints\b/)[0];
+  // and nested blocks with their own <Description> (BCF 3.0 DocumentReference, BIM snippets) are dropped so they never stand in for the topic's
+  const head = body.split(/<Comments\b|<Comment\b|<Viewpoints\b/)[0]
+    .replace(/<(DocumentReferences|DocumentReference|BimSnippet)\b[^>]*\/>/g, "")
+    .replace(/<(DocumentReferences|DocumentReference|BimSnippet)\b[^>]*>[\s\S]*?<\/\1>/g, "");
   const labels: string[] = [];
   for (const m of head.matchAll(/<Labels>([\s\S]*?)<\/Labels>/g)) {
     const inner = [...m[1].matchAll(/<Label>([\s\S]*?)<\/Label>/g)];
@@ -57,7 +60,18 @@ export function parseMarkup(raw: string): { topic: BcfTopic; viewpoints: { file:
   return { topic, viewpoints };
 }
 
-const componentGuids = (vp: string) => [...stripNs(vp).matchAll(/<Component\b[^>]*\bIfcGuid="([^"]+)"/g)].map((m) => m[1]);
+/**
+ * IfcGuids of the components a viewpoint is about: the selected (BCF 2.1 / 3.0 <Selection>, BCF 2.0 Selected="true") and
+ * coloured ones when there are any, otherwise every component listed (visibility exceptions included).
+ */
+export function componentGuids(vp: string): string[] {
+  const x = stripNs(vp);
+  const guids = (s: string) => [...s.matchAll(/<Component\b[^>]*\bIfcGuid\s*=\s*"([^"]+)"/g)].map((m) => m[1].trim()).filter(Boolean);
+  const blocks = [...x.matchAll(/<(Selection|Coloring)\b[^>]*>([\s\S]*?)<\/\1>/g)].map((m) => m[2]).join("\n");
+  const selected = [...x.matchAll(/<Component\b[^>]*\bSelected\s*=\s*"true"[^>]*>/gi)].map((m) => m[0]).join("\n");
+  const picked = [...guids(blocks), ...guids(selected)];
+  return [...new Set(picked.length ? picked : guids(x))];
+}
 const mimeOf = (name: string) => (/\.jpe?g$/i.test(name) ? "image/jpeg" : "image/png");
 
 /** Read a .bcf / .bcfzip archive (BCF 2.0, 2.1 or 3.0). Snapshots are returned as data URLs only when `snapshots` is true. */
@@ -202,7 +216,7 @@ export function rowsToTopics(rows: string[][], header: string[]): BcfTopic[] {
 
 /** RFC 4180-ish CSV parser; detects comma, semicolon or tab from the first line. */
 export function parseCsv(text: string): string[][] {
-  const src = text.replace(/^﻿/, "");
+  const src = text.replace(/^\uFEFF/, "");
   const first = src.split(/\r?\n/, 1)[0] ?? "";
   const counts = [",", ";", "\t"].map((d) => [d, first.split(d).length] as const).sort((a, b) => b[1] - a[1]);
   const sep = counts[0][1] > 1 ? counts[0][0] : ",";

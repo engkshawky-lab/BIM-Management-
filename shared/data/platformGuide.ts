@@ -40,28 +40,17 @@ export interface RoleRoute {
 /** In sidebar order. */
 export const SECTION_GUIDE: SectionGuide[] = [
   {
-    id: "home", title: "My work",
-    purpose: "Your own starting point: today's work, recent pages and your projects in one place. Nothing here needs setting up except a saved delivery plan for My Day.",
-    whenToUse: "Every morning, and whenever you want to get back to where you left off.",
-    startWith: "r.home",
-    order: "Home first because it is where you land, then this guide, then the two dashboards that fill up as you use the platform.",
+    id: "learn", title: "ISO standards & learning",
+    purpose: "The standards themselves, explained from beginner to expert, with in-depth topic hubs, practice and references. Everything here works without a project or AI.",
+    whenToUse: "When you meet a term, clause or process you do not know, and for structured learning by role.",
+    startWith: "s.paths",
+    order: "Start here gives you a route; then the six parts of ISO 19650, the essentials you look up daily, the in-depth topic hubs, ISO/IEC 42001 and finally the references.",
     groups: {
-      "My work": "Home, this guide, My Day (what is due from your delivery plan) and Portfolio (health across your projects).",
-    },
-  },
-  {
-    id: "projects", title: "Projects",
-    purpose: "The records of one real project: its CDE, documents, delivery plan, issues, team and gates, shared with everyone you invite. Pick the project at the top of the section; every page below opens inside it.",
-    whenToUse: "Once you have created a project and want to store information your team works on together.",
-    startWith: "p.summary",
-    order: "The groups follow the ISO 19650-2 sequence: appoint and plan, produce and share information in the CDE, coordinate models, then control quality and hand over. Team pages sit last because you set them up once.",
-    groups: {
-      "Overview": "The project summary, the activity log and the two AI helpers that answer from the project's own records.",
-      "Appointment & planning": "Everything agreed before production starts: appointment review, information uses, teams, responsibilities, level of information need and the MIDP/TIDP.",
-      "Information (CDE)": "The common data environment: controlled documents with reviews and revisions, and files moving through WIP, Shared, Published and Archived.",
-      "Model & coordination": "Model validation, QA/QC reviews, BCF issues, the clash matrix, 4D planning and asset tags.",
-      "Control & handover": "Quality checks, requirements traceability, stage gates, risks, health and safety information and the PIM to AIM handover.",
-      "Team": "Meetings and progress reports, automations, team training, members and project settings.",
+      "Start here": "Learning paths by role, best-practice guides, videos, the implementation guide and practice quizzes.",
+      "ISO 19650 parts": "Parts 1 to 6, each from overview to clauses, examples, Q&A and a quiz, plus the 2026 revision status.",
+      "ISO 19650 essentials": "The parts at a glance, the delivery process, CDE and status codes, glossaries and the information uses library.",
+      "Topic hubs": "In-depth guides on appointment, LOIN, COBie, Revit, CDE, BCF, handover, infrastructure and more.",
+      "References": "The published sources behind the ISO 19650 and ISO/IEC 42001 content.",
     },
   },
   {
@@ -87,6 +76,7 @@ export const SECTION_GUIDE: SectionGuide[] = [
     groups: {
       "Check models": "Revit project health, graded IFC QA/QC, the IFC hub for LOIN and IDS checks, and the COBie data checker.",
       "Coordination": "Write model requirements as an IDS file and open, edit and convert BCF issue files.",
+      "Connectors": "Connect to Autodesk ACC / BIM 360 Docs and to Speckle to browse files and models, check names and export lists.",
     },
   },
   {
@@ -102,20 +92,6 @@ export const SECTION_GUIDE: SectionGuide[] = [
     },
   },
   {
-    id: "learn", title: "ISO standards & learning",
-    purpose: "The standards themselves, explained from beginner to expert, with in-depth topic hubs, practice and references. Everything here works without a project or AI.",
-    whenToUse: "When you meet a term, clause or process you do not know, and for structured learning by role.",
-    startWith: "s.paths",
-    order: "Start here gives you a route; then the six parts of ISO 19650, the essentials you look up daily, the in-depth topic hubs, ISO/IEC 42001 and finally the references.",
-    groups: {
-      "Start here": "Learning paths by role, best-practice guides, videos, the implementation guide and practice quizzes.",
-      "ISO 19650 parts": "Parts 1 to 6, each from overview to clauses, examples, Q&A and a quiz, plus the 2026 revision status.",
-      "ISO 19650 essentials": "The parts at a glance, the delivery process, CDE and status codes, glossaries and the information uses library.",
-      "Topic hubs": "In-depth guides on appointment, LOIN, COBie, Revit, CDE, BCF, handover, infrastructure and more.",
-      "References": "The published sources behind the ISO 19650 and ISO/IEC 42001 content.",
-    },
-  },
-  {
     id: "resources", title: "Resources",
     purpose: "Calculators for fees, carbon and readiness, plus client standards, news and careers. Use them for proposals, assessments and keeping up to date.",
     whenToUse: "When you prepare a fee or proposal, assess maturity or readiness, or look for client standards and news.",
@@ -124,6 +100,31 @@ export const SECTION_GUIDE: SectionGuide[] = [
     groups: {
       "Calculators": "BIM fee estimate, embodied carbon (6D), BIM maturity, digital twin readiness and scan-to-BIM readiness.",
       "Industry & careers": "Client information standards, BIM and ISO 19650 news, your opt-in talent profile and the recruiter talent pool.",
+    },
+  },
+  {
+    id: "home", title: "My work",
+    purpose: "Your own starting point: today's work, recent pages and your projects in one place. Nothing here needs setting up except a saved delivery plan for My Day.",
+    whenToUse: "Every morning, and whenever you want to get back to where you left off.",
+    startWith: "r.home",
+    order: "Inside My work: Home first because it is where you land, then this guide, then the two dashboards that fill up as you use the platform. The sidebar puts learning first and your own work near the end, just above your projects.",
+    groups: {
+      "My work": "Home, this guide, My Day (what is due from your delivery plan) and Portfolio (health across your projects).",
+    },
+  },
+  {
+    id: "projects", title: "Projects",
+    purpose: "The records of one real project: its CDE, documents, delivery plan, issues, team and gates, shared with everyone you invite. Pick the project at the top of the section; every page below opens inside it.",
+    whenToUse: "Once you have created a project and want to store information your team works on together.",
+    startWith: "p.summary",
+    order: "The groups follow the ISO 19650-2 sequence: appoint and plan, produce and share information in the CDE, coordinate models, then control quality and hand over. Team pages sit last because you set them up once.",
+    groups: {
+      "Overview": "The project summary, the activity log and the two AI helpers that answer from the project's own records.",
+      "Appointment & planning": "Everything agreed before production starts: appointment review, information uses, teams, responsibilities, level of information need and the MIDP/TIDP.",
+      "Information (CDE)": "The common data environment: controlled documents with reviews and revisions, and files moving through WIP, Shared, Published and Archived.",
+      "Model & coordination": "Model validation, QA/QC reviews, BCF issues, the clash matrix, 4D planning and asset tags.",
+      "Control & handover": "Quality checks, requirements traceability, stage gates, risks, health and safety information and the PIM to AIM handover.",
+      "Team": "Meetings and progress reports, automations, team training, members and project settings.",
     },
   },
 ];

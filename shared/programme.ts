@@ -43,7 +43,8 @@ export function toIsoDate(v: unknown): string {
   let s = String(v ?? "").trim();
   if (!s) return "";
   s = s.replace(/\s*[A*]$/, "").trim(); // P6 actual / constraint markers: "15-Jan-24 A", "15-Jan-24*"
-  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
+  // stray spaces around the separators occur in real XER exports ("2019-05 -27 00:00")
+  let m = /^(\d{4})\s*-\s*(\d{1,2})\s*-\s*(\d{1,2})/.exec(s);
   if (m) return iso(+m[1], +m[2], +m[3]);
   m = /^(\d{4})\/(\d{1,2})\/(\d{1,2})/.exec(s);
   if (m) return iso(+m[1], +m[2], +m[3]);
@@ -63,6 +64,29 @@ export function toIsoDate(v: unknown): string {
 function excelSerial(n: number) {
   if (!(n > 20000 && n < 80000)) return "";
   return new Date(Date.UTC(1899, 11, 30) + Math.floor(n) * 86_400_000).toISOString().slice(0, 10);
+}
+
+/** The first of several candidate values that is a readable date (an unreadable actual date falls back to the planned one). */
+const firstDate = (...vs: unknown[]) => { for (const v of vs) { const d = toIsoDate(v); if (d) return d; } return ""; };
+
+// ---------------------------------------------------------------- text decoding
+
+/**
+ * File bytes → text: honours a UTF-8 / UTF-16 byte-order mark, UTF-16 without one (an XML file starting "<\0"),
+ * an XML encoding declaration, and falls back to Windows-1252 (P6 XER and Excel CSV exports) when the bytes are not UTF-8.
+ */
+export function decodeText(data: ArrayBuffer | Uint8Array): string {
+  const b = data instanceof Uint8Array ? data : new Uint8Array(data);
+  const dec = (label: string, bytes: Uint8Array, fatal = false) => new TextDecoder(label, { fatal }).decode(bytes);
+  if (b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf) return dec("utf-8", b.subarray(3));
+  if (b[0] === 0xff && b[1] === 0xfe) return dec("utf-16le", b.subarray(2));
+  if (b[0] === 0xfe && b[1] === 0xff) return dec("utf-16be", b.subarray(2));
+  if (b.length >= 4 && b[1] === 0 && b[3] === 0 && b[0] !== 0) return dec("utf-16le", b);
+  if (b.length >= 4 && b[0] === 0 && b[2] === 0 && b[1] !== 0) return dec("utf-16be", b);
+  const declared = /^\s*<\?xml[^>]*\bencoding\s*=\s*["']([\w.:-]+)["']/i.exec(String.fromCharCode(...b.subarray(0, 200)))?.[1].toLowerCase();
+  try { return dec("utf-8", b, true); } catch { /* not UTF-8 */ }
+  if (declared && !/^utf-?8$/.test(declared)) { try { return dec(declared, b); } catch { /* unknown label */ } }
+  return dec("windows-1252", b);
 }
 
 /** Whole days from a to b (ISO dates); 0 when either is missing. */
@@ -140,13 +164,47 @@ export function parseXer(text: string): Activity[] {
     const type = x.task_type ?? "";
     return {
       id: x.task_id, code: x.task_code ?? "", name: x.task_name ?? "",
-      start: toIsoDate(x.act_start_date || x.early_start_date || x.target_start_date || x.restart_date),
-      finish: toIsoDate(x.act_end_date || x.early_end_date || x.target_end_date || x.reend_date),
+      start: firstDate(x.act_start_date, x.early_start_date, x.target_start_date, x.restart_date),
+      finish: firstDate(x.act_end_date, x.early_end_date, x.target_end_date, x.reend_date),
       milestone: type === "TT_Mile" || type === "TT_FinMile",
       wbs: w?.wbs_short_name || w?.wbs_name || x.wbs_id || "",
       predecessors: preds.get(x.task_id) ?? [],
       summary: type === "TT_LOE" || type === "TT_WBS",
       group: w?.wbs_name ?? "",
+    };
+  });
+}
+
+// ---------------------------------------------------------------- Primavera P6 XML
+
+/**
+ * Primavera P6 XML export (APIBusinessObjects › Project › WBS / Activity / Relationship). Dates prefer actuals, then the
+ * current (StartDate / FinishDate), then planned; WBS is the node's code and group its name.
+ */
+export function parseP6Xml(input: string): Activity[] {
+  const xml = input.replace(/^\uFEFF/, "").replace(/<(\/?)[A-Za-z_][\w.-]*:([A-Za-z_][\w.-]*)/g, "<$1$2");
+  if (!/<APIBusinessObjects\b/.test(xml)) throw new Error("Not a Primavera P6 XML file: no <APIBusinessObjects> element found.");
+  const wbs = new Map<string, { code: string; name: string }>();
+  for (const m of xml.matchAll(/<WBS(?:\s[^>]*)?>([\s\S]*?)<\/WBS>/g)) wbs.set(tag(m[1], "ObjectId"), { code: tag(m[1], "Code"), name: tag(m[1], "Name") });
+  const acts = [...xml.matchAll(/<Activity(?:\s[^>]*)?>([\s\S]*?)<\/Activity>/g)].map((m) => m[1]);
+  if (!acts.length) throw new Error("The P6 XML file has no activities.");
+  const keyOf = new Map(acts.map((a) => [tag(a, "ObjectId"), tag(a, "Id") || tag(a, "ObjectId")]));
+  const preds = new Map<string, string[]>();
+  for (const m of xml.matchAll(/<Relationship(?:\s[^>]*)?>([\s\S]*?)<\/Relationship>/g)) {
+    const k = keyOf.get(tag(m[1], "PredecessorActivityObjectId")), succ = tag(m[1], "SuccessorActivityObjectId");
+    if (k && succ) (preds.get(succ) ?? preds.set(succ, []).get(succ)!).push(k);
+  }
+  return acts.map((a) => {
+    const id = tag(a, "ObjectId"), type = tag(a, "Type").toLowerCase(), w = wbs.get(tag(a, "WBSObjectId"));
+    return {
+      id, code: tag(a, "Id"), name: tag(a, "Name"),
+      start: firstDate(tag(a, "ActualStartDate"), tag(a, "StartDate"), tag(a, "PlannedStartDate"), tag(a, "EarlyStartDate")),
+      finish: firstDate(tag(a, "ActualFinishDate"), tag(a, "FinishDate"), tag(a, "PlannedFinishDate"), tag(a, "EarlyFinishDate")),
+      milestone: /milestone/.test(type),
+      wbs: w?.code || w?.name || tag(a, "WBSObjectId"),
+      predecessors: preds.get(id) ?? [],
+      summary: type === "wbs summary" || type === "level of effort",
+      group: w?.name ?? "",
     };
   });
 }
@@ -200,9 +258,12 @@ export function parseCsvProgramme(rows: unknown[][]): Activity[] {
 }
 
 /** Pick the parser from the file name (and content as a fallback). CSV / XLSX rows are parsed by the caller into rows first. */
-export function parseProgrammeText(fileName: string, text: string, csvRows?: (t: string) => unknown[][]): Activity[] {
+export function parseProgrammeText(fileName: string, input: string | ArrayBuffer | Uint8Array, csvRows?: (t: string) => unknown[][]): Activity[] {
+  // bytes are decoded here (BOM, UTF-16, Windows-1252 fallback); a string only loses a leading byte-order mark
+  const text = typeof input === "string" ? input.replace(/^\uFEFF/, "") : decodeText(input);
   const n = fileName.toLowerCase();
   if (n.endsWith(".xer") || /^\s*ERMHDR/.test(text)) return parseXer(text);
+  if (/<APIBusinessObjects\b/.test(text.slice(0, 2000))) return parseP6Xml(text);
   if (n.endsWith(".xml") || /^\s*<\?xml|<Project[\s>]/.test(text)) return parseMsProjectXml(text);
   if (!csvRows) throw new Error("Unsupported programme format.");
   return parseCsvProgramme(csvRows(text));

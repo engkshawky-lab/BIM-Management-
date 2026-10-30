@@ -270,7 +270,7 @@ r.post(T + "/plan-rows", h(async (req, res) => {
   const system = body.kind === "mpdt"
     ? `${EXPERT}
 Build a Model Production and Delivery Table: which task team models each element or system, with its level of information need at each stage. ${JSON_ONLY}
-Schema: {"rows": [{"element": string, "classification": string (Uniclass 2015 code and title, e.g. "Ss_25_10_32 Curtain wall systems"), "author": string (task team), "loin": {${body.stages.map((s) => `"${s}": string`).join(", ")}}, "notes": string}]}
+Schema: {"rows": [{"element": string, "classification": string (Uniclass 2015 code and title, e.g. "Ss_25_10_20 Curtain walling systems"), "author": string (task team), "loin": {${body.stages.map((s) => `"${s}": string`).join(", ")}}, "notes": string}]}
 Each loin value is short and specific: geometry level (e.g. "LOD 300") plus the key properties needed at that stage (e.g. "LOD 300; FireRating, U-value"). Cover every discipline given; ${body.count} rows.`
     : `${EXPERT}
 Build the information containers of a ${body.kind === "tidp" ? "Task Information Delivery Plan for one task team" : "Master Information Delivery Plan across the task teams"} (ISO 19650-2 5.4.4 / 5.4.5). ${JSON_ONLY}

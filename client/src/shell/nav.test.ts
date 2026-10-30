@@ -13,7 +13,7 @@ describe("navigation layout", () => {
   });
 
   it("has six sidebar sections, each in a few groups", () => {
-    expect(SECTIONS.map((s) => s.id)).toEqual(["home", "documents", "models", "ai", "learn", "resources"]);
+    expect(SECTIONS.map((s) => s.id)).toEqual(["learn", "documents", "models", "ai", "resources", "home"]);
     for (const s of SECTIONS) expect(groupsOf(s.items).length).toBeLessThanOrEqual(6);
     expect(HOME_PAGES.map((p) => p.path)).toContain("/");
   });

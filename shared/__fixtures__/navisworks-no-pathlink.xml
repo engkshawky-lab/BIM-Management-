@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<exchange xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://download.autodesk.com/us/navisworks/schemas/nw-exchange-11.0.xsd" units="ft" filename="" filepath="">
+  <batchtest name="Report" internal_name="Report" units="ft">
+    <clashtests>
+      <clashtest name="Structural vs MEP" test_type="hard" status="ok" tolerance="0.02" merge_composites="0">
+        <linkage mode="none"/>
+        <summary total="54" new="54" active="0" reviewed="0" approved="0" resolved="0">
+          <testtype>Hard</testtype>
+          <teststatus>OK</teststatus>
+        </summary>
+        <clashresults>
+          <clashresult name="Clash1" guid="75326bbc-79e8-4444-a3e7-886d0cd4f8c5" href="Structural vs MEP_files\cd000001.jpg" status="new" distance="-1.54">
+            <description>Hard</description>
+            <resultstatus>New</resultstatus>
+            <clashpoint>
+              <pos3f x="20.20" y="42.74" z="57.58"/>
+            </clashpoint>
+            <gridlocation></gridlocation>
+            <createddate>
+              <date year="2015" month="3" day="7" hour="19" minute="30" second="27"/>
+            </createddate>
+            <clashobjects>
+              <clashobject>
+                <objectattribute>
+                  <name>Element ID</name>
+                  <value>129725</value>
+                </objectattribute>
+                <layer>Level 1</layer>
+                <smarttags>
+                  <smarttag>
+                    <name>Item Name</name>
+                    <value>Steel ASTM A992</value>
+                  </smarttag>
+                  <smarttag>
+                    <name>Item Type</name>
+                    <value>Solid</value>
+                  </smarttag>
+                </smarttags>
+              </clashobject>
+              <clashobject>
+                <objectattribute>
+                  <name>Element ID</name>
+                  <value>130363</value>
+                </objectattribute>
+                <layer>Level 2</layer>
+                <smarttags>
+                  <smarttag>
+                    <name>Item Name</name>
+                    <value>Rectangular Duct</value>
+                  </smarttag>
+                  <smarttag>
+                    <name>Item Type</name>
+                    <value>Solid</value>
+                  </smarttag>
+                </smarttags>
+              </clashobject>
+            </clashobjects>
+          </clashresult>
+          <clashresult name="Clash2" guid="ea2a8853-57ad-4fee-988f-f9a3703df1e9" href="Structural vs MEP_files\cd000002.jpg" status="new" distance="-1.54">
+            <description>Hard</description>
+            <resultstatus>New</resultstatus>
+            <clashpoint>
+              <pos3f x="20.20" y="42.74" z="27.58"/>
+            </clashpoint>
+            <gridlocation>3-6 : Roof</gridlocation>
+            <createddate>
+              <date year="2015" month="3" day="7" hour="19" minute="30" second="27"/>
+            </createddate>
+            <clashobjects>
+              <clashobject>
+                <objectattribute>
+                  <name>Element ID</name>
+                  <value>129130</value>
+                </objectattribute>
+                <layer>Level 2</layer>
+                <smarttags>
+                  <smarttag>
+                    <name>Item Name</name>
+                    <value>Phase - Exist</value>
+                  </smarttag>
+                  <smarttag>
+                    <name>Item Type</name>
+                    <value>Solid</value>
+                  </smarttag>
+                </smarttags>
+              </clashobject>
+              <clashobject>
+                <objectattribute>
+                  <name>Element ID</name>
+                  <value>129742</value>
+                </objectattribute>
+                <layer>Level 1</layer>
+                <smarttags>
+                  <smarttag>
+                    <name>Item Name</name>
+                    <value>Phase - Exist</value>
+                  </smarttag>
+                  <smarttag>
+                    <name>Item Type</name>
+                    <value>Solid</value>
+                  </smarttag>
+                </smarttags>
+              </clashobject>
+            </clashobjects>
+          </clashresult>
+        </clashresults>
+      </clashtest>
+    </clashtests>
+    <selectionsets/>
+  </batchtest>
+</exchange>

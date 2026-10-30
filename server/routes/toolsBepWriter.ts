@@ -57,10 +57,16 @@ r.post("/ai/tools/bep-from-eir", upload.single("eir"), h(async (req, res) => {
     requirements: z.string().max(120_000).optional(),
     projectName: z.string().max(160).default(""),
     note: z.string().max(2000).default(""),
+    /** Write without an EIR: a short project brief instead (internal projects, or before the client's EIR exists). */
+    brief: z.string().max(20_000).default(""),
   }), req.body, res); if (!body) return;
 
-  const eir = await eirBlocks(req.file, body.eirText);
-  if (!eir.length) return res.status(400).json({ error: "Upload or paste the EIR." });
+  let eir = await eirBlocks(req.file, body.eirText);
+  const noEir = !eir.length && !!body.brief.trim();
+  if (noEir) eir = [{ type: "text", text: `<project_brief>
+${body.brief}
+</project_brief>` } as Block];
+  if (!eir.length) return res.status(400).json({ error: "Upload or paste the EIR, or write a short project brief." });
 
   const tpl = templateById(body.kind === "post" ? "bep-post" : "bep-pre")!;
   const guide = guideById(tpl.id);
@@ -70,7 +76,7 @@ r.post("/ai/tools/bep-from-eir", upload.single("eir"), h(async (req, res) => {
   if (!wanted.length) return res.status(400).json({ error: "Unknown BEP sections." });
 
   const given = sanitiseRequirements(jsonField(body.requirements));
-  const extract = !given.length;
+  const extract = !given.length && !noEir;
   const profile = normaliseProfile(jsonField(body.profile));
 
   const outline = tpl.sections.filter((s) => wanted.some((w) => w.id === s.id)).map((s) => {
@@ -83,9 +89,11 @@ r.post("/ai/tools/bep-from-eir", upload.single("eir"), h(async (req, res) => {
     : "a pre-appointment BEP submitted with the tender (ISO 19650-2 5.3.2): proposed roles, information delivery strategy, federation strategy, proposed amendments to standards, software schedule, capability summary and risks";
 
   const system = `${EXPERT}
-You write ${kindText}, on behalf of the bidder described in the company profile, in direct response to the EIR (exchange information requirements) supplied by the appointing party.
+You write ${kindText}, on behalf of the bidder described in the company profile, ${noEir ? "from the project brief supplied (no EIR is available yet), following ISO 19650 good practice" : "in direct response to the EIR (exchange information requirements) supplied by the appointing party"}.
 Rules:
-${extract
+${noEir
+    ? `- No EIR was supplied. Write from the project brief and ISO 19650-2 good practice. Return "requirements": [] and "trace": []. In "clarifications", list the information requirements the appointing party should confirm (formats, LOIN, milestones, CDE, security, handover), because without an EIR they are assumptions.`
+    : extract
     ? `- First list every distinct requirement stated in the EIR, in EIR order, at most 150. "ref" is the EIR's own clause or item number when it has one (e.g. "4.2.1"), otherwise "EIR-01", "EIR-02"…; "requirement" is a short paraphrase under 30 words. Never invent requirements and never add good practice the EIR does not ask for.`
     : `- The EIR requirements have already been extracted (listed in the task with their refs). Use exactly those refs; do not add or renumber requirements.`}
 - Then write ONLY the BEP sections listed below, one entry per section, using the "id" given. Each section answers the EIR specifically: name the EIR requirement it responds to (by ref), and state how the bidder will meet it — who, what, when, which tool or format.

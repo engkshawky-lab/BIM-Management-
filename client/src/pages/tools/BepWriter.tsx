@@ -46,6 +46,9 @@ export default function BepWriter() {
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
+  // write from the client's EIR, or from a short project brief when there is no EIR yet
+  const [source, setSource] = useState<"eir" | "brief">("eir");
+  const [brief, setBrief] = useState("");
   const [profile, setProfile] = useState<BepProfile>(loadProfile);
   const [kind, setKind] = useState<BepKind>(last?.kind ?? "pre");
   const [projectName, setProjectName] = useState(last?.projectName ?? "");
@@ -68,13 +71,13 @@ export default function BepWriter() {
     return () => clearInterval(id);
   }, [busy]);
 
-  const hasEir = !!file || !!text.trim();
+  const hasEir = source === "eir" ? !!file || !!text.trim() : brief.trim().length >= 20;
   const ai = enabled === true;
   const setField = (id: string, v: string) => setProfile((p) => ({ ...p, [id]: v }));
 
   const call = (sectionIds: string[], requirements?: EirRequirement[], extraNote = "") => {
     const form = new FormData();
-    if (file) form.set("eir", file); else form.set("eirText", text);
+    if (source === "brief") form.set("brief", brief); else if (file) form.set("eir", file); else form.set("eirText", text);
     form.set("profile", JSON.stringify(profile));
     form.set("kind", kind);
     form.set("projectName", projectName);
@@ -161,16 +164,24 @@ export default function BepWriter() {
   return (
     <div className="bw">
       <div className="hub-card">
-        <h2 className="bw-h">{t("BEP from the EIR")}</h2>
+        <h2 className="bw-h">{t("BEP writer")}</h2>
         <p className="muted bw-p">{t("Draft a BIM execution plan that answers the client's EIR requirement by requirement, using your company profile. The AI writes [TBC: …] where facts are missing. Review every section before you submit it.")}</p>
+        <p className="muted bw-p">{t("No EIR yet, or an internal project? Choose \"From a project brief\" in step 1 and the BEP follows ISO 19650 good practice, listing what the client should confirm.")}</p>
       </div>
       {enabled === false && <div className="hub-card bw-note">{t("AI is not configured on this server, so the BEP writer is unavailable. Ask an administrator to set the Claude API key.")}</div>}
 
       <section className="hub-card bw-step">
-        <h3 className="bw-h"><span className="bw-n">1</span>{t("Upload or paste the EIR")}</h3>
-        <input type="file" accept=".pdf,.docx,.txt,.md" onChange={(e) => setFile(e.target.files?.[0] ?? null)} aria-label={t("EIR file")} disabled={!ai} />
-        {file ? <div className="small muted">{file.name} · {(file.size / 1024).toFixed(0)} KB <button className="ghost small" onClick={() => setFile(null)}>{t("Remove")}</button></div>
-          : <textarea className="bw-eir" value={text} onChange={(e) => setText(e.target.value)} placeholder={t("…or paste the EIR text here")} disabled={!ai} />}
+        <h3 className="bw-h"><span className="bw-n">1</span>{t(source === "eir" ? "Upload or paste the EIR" : "Describe the project")}</h3>
+        <div className="seg" style={{ marginBottom: 8 }}>
+          <button className={source === "eir" ? "on" : ""} onClick={() => setSource("eir")}>{t("From the client's EIR")}</button>
+          <button className={source === "brief" ? "on" : ""} onClick={() => setSource("brief")}>{t("From a project brief (no EIR)")}</button>
+        </div>
+        {source === "eir" ? <>
+          <input type="file" accept=".pdf,.docx,.txt,.md" onChange={(e) => setFile(e.target.files?.[0] ?? null)} aria-label={t("EIR file")} disabled={!ai} />
+          {file ? <div className="small muted">{file.name} · {(file.size / 1024).toFixed(0)} KB <button className="ghost small" onClick={() => setFile(null)}>{t("Remove")}</button></div>
+            : <textarea className="bw-eir" value={text} onChange={(e) => setText(e.target.value)} placeholder={t("…or paste the EIR text here")} disabled={!ai} />}
+        </> : <textarea className="bw-eir" value={brief} onChange={(e) => setBrief(e.target.value)} disabled={!ai}
+          placeholder={t("Asset type and size, client, procurement route, stages in scope, key milestones, disciplines, software and CDE, any special requirements (security, COBie, LOIN)…")} />}
         <label className="bw-field">{t("Project name")}<input value={projectName} onChange={(e) => setProjectName(e.target.value)} disabled={!ai} /></label>
       </section>
 
@@ -216,7 +227,7 @@ export default function BepWriter() {
           <button className="primary" disabled={busy || !hasEir || !ai} onClick={generate}>
             {busy && !regen ? `${t("Writing the BEP…")} ${clock(seconds)}` : t("Generate BEP")}
           </button>
-          {!hasEir && <span className="small muted">{t("Add the EIR first.")}</span>}
+          {!hasEir && <span className="small muted">{t(source === "eir" ? "Add the EIR first." : "Describe the project first (a few lines).")}</span>}
         </div>
         {busy && !regen && progress && (
           <div className="bw-progress" aria-live="polite">

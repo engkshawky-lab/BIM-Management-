@@ -1,0 +1,5 @@
+Clash Name,,Status,Distance,Grid Location,Description,Date Found,Clash Point,,,Item ID,Layer,Item Name,Item Type,Item ID,Layer,Item Name,Item Type
+Clash1,,New,-0.223,2-6 : Level 2,Hard,2024/3/1  16:56,"x:-7.735, y:12.612, z:5.944",,,Element ID: 574839,Level 3,Beam,Solid,Element ID: 1366151,Level 2,Rectangular Duct,Solid
+Clash2,,New,-0.223,2-6 : Level 1,Hard,2024/3/1  16:56,"x:-7.735, y:12.612, z:2.896",,,Element ID: 568522,Level 2,Beam,Solid,Element ID: 1365714,Level 1,Rectangular Duct,Solid
+Clash3,,New,-0.176,3-6 : Level 2,Hard,2024/3/1  16:56,"x:-8.040, y:5.221, z:5.944",,,Element ID: 574847,Level 3,Beam,Solid,Element ID: 1366166,Level 2,Rectangular Duct,Solid
+Clash4,,New,-0.176,3-6 : Level 1,Hard,2024/3/1  16:56,"x:-8.040, y:5.221, z:2.896",,,Element ID: 568663,Level 2,Beam,Solid,Element ID: 1365741,Level 1,Rectangular Duct,Solid

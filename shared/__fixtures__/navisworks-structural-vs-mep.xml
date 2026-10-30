@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<exchange xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://download.autodesk.com/us/navisworks/schemas/nw-exchange-11.0.xsd" units="ft" filename="" filepath="">
+  <batchtest name="Report" internal_name="Report" units="ft">
+    <clashtests>
+      <clashtest name="Structural vs All MEP" test_type="hard" status="old" tolerance="0.01" merge_composites="0">
+        <linkage mode="none"/>
+        <summary total="60" new="60" active="0" reviewed="0" approved="0" resolved="0">
+          <testtype>Hard</testtype>
+          <teststatus>Old</teststatus>
+        </summary>
+        <clashresults>
+          <clashresult name="Clash59" guid="6444c275-19de-4733-a664-420911120992" href="Structural vs All MEP (Grids Working)_files\cd000001.jpg" status="new" distance="-0.27">
+            <description>Hard</description>
+            <resultstatus>New</resultstatus>
+            <clashpoint>
+              <pos3f x="31.46" y="30.24" z="57.27"/>
+            </clashpoint>
+            <gridlocation>B-2 : Level 2</gridlocation>
+            <createddate>
+              <date year="2015" month="3" day="8" hour="16" minute="13" second="44"/>
+            </createddate>
+            <clashobjects>
+              <clashobject>
+                <objectattribute>
+                  <name>Element ID</name>
+                  <value>129743</value>
+                </objectattribute>
+                <layer>Level 1</layer>
+                <pathlink>
+                  <node>File</node>
+                  <node>File</node>
+                  <node>Struct_2014_Grid Update 3.nwc</node>
+                  <node>Level 1</node>
+                  <node>Structural Framing</node>
+                  <node>W-Wide Flange</node>
+                  <node>W40X211</node>
+                  <node>W-Wide Flange</node>
+                  <node>W40X211</node>
+                  <node>Steel ASTM A992</node>
+                </pathlink>
+                <smarttags>
+                  <smarttag>
+                    <name>Item Name</name>
+                    <value>Steel ASTM A992</value>
+                  </smarttag>
+                  <smarttag>
+                    <name>Item Type</name>
+                    <value>Solid</value>
+                  </smarttag>
+                </smarttags>
+              </clashobject>
+              <clashobject>
+                <objectattribute>
+                  <name>Element ID</name>
+                  <value>130373</value>
+                </objectattribute>
+                <layer>Level 2</layer>
+                <pathlink>
+                  <node>File</node>
+                  <node>File</node>
+                  <node>PLUM_2014_Grid Update 3.nwc</node>
+                  <node>Level 2</node>
+                  <node>Pipes</node>
+                  <node>Pipe Types</node>
+                  <node>Default</node>
+                  <node>Pipe Types</node>
+                  <node>Steel, Carbon</node>
+                </pathlink>
+                <smarttags>
+                  <smarttag>
+                    <name>Item Name</name>
+                    <value>Steel, Carbon</value>
+                  </smarttag>
+                  <smarttag>
+                    <name>Item Type</name>
+                    <value>Solid</value>
+                  </smarttag>
+                </smarttags>
+              </clashobject>
+            </clashobjects>
+          </clashresult>
+          <clashresult name="Clash51" guid="1d9158eb-66ba-47f2-8e80-f11ae15d6084" href="Structural vs All MEP (Grids Working)_files\cd000002.jpg" status="new" distance="-0.29">
+            <description>Hard</description>
+            <resultstatus>New</resultstatus>
+            <clashpoint>
+              <pos3f x="31.34" y="17.74" z="57.22"/>
+            </clashpoint>
+            <gridlocation>B-3 : Level 2</gridlocation>
+            <createddate>
+              <date year="2015" month="3" day="8" hour="16" minute="13" second="44"/>
+            </createddate>
+            <clashobjects>
+              <clashobject>
+                <objectattribute>
+                  <name>Element ID</name>
+                  <value>129733</value>
+                </objectattribute>
+                <layer>Level 1</layer>
+                <pathlink>
+                  <node>File</node>
+                  <node>File</node>
+                  <node>Struct_2014_Grid Update 3.nwc</node>
+                  <node>Level 1</node>
+                  <node>Structural Framing</node>
+                  <node>W-Wide Flange</node>
+                  <node>W40X211</node>
+                  <node>W-Wide Flange</node>
+                  <node>W40X211</node>
+                  <node>Steel ASTM A992</node>
+                </pathlink>
+                <smarttags>
+                  <smarttag>
+                    <name>Item Name</name>
+                    <value>Steel ASTM A992</value>
+                  </smarttag>
+                  <smarttag>
+                    <name>Item Type</name>
+                    <value>Solid</value>
+                  </smarttag>
+                </smarttags>
+              </clashobject>
+              <clashobject>
+                <objectattribute>
+                  <name>Element ID</name>
+                  <value>130373</value>
+                </objectattribute>
+                <layer>Level 2</layer>
+                <pathlink>
+                  <node>File</node>
+                  <node>File</node>
+                  <node>PLUM_2014_Grid Update 3.nwc</node>
+                  <node>Level 2</node>
+                  <node>Pipes</node>
+                  <node>Pipe Types</node>
+                  <node>Default</node>
+                  <node>Pipe Types</node>
+                  <node>Steel, Carbon</node>
+                </pathlink>
+                <smarttags>
+                  <smarttag>
+                    <name>Item Name</name>
+                    <value>Steel, Carbon</value>
+                  </smarttag>
+                  <smarttag>
+                    <name>Item Type</name>
+                    <value>Solid</value>
+                  </smarttag>
+                </smarttags>
+              </clashobject>
+            </clashobjects>
+          </clashresult>
+        </clashresults>
+      </clashtest>
+    </clashtests>
+    <selectionsets/>
+  </batchtest>
+</exchange>
