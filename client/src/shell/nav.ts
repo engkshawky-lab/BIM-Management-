@@ -72,6 +72,7 @@ export const DOCUMENT_PAGES: NavItem[] = [
   g("w.documents", "Document workflow", "/workflow/documents", "files", "Workflow & roles", "How files and documents move through the CDE, step by step"),
   g("w.matrix", "Roles by stage", "/workflow/matrix", "table", "Workflow & roles", "Who is responsible, accountable, consulted and informed at each stage"),
   g("w.roles", "Role profiles", "/workflow/roles", "users", "Workflow & roles", "BIM manager, information manager, BIM coordinator and every other role"),
+  g("w.docguides", "Document guides", "/doc-guides", "book", "Workflow & roles", "Every ISO 19650 document explained: sections, how to create it, checks"),
   g("ai.projectdata", "Project data (enter once)", "/project-data", "table", "Project data & setup", "Mandatory inputs every document reuses"),
   g("r.wizard", "Setup wizard", "/wizard", "sparkles", "Project data & setup", "Answer a few questions; get the documents and workflow you need"),
   g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "Create", "EIR, AIR, PIR, OIR, BEP or any custom template"),

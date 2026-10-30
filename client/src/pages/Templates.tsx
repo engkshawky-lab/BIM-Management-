@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { navigate, useSession } from "../App";
 import { StdBadge } from "../components/common";
 import { templates } from "../../../shared/data/templates";
+import { guideById } from "../../../shared/data/docGuides";
 import type { DocTemplate, StandardId } from "../../../shared/data/types";
 import { api, canEdit, type Project } from "../lib/api";
 import { GeneratedNotice } from "./Documents";
@@ -64,6 +65,7 @@ export default function Templates({ std, focusId }: { std?: StandardId; focusId?
                 <div className="row" style={{ marginTop: 10 }}>
                   <button className="primary" onClick={() => setUse(t)}>Use in project…</button>
                   <button className="ghost" onClick={() => setOpen(open === t.id ? null : t.id)}>{open === t.id ? "Hide" : "Contents"}</button>
+                  {guideById(t.id) && <a className="btn ghost" href={`#/doc-guides/${t.id}`}>Read the guide</a>}
                 </div>
               </div>
             ))}

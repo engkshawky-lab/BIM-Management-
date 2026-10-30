@@ -614,3 +614,30 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .wf-role-list a:hover { background: var(--surface-2); }
 .wf-role-list a.on { background: color-mix(in srgb, var(--hub) 12%, transparent); border-inline-start-color: var(--hub); }
 @media (max-width: 900px) { .wf-roles { grid-template-columns: 1fr; } .wf-role-list { position: static; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); } .wf-states { grid-template-columns: repeat(2, 1fr); } }
+
+/* Document guides */
+.dg-phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 12px; align-items: start; }
+.dg-phase { display: grid; gap: 8px; padding: 12px; border-radius: 14px; background: color-mix(in srgb, var(--hub) 5%, var(--surface)); border: 1px solid var(--border); }
+.dg-phase-head { display: flex; gap: 10px; align-items: center; padding-bottom: 6px; }
+.dg-phase-head span:last-child { display: grid; } .dg-phase-head small { color: var(--muted); font-size: 12px; }
+.dg-card { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+.dg-card:hover { border-color: var(--hub); }
+.dg-card-text { display: grid; gap: 2px; min-width: 0; } .dg-card-text small { color: var(--muted); font-size: 12px; line-height: 1.4; }
+.dg-card-text .dg-who { color: var(--text); opacity: .75; font-size: 11.5px; }
+.dg-code { flex-shrink: 0; font: 700 11px ui-monospace, monospace; padding: 3px 6px; border-radius: 6px; background: var(--hub); color: #fff; min-width: 44px; text-align: center; }
+.dg-hero-code { font: 800 34px ui-monospace, monospace; letter-spacing: -.02em; opacity: .9; white-space: nowrap; }
+.dg-toc { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); position: sticky; top: 46px; z-index: 5; }
+.dg-toc button { color: var(--muted); } .dg-toc button:hover { color: var(--accent); }
+.dg-who-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 14px; }
+.dg-role { display: inline-block; padding: 3px 10px; border-radius: 99px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 12.5px; }
+.dg-role:hover { border-color: var(--hub); }
+.dg-chain { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dg-chain-col { flex: 1 1 200px; display: grid; gap: 6px; }
+.dg-this { flex: 0 1 220px; justify-items: center; text-align: center; padding: 12px; border-radius: 12px; border: 2px solid var(--hub); background: color-mix(in srgb, var(--hub) 8%, var(--surface)); }
+.dg-arrow { font-size: 22px; color: var(--muted); }
+[dir="rtl"] .dg-arrow { transform: scaleX(-1); }
+.dg-chip { font: 700 11.5px ui-monospace, monospace; padding: 3px 8px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--hub) 45%, var(--border)); color: var(--text); background: var(--surface); }
+.dg-chip:hover { background: color-mix(in srgb, var(--hub) 12%, var(--surface)); }
+.dg-chip.plain { border-style: dashed; color: var(--muted); }
+.dg-example { margin: 4px 0 8px; padding: 8px 12px; border-radius: 8px; border-inline-start: 3px solid var(--hub); background: var(--surface-2); font-size: 13.5px; }
+@media (max-width: 760px) { .dg-arrow { transform: rotate(90deg); width: 100%; text-align: center; } }
