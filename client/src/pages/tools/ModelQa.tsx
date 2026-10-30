@@ -383,7 +383,7 @@ export default function ModelQa() {
           {groups.length > 0 && (
             <div className="mqa-steps">
               {/* 4 AI */}
-              <section className="hub-card" style={{ "--c": "#7c3aed" } as CSSProperties}>
+              <section className="hub-card" style={{ "--c": "#0e7490" } as CSSProperties}>
                 <div className="hub-title">{t("4. Explain with AI (optional)")}</div>
                 {aiEnabled === false && <div className="hub-tile small" style={{ marginBottom: 10 }}><b>{t("AI isn't switched on yet.")}</b> {t("Once it is, you can get a plain-language explanation, a fix for your authoring software and a priority for each group. The check and exports work without it.")}</div>}
                 <div className="row">

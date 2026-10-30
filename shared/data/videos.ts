@@ -31,6 +31,12 @@ export interface Video {
 }
 
 export const VIDEOS: Video[] = [
+  { id: "cd5Atg7LNRc", title: "ISO 19650 and BIM Standards Overview", channel: "Kamal Shawky", topic: "ISO 19650 basics", level: "Beginner", lang: "en",
+    summary: "An overview of ISO 19650 and the BIM standards around it, and how they fit together on a project.",
+    summaryAr: "نظرة عامة على ISO 19650 ومعايير BIM المرتبطة به، وكيف تترابط في المشروع.", verified: "2026-10-31" },
+  { id: "lD8jNuVgEvI", title: "ISO 19650 and BIM Management Overview", channel: "Kamal Shawky", topic: "ISO 19650 basics", level: "Beginner", lang: "en",
+    summary: "An overview of ISO 19650 and how BIM management runs information on a project.",
+    summaryAr: "نظرة عامة على ISO 19650 وكيف تدير إدارة BIM المعلومات في المشروع.", verified: "2026-10-31" },
   { id: "u3rImY-5q6Y", title: "ISO 19650 in five minutes", channel: "Plannerly - The BIM Management Platform", topic: "ISO 19650 basics", level: "Beginner", lang: "en",
     summary: "A five-minute overview of what ISO 19650 is and how its information management process fits together.",
     summaryAr: "نظرة عامة في خمس دقائق على معيار ISO 19650 وكيف تترابط عملية إدارة المعلومات فيه.", verified: "2026-10-30" },

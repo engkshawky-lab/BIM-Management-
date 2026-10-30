@@ -153,7 +153,7 @@ export default function Correspondence() {
       </div>}
 
       {/* (b) AI correspondence writer */}
-      <div className="hub-card" style={{ "--c": "#7c3aed" } as CSSProperties}>
+      <div className="hub-card" style={{ "--c": "#0e7490" } as CSSProperties}>
         <div className="hub-title">AI correspondence writer</div>
         <p className="small muted" style={{ marginBlockStart: 0 }}>Draft an RFI, a rejection, a non-conformance notice, a reminder or a transmittal cover note. Facts that are not in your context are left as [TBC].</p>
         {ai === false && <div className="hub-tile" style={{ display: "grid", gap: 6, marginBlockEnd: 10 }}>
@@ -185,7 +185,7 @@ export default function Correspondence() {
 
       {busy && <div className="card muted">Drafting the correspondence…</div>}
 
-      {letter && !busy && <div className="hub-card" style={{ "--c": "#7c3aed" } as CSSProperties}>
+      {letter && !busy && <div className="hub-card" style={{ "--c": "#0e7490" } as CSSProperties}>
         <div className="row spread">
           <div className="hub-title" style={{ marginBlockEnd: 0 }}>Draft</div>
           <div className="actions-bar">

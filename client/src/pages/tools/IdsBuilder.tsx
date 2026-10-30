@@ -306,9 +306,9 @@ function AiExtract({ onAdd }: { onAdd: (specs: IdsSpec[]) => void }) {
     finally { setBusy(false); }
   };
   return (
-    <section className="hub-card" style={{ "--c": "#7c3aed" } as CSSProperties}>
+    <section className="hub-card" style={{ "--c": "#0e7490" } as CSSProperties}>
       <div className="hub-title">AI helper</div>
-      {enabled === false && <div className="hub-tile small" style={{ "--c": "#7c3aed", marginBottom: 10 } as CSSProperties}><b>AI isn't switched on yet.</b> Once it is, you can paste EIR or LOIN text here and get draft specifications. Everything else in the IDS builder works without it.</div>}
+      {enabled === false && <div className="hub-tile small" style={{ "--c": "#0e7490", marginBottom: 10 } as CSSProperties}><b>AI isn't switched on yet.</b> Once it is, you can paste EIR or LOIN text here and get draft specifications. Everything else in the IDS builder works without it.</div>}
       <label>Paste EIR / LOIN text</label>
       <textarea rows={6} value={text} onChange={(e) => setText(e.target.value.slice(0, 60000))} disabled={enabled === false}
         placeholder={t("e.g. All doors shall carry a fire rating and state whether they are external. Spaces shall have a room name and net floor area…")} />

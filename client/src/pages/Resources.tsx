@@ -21,7 +21,7 @@ const Head = ({ eyebrow, title, intro, color }: { eyebrow: string; title: string
 interface Resource { id: string; title: string; description: string; category: string; part: string; fileName: string; mimeType: string; size: number; downloads: number; createdAt: string; previewable: boolean }
 const PARTS = ["", "19650-1", "19650-2", "19650-3", "19650-4", "19650-5", "19650-6"];
 const ext = (n: string) => (/\.([a-z0-9]+)$/i.exec(n)?.[1] ?? "file").toUpperCase();
-const extColor = (e: string) => (e === "PDF" ? "#dc2626" : /DOCX?/.test(e) ? "#2563eb" : /XLSX?|CSV/.test(e) ? "#16a34a" : /PPTX?/.test(e) ? "#ea580c" : /DWG|IFC|RVT/.test(e) ? "#7c3aed" : "#64748b");
+const extColor = (e: string) => (e === "PDF" ? "#dc2626" : /DOCX?/.test(e) ? "#2563eb" : /XLSX?|CSV/.test(e) ? "#16a34a" : /PPTX?/.test(e) ? "#ea580c" : /DWG|IFC|RVT/.test(e) ? "#0e7490" : "#64748b");
 
 export function DownloadsLibrary() {
   const { user, toast } = useSession();
@@ -155,7 +155,7 @@ export function NewsFeed() {
 const SAMPLES: { id: string; color: string; scope: string }[] = [
   { id: "eir", color: "#3b82f6", scope: "ISO 19650-2 · issued with the invitation to tender" },
   { id: "air", color: "#22c55e", scope: "ISO 19650-3 · asset information for operations" },
-  { id: "oir", color: "#a855f7", scope: "ISO 19650-1 · organisational strategy" },
+  { id: "oir", color: "#06b6d4", scope: "ISO 19650-1 · organisational strategy" },
   { id: "bep-pre", color: "#ef4444", scope: "ISO 19650-2 · tender response to the EIR" },
   { id: "bep-post", color: "#38bdf8", scope: "ISO 19650-2 · confirmed after appointment" },
   { id: "info-standard", color: "#14b8a6", scope: "ISO 19650-2 5.1.4 · naming, formats, classification, LOIN" },

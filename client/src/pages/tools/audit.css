@@ -33,7 +33,7 @@
 .au-files li { display: flex; gap: 10px; align-items: center; padding-block: 4px; border-block-end: 1px solid var(--border); }
 .au-fname { flex: 1; overflow-wrap: anywhere; }
 .au-ficon { display: inline-grid; place-items: center; min-inline-size: 36px; block-size: 22px; padding-inline: 4px; border-radius: 4px; font-size: 10px; font-weight: 700; color: #fff; background: var(--muted); direction: ltr; }
-.au-f-pdf { background: #b91c1c; } .au-f-doc { background: #1d4ed8; } .au-f-xls { background: #15803d; } .au-f-img { background: #7c3aed; } .au-f-txt { background: #475569; }
+.au-f-pdf { background: #b91c1c; } .au-f-doc { background: #1d4ed8; } .au-f-xls { background: #15803d; } .au-f-img { background: #0e7490; } .au-f-txt { background: #475569; }
 
 .au-partcounts { display: flex; flex-wrap: wrap; gap: 8px; }
 .au-pc { padding-block: 4px; padding-inline: 10px; border-radius: 8px; background: var(--surface-2); font-size: 13px; }

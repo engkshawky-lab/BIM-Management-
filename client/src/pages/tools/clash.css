@@ -30,7 +30,7 @@
 .clash-table td select { font-size: 12.5px; }
 .clash-label { font-weight: 600; margin-block-start: 4px; max-inline-size: 360px; }
 .clash-expand { border: 0; background: none; padding: 0; margin-inline-end: 6px; cursor: pointer; color: var(--muted); }
-.clash-kind.k-duplicate { background: color-mix(in srgb, #7c3aed 14%, var(--surface)); color: #6d28d9; }
+.clash-kind.k-duplicate { background: color-mix(in srgb, #0e7490 14%, var(--surface)); color: #0e7490; }
 .clash-kind.k-cluster { background: color-mix(in srgb, #0284c7 14%, var(--surface)); color: #0369a1; }
 .clash-row.p-critical td:first-child { border-inline-start: 3px solid #b91c1c; }
 .clash-row.p-high td:first-child { border-inline-start: 3px solid #ea580c; }

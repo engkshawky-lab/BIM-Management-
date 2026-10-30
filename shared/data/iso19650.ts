@@ -244,7 +244,7 @@ export const cdeStates = [
   { id: "WIP", title: "Work in progress", desc: "Information being developed by its task team; not visible to other task teams.", color: "#64748b" },
   { id: "SHARED", title: "Shared", desc: "Approved for sharing with others for coordination; not for construction.", color: "#2563eb" },
   { id: "PUBLISHED", title: "Published", desc: "Authorized and accepted information for use (e.g., construction, handover).", color: "#16a34a" },
-  { id: "ARCHIVED", title: "Archived", desc: "Journal of transactions and superseded information, retained for audit.", color: "#9333ea" },
+  { id: "ARCHIVED", title: "Archived", desc: "Journal of transactions and superseded information, retained for audit.", color: "#0e7490" },
 ];
 
 // UK National Annex (BS EN ISO 19650-2:2018 NA, 2021 update) — commonly used codes.

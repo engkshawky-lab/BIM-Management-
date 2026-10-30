@@ -33,7 +33,7 @@ function useAiEnabled() {
 function AiOff({ what }: { what?: string }) {
   const { user } = useSession();
   return (
-    <div className="hub-tile" style={{ "--c": "#7c3aed", display: "grid", gap: 10 } as CSSProperties}>
+    <div className="hub-tile" style={{ "--c": "#0e7490", display: "grid", gap: 10 } as CSSProperties}>
       <div className="row" style={{ flexWrap: "nowrap", alignItems: "start", gap: 12 }}>
         <span style={{ fontSize: 26, lineHeight: 1 }}>✨</span>
         <div><b style={{ fontSize: 15 }}>AI isn't switched on yet</b>
@@ -323,7 +323,7 @@ export default function AiTools({ tool, arg, arg2 }: { tool?: string; arg?: stri
   const cur = AI_TOOLS.find((t) => t.id === tool) ?? AI_TOOLS[0];
   const ai = useAiEnabled();
   return (
-    <div className="hub" style={{ "--hub": "#7c3aed" } as CSSProperties}>
+    <div className="hub" style={{ "--hub": "#0e7490" } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">AI TOOLS · ISO 19650</div><h1>{cur.label}</h1><p>{cur.hint}</p>
         <div className="facts"><span>Powered by Claude</span><span>Review-first: you stay accountable</span><span>Export to Word / CSV</span></div></div>
       <div className="hub-tabs">{AI_TOOLS.map((t) => <a key={t.id} className={cur.id === t.id ? "on" : ""} href={`#/ai-tools/${t.id}`}>{t.label}</a>)}</div>

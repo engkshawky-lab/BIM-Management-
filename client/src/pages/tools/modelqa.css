@@ -24,7 +24,7 @@
 .mqa-samples { margin-block-start: 6px; background: var(--surface); }
 .mqa-guid { direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
 .mqa-advice { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-block-end: 10px; }
-.mqa-advice > div { border-inline-start: 3px solid #7c3aed; padding-inline-start: 10px; }
+.mqa-advice > div { border-inline-start: 3px solid #0e7490; padding-inline-start: 10px; }
 .mqa-advice p { margin: 4px 0 0; white-space: pre-wrap; }
 .mqa-ai { border-block-start: 1px solid var(--border); padding-block-start: 8px; margin-block-start: 8px; }
 .mqa-ai ol { margin: 4px 0 8px; padding-inline-start: 20px; }

@@ -29,7 +29,7 @@ function useAiEnabled() {
 function AiOffNotice({ what }: { what: string }) {
   const { user } = useSession();
   return (
-    <div className="hub-tile" style={{ "--c": "#7c3aed", display: "grid", gap: 8 } as CSSProperties}>
+    <div className="hub-tile" style={{ "--c": "#0e7490", display: "grid", gap: 8 } as CSSProperties}>
       <b>AI isn't switched on yet</b>
       <div className="small">{what}</div>
       {user.role === "admin"

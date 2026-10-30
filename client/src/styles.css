@@ -1,16 +1,16 @@
 :root {
   --bg: #f3f5f9; --panel: #ffffff; --surface: #ffffff; --surface-2: #eef1f6; --text: #142130; --muted: #5b6b7d; --border: #d9e0e9;
-  --primary: #1e3a5f; --accent: #4f5fd6; --accent-strong: #3f4cc4; --on-accent: #ffffff; --teal: #0e7c86; --ai: #6d28d9;
+  --primary: #1e3a5f; --accent: #2563eb; --accent-strong: #1d4ed8; --on-accent: #ffffff; --teal: #0e7c86; --ai: #0e7490;
   --ok: #16a34a; --warn: #0284c7; --danger: #dc2626; --radius: 12px;
-  --hero-a: #e6ecf7; --hero-b: #f3f5f9; --hero-line: #5568c9; --hero-accent: #0e7c86;
+  --hero-a: #e6ecf7; --hero-b: #f3f5f9; --hero-line: #3b82f6; --hero-accent: #0e7c86;
   --font: "Inter", system-ui, sans-serif;
   color-scheme: light;
 }
 :root[data-theme="dark"] {
   --bg: #13202c; --panel: #172533; --surface: #1b2a39; --surface-2: #223346; --text: #e7edf4; --muted: #9aabbe; --border: #2b3d51;
-  --primary: #9db4f2; --accent: #a5b4fc; --accent-strong: #c3cdfd; --on-accent: #111827; --teal: #4fd1c5; --ai: #c4b5fd;
+  --primary: #93c5fd; --accent: #60a5fa; --accent-strong: #93c5fd; --on-accent: #111827; --teal: #4fd1c5; --ai: #67e8f9;
   --ok: #4ade80; --warn: #7dd3fc; --danger: #f87171;
-  --hero-a: #1a2b3d; --hero-b: #13202c; --hero-line: #a5b4fc; --hero-accent: #4fd1c5;
+  --hero-a: #1a2b3d; --hero-b: #13202c; --hero-line: #60a5fa; --hero-accent: #4fd1c5;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -35,7 +35,7 @@ p { margin: 4px 0 8px; }
 .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
 .b19650 { background: #e0ecf8; color: #1e3a5f; border-color: #bcd3ec; }
 .b42001 { background: #ede4fd; color: #5b21b6; border-color: #d6c5fa; }
-@media (prefers-color-scheme: dark) { .b19650 { background: #1d3049; color: #a9cdf2; border-color: #2d4867; } .b42001 { background: #2e2350; color: #c9b6fc; border-color: #44367a; } }
+@media (prefers-color-scheme: dark) { .b19650 { background: #1d3049; color: #a9cdf2; border-color: #2d4867; } .b42001 { background: #083344; color: #a5f3fc; border-color: #155e75; } }
 
 button, .btn { font: inherit; border: 1px solid var(--border); background: var(--surface); color: var(--text); padding: 7px 12px; border-radius: 8px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
 button:hover { border-color: var(--accent); }
@@ -178,7 +178,7 @@ tr.late td { background: rgba(220, 38, 38, .06); }
 .gauge { display: grid; justify-items: center; color: var(--text); }
 .center-cell { text-align: center !important; }
 .raci-cell { width: 44px; justify-content: center; font-weight: 700; padding: 4px; }
-.raci-R { background: #dbeafe; color: #1e40af; } .raci-A { background: #bae6fd; color: #075985; } .raci-C { background: #e9d5ff; color: #6b21a8; }
+.raci-R { background: #dbeafe; color: #1e40af; } .raci-A { background: #bae6fd; color: #075985; } .raci-C { background: #cffafe; color: #155e75; }
 .raci-I { background: #e2e8f0; color: #334155; } .raci-RA { background: #bbf7d0; color: #166534; } .raci-none { color: var(--muted); }
 .cell-input { border-color: transparent; padding: 4px 6px; font-size: 12.5px; min-width: 110px; }
 textarea.cell-input { min-height: 34px; resize: vertical; }
@@ -192,9 +192,9 @@ textarea.cell-input { min-height: 34px; resize: vertical; }
 .gantt-month { position: absolute; top: 5px; font-size: 11px; color: var(--muted); border-inline-start: 1px solid var(--border); padding-inline-start: 4px; }
 .gantt-bar { position: absolute; top: 12px; height: 16px; border-radius: 4px; }
 .gantt-overlay { position: absolute; inset: 0; display: grid; grid-template-columns: 260px minmax(600px, 1fr); pointer-events: none; }
-.gantt-milestone, .gantt-today { position: absolute; top: 0; bottom: 0; border-inline-start: 2px dashed #9333ea; }
+.gantt-milestone, .gantt-today { position: absolute; top: 0; bottom: 0; border-inline-start: 2px dashed #0e7490; }
 .gantt-today { border-inline-start: 2px solid var(--danger); }
-.gantt-milestone span, .gantt-today span { position: absolute; bottom: 2px; left: 4px; font-size: 10px; white-space: nowrap; background: var(--surface); padding: 0 3px; color: #9333ea; }
+.gantt-milestone span, .gantt-today span { position: absolute; bottom: 2px; left: 4px; font-size: 10px; white-space: nowrap; background: var(--surface); padding: 0 3px; color: #0e7490; }
 .gantt-today span { color: var(--danger); top: 2px; bottom: auto; }
 
 /* ---------- phase 3: validation & coordination ---------- */
@@ -224,12 +224,12 @@ body { background: var(--bg); }
 .shell.sb-hidden { grid-template-columns: minmax(0, 1fr); }
 .shell.sb-hidden .sidebar { display: none; }
 .sidebar { display: flex; flex-direction: column; min-height: 0; background: var(--panel); border-inline-end: 1px solid var(--border); position: relative; z-index: 20; }
-.brand-logo { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg, #6d7cf0, #4f5fd6); color: #fff; flex-shrink: 0; }
+.brand-logo { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; flex-shrink: 0; }
 kbd { font: 600 11px var(--font); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; background: var(--surface-2); color: var(--muted); }
 .icon-btn { border: none; background: transparent; padding: 6px; border-radius: 8px; color: var(--muted); position: relative; }
 .icon-btn:hover { background: var(--surface-2); color: var(--text); }
 .icon-btn .dot { position: absolute; top: -2px; right: -4px; }
-.avatar { background: linear-gradient(135deg, #6d7cf0, #4f5fd6); }
+.avatar { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 .popover.menu { width: 240px; padding: 6px; display: grid; gap: 2px; }
 .popover.menu a, .popover.menu button { display: flex; gap: 10px; align-items: center; border: none; background: none; color: var(--text); padding: 8px 10px; border-radius: 8px; font-size: 13px; width: 100%; text-align: start; }
 .popover.menu a:hover, .popover.menu button:hover { background: var(--surface-2); }
