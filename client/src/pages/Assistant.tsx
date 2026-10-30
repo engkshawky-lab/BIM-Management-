@@ -77,7 +77,7 @@ export function ContractReview({ data }: { data: ProjectData }) {
     setBusy(true); setR(null);
     try { setR(await api<ReviewResult>(`/projects/${data.project.id}/contract-review`, { form })); } catch (e) { toast((e as Error).message, "error"); } finally { setBusy(false); }
   };
-  const color: Record<string, string> = { present: "var(--ok)", partial: "#d97706", missing: "var(--danger)" };
+  const color: Record<string, string> = { present: "var(--ok)", partial: "#38bdf8", missing: "var(--danger)" };
   return (
     <>
       <p className="muted">Upload an appointment, contract or BIM specification (PDF) or paste its text. The AI checks it for ISO 19650 information-management obligations — information protocol, EIR, BEP, MIDP/TIDP, CDE, IP and licence, liability, security, handover — with clause references. This is a checklist aid, not legal advice.</p>

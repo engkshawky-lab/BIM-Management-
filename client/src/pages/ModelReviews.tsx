@@ -8,7 +8,7 @@ import type { ProjectData } from "./Project";
 
 interface Review { id: string; number: number; title: string; discipline: string; taskTeamId: string | null; fileId: string | null; milestone: string; reviewerId: string; results: Record<string, QaResult>; status: "Draft" | "Completed"; score: number; grade: string; updatedAt: string }
 
-const GRADE_COLOR: Record<string, string> = { A: "#16a34a", B: "#65a30d", C: "#d97706", D: "#dc2626", "—": "#64748b" };
+const GRADE_COLOR: Record<string, string> = { A: "#16a34a", B: "#65a30d", C: "#38bdf8", D: "#dc2626", "—": "#64748b" };
 const tag = (n: number) => `QA-${String(n).padStart(3, "0")}`;
 export const GradeBadge = ({ g }: { g: string }) => <span className="badge" style={{ background: GRADE_COLOR[g] ?? "#64748b", color: "#fff" }}>{g}</span>;
 

@@ -1,0 +1,35 @@
+/* Learning paths (LearningPaths.tsx) and the link card on Learn.tsx. Logical properties for RTL. */
+
+.lp-learn-link { display: flex; align-items: center; gap: 12px; margin-block-end: 14px; text-decoration: none; color: inherit; border-inline-start: 4px solid var(--accent); }
+.lp-learn-link:hover { border-color: var(--accent); }
+.lp-learn-icon { font-size: 22px; }
+.lp-learn-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-inline-size: 0; }
+.lp-learn-go { font-weight: 600; color: var(--accent); white-space: nowrap; }
+
+.lp-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-block: 14px; }
+.lp-card { display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit; transition: transform .12s ease, box-shadow .12s ease; }
+.lp-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0, 0, 0, .08); }
+.lp-card .hub-title { margin-block-end: 0; }
+.lp-card-title { font-size: 16px; }
+.lp-card p { margin: 0; }
+.lp-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-block-start: auto; }
+
+.lp-progress { display: flex; flex-direction: column; gap: 4px; }
+.lp-top { margin-block: 12px; gap: 8px; flex-wrap: wrap; }
+
+.lp-steps { list-style: none; padding: 0; margin: 14px 0; display: grid; gap: 10px; counter-reset: none; }
+.lp-step { display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; border-inline-start: 3px solid var(--hub); }
+.lp-step.done { opacity: .78; border-inline-start-color: var(--ok); }
+.lp-n { flex: none; inline-size: 30px; block-size: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: #fff; background: var(--hub); }
+.lp-step.done .lp-n { background: var(--ok); }
+.lp-body { flex: 1; min-inline-size: 0; }
+.lp-body p { margin-block: 4px 8px; }
+.lp-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lp-kind { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--text); }
+.lp-kind.k-read { background: color-mix(in srgb, #3b82f6 14%, var(--surface)); color: #2563eb; }
+.lp-kind.k-practise { background: color-mix(in srgb, #0d9488 14%, var(--surface)); color: #0f766e; }
+.lp-kind.k-tool { background: color-mix(in srgb, #9333ea 14%, var(--surface)); color: #7e22ce; }
+.lp-kind.k-quiz { background: color-mix(in srgb, #f59e0b 16%, var(--surface)); color: #b45309; }
+.lp-tick { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.lp-tick input { margin: 0; }
+.lp-finish { border-top-color: var(--ok); }

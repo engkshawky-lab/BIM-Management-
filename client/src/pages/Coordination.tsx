@@ -16,7 +16,7 @@ interface Issue {
 const TYPES = ["Issue", "Clash", "RFI", "Request", "Comment", "Error", "Remark"];
 const STATUSES = ["Open", "In progress", "Resolved", "Closed"];
 const PRIORITIES = ["Low", "Normal", "High", "Critical"];
-const PRIORITY_COLOR: Record<string, string> = { Low: "#94a3b8", Normal: "#0e7c86", High: "#d97706", Critical: "#dc2626" };
+const PRIORITY_COLOR: Record<string, string> = { Low: "#94a3b8", Normal: "#0e7c86", High: "#38bdf8", Critical: "#dc2626" };
 const today = () => new Date().toISOString().slice(0, 10);
 const issueIdFromHash = () => window.location.hash.split("/")[5];
 
@@ -282,7 +282,7 @@ export default function Coordination({ data, sub }: { data: ProjectData; sub?: s
 // ---------------------------------------------------------------- risk register
 
 interface Risk { id: string; number: number; title: string; category: string; cause: string; likelihood: number; impact: number; mitigation: string; ownerId: string | null; status: string; residualLikelihood: number | null; residualImpact: number | null; reviewDate: string }
-const riskTone = (s: number) => (s >= 15 ? "#dc2626" : s >= 8 ? "#d97706" : "#16a34a");
+const riskTone = (s: number) => (s >= 15 ? "#dc2626" : s >= 8 ? "#38bdf8" : "#16a34a");
 const RISK_CATEGORIES = ["Information delivery", "Technology / CDE", "Resources & capability", "Programme", "Security (19650-5)", "Commercial", "AI (42001)"];
 
 export function Risks({ data }: { data: ProjectData }) {

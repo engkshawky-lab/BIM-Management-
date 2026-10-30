@@ -1,8 +1,15 @@
 // Learning content: original question bank by topic and decision scenarios. Paraphrased
 // guidance only — verify against the licensed editions of the standards.
 
-export interface Question { id: string; topic: string; q: string; options: string[]; answer: number; why: string }
-export const TOPICS = ["Concepts & terms", "Delivery process", "CDE, naming & status", "Plans & responsibilities", "Asset information & handover", "Security (19650-5)", "AI management (42001)"] as const;
+import { BANK_QUESTIONS } from "./learnBank";
+
+export interface Question {
+  id: string; topic: string; q: string; options: string[]; answer: number; why: string;
+  /** ISO 19650 part the question maps to, where it maps to one. */
+  part?: 1 | 2 | 3 | 4 | 5 | 6;
+  level?: "Beginner" | "Intermediate" | "Advanced";
+}
+export const TOPICS = ["Concepts & terms", "Delivery process", "CDE, naming & status", "Plans & responsibilities", "Asset information & handover", "Security (19650-5)", "AI management (42001)", "Health & safety (19650-6)"] as const;
 
 const Q = (topic: (typeof TOPICS)[number], list: [string, string[], number, string][]): Question[] =>
   list.map(([q, options, answer, why], i) => ({ id: `${TOPICS.indexOf(topic)}-${i + 1}`, topic, q, options, answer, why }));
@@ -62,6 +69,8 @@ export const QUESTIONS: Question[] = [
     ["Human oversight of AI outputs in BIM workflows is important because…", ["AI is always correct", "Outputs can be wrong and accountability stays with people", "It is required by IFC", "It slows projects"], 1, "People remain accountable for decisions informed by AI."],
     ["Which belongs in an AI system inventory?", ["Each AI system's purpose, owner, data and risk level", "Only the vendor's logo", "Meeting minutes", "Room data sheets"], 0, "An inventory records what AI is used, by whom, for what and with what risk."],
   ]),
+  // extended bank, tagged by ISO 19650 part and level (learnBank.ts)
+  ...BANK_QUESTIONS,
 ];
 
 // ---------------------------------------------------------------- scenarios

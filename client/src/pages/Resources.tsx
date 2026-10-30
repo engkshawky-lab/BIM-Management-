@@ -157,7 +157,7 @@ const SAMPLES: { id: string; color: string; scope: string }[] = [
   { id: "air", color: "#22c55e", scope: "ISO 19650-3 · asset information for operations" },
   { id: "oir", color: "#a855f7", scope: "ISO 19650-1 · organisational strategy" },
   { id: "bep-pre", color: "#ef4444", scope: "ISO 19650-2 · tender response to the EIR" },
-  { id: "bep-post", color: "#f97316", scope: "ISO 19650-2 · confirmed after appointment" },
+  { id: "bep-post", color: "#38bdf8", scope: "ISO 19650-2 · confirmed after appointment" },
   { id: "info-standard", color: "#14b8a6", scope: "ISO 19650-2 5.1.4 · naming, formats, classification, LOIN" },
   { id: "info-protocol", color: "#eab308", scope: "ISO 19650-2 5.1.8 · contractual obligations and licences" },
   { id: "security-triage", color: "#64748b", scope: "ISO 19650-5 · sensitivity assessment and security plan" },

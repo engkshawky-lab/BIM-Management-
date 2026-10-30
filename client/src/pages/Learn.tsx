@@ -3,19 +3,25 @@ import { QUESTIONS, SCENARIOS, TOPICS, type Question } from "../../../shared/dat
 import { api, fmtDate } from "../lib/api";
 import { Courses, InterviewCoach, StandardsUpdates } from "./LearnExtras";
 import { AssignedTraining } from "./LearnGuides";
+import { t } from "../i18n";
+import "./learningPaths.css";
 
 interface Attempt { id: string; mode: string; topic: string; score: number; total: number; seconds: number; createdAt: string }
 const shuffle = <T,>(a: T[]) => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const EXAM = { count: 30, minutes: 40, pass: 0.65 };
+/** Mock exam per ISO 19650 part, drawn from questions tagged with that part; "All parts" uses every tagged question. */
+const PART_EXAM = { count: 20, minutes: 25 };
+const PARTS = [1, 2, 3, 4, 5, 6] as const;
+const PART_TITLES: Record<number, string> = { 1: "Concepts and principles", 2: "Delivery phase", 3: "Operational phase", 4: "Information exchange", 5: "Security-minded approach", 6: "Health and safety information" };
 
-function Quiz({ questions, mode, topic, onDone }: { questions: Question[]; mode: "practice" | "exam"; topic: string; onDone: () => void }) {
+function Quiz({ questions, mode, topic, minutes = EXAM.minutes, onDone }: { questions: Question[]; mode: "practice" | "exam"; topic: string; minutes?: number; onDone: () => void }) {
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [revealed, setRevealed] = useState(false);
   const [start] = useState(Date.now());
   const [now, setNow] = useState(Date.now());
   const [result, setResult] = useState<{ score: number; total: number; byTopic: Record<string, [number, number]> } | null>(null);
-  const left = mode === "exam" ? Math.max(0, EXAM.minutes * 60 - Math.floor((now - start) / 1000)) : null;
+  const left = mode === "exam" ? Math.max(0, minutes * 60 - Math.floor((now - start) / 1000)) : null;
   useEffect(() => { if (mode !== "exam" || result) return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, [mode, result]);
   const submit = async () => { const r = await api<typeof result>("/learn/attempts", { body: { mode, topic, answers, seconds: Math.round((Date.now() - start) / 1000) } }); setResult(r); };
   useEffect(() => { if (left === 0 && !result) submit(); }); // time up
@@ -35,7 +41,7 @@ function Quiz({ questions, mode, topic, onDone }: { questions: Question[]; mode:
   const chosen = answers[q.id];
   return (
     <div className="card">
-      <div className="row spread"><span className="small muted">Question {i + 1} of {questions.length} · {q.topic}</span>{left !== null && <b className={left < 300 ? "error" : ""}>⏱ {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</b>}</div>
+      <div className="row spread"><span className="small muted">Question {i + 1} of {questions.length} · {q.topic}{q.part ? ` · Part ${q.part}` : ""}{q.level ? ` · ${t(q.level)}` : ""}</span>{left !== null && <b className={left < 300 ? "error" : ""}>⏱ {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</b>}</div>
       <h3>{q.q}</h3>
       <div style={{ display: "grid", gap: 6 }}>{q.options.map((o, k) => {
         const show = mode === "practice" && revealed;
@@ -76,18 +82,28 @@ function ScenarioPlayer({ id, onDone }: { id: string; onDone: () => void }) {
 }
 
 export default function Learn() {
-  const [run, setRun] = useState<{ mode: "practice" | "exam"; topic: string; qs: Question[] } | { scenario: string } | null>(null);
+  const [run, setRun] = useState<{ mode: "practice" | "exam"; topic: string; qs: Question[]; minutes?: number } | { scenario: string } | null>(null);
   const [hist, setHist] = useState<{ attempts: Attempt[]; profile: Record<string, [number, number]> } | null>(null);
   const load = () => api<typeof hist>("/learn/attempts").then(setHist);
   useEffect(() => { load(); }, []);
   const counts = useMemo(() => Object.fromEntries(TOPICS.map((t) => [t, QUESTIONS.filter((q) => q.topic === t).length])), []);
   const done = () => { setRun(null); load(); };
-  if (run) return <>{"scenario" in run ? <ScenarioPlayer id={run.scenario} onDone={done} /> : <Quiz questions={run.qs} mode={run.mode} topic={run.topic} onDone={done} />}<button className="ghost" style={{ marginTop: 8 }} onClick={() => setRun(null)}>Leave</button></>;
+  if (run) return <>{"scenario" in run ? <ScenarioPlayer id={run.scenario} onDone={done} /> : <Quiz questions={run.qs} mode={run.mode} topic={run.topic} minutes={run.minutes} onDone={done} />}<button className="ghost" style={{ marginTop: 8 }} onClick={() => setRun(null)}>Leave</button></>;
+  const partQs = (n?: number) => QUESTIONS.filter((q) => (n ? q.part === n : q.part !== undefined));
+  const startPartExam = (n?: number) => {
+    const all = n === undefined;
+    setRun({ mode: "exam", topic: all ? "All parts mock exam" : `Part ${n} mock exam`, qs: shuffle(partQs(n)).slice(0, all ? EXAM.count : PART_EXAM.count), minutes: all ? EXAM.minutes : PART_EXAM.minutes });
+  };
   const weakest = hist ? Object.entries(hist.profile).filter(([, [, n]]) => n >= 3).sort((a, b) => a[1][0] / a[1][1] - b[1][0] / b[1][1])[0] : undefined;
 
   return (
     <>
       <div className="page-head"><h1>Learn</h1><p className="muted">Short courses, practice questions by topic, a timed mock exam, decision scenarios and an AI interview coach. Questions are written for learning and paraphrase the standards — always check the licensed editions.</p></div>
+      <a className="card lp-learn-link" href="#/learning-paths">
+        <span className="lp-learn-icon" aria-hidden="true">🧭</span>
+        <span className="lp-learn-text"><b>{t("Learning paths")}</b><span className="small muted">{t("Step-by-step plans for modellers, coordinators, BIM and information managers, clients and AI governance leads")}</span></span>
+        <span className="lp-learn-go">{t("Choose a path")} →</span>
+      </a>
       <AssignedTraining />
       <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
         <a className="badge" href="#/learn/guides">📘 Best-practice guides</a>
@@ -105,6 +121,10 @@ export default function Learn() {
           <h3 style={{ marginTop: 0 }}>Mock exam</h3>
           <p className="small">{Math.min(EXAM.count, QUESTIONS.length)} questions across all topics · {EXAM.minutes} minutes · pass mark {EXAM.pass * 100}%. No feedback until you finish.</p>
           <button className="primary" onClick={() => setRun({ mode: "exam", topic: "", qs: shuffle(QUESTIONS).slice(0, EXAM.count) })}>Start mock exam</button>
+          <h3>{t("Mock exam by part")}</h3>
+          <p className="small">{t("Timed exam on one ISO 19650 part")}: {PART_EXAM.count} {t("questions")} · {PART_EXAM.minutes} {t("minutes")}. {t("All parts")}: {EXAM.count} {t("questions")} · {EXAM.minutes} {t("minutes")}.</p>
+          {PARTS.map((n) => { const c = partQs(n).length; return <div key={n} className="row spread" style={{ marginBottom: 6 }}><span>Part {n} <span className="tiny muted">{t(PART_TITLES[n])} ({c})</span></span><button className="small" disabled={!c} onClick={() => startPartExam(n)}>{t("Start")}</button></div>; })}
+          <div className="row spread" style={{ marginBottom: 6 }}><span><b>{t("All parts")}</b> <span className="tiny muted">({partQs().length})</span></span><button className="small" onClick={() => startPartExam()}>{t("Start")}</button></div>
           <h3>Scenarios</h3>
           {SCENARIOS.map((s) => <div key={s.id} className="row spread" style={{ marginBottom: 6 }}><span>{s.title} <span className="tiny muted">{s.topic}</span></span><button className="small" onClick={() => setRun({ scenario: s.id })}>Play</button></div>)}
         </div>
@@ -117,7 +137,7 @@ export default function Learn() {
         </div>
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Recent results</h3>
-          <table className="data"><tbody>{hist.attempts.slice(0, 10).map((a) => <tr key={a.id}><td className="small">{fmtDate(a.createdAt)}</td><td className="small">{a.mode === "exam" ? "Mock exam" : a.topic}</td><td><b>{a.score}/{a.total}</b></td><td className="small muted">{Math.round(a.seconds / 60)} min</td></tr>)}</tbody></table>
+          <table className="data"><tbody>{hist.attempts.slice(0, 10).map((a) => <tr key={a.id}><td className="small">{fmtDate(a.createdAt)}</td><td className="small">{a.mode === "exam" ? (a.topic || "Mock exam") : a.topic}</td><td><b>{a.score}/{a.total}</b></td><td className="small muted">{Math.round(a.seconds / 60)} min</td></tr>)}</tbody></table>
         </div>
       </div>}
       <div className="grid g2" style={{ marginTop: 14 }}><InterviewCoach /><StandardsUpdates /></div>

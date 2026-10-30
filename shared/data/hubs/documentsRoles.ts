@@ -7,7 +7,7 @@ import type { Hub, RoleDoc } from "./types";
 
 // Stage × party document cards for the "Document table" tab. Stage ids match the
 // process19650 clause numbers; party ids match the hub sections.
-const roleDocs: RoleDoc[] = [
+export const roleDocs: RoleDoc[] = [
   // ------------------------------------------------------------ 5.1 Assessment and need
   {
     stage: "5.1", party: "appointing", name: "Information management assignment matrix",

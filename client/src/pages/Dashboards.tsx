@@ -98,7 +98,7 @@ export function Portfolio() {
   useEffect(() => { api<{ projects: PRow[] }>("/me/portfolio").then((r) => setRows(r.projects)); }, []);
   if (!rows) return <p className="muted">Loading…</p>;
   const health = (r: PRow) => (r.overdue > 0 || r.criticalIssues > 0 || r.highRisks > 0 || (r.quality !== null && r.quality < 60) ? "bad" : r.openIssues > 10 || (r.quality !== null && r.quality < 80) ? "warn" : "good");
-  const tone = { good: "var(--ok)", warn: "#d97706", bad: "var(--danger)" } as const;
+  const tone = { good: "var(--ok)", warn: "#38bdf8", bad: "var(--danger)" } as const;
   return (
     <>
       <div className="page-head"><h1>Portfolio dashboard</h1><p className="muted">Information delivery health across all your projects.</p></div>

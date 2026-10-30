@@ -6,12 +6,14 @@ import { WF_ROLES } from "../../../shared/data/workflow/roles";
 import { WF_STAGES } from "../../../shared/data/workflow/stages";
 import { ROLE_IDS, ROLE_TITLES, type Raci, type RoleId, type StageId } from "../../../shared/data/workflow/types";
 import { TONES } from "./HubPage";
+import DocTable from "./DocTable";
 
 // Project workflow, document workflow and who does what: one page with four tabs.
 // /workflow/project/:stage · /workflow/documents/:flow · /workflow/matrix · /workflow/roles/:role
 
 const TABS = [
   { id: "project", label: "Project workflow", hint: "Ten stages from need to operation" },
+  { id: "table", label: "Documents by stage", hint: "Every document by ISO 19650-2 stage and party, each one explained" },
   { id: "documents", label: "Document workflow", hint: "How files and documents move through the CDE" },
   { id: "matrix", label: "Roles by stage", hint: "Who is responsible, accountable, consulted, informed" },
   { id: "roles", label: "Role profiles", hint: "What each stakeholder does and owns" },
@@ -194,6 +196,7 @@ export default function Workflow({ tab, arg }: { tab?: string; arg?: string }) {
         {TABS.map((x) => <a key={x.id} className={"tab" + (cur.id === x.id ? " on" : "")} href={`#/workflow/${x.id}`}>{t(x.label)}</a>)}
       </nav>
       {cur.id === "project" && <ProjectWorkflow stageId={arg} />}
+      {cur.id === "table" && <DocTable />}
       {cur.id === "documents" && <DocumentWorkflow flowId={arg} />}
       {cur.id === "matrix" && <Matrix />}
       {cur.id === "roles" && <RoleProfiles roleId={arg} />}

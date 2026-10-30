@@ -9,6 +9,12 @@ import { mcpHub } from "./mcp";
 import { revision2026Hub } from "./revision2026";
 import { revitHub } from "./revit";
 import { scanToBimHub } from "./scanToBim";
+import { bcfHub } from "./bcf";
+import { cdeHub } from "./cde";
+import { facadeHub } from "./facade";
+import { handoverHub } from "./handover";
+import { iso42001Hub } from "./iso42001";
+import { timelineHub } from "./timeline";
 import type { Hub } from "./types";
 
 export const hubs: Hub[] = [
@@ -17,6 +23,7 @@ export const hubs: Hub[] = [
   { ...dimensionsHub, tone: dimensionsHub.tone ?? "green" },
   revitHub, mcpHub,
   { ...implementationHub, tone: implementationHub.tone ?? "purple" },
+  cdeHub, bcfHub, facadeHub, handoverHub, timelineHub, iso42001Hub,
 ];
 export const hubById = (id: string) => hubs.find((h) => h.id === id);
 

@@ -9,7 +9,7 @@ import type { ProjectData } from "./Project";
 
 interface HsItem { id: string; number: number; hazard: string; location: string; phase: string; description: string; controls: string; residual: string; audience: string; fileId: string | null; ownerId: string | null; status: string }
 const PHASES = ["Design", "Construction", "Operation", "Maintenance", "Demolition"];
-const RESIDUAL_TONE: Record<string, string> = { Low: "#16a34a", Medium: "#d97706", High: "#dc2626" };
+const RESIDUAL_TONE: Record<string, string> = { Low: "#16a34a", Medium: "#38bdf8", High: "#dc2626" };
 const ref = (n: number) => `HS${String(n).padStart(2, "0")}`;
 const BLANK: Partial<HsItem> = { hazard: "", location: "", phase: "Construction", description: "", controls: "", residual: "Medium", audience: "", fileId: null, ownerId: null, status: "Open" };
 

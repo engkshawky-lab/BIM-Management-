@@ -1,0 +1,38 @@
+/* Video library (/videos). Logical properties only, so the layout mirrors in Arabic (RTL). */
+.vid-filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.vid-filters input[type="search"] { flex: 1 1 240px; max-inline-size: 420px; }
+.vid-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.vid-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.vid-chips .chip { border: 1px solid var(--border); cursor: pointer; padding-block: 5px; padding-inline: 10px; font-size: 12.5px; }
+.vid-chips .chip b { margin-inline-start: 4px; opacity: .75; font-weight: 700; }
+.vid-chips .chip.on { background: var(--hub); border-color: var(--hub); color: #fff; }
+
+.vid-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.vid-card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius, 12px); overflow: hidden; }
+.vid-card.seen { border-color: color-mix(in srgb, var(--hub) 45%, var(--border)); }
+.vid-open { display: flex; flex-direction: column; align-items: stretch; text-align: start; padding: 0; border: none; border-radius: 0; background: none; color: inherit; cursor: pointer; flex: 1; font: inherit; }
+.vid-open:focus-visible { outline: 2px solid var(--hub); outline-offset: -2px; }
+.vid-thumb { position: relative; display: block; aspect-ratio: 16 / 9; background: var(--surface-2); overflow: hidden; }
+.vid-thumb img { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.vid-play { position: absolute; inset: 0; margin: auto; inline-size: 52px; block-size: 52px; display: grid; place-items: center; border-radius: 50%;
+  background: color-mix(in srgb, var(--hub) 88%, #000); color: #fff; font-size: 20px; opacity: .9; transition: transform .15s; }
+.vid-open:hover .vid-play { transform: scale(1.08); }
+.vid-seen-badge { position: absolute; inset-block-start: 8px; inset-inline-start: 8px; background: rgba(0,0,0,.7); color: #fff; font-size: 11px; font-weight: 700; padding-block: 2px; padding-inline: 8px; border-radius: 999px; }
+.vid-body { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 4px; }
+.vid-title { font-size: 14.5px; line-height: 1.35; }
+.vid-channel { color: var(--muted); }
+.vid-meta { display: flex; flex-wrap: wrap; gap: 4px; }
+.vid-level.beginner { color: #15803d; }
+.vid-level.intermediate { color: #b45309; }
+.vid-level.advanced { color: #b91c1c; }
+.vid-summary { font-size: 13px; line-height: 1.5; color: var(--text); margin: 0; }
+.vid-actions { padding: 8px 14px 12px; display: flex; justify-content: flex-end; }
+button.vid-on { background: var(--hub); border-color: var(--hub); color: #fff; }
+.vid-note { margin: 0; }
+
+.vid-modal { display: grid; gap: 12px; }
+.vid-modal-head { display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; }
+.vid-modal-head > div { display: flex; flex-direction: column; gap: 2px; }
+.vid-frame { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; }
+.vid-frame iframe { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; border: 0; }
+.vid-modal-actions { gap: 8px; flex-wrap: wrap; }

@@ -6,7 +6,7 @@ import { exportCsv, parseTabular } from "../lib/export";
 import type { ProjectData } from "./Project";
 
 interface Req { id: string; ref: string; text: string; source: string; category: string; response: string; deliverableIds: string[]; coverage: string }
-const COV_COLOR: Record<string, string> = { Delivered: "var(--ok)", Planned: "#2563eb", "Response only": "#d97706", "Not addressed": "var(--danger)" };
+const COV_COLOR: Record<string, string> = { Delivered: "var(--ok)", Planned: "#2563eb", "Response only": "#38bdf8", "Not addressed": "var(--danger)" };
 
 /** Requirement -> BEP response -> MIDP containers -> delivered, with coverage gaps. */
 export default function Traceability({ data }: { data: ProjectData }) {

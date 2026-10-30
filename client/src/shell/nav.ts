@@ -69,6 +69,7 @@ export const TEMPLATE_PAGES: NavItem[] = templates.map((t) =>
 /** Documents and delivery, in the order work is done: project data and setup, create, check, then templates. */
 export const DOCUMENT_PAGES: NavItem[] = [
   g("w.project", "Project workflow", "/workflow/project", "flow", "Workflow & roles", "Ten stages from need to operation: steps, gates, documents"),
+  g("w.table", "Documents by stage", "/workflow/table", "grid", "Workflow & roles", "Every document by ISO 19650-2 stage and party, each one explained"),
   g("w.documents", "Document workflow", "/workflow/documents", "files", "Workflow & roles", "How files and documents move through the CDE, step by step"),
   g("w.matrix", "Roles by stage", "/workflow/matrix", "table", "Workflow & roles", "Who is responsible, accountable, consulted and informed at each stage"),
   g("w.roles", "Role profiles", "/workflow/roles", "users", "Workflow & roles", "BIM manager, information manager, BIM coordinator and every other role"),
@@ -106,6 +107,8 @@ export const MODEL_PAGES: NavItem[] = [
 export const LEARN_PAGES: NavItem[] = [
   g("s.learn", "Quizzes, mock exam, scenarios", "/learn", "sparkles", "Start here", "Practice questions, timed exam, skill profile"),
   g("s.guides", "Best-practice guides", "/learn/guides", "book", "Start here", "Practical guidance for modellers, coordinators and managers"),
+  g("s.paths", "Learning paths by role", "/learning-paths", "flow", "Start here", "Step-by-step routes for modellers, coordinators and managers"),
+  g("s.videos", "Video library", "/videos", "activity", "Start here", "Free, verified videos by topic and level"),
   g("s.adoption", "Implementation guide", "/learn/adoption", "flow", "Start here", "Adopt ISO 19650 across your organization, step by step"),
   g("s.19650.parts", "All parts (1–6): learning hub", "/parts", "book", "ISO 19650 parts", "Beginner to expert, clause deep dives, checklists, Ask AI"),
   ...[1, 2, 3, 4, 5, 6].map((n) => g(`s.19650.part${n}`, `Part ${n}`, `/parts/19650-${n}`, "book", "ISO 19650 parts")),
@@ -114,6 +117,7 @@ export const LEARN_PAGES: NavItem[] = [
   g("s.19650.process", "Delivery process (19650-2)", "/knowledge/iso19650/library/1", "flow", "ISO 19650 essentials"),
   g("s.19650.cde", "CDE & status codes", "/knowledge/iso19650/library/2", "layers", "ISO 19650 essentials"),
   g("s.19650.glossary", "Glossary & acronyms", "/knowledge/iso19650/library/3", "text", "ISO 19650 essentials"),
+  g("s.glossary", "Glossary & acronym decoder (EN/AR)", "/glossary", "text", "ISO 19650 essentials", "400+ BIM terms and acronyms in English and Arabic"),
   g("s.uses", "Information uses library", "/knowledge/iso19650/uses", "target", "ISO 19650 essentials"),
   g("s.hubs", "All topic hubs", "/hubs", "grid", "Topic hubs", "Every in-depth guide, grouped by theme"),
   g("s.hub.appointment", "Appointment process diagram", "/hubs/appointment", "flow", "Topic hubs", "Interactive ISO 19650-2 process: who does what, inputs, outputs"),
@@ -125,7 +129,13 @@ export const LEARN_PAGES: NavItem[] = [
   g("s.hub.scan", "Scan to BIM", "/hubs/scan-to-bim", "layers", "Topic hubs", "Reality capture, accuracy, workflow, cost estimator"),
   g("s.hub.infra", "Infrastructure BIM & ISO 19650", "/hubs/infrastructure", "layers", "Topic hubs", "Roads, rail, bridges, utilities"),
   g("s.hub.dimensions", "BIM dimensions (4D–7D, net zero)", "/hubs/dimensions", "layers", "Topic hubs", "4D time, 5D cost, 6D carbon, 7D FM, net zero"),
+  g("s.hub.cde", "CDE deep guide", "/hubs/cde", "layers", "Topic hubs", "States, status and revision codes, set-up, platforms and daily operation"),
+  g("s.hub.bcf", "BCF learning hub", "/hubs/bcf", "flag", "Topic hubs", "Issues, viewpoints, versions, workflows and coordination meetings"),
+  g("s.hub.facade", "Façade BIM coordination", "/hubs/facade", "building", "Topic hubs", "Specialist packages, interfaces, fabrication and façade asset data"),
+  g("s.hub.handover", "Handover guide (PIM → AIM)", "/hubs/handover", "handshake", "Topic hubs", "Strategy, AIM content, data quality, CAFM loading and acceptance"),
+  g("s.hub.timeline", "BIM standards timeline", "/hubs/timeline", "calendar", "Topic hubs", "From BS 1192 and PAS 1192 to ISO 19650, IFC, IDS and BCF"),
   g("s.hub.implementation", "BIM implementation best practices", "/hubs/implementation", "flow", "Topic hubs", "Strategy, maturity, people, process, technology, KPIs"),
+  g("s.hub.iso42001", "ISO/IEC 42001 learning hub", "/hubs/iso42001", "sparkles", "ISO/IEC 42001", "Clauses, Annex A, AI in BIM, roadmap, Q&A and quiz"),
   g("s.42001.clauses", "Clauses 4–10", "/knowledge/iso42001/library/0", "book", "ISO/IEC 42001"),
   g("s.42001.annex", "Annex A controls", "/knowledge/iso42001/library/1", "shield", "ISO/IEC 42001"),
   g("s.42001.aibim", "AI in BIM", "/knowledge/iso42001/library/2", "sparkles", "ISO/IEC 42001"),

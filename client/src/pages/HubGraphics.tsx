@@ -4,7 +4,7 @@ import type { GraphicId } from "../../../shared/data/hubs/types";
 // Built-in explanatory illustrations for the hubs. Drawn as SVG with theme colours so they read in
 // light and dark mode; labels are plain text nodes, so the Arabic layer translates them too.
 
-const C = { blue: "#3b82f6", green: "#16a34a", amber: "#d97706", purple: "#9333ea", red: "#dc2626", teal: "#0d9488" };
+const C = { blue: "#3b82f6", green: "#16a34a", amber: "#38bdf8", purple: "#9333ea", red: "#dc2626", teal: "#0d9488" };
 const ink = "var(--text)", muted = "var(--muted)", card = "var(--surface-2)";
 
 /**

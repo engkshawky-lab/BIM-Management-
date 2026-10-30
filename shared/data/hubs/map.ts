@@ -9,10 +9,11 @@ export type HubId = Hub["id"];
 export interface Theme { id: string; label: string; blurb: string; hubs: HubId[] }
 
 export const THEMES: Theme[] = [
-  { id: "process", label: "The ISO 19650 process", blurb: "Who does what, when, and which documents each party produces.", hubs: ["revision-2026", "appointment", "documents-roles"] },
-  { id: "requirements", label: "Information requirements", blurb: "How much information is needed, and how it is handed over.", hubs: ["loin", "cobie"] },
-  { id: "software", label: "Software, models & AI", blurb: "Producing and checking information with Revit, reality capture and AI.", hubs: ["revit", "mcp", "scan-to-bim"] },
-  { id: "strategy", label: "Sectors & strategy", blurb: "Applying ISO 19650 to infrastructure, beyond 3D, and across an organisation.", hubs: ["infrastructure", "dimensions", "implementation"] },
+  { id: "process", label: "The ISO 19650 process", blurb: "Who does what, when, and which documents each party produces.", hubs: ["revision-2026", "appointment", "documents-roles", "cde"] },
+  { id: "requirements", label: "Information requirements", blurb: "How much information is needed, and how it is handed over.", hubs: ["loin", "cobie", "handover"] },
+  { id: "software", label: "Software, models & AI", blurb: "Producing and checking information with Revit, reality capture and AI.", hubs: ["revit", "mcp", "bcf", "scan-to-bim"] },
+  { id: "strategy", label: "Sectors & strategy", blurb: "Applying ISO 19650 to infrastructure, beyond 3D, and across an organisation.", hubs: ["infrastructure", "facade", "dimensions", "implementation"] },
+  { id: "governance", label: "Standards & AI governance", blurb: "Where the standards came from, and managing AI responsibly under ISO/IEC 42001.", hubs: ["timeline", "iso42001"] },
 ];
 
 /** Hubs in learning order, theme by theme. */
@@ -29,6 +30,60 @@ export interface HubLinks {
 }
 
 export const HUB_LINKS: Record<HubId, HubLinks> = {
+  cde: {
+    related: [
+      { hub: "appointment", why: "Where the CDE is set up and tested in the process" },
+      { hub: "bcf", why: "Issues raised against shared information" },
+      { hub: "handover", why: "Archiving the PIM and publishing the AIM" },
+    ],
+    tools: ["s.19650.cde", "w.documents", "m.naming", "ai.suitability"],
+    parts: [1, 2, 5],
+  },
+  bcf: {
+    related: [
+      { hub: "cde", why: "Issues follow shared and published information" },
+      { hub: "revit", why: "Raising and resolving issues in the authoring tool" },
+      { hub: "mcp", why: "AI help to triage and summarise issues" },
+    ],
+    tools: ["b.bcf", "ai.clash", "m.ifc"],
+    parts: [2, 4],
+  },
+  facade: {
+    related: [
+      { hub: "loin", why: "Level of information need for façade packages" },
+      { hub: "handover", why: "Panel, glass and warranty data for operation" },
+      { hub: "bcf", why: "Coordinating façade interfaces as issues" },
+    ],
+    tools: ["ai.generate", "ai.clash", "b.ids"],
+    parts: [2, 6],
+  },
+  handover: {
+    related: [
+      { hub: "cobie", why: "The structured asset data at handover" },
+      { hub: "cde", why: "Statuses and archiving at close-out" },
+      { hub: "loin", why: "What information the operator needs" },
+    ],
+    tools: ["ai.cobie", "w.docguides", "w.table", "b.ids"],
+    parts: [2, 3, 6],
+  },
+  timeline: {
+    related: [
+      { hub: "revision-2026", why: "The next chapter of the series" },
+      { hub: "appointment", why: "The process the standards describe" },
+      { hub: "iso42001", why: "The AI management standard alongside ISO 19650" },
+    ],
+    tools: ["s.19650.parts", "s.glossary"],
+    parts: [1, 2, 3, 4, 5, 6],
+  },
+  iso42001: {
+    related: [
+      { hub: "mcp", why: "AI connected to BIM tools needs governance" },
+      { hub: "implementation", why: "Rolling out a management system" },
+      { hub: "timeline", why: "How the standards landscape fits together" },
+    ],
+    tools: ["s.42001.clauses", "s.42001.annex", "t.lib42001", "ai.generate"],
+    parts: [1],
+  },
   "revision-2026": {
     related: [
       { hub: "appointment", why: "The 2018 process that stays in force until the new editions" },
