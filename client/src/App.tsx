@@ -99,7 +99,7 @@ export default function App() {
   else if (parts[0] === "downloads") view = <DownloadsLibrary />;
   else if (parts[0] === "news") view = <NewsFeed />;
   else if (parts[0] === "samples") view = <SampleDocuments />;
-  else if (parts[0] === "parts") view = <PartsHub key={parts[1] ?? ""} partId={parts[1]} />;
+  else if (parts[0] === "parts") view = <PartsHub key={parts[1] ?? ""} partId={parts[1]} tab={parts[2]} />;
   else if (parts[0] === "standards") view = <ClientStandards id={parts[1]} />;
   else if (parts[0] === "profile") view = <ProfilePage />;
   else view = <Home />;

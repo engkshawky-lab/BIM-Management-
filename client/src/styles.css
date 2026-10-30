@@ -433,7 +433,7 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 [dir="rtl"] .gantt, [dir="rtl"] .gantt-wrap, [dir="rtl"] input[type=range], [dir="rtl"] svg, [dir="rtl"] .mono, [dir="rtl"] code, [dir="rtl"] input[type=email], [dir="rtl"] input[type=date] { direction: ltr; }
 
 /* ---------- Topic hubs, parts hub and AI tools: colourful, friendly layout. --hub is the page accent. ---------- */
-.hub { --hub: var(--accent); display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+.hub { --hub: var(--accent); --c: var(--hub); display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
 .hub > *, .hub .grid > * { min-width: 0; }
 .hub-hero { position: relative; overflow: hidden; border-radius: 16px; padding: 22px 24px; color: #fff;
   background: linear-gradient(120deg, color-mix(in srgb, var(--hub) 92%, #0b1220), color-mix(in srgb, var(--hub) 55%, #312e81)); }
@@ -539,3 +539,25 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .hub-theme-head { display: flex; align-items: center; gap: 12px; padding-top: 8px; }
 .hub-theme-head h2 { margin: 0; font-size: 18px; }
 .hub-theme-n { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #fff; background: var(--c); }
+
+/* ISO 19650 parts: how the six parts fit together */
+.pmap { display: grid; gap: 10px; }
+.pmap-layer { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 12px; }
+.pmap-overlay { border-style: solid; border-color: color-mix(in srgb, var(--danger) 35%, var(--border)); }
+.pmap-base { background: color-mix(in srgb, var(--hub) 8%, var(--surface)); border-style: solid; }
+.pmap-note { color: var(--muted); font-size: 13px; flex: 1 1 220px; }
+.pmap-life { display: grid; grid-template-columns: 1fr minmax(160px, 220px) 1fr; gap: 10px; align-items: center; }
+.pmap-phase { display: grid; gap: 6px; justify-items: start; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
+.pmap-phase-title { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.pmap-out { font-size: 12.5px; color: var(--muted); }
+.pmap-arrows { display: grid; gap: 8px; text-align: center; font-size: 12.5px; }
+.pmap-arrow { padding: 6px 8px; border-radius: 8px; background: color-mix(in srgb, var(--hub) 12%, transparent); color: var(--text); }
+.pmap-arrow.back { background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.pmap-node { display: inline-flex; align-items: center; gap: 10px; color: var(--text); padding: 6px 12px 6px 6px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); }
+.pmap-node:hover { border-color: var(--hub); }
+.pmap-node b { display: block; font-size: 14px; } .pmap-node small { display: block; color: var(--muted); font-size: 11.5px; }
+.pmap-num, .part-num { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--hub); color: #fff; font-weight: 800; font-size: 17px; flex-shrink: 0; }
+.part-num { width: 46px; height: 46px; border-radius: 12px; font-size: 22px; }
+.use-dot { color: var(--muted); font-size: 15px; } .use-dot.core { color: var(--hub); font-size: 17px; }
+.tab-count { margin-inline-start: 6px; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
+@media (max-width: 760px) { .pmap-life { grid-template-columns: 1fr; } }
