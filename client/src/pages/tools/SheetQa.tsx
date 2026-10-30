@@ -4,10 +4,9 @@ import { useSession } from "../../App";
 import { t } from "../../i18n";
 import { ApiError, api } from "../../lib/api";
 import { exportCsv } from "../../lib/export";
-import { activePlan } from "../../lib/planStore";
+import { activePlan, rowName } from "../../lib/planStore";
 import { useProjectData } from "../../lib/projectStore";
 import { formatMsg } from "../../../../shared/namingCheck";
-import { containerName } from "../../../../shared/planRows";
 import {
   CHECKS, TITLE_FIELDS, checkDetail, checkRows, checkSheet, emptyTitleBlock, issuesText, overall, summarise, toRows, transmittalList,
   type CheckStatus, type Confidence, type ExtractedSheet, type PlanEntry, type SheetResult, type TitleBlock,
@@ -101,7 +100,7 @@ export default function SheetQa() {
   const [showTrn, setShowTrn] = useState(false);
 
   const planEntries: PlanEntry[] | undefined = useMemo(() => (usePlan && plan
-    ? plan.rows.map((r) => ({ name: containerName(plan.header, r), due: r.due, title: r.title, suitability: r.suitability })) : undefined), [usePlan, plan]);
+    ? plan.rows.map((r) => ({ name: rowName(plan, r), due: r.due, title: r.title, suitability: r.suitability })) : undefined), [usePlan, plan]);
   const rules = useMemo(() => ({ separator: sep, projectCode: code.trim() || undefined, originators: orgs.split(/[,;\s]+/).filter(Boolean) }), [sep, code, orgs]);
 
   const results = useMemo(() => sheets.map((s): SheetResult & { key: string; manual?: boolean } => ({

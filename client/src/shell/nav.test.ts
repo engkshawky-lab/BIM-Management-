@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ALL_PAGES, DAILY_TOOLS, HOME_PAGES, SECTIONS, groupsOf, locate, pageByKey } from "./nav";
 import { BIM_ROLES } from "./roles";
+import { LEARNING_PATHS } from "../../../shared/data/learningPaths";
+import { ROLE_IDS } from "../../../shared/data/workflow/types";
 
 describe("navigation layout", () => {
   it("defines every page once", () => {
@@ -35,6 +37,9 @@ describe("navigation layout", () => {
 
   it("keeps shortcuts and role favourites pointing at real pages", () => {
     for (const k of DAILY_TOOLS) expect(pageByKey(k), k).toBeTruthy();
-    for (const r of BIM_ROLES) for (const k of r.tools) expect(pageByKey(k), `${r.id}: ${k}`).toBeTruthy();
+    for (const r of BIM_ROLES) for (const k of [...r.tools, ...r.pages]) expect(pageByKey(k), `${r.id}: ${k}`).toBeTruthy();
+    // pages that work without a project, so the role filter is useful from day one
+    for (const r of BIM_ROLES) expect(r.pages.every((k) => pageByKey(k)?.scope === "global"), r.id).toBe(true);
+    for (const r of BIM_ROLES) { expect(LEARNING_PATHS.some((p) => p.id === r.path), r.path).toBe(true); expect(ROLE_IDS as string[], r.profile).toContain(r.profile); }
   });
 });

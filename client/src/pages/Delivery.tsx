@@ -8,6 +8,7 @@ import { changeImpact } from "../../../shared/impact";
 import { RACI_STARTER } from "../../../shared/data/raciStarter";
 import { LODS, LOD_MEANING, mrmFindings, type Lod, type MrmCell } from "../../../shared/mrm";
 import { api, canEdit, type Member } from "../lib/api";
+import { planSource, refreshProjectPlan, setPlanSource } from "../lib/planStore";
 import { exportCsv, parseTabular } from "../lib/export";
 import { Handover, Risks } from "./Coordination";
 import type { ProjectData } from "./Project";
@@ -176,6 +177,19 @@ function Gantt({ data, items }: { data: DeliveryData; items: DeliveryData["deliv
   );
 }
 
+/** Make this project's plan the one My Day, the Today card and the checkers work from. */
+function UseInMyDay({ project }: { project: ProjectData["project"] }) {
+  const src = planSource();
+  const [on, setOn] = useState(src.kind === "project" && src.projectId === project.id);
+  const use = async () => { await refreshProjectPlan(project.id, project.code, project.name); setPlanSource({ kind: "project", projectId: project.id, code: project.code, name: project.name }); setOn(true); };
+  return (
+    <div className="hub-tile row spread small" style={{ marginBottom: 12 }}>
+      <span>{on ? <><b>This plan feeds My Day.</b> The Today card, the file naming checker and sheet QA also use it.</> : <><b>My Day uses another plan.</b> Make this project's plan the one My Day, the Today card and the checkers work from.</>}</span>
+      {on ? <a className="btn small" href="#/my-day">Open My Day →</a> : <button className="primary small" onClick={use}>Use this plan in My Day</button>}
+    </div>
+  );
+}
+
 function Planner({ d, project, members, role, call }: { d: DeliveryData; project: ProjectData["project"]; members: Member[]; role: ProjectData["role"]; call: ReturnType<typeof useDelivery>["call"] }) {
   const [teamFilter, setTeamFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -198,6 +212,7 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
 
   return (
     <>
+      <UseInMyDay project={project} />
       <div className="grid g4" style={{ marginBottom: 12 }}>
         <div className="card"><div className="small muted">Containers</div><div className="stat">{d.stats.total}</div><Progress value={d.stats.progress} /><div className="tiny muted">{Math.round(d.stats.progress * 100)}% shared or published</div></div>
         <div className="card"><div className="small muted">In progress</div><div className="stat">{d.stats.inProgress}</div><div className="tiny muted">{d.stats.planned} planned</div></div>

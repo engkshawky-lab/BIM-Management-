@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ASSESSMENTS, CARBON_MATERIALS, COMPLEXITY, FEE_SERVICES, estimateCarbon, estimateFee, scoreAssessment } from "../../../shared/tools";
 import { useSession } from "../App";
-import { api, fmtDate } from "../lib/api";
+import { api, fmtDate, type Project } from "../lib/api";
 import { exportCsv } from "../lib/export";
-import { activePlan, updatePlanRow } from "../lib/planStore";
-import { STATUSES, containerName, dueBucket, type DueBucket } from "../../../shared/planRows";
+import { activePlan, planSource, refreshProjectPlan, rowName, setPlanSource, updatePlanRow, type PlanSource } from "../lib/planStore";
+import { STATUSES, dueBucket, type DueBucket } from "../../../shared/planRows";
 
 // ---------------------------------------------------------------- My Day
 
@@ -22,13 +22,46 @@ const BUCKETS: { id: DueBucket; label: string; color: string }[] = [
   { id: "fortnight", label: "Due in 8–14 days", color: "var(--accent)" }, { id: "undated", label: "No due date", color: "var(--muted)" },
 ];
 
-/** Open containers from the TIDP/MIDP saved in this browser, grouped by due date, with a one-click status update. */
+/** Which plan My Day, the Today card and the checkers use: the plan generator in this browser, or a project's planner. */
+function PlanSourcePicker({ onChange }: { onChange: () => void }) {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [src, setSrc] = useState<PlanSource>(() => planSource());
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  useEffect(() => { api<{ projects: Project[] }>("/projects").then((r) => setProjects(r.projects)).catch(() => undefined); }, []);
+  const pick = async (v: string) => {
+    setErr("");
+    if (v === "browser") { const s: PlanSource = { kind: "browser" }; setPlanSource(s); setSrc(s); onChange(); return; }
+    const p = projects.find((x) => x.id === v); if (!p) return;
+    setBusy(true);
+    try { await refreshProjectPlan(p.id, p.code, p.name); const s: PlanSource = { kind: "project", projectId: p.id, code: p.code, name: p.name }; setPlanSource(s); setSrc(s); onChange(); }
+    catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <div className="row small plan-source" style={{ gap: 8, marginBottom: 10 }}>
+      <span className="muted">Plan used by My Day, the Today card and the checkers:</span>
+      <select value={src.kind === "project" ? src.projectId : "browser"} onChange={(e) => pick(e.target.value)} disabled={busy} style={{ width: "auto" }} aria-label="Plan source">
+        <option value="browser">Plan generator (this browser)</option>
+        {projects.map((p) => <option key={p.id} value={p.id}>{p.code} — MIDP / TIDP planner</option>)}
+      </select>
+      {src.kind === "project" && <button className="ghost small" disabled={busy} onClick={() => pick(src.projectId)}>Refresh</button>}
+      {busy && <span className="muted">Loading the project plan…</span>}{err && <span className="error">{err}</span>}
+    </div>
+  );
+}
+
+/** Open containers from the chosen plan, grouped by due date. Browser plans get a one-click status update; project plans are updated in the project. */
 function PlanToday() {
   const [plan, setPlan] = useState(() => activePlan());
   const [open, setOpen] = useState<DueBucket | "">("");
-  if (!plan) return (
-    <div className="card dashed" style={{ marginBottom: 12 }}><b>No delivery plan yet.</b> <span className="muted">Create a TIDP or MIDP and its containers appear here every day, sorted by due date.</span> <a href="#/ai-tools/plans">Open the plan generator →</a></div>
-  );
+  // keep a project plan current: refresh the snapshot each time My Day opens
+  useEffect(() => { const src = planSource(); if (src.kind === "project") refreshProjectPlan(src.projectId, src.code, src.name).then(setPlan).catch(() => undefined); }, []);
+  const picker = <PlanSourcePicker onChange={() => setPlan(activePlan())} />;
+  if (!plan) return (<>
+    {picker}
+    <div className="card dashed" style={{ marginBottom: 12 }}><b>No delivery plan yet.</b> <span className="muted">Create a TIDP or MIDP in the plan generator, or choose a project above to use its MIDP / TIDP planner. Its containers then appear here every day, sorted by due date.</span> <a href="#/ai-tools/plans">Open the plan generator →</a></div>
+  </>);
+  const fromProject = !!plan.project;
   const day = new Date().toISOString().slice(0, 10);
   const rows = plan.rows.map((r) => ({ r, b: dueBucket(r, day) })).filter((x) => x.b && x.b !== "later");
   const later = plan.rows.filter((r) => dueBucket(r, day) === "later").length;
@@ -37,7 +70,8 @@ function PlanToday() {
   const shown = BUCKETS.filter((b) => (open ? b.id === open : b.id !== "undated"));
   return (
     <section style={{ marginBottom: 16 }}>
-      <div className="row spread"><h2 style={{ margin: "8px 0" }}>{plan.kind.toUpperCase()} · {plan.header.projectCode || plan.header.projectName || "Delivery plan"}</h2>
+      {picker}
+      <div className="row spread"><h2 style={{ margin: "8px 0" }}>{fromProject ? "Project plan" : plan.kind.toUpperCase()} · {plan.header.projectCode || plan.header.projectName || "Delivery plan"}</h2>
         <span className="small muted">{done} of {plan.rows.length} published · {later} due later</span></div>
       <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 10, marginBottom: 10 }}>
         {BUCKETS.map((b) => <button key={b.id} className={"card stat-card" + (open === b.id ? " on" : "")} style={{ textAlign: "start" }} onClick={() => setOpen(open === b.id ? "" : b.id)}>
@@ -48,15 +82,17 @@ function PlanToday() {
           <b style={{ color: b.color }}>{b.label}</b>
           <div className="table-wrap"><table className="data"><tbody>{list.map(({ r }) => (
             <tr key={r.ref} className={b.id === "overdue" ? "late" : ""}>
-              <td className="mono small no-i18n nowrap">{containerName(plan.header, r)}</td>
+              <td className="mono small no-i18n nowrap">{rowName(plan, r)}</td>
               <td className="small">{r.title}<div className="tiny muted">{[r.taskTeam, r.responsible, r.milestone].filter(Boolean).join(" · ")}</div></td>
               <td className="small nowrap">{r.due || "—"}</td>
-              <td style={{ width: 140 }}><select value={r.status} onChange={(e) => setStatus(r.ref, e.target.value)} aria-label="Status">{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></td>
+              <td style={{ width: 140 }}>{fromProject ? <span className="small">{r.status}</span> : <select value={r.status} onChange={(e) => setStatus(r.ref, e.target.value)} aria-label="Status">{STATUSES.map((s) => <option key={s}>{s}</option>)}</select>}</td>
             </tr>))}</tbody></table></div>
         </div>) : null; })}
       {!rows.some((x) => x.b !== "undated") && !open && <p style={{ color: "var(--ok)" }}>✔ Nothing due in the next 14 days.</p>}
       {rows.some((x) => x.b === "undated") && !open && <div className="hub-tile small" style={{ "--c": "var(--warn)", marginBottom: 8 } as CSSProperties}>Containers without a due date never show as due. Add due dates in the <a href="#/ai-tools/plans">plan generator</a> (the Due column), or set the milestone dates before you load the starter list.</div>}
-      <p className="tiny muted">Status changes update the {plan.kind.toUpperCase()} saved in this browser. <a href="#/ai-tools/plans">Open the full plan →</a></p>
+      {fromProject
+        ? <p className="tiny muted">From the project's MIDP / TIDP planner. Change statuses and dates there. <a href={`#/projects/${plan.project!.id}/delivery/plan`}>Open the project planner →</a></p>
+        : <p className="tiny muted">Status changes update the {plan.kind.toUpperCase()} saved in this browser. <a href="#/ai-tools/plans">Open the full plan →</a></p>}
     </section>
   );
 }

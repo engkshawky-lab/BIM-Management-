@@ -6,7 +6,7 @@ import { clauses42001, glossary42001 } from "../../../shared/data/iso42001";
 import { api, canManage, type Notification, type Project } from "../lib/api";
 import { Icon } from "./icons";
 import { ALL_PAGES, PROJECT_PAGES, SECTIONS, TEMPLATE_PAGES, groupsOf, hrefFor, labelForRoute, locate, pageByKey, type NavItem } from "./nav";
-import { BIM_ROLES, roleById } from "./roles";
+import { BIM_ROLES, roleById, roleKeys } from "./roles";
 
 // ---------------------------------------------------------------- per-user local conveniences
 
@@ -141,7 +141,8 @@ function Sidebar({ route, projects, project, onAsk, onRole, onHide, theme, setTh
   const role = roleById(roleId);
   const term = q.trim().toLowerCase();
   const found = (i: NavItem) => !term || [i.label, i.group, i.hint ?? "", t(i.label), t(i.group)].join(" ").toLowerCase().includes(term);
-  const match = (i: NavItem) => found(i) && (!role || role.tools.includes(i.key));
+  const roleSet = role ? roleKeys(role) : null;
+  const match = (i: NavItem) => found(i) && (!roleSet || roleSet.has(i.key));
   const filtering = !!term || !!role;
 
   const favItems = (user.favourites ?? []).map(pageByKey).filter((x): x is NavItem => !!x);
@@ -328,7 +329,7 @@ export function RolePicker({ onClose }: { onClose: () => void }) {
   const apply = async () => {
     const role = roleById(pick);
     if (!role) return;
-    const favourites = [...new Set([...(user.favourites ?? []), ...role.tools])];
+    const favourites = [...new Set([...(user.favourites ?? []), ...role.pages, ...role.tools])];
     try { const r = await api<{ user: typeof user }>("/profile", { method: "PUT", body: { bimRole: role.id, favourites } }); setUser(r.user); toast(`Favourites built for ${role.title}`); onClose(); }
     catch (e) { toast((e as Error).message, "error"); }
   };
@@ -345,7 +346,7 @@ export function RolePicker({ onClose }: { onClose: () => void }) {
               <span className="role-card-icon"><Icon name={r.icon} size={20} /></span>
               <b>{r.title}</b>
               <span className="role-desc">{r.description}</span>
-              <span className="chip">{r.tools.length} tools</span>
+              <span className="row" style={{ gap: 6 }}><span className="chip">{r.pages.length + r.tools.length} pages</span><span className="small muted">+ learning path</span></span>
             </button>
           ))}
         </div>

@@ -109,6 +109,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
 
   return (
     <div style={{ display: "grid", gap: 12 }}>
+      <div className="hub-tile small">Writing a full EIR and AIR, or a BEP that answers a client's EIR? The AI studio has dedicated tools: <a href="#/ai-studio/eir-writer">EIR writer</a> · <a href="#/ai-studio/bep-writer">BEP from EIR</a>.</div>
       <div className="row">{STEPS.map((s, i) => <span key={s} className="chip" style={i + 1 === step ? { background: "var(--hub)", color: "#fff" } : i + 1 < step ? { color: "var(--ok)" } : undefined}>{i + 1 < step ? "✓" : i + 1}. {s}</span>)}</div>
 
       {!outline && <ProjectDataGate docType={f.docType} what={f.docType || "this document"} />}
@@ -235,6 +236,7 @@ export function ReviewTool() {
     <div style={{ display: "grid", gap: 12 }}>
       <div className="row">
         <div className="seg">{([["single", "Single document review"], ["eir-bep", "EIR ↔ BEP compliance"], ["bep-versions", "BEP version compare"]] as const).map(([k, l]) => <button key={k} className={mode === k ? "on" : ""} onClick={() => { setMode(k); setResult(null); }}>{l}</button>)}</div>
+        {mode === "eir-bep" && <div className="hub-tile small" style={{ flexBasis: "100%" }}>For a requirement-by-requirement matrix with suggested BEP wording and an addendum, use the <a href="#/ai-studio/compliance">EIR ↔ BEP compliance matrix</a> in the AI studio.</div>}
         {mode === "single" && <select value={docType} onChange={(e) => setDocType(e.target.value)} style={{ width: "auto" }}>
           {REVIEW_TYPES.map((d) => <option key={d} value={d}>{d === "auto" ? "Auto-detect document type" : d}</option>)}</select>}
       </div>
