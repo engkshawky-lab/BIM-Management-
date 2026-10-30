@@ -5,7 +5,7 @@ import { glossary19650, process19650 } from "../../../shared/data/iso19650";
 import { clauses42001, glossary42001 } from "../../../shared/data/iso42001";
 import { api, canManage, type Notification, type Project } from "../lib/api";
 import { Icon } from "./icons";
-import { ALL_PAGES, PROJECT_PAGES, RAIL, RESOURCE_PAGES, STANDARD_PAGES, TEMPLATE_PAGES, TOOL_PAGES, hrefFor, labelForRoute, pageByKey, sectionFor, type NavItem } from "./nav";
+import { ALL_PAGES, DAILY_TOOLS, DOCUMENT_PAGES, HOME_PAGES, MODEL_PAGES, PROJECT_PAGES, RAIL, RESOURCE_PAGES, STANDARD_PAGES, TEMPLATE_PAGES, hrefFor, labelForRoute, pageByKey, sectionFor, type NavItem } from "./nav";
 import { BIM_ROLES, roleById } from "./roles";
 import { SupportForm } from "../pages/Support";
 
@@ -79,6 +79,9 @@ function Panel({ section, route, projects, project, onRole, onClose }: { section
     const favItems = (user.favourites ?? []).map(pageByKey).filter((x): x is NavItem => !!x);
     body = <>
       <a className={"panel-link" + (route === "/" ? " on" : "")} href="#/"><Icon name="grid" size={16} /><span>{t("Dashboard")}</span></a>
+      <Groups items={filter(HOME_PAGES)} route={route} favs={favs} empty="" />
+      <div className="panel-group"><div className="panel-group-title">{t("Daily tools")}</div>
+        {filter(DAILY_TOOLS.map(pageByKey).filter((x): x is NavItem => !!x)).map((i) => <PanelLink key={i.key} item={i} projectId={project?.id} active={route === hrefFor(i, project?.id)} />)}</div>
       <div className="panel-group"><div className="panel-group-title">{t("Favourites")}</div>
         {favItems.length ? filter(favItems).map((i) => <PanelLink key={i.key} item={i} projectId={project?.id} active={route === hrefFor(i, project?.id)} />)
           : <p className="panel-empty">Use the ☆ Favourite button at the top of any page to pin it here.</p>}</div>
@@ -88,8 +91,8 @@ function Panel({ section, route, projects, project, onRole, onClose }: { section
       <button className="panel-cta" onClick={onRole}><Icon name="target" size={16} />{user.bimRole ? `Role: ${roleById(user.bimRole)?.title} — change` : "Set my role & suggested favourites"}</button>
     </>;
   } else if (section === "standards") body = <Groups items={filter(STANDARD_PAGES)} route={route} favs={favs} empty="No pages match." />;
-  else if (section === "documents") body = <Groups items={filter(TEMPLATE_PAGES)} route={route} favs={favs} empty="No templates match." />;
-  else if (section === "tools") body = <Groups items={filter(TOOL_PAGES)} route={route} favs={favs} empty="No tools match." />;
+  else if (section === "documents") body = <Groups items={filter(DOCUMENT_PAGES)} route={route} favs={favs} empty="No pages match." />;
+  else if (section === "tools") body = <Groups items={filter(MODEL_PAGES)} route={route} favs={favs} empty="No tools match." />;
   else if (section === "resources") body = <Groups items={filter(RESOURCE_PAGES)} route={route} favs={favs} empty="No pages match." />;
   else if (section === "projects") {
     body = <>
@@ -107,7 +110,8 @@ function Panel({ section, route, projects, project, onRole, onClose }: { section
     body = <div className="help-body">
       <p><b>Search anything</b> — press <kbd>Ctrl</kbd> <kbd>K</kbd> (<kbd>⌘</kbd> <kbd>K</kbd> on Mac) to jump to any page, template or project.</p>
       <p><b>Favourites</b> — pin pages with ☆ Favourite; set your BIM role to get a starter list.</p>
-      <p><b>Projects</b> are organised in hubs: Overview, Information (CDE), Delivery, Model & coordination, Quality & team.</p>
+      <p><b>The menu follows your work</b>: Home (your day), Projects, Documents (project data → create → check), Models (checks and AI), Learn, Resources.</p>
+      <p><b>Projects</b> follow ISO 19650-2: Overview, Appointment & planning, Information (CDE), Model & coordination, Control & handover, Team.</p>
       <p><b>Roles</b> — viewers read and comment, editors create and edit, managers approve, publish and manage the team.</p>
       <p><b>Data entered once</b> — MIDP, TIDP, responsibility matrix and risk register documents are generated from their data.</p>
       <p style={{ marginBottom: 4 }}><b>Feedback & support</b> <a className="small" href="#/support">My requests</a></p>
