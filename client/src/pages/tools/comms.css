@@ -1,0 +1,19 @@
+/* Meeting minutes and correspondence tools. Logical properties only, so the layout mirrors in Arabic (RTL). */
+.comms { display: grid; gap: 14px; }
+.comms .field { display: grid; gap: 4px; font-size: 13px; }
+.comms .field > span { color: var(--muted); }
+.comms textarea.comms-notes { min-block-size: 260px; font-size: 13px; }
+.comms textarea.comms-body { min-block-size: 320px; font-size: 13.5px; line-height: 1.5; }
+.comms table.data input, .comms table.data textarea, .comms table.data select { padding: 4px 6px; font-size: 12.5px; }
+.comms table.data textarea { min-block-size: 34px; }
+.comms .table-wrap { overflow-x: auto; max-inline-size: 100%; }
+.comms .mono-name { font-family: Consolas, "Courier New", monospace; font-size: 12px; word-break: break-all; direction: ltr; text-align: start; }
+.comms .issue-list { margin: 0; padding-inline-start: 16px; font-size: 12px; }
+.comms .issue-list li.err { color: var(--danger); }
+.comms .issue-list li.warn { color: var(--warn); }
+.comms .ok-text { color: var(--ok); font-weight: 600; font-size: 12px; }
+.comms .agenda-item { border-inline-start: 3px solid var(--c, var(--hub, var(--accent))); padding-inline-start: 12px; display: grid; gap: 6px; }
+.comms .actions-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.comms .note { font-size: 12.5px; color: var(--muted); border-inline-start: 3px solid var(--warn); padding-inline-start: 10px; }
+.comms .drop { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.comms .drop input[type="file"] { display: none; }

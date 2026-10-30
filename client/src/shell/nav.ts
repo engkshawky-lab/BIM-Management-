@@ -79,6 +79,8 @@ export const DOCUMENT_PAGES: NavItem[] = [
   g("ai.plans", "TIDP / MIDP / MPDT generator", "/ai-tools/plans", "calendar", "Create", "Delivery plan tables with naming, checks and Excel export"),
   g("ai.risks", "Risk register generator", "/ai-tools/risks", "sparkles", "Create", "Information delivery risks with owners and treatment"),
   g("ai.clash", "Clash matrix builder", "/ai-tools/clash", "sparkles", "Create", "Discipline pairs, tolerances and priorities"),
+  g("b.minutes", "Meeting minutes (AI)", "/bim-tools/minutes", "calendar", "Create", "Notes or a transcript into minutes, decisions and actions"),
+  g("b.comms", "Transmittals & letters", "/bim-tools/comms", "file", "Create", "Transmittals from file names; AI drafts RFIs and notices"),
   g("ai.review", "Document review & compare", "/ai-tools/review", "sparkles", "Check", "Review EIR/BEP/MIDP; EIR ↔ BEP check; BEP versions"),
   g("m.naming", "File naming checker", "/tools/naming-check", "tag", "Check", "Check hundreds of file names at once"),
   g("s.naming", "Naming & status code tool", "/knowledge/iso19650/naming", "tag", "Check", "Build one container name and look up status codes"),
@@ -95,6 +97,8 @@ export const MODEL_PAGES: NavItem[] = [
   g("m.qaqc", "QA/QC model checker", "/model-tools/qaqc", "check", "Check models", "Grade IFC models A–F, compare up to 10"),
   g("m.ifc", "IFC Hub", "/model-tools/ifc", "layers", "Check models", "Analyse IFC models, check LOIN/IDS, compare with your EIR"),
   g("ai.cobie", "COBie data checker", "/ai-tools/cobie", "sparkles", "Check models", "Sheets, required fields and handover readiness"),
+  g("b.ids", "IDS builder", "/bim-tools/ids", "check", "Coordination", "Write model requirements as a buildingSMART IDS file"),
+  g("b.bcf", "BCF studio", "/bim-tools/bcf", "flag", "Coordination", "Open, review, edit and convert BCF issue files"),
   g("ai.mcp", "Connect AI via MCP", "/ai-tools/mcp", "link", "Connect AI", "Connect Claude to Revit, IFC and CDE tools"),
 ];
 

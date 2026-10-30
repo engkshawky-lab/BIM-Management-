@@ -5,6 +5,8 @@ import { loadUser, requireUser } from "./auth";
 import { runMigrations } from "./db";
 import ai from "./routes/ai";
 import aitools from "./routes/aitools";
+import toolsIds from "./routes/toolsIds";
+import toolsComms from "./routes/toolsComms";
 import library from "./routes/library";
 import news, { startNewsSchedule } from "./routes/news";
 import delivery from "./routes/delivery";
@@ -49,7 +51,7 @@ app.use("/api", (req, res, next) => {
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api", auth);
-app.use("/api", requireUser, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, library, news);
+app.use("/api", requireUser, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, library, news);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: NextFunction) => {

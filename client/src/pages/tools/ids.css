@@ -1,0 +1,25 @@
+/* IDS builder. Logical properties only, so the layout mirrors for Arabic (RTL). */
+.ids-layout { display: grid; grid-template-columns: minmax(220px, 280px) 1fr; gap: 16px; align-items: start; }
+@media (max-width: 860px) { .ids-layout { grid-template-columns: 1fr; } }
+.ids-speclist { display: grid; gap: 6px; }
+.ids-specitem { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.ids-specitem.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.ids-specitem .linklike { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ids-specitem .ids-err { color: var(--danger); font-weight: 700; }
+.ids-iconbtn { padding: 2px 6px; font-size: 12px; line-height: 1.2; }
+.ids-reqs td { vertical-align: middle; }
+.ids-reqs input, .ids-reqs select { padding: 4px 6px; font-size: 12.5px; }
+.ids-reqs .ids-fields { display: flex; gap: 6px; flex-wrap: wrap; }
+.ids-reqs .ids-fields > * { flex: 1 1 120px; min-width: 0; }
+.ids-check { display: inline-flex; align-items: center; gap: 6px; margin-inline-end: 14px; font-weight: 500; font-size: 13px; }
+.ids-check input { width: auto; }
+.ids-xml { max-height: 460px; overflow: auto; font-size: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; direction: ltr; text-align: left; white-space: pre; }
+.ids-issues { margin: 0; padding-inline-start: 18px; }
+.ids-issues li { margin-block: 2px; }
+.ids-issues .error { color: var(--danger); }
+.ids-issues .warning { color: var(--warn); }
+.ids-note { border-inline-start: 3px solid var(--warn); padding-inline-start: 10px; }
+.ids-menu { position: relative; display: inline-block; }
+.ids-menu-list { position: absolute; inset-inline-start: 0; top: calc(100% + 4px); z-index: 20; min-width: 300px; max-width: 90vw; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.15); display: grid; gap: 2px; }
+.ids-menu-list button { justify-content: flex-start; text-align: start; border-color: transparent; display: block; width: 100%; }
+.ids-menu-list button:hover { background: var(--surface-2); }
