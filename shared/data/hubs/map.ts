@@ -11,7 +11,7 @@ export interface Theme { id: string; label: string; blurb: string; hubs: HubId[]
 export const THEMES: Theme[] = [
   { id: "process", label: "The ISO 19650 process", blurb: "Who does what, when, and which documents each party produces.", hubs: ["revision-2026", "appointment", "documents-roles", "cde"] },
   { id: "requirements", label: "Information requirements", blurb: "How much information is needed, and how it is handed over.", hubs: ["loin", "cobie", "handover"] },
-  { id: "software", label: "Software, models & AI", blurb: "Producing and checking information with Revit, reality capture and AI.", hubs: ["revit", "mcp", "bcf", "scan-to-bim"] },
+  { id: "software", label: "Software, models & AI", blurb: "Producing and checking information with Revit, reality capture and AI.", hubs: ["revit", "mcp", "ai-connect", "bcf", "scan-to-bim"] },
   { id: "strategy", label: "Sectors & strategy", blurb: "Applying ISO 19650 to infrastructure, beyond 3D, and across an organisation.", hubs: ["infrastructure", "facade", "dimensions", "implementation"] },
   { id: "governance", label: "Standards & AI governance", blurb: "Where the standards came from, and managing AI responsibly under ISO/IEC 42001.", hubs: ["timeline", "iso42001"] },
 ];
@@ -30,6 +30,15 @@ export interface HubLinks {
 }
 
 export const HUB_LINKS: Record<HubId, HubLinks> = {
+  "ai-connect": {
+    related: [
+      { hub: "mcp", why: "How MCP works, and the security rules behind every connection" },
+      { hub: "revit", why: "Revit set-up that makes AI answers reliable" },
+      { hub: "iso42001", why: "Governing AI use under ISO/IEC 42001" },
+    ],
+    tools: ["ai.mcp", "x.modelqa", "x.clash", "m.revit"],
+    parts: [2, 5],
+  },
   cde: {
     related: [
       { hub: "appointment", why: "Where the CDE is set up and tested in the process" },

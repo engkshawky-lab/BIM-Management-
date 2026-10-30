@@ -29,6 +29,7 @@ import Workflow from "./pages/Workflow";
 import DocGuides from "./pages/DocGuides";
 import BimTools from "./pages/BimTools";
 import AiStudio from "./pages/AiStudio";
+import PlatformGuide from "./pages/PlatformGuide";
 import Glossary from "./pages/Glossary";
 import Videos from "./pages/Videos";
 import LearningPaths from "./pages/LearningPaths";
@@ -104,6 +105,7 @@ export default function App() {
   else if (parts[0] === "glossary") view = <Glossary q={parts[1] ? decodeURIComponent(parts[1]) : undefined} />;
   else if (parts[0] === "learning-paths") view = <LearningPaths key={parts[1] ?? ""} id={parts[1]} />;
   else if (parts[0] === "videos") view = <Videos topic={parts[1]} />;
+  else if (parts[0] === "guide") view = <PlatformGuide tab={parts[1]} />;
   else if (parts[0] === "ai-studio") view = <AiStudio tool={parts[1]} />;
   else if (parts[0] === "bim-tools") view = <BimTools tool={parts[1]} />;
   else if (parts[0] === "doc-guides") view = <DocGuides key={parts[1] ?? ""} id={parts[1]} />;

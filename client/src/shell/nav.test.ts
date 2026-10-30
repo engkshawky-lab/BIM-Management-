@@ -10,8 +10,8 @@ describe("navigation layout", () => {
     expect(new Set(paths).size).toBe(paths.length);
   });
 
-  it("has five sidebar sections, each in a few groups", () => {
-    expect(SECTIONS.map((s) => s.id)).toEqual(["home", "documents", "models", "learn", "resources"]);
+  it("has six sidebar sections, each in a few groups", () => {
+    expect(SECTIONS.map((s) => s.id)).toEqual(["home", "documents", "models", "ai", "learn", "resources"]);
     for (const s of SECTIONS) expect(groupsOf(s.items).length).toBeLessThanOrEqual(6);
     expect(HOME_PAGES.map((p) => p.path)).toContain("/");
   });

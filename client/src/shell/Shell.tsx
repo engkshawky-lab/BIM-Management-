@@ -225,7 +225,7 @@ function Crumbs({ route, projects }: { route: string; projects: Project[] }) {
   } else if (route === "/") parts.push({ label: t("Home") });
   else {
     parts.push({ label: t(where.sectionLabel), href: where.section === "home" ? "/" : undefined });
-    if (where.group && where.group !== "Home" && where.group !== "Account") parts.push({ label: t(where.group) });
+    if (where.group && where.group !== where.sectionLabel && where.group !== "Account") parts.push({ label: t(where.group) });
     if (where.item) parts.push({ label: t(where.item.label), href: where.item.path });
   }
   return (
@@ -257,7 +257,7 @@ function CommandPalette({ projects, project, onClose }: { projects: Project[]; p
   const results = useMemo(() => {
     const items: { label: string; sub: string; href: string; icon: NavItem["icon"] }[] = [
       ...projects.map((p) => ({ label: `${p.code} — ${p.name}`, sub: "Project", href: `/projects/${p.id}/overview`, icon: "folder" as const })),
-      ...ALL_PAGES.filter((x) => x.scope === "global" || project).map((x) => ({ label: x.label, sub: x.scope === "project" ? `${project!.code} · ${x.group}` : x.group, href: hrefFor(x, project?.id), icon: x.icon })),
+      ...ALL_PAGES.map((x) => ({ label: x.label, sub: x.scope === "project" ? (project ? `${project.code} · ${x.group}` : `${x.group} · open a project first`) : x.group, href: hrefFor(x, project?.id), icon: x.icon })),
     ];
     const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
     return items.filter((x) => terms.every((t) => (x.label + " " + x.sub).toLowerCase().includes(t))).slice(0, 12);
@@ -370,7 +370,7 @@ export default function Shell({ route, children }: { route: string; children: Re
   const [drawer, setDrawer] = useState(false);
   const [palette, setPalette] = useState(false);
   const [ask, setAsk] = useState(false);
-  const [rolePicker, setRolePicker] = useState(() => !user.bimRole && !store.get(`bim:role-skipped:${user.id}`, false));
+  const [rolePicker, setRolePicker] = useState(false);
   const [theme, setThemeState] = useState(() => store.get("bim:theme", "dark"));
   const setTheme = (t: string) => { setThemeState(t); store.set("bim:theme", t); };
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
@@ -405,7 +405,7 @@ export default function Shell({ route, children }: { route: string; children: Re
   const pageItem = useMemo(() => {
     const proj = /^\/projects\/[^/]+\/(.+)$/.exec(route)?.[1];
     if (proj) return PROJECT_PAGES.find((x) => proj === x.path || (proj.startsWith(x.path + "/") && !/^documents\//.test(proj)));
-    return ALL_PAGES.find((x) => x.scope === "global" && route === x.path);
+    return ALL_PAGES.find((x) => x.scope === "global" && route === x.path) ?? locate(route).item;
   }, [route]);
 
   const showMenu = () => (narrow() ? setDrawer(true) : setSidebar(true));

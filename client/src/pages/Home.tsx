@@ -81,6 +81,7 @@ export default function Home({ projectsOnly }: { projectsOnly?: boolean }) {
   const [notes, setNotes] = useState<Notification[]>([]);
   const [hasEir, setHasEir] = useState(false);
   const [picker, setPicker] = useState(false);
+  const [guideSeen, setGuideSeen] = useState(() => { try { return localStorage.getItem("bim:guide:seen") === "1"; } catch { return false; } });
   const recent = useRecent(user.id);
   useEffect(() => {
     api<{ projects: Project[] }>("/projects").then(async (r) => {
@@ -99,10 +100,12 @@ export default function Home({ projectsOnly }: { projectsOnly?: boolean }) {
   );
 
   const first = projects?.[0];
+  const hideGuide = () => { setGuideSeen(true); try { localStorage.setItem("bim:guide:seen", "1"); } catch { /* storage unavailable */ } };
   const steps = [
+    { done: guideSeen, title: "Read the platform guide", text: "Every section, where to begin, your first day", go: () => { hideGuide(); navigate("/guide"); } },
     { done: !!user.bimRole, title: "Set your role", text: user.bimRole ? `${roleById(user.bimRole)?.title}` : "Pins the tools your role uses most", go: () => setPicker(true) },
     { done: !!first, title: "Create a project", text: first ? `${first.code} — ${first.name}` : "Holds your CDE, plan and team", go: () => navigate(first ? `/projects/${first.id}/overview` : "/projects/new") },
-    { done: hasEir, title: "Draft your first EIR", text: "Guided, section by section", go: () => navigate("/knowledge/iso19650/templates/eir") },
+    { done: hasEir, title: "Draft your first EIR", text: "Guided, section by section", go: () => navigate("/doc-guides/eir") },
   ];
   const doneCount = steps.filter((s) => s.done).length;
   const today = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
@@ -114,6 +117,16 @@ export default function Home({ projectsOnly }: { projectsOnly?: boolean }) {
         <h1>{greeting()}, {user.name.split(" ")[0]}</h1>
       </header>
 
+      {!guideSeen && (
+        <section className="hub-tile row spread new-here">
+          <span><b>New here? Start with the Platform guide.</b><span className="small muted" style={{ display: "block" }}>Every section explained, where to begin, your first day and how the tools fit together.</span></span>
+          <span className="row" style={{ gap: 6 }}>
+            <a className="btn primary" href="#/guide" onClick={hideGuide}>Open the guide</a>
+            <button className="ghost small" onClick={hideGuide}>Hide</button>
+          </span>
+        </section>
+      )}
+
       <nav className="quick-row" aria-label="Quick actions">
         <Quick icon="plus" label="New project" href="/projects/new" />
         <Quick icon="tag" label="Check file names" href="/tools/naming-check" />
@@ -123,9 +136,9 @@ export default function Home({ projectsOnly }: { projectsOnly?: boolean }) {
         <Quick icon="file" label="Review a document" href="/ai-tools/review" />
       </nav>
 
-      {doneCount < 3 && (
+      {doneCount < steps.length && (
         <section className="card setup-card">
-          <div className="row spread"><h2>Get started</h2><span className="chip">{doneCount}/3 done</span></div>
+          <div className="row spread"><h2>Get started</h2><span className="chip">{doneCount}/{steps.length} done</span></div>
           <div className="setup-steps">{steps.map((s, i) => (
             <button key={s.title} className={"step" + (s.done ? " done" : "")} onClick={s.go}>
               <span className="step-num">{s.done ? "✓" : i + 1}</span>
