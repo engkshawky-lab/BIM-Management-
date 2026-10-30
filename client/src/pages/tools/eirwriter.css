@@ -1,0 +1,40 @@
+/* EIR writer from a brief. Logical properties only, so the layout mirrors for Arabic (RTL). */
+.eirw { display: grid; gap: 12px; }
+.eirw-note { border-inline-start: 3px solid var(--warn); }
+.eirw-error { border-inline-start: 3px solid var(--danger); color: var(--danger); white-space: pre-wrap; }
+
+.eirw-steps { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.eirw-steps li button { border-block-end: 2px solid transparent; border-radius: 0; }
+.eirw-steps li.on button { border-block-end-color: var(--accent); font-weight: 700; }
+.eirw-steps li.past button { color: var(--ok); }
+
+.eirw-brief, .eirw-docs, .eirw-progress { display: grid; gap: 12px; }
+.eirw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px 16px; }
+.eirw-q { display: grid; gap: 4px; align-content: start; margin: 0; padding: 0; border: 0; min-inline-size: 0; }
+.eirw-q legend { padding: 0; margin-block-end: 4px; }
+.eirw-q input, .eirw-q select, .eirw-q textarea { inline-size: 100%; box-sizing: border-box; }
+.eirw-wide { grid-column: 1 / -1; }
+.eirw-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.eirw-doc { display: flex; gap: 8px; align-items: baseline; padding-block: 4px; }
+
+.eirw-progress progress { inline-size: 100%; }
+.eirw-status { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 4px 12px; }
+.eirw-status li { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+.eirw-dot { inline-size: 8px; block-size: 8px; border-radius: 50%; background: var(--border); flex: none; }
+.eirw-running .eirw-dot { background: var(--accent); animation: eirw-pulse 1s infinite alternate; }
+.eirw-done .eirw-dot { background: var(--ok); }
+.eirw-error .eirw-dot { background: var(--danger); }
+li.eirw-error { color: inherit; border: 0; }
+@keyframes eirw-pulse { from { opacity: .35; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .eirw-running .eirw-dot { animation: none; } }
+
+.eirw-result { display: grid; gap: 12px; }
+.eirw-doc-result { display: grid; gap: 10px; }
+.eirw-doc-result h2 { margin-block: 8px 0; }
+.eirw-lists { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; }
+.eirw-lists ul { margin-block: 6px 0; padding-inline-start: 18px; }
+.eirw-tbc { border-inline-start: 3px solid var(--warn); }
+.eirw-section { display: grid; gap: 8px; }
+.eirw-md { inline-size: 100%; box-sizing: border-box; font-family: ui-monospace, Consolas, monospace; font-size: 13px; line-height: 1.5; }
+.eirw-preview { overflow-x: auto; line-height: 1.55; }

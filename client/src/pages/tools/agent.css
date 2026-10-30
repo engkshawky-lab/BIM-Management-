@@ -1,0 +1,52 @@
+/* Project agent. Logical properties only, so the layout mirrors in Arabic (RTL). */
+.agent { display: grid; gap: 14px; }
+.agent .field { display: grid; gap: 4px; font-size: 13px; }
+.agent .field > span { color: var(--muted); }
+.agent-controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-block-end: 8px; }
+.agent-controls .field { min-inline-size: 200px; flex: 1 1 220px; }
+.agent-controls .field:nth-child(2) { flex: 0 1 180px; min-inline-size: 150px; }
+.agent-controls-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.agent-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.agent-kpi { display: grid; gap: 2px; padding-block: 12px; padding-inline: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  border-inline-start: 4px solid var(--hub, var(--accent)); color: inherit; text-decoration: none; }
+.agent-kpi:hover { border-color: var(--hub, var(--accent)); }
+.agent-kpi .stat { font-size: 24px; line-height: 1.1; }
+.agent-kpi .small { color: var(--muted); }
+.agent-kpi.danger { border-inline-start-color: var(--danger); }
+.agent-kpi.warn { border-inline-start-color: var(--warn); }
+
+.agent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; align-items: start; }
+.agent-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; display: grid; gap: 10px; min-inline-size: 0; }
+.agent-panel-head { display: flex; align-items: center; gap: 8px; }
+.agent-open { margin-inline-start: auto; }
+.agent-sub { font-size: 12.5px; font-weight: 600; margin-block-start: 6px; display: flex; align-items: center; gap: 6px; }
+.agent .table-wrap { overflow-x: auto; max-inline-size: 100%; }
+.agent table.data td, .agent table.data th { font-size: 12.5px; }
+.agent-bad { color: var(--danger); font-weight: 700; }
+
+.agent-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-block-size: 360px; overflow-y: auto; }
+.agent-list li { display: grid; gap: 1px; padding-block: 6px; padding-inline: 10px; border-inline-start: 3px solid var(--border); position: relative; padding-inline-end: 80px; }
+.agent-list li > a { font-size: 13px; font-weight: 600; word-break: break-word; }
+.agent-tag { position: absolute; inset-inline-end: 6px; inset-block-start: 6px; font-size: 11px; font-weight: 600; padding-inline: 6px; border-radius: 999px;
+  background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); white-space: nowrap; }
+.agent-tag.late { color: var(--danger); border-color: var(--danger); }
+.agent-mono { font-family: Consolas, "Courier New", monospace; font-size: 12px; direction: ltr; unicode-bidi: isolate; text-align: start; word-break: break-all; }
+
+.agent-chat { gap: 10px; }
+.agent .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.agent .chips .chip { border: 1px solid var(--border); cursor: pointer; font: inherit; font-size: 12px; padding-block: 4px; padding-inline: 10px; border-radius: 999px; }
+.agent .chips .chip:hover:not(:disabled) { border-color: var(--hub, var(--accent)); color: var(--text, inherit); }
+.agent-log { display: grid; gap: 10px; max-block-size: 520px; overflow-y: auto; padding-block: 4px; }
+.agent-bubble { padding-block: 10px; padding-inline: 12px; border-radius: var(--radius); border: 1px solid var(--border); font-size: 13.5px; line-height: 1.5; max-inline-size: 100%; overflow-x: auto; }
+.agent-bubble.user { background: var(--surface-2); justify-self: end; max-inline-size: 85%; white-space: pre-wrap; }
+.agent-bubble.assistant { background: var(--surface); }
+.agent-cites { margin-block-start: 8px; padding-block-start: 6px; border-block-start: 1px solid var(--border); display: grid; gap: 2px; color: var(--muted); }
+.agent-ask { display: flex; gap: 8px; align-items: end; }
+.agent-ask textarea { flex: 1; min-block-size: 44px; }
+
+@media (max-width: 640px) {
+  .agent-grid { grid-template-columns: 1fr; }
+  .agent-list li { padding-inline-end: 10px; }
+  .agent-tag { position: static; justify-self: start; }
+}

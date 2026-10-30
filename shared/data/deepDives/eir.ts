@@ -1,0 +1,483 @@
+import type { DeepDive } from "./types";
+
+// Deep dive: Exchange Information Requirements (EIR).
+// Fictional worked example for a hospital extension, with variants, case studies, a clause
+// library and an assessment rubric. Paraphrased practical guidance, not the text of ISO 19650.
+
+export const eirDeepDive: DeepDive = {
+  id: "eir",
+  code: "EIR",
+  project: {
+    name: "Gulf General Hospital Extension",
+    code: "GHX",
+    type: "Healthcare: 220-bed general hospital extension, design and build from the authority's concept design",
+    client: "Gulf Regional Health Authority (appointing party)",
+    value: "Approximately AED 960 million construction value",
+    stages: "Schematic design, detailed design, construction, testing and commissioning, handover and 12-month defects period",
+    location: "Al Sahel, Gulf region (fictional site next to the existing general hospital)",
+    summary:
+      "A seven-storey extension to an operational general hospital: a three-storey diagnostic and treatment podium with 10 operating theatres, a four-storey ward tower with 220 inpatient beds, a two-level link bridge and a new energy centre. The Authority appointed Sahil Build Contracting LLC as the design-and-build lead appointed party after a concept design prepared by its own consultant. The estate is run from EstateHub CAFM, so the EIR is built around a verified asset information model at handover, clinical equipment coordination and strict security for a live, sensitive healthcare site. It is the companion to the BEP and AIR deep dives for the same project.",
+  },
+  example: [
+    {
+      title: "Project information",
+      note: "Identifies the appointment precisely so there is no doubt which scope, stages and parties the requirements apply to. The project code is the first field of every container name.",
+      paragraphs: [
+        "Project name: Gulf General Hospital Extension. Project code: GHX. Appointing party: Gulf Regional Health Authority, Capital Projects Directorate (originator code GRH). Lead appointed party: Sahil Build Contracting LLC (originator code SBC), design-and-build contractor, appointed through the tender for which this EIR was first issued. Site code GH1; the extension is building B07 in the Authority's estate register.",
+        "The project comprises a new seven-storey extension of about 58,000 m2 gross floor area next to the existing hospital: a three-storey diagnostic and treatment podium (emergency department, imaging including MRI and CT, 10 operating theatres with recovery, central sterile services), a four-storey ward tower above the podium with 220 inpatient beds, a two-level enclosed link bridge to the existing hospital, an energy centre, and external works including ambulance drop-off, parking, landscaped courtyards and diversions of live utilities.",
+        "The appointment covers design development from the end of the Authority's concept design, through schematic design, detailed design, construction, testing and commissioning, handover and a twelve-month defects period. This EIR is document GHX-GRH-ZZ-ZZ-RI-Z-0001. Revision C01 was issued with the invitation to tender on 15 October 2025; this revision C03 incorporates the tender clarifications and forms part of the appointment of Sahil Build Contracting LLC dated 2 February 2026.",
+      ],
+      table: {
+        columns: ["Item", "Detail"],
+        rows: [
+          ["Project code", "GHX (site GH1, building B07)"],
+          ["Appointing party", "Gulf Regional Health Authority, Capital Projects Directorate"],
+          ["Appointment", "Design and build; lead appointed party Sahil Build Contracting LLC"],
+          ["Task teams", "ARC Qasr Architects; STR Dune Structural Engineers; MEP Falcon MEP Engineering; FAC Prism Façade Systems; LAN Oasis Landscape Studio"],
+          ["Programme", "Appointment February 2026; handover 30 June 2029; defects period to 30 June 2030"],
+          ["Document reference", "GHX-GRH-ZZ-ZZ-RI-Z-0001, revision C03"],
+          ["Document owner", "Appointing party information lead, Capital Projects Directorate"],
+        ],
+      },
+    },
+    {
+      title: "Introduction and scope",
+      note: "States the purpose, the documents it must be read with and the order of precedence. Most EIR disputes start where two documents disagree and nobody said which one wins.",
+      paragraphs: [
+        "This document sets out the information the Authority requires from the lead appointed party and every appointed party in its delivery team: what is to be delivered, when, in what format, to what level of information need and how it will be checked and accepted. It has been prepared following the appointing party activities for establishing exchange information requirements described in ISO 19650-2 and forms part of the appointment documents.",
+        "The EIR must be read with the documents listed below. Where they conflict, the order of precedence is: the appointment conditions, the information protocol, this EIR, the project information standard, the project information production methods and procedures, then the asset information requirements. Any conflict found by a tenderer must be raised as a clarification before tender return; conflicts found after appointment are raised through the change control procedure in this document.",
+        "The requirements apply to the lead appointed party and must be flowed down, in full or in the relevant part, to every appointed party (designers, specialist subcontractors and manufacturers) that produces information for this project. The lead appointed party remains responsible for the information delivered by its supply chain.",
+        "Terms follow the definitions in ISO 19650-1 and the Authority's information glossary. Where this document uses the word must, the requirement is mandatory and will be checked at acceptance; where it uses should, the requirement is recommended and any departure must be stated in the BIM execution plan.",
+      ],
+      table: {
+        columns: ["Document", "Reference", "Revision"],
+        rows: [
+          ["Organizational information requirements (OIR)", "Authority corporate register, OIR", "C03"],
+          ["Asset information requirements (AIR)", "GHX-GRH-ZZ-ZZ-RI-Z-0005", "C02"],
+          ["Project information standard", "GHX-GRH-ZZ-ZZ-SP-Z-0002", "C02"],
+          ["Project information production methods and procedures (including CDE workflow)", "GHX-GRH-ZZ-ZZ-SP-Z-0003", "C02"],
+          ["Information protocol", "GHX-GRH-ZZ-ZZ-PR-Z-0004", "C01"],
+          ["Security management plan", "GHX-GRH-ZZ-ZZ-PL-Z-0006", "C01"],
+          ["Authority concept design report and models", "GHX-CON-ZZ-ZZ-RP-A-0001", "A1"],
+        ],
+      },
+    },
+    {
+      title: "Information requirements",
+      note: "Every requirement has a reference, a purpose and the decision it supports, so the BEP and the task information delivery plans can answer each one by number.",
+      paragraphs: [
+        "The project information requirements below are derived from the Authority's OIR (whole-life cost control, clinical service continuity, statutory compliance) and its AIR (maintainable assets for EstateHub CAFM). Each requirement carries a reference that must be used in the BEP responsibility matrix and in every task information delivery plan.",
+        "ER-01 Design coordination: federated architectural, structural and building services models coordinated to the stated tolerances, to support the Authority's design approval at detailed design 50 percent (M2) and detailed design complete (M3).",
+        "ER-02 Cost and quantity: element quantities by Uniclass 2015 Ss code, extractable from the models, to support the Authority's cost check at each design milestone within a tolerance of plus or minus 3 percent against the cost plan measurement.",
+        "ER-03 Clinical planning: room data for every clinical and support space (room code, department, area, clinical function, infection control category, medical gases, finishes, fixed and loose equipment groups) to support clinical user sign-off of room layouts. ER-04 Construction safety and logistics: construction sequencing and logistics information for works next to the live hospital, including temporary diversions and infection control barriers. ER-05 Asset handover: verified COBie and linked documents for every maintainable asset, to populate EstateHub CAFM before the building opens. ER-06 Compliance: fire strategy, medical gas, ventilation and water safety records linked to the relevant assets and spaces.",
+      ],
+      table: {
+        columns: ["Ref", "Purpose", "Key decision point", "Information required", "LOIN reference"],
+        rows: [
+          ["ER-01", "Design coordination", "Detailed design approval at M2 and M3", "Federated discipline models and clash reports", "LOIN-03, LOIN-04"],
+          ["ER-02", "Cost and quantity", "Cost check at each design milestone", "Quantities by Uniclass Ss code", "LOIN-02 to LOIN-04"],
+          ["ER-03", "Clinical planning", "Clinical user sign-off of 1:50 room layouts", "Room data sheets and room models", "LOIN-03"],
+          ["ER-04", "Construction safety and logistics", "Approval of phasing next to live hospital", "4D sequence and logistics plans", "LOIN-05"],
+          ["ER-05", "Asset handover", "Building opening and EstateHub CAFM go-live", "COBie, O&M and verified asset register", "LOIN-06"],
+          ["ER-06", "Statutory compliance", "Civil defence and health regulator approvals", "Fire, gases, ventilation and water records", "LOIN-04 to LOIN-06"],
+        ],
+      },
+    },
+    {
+      title: "Level of information need",
+      note: "Written per element group and milestone with geometry, alphanumeric information and documentation, rather than a single LOD number for the whole model, which nobody can check.",
+      paragraphs: [
+        "The level of information need is defined by purpose, milestone and element group, following the concepts of ISO 7817-1. For each entry the delivery team must provide the stated geometry, alphanumeric information and documentation, and no more than is needed for the purpose; additional geometric detail that is not required will not be reviewed and must not delay delivery.",
+        "Geometry is described by detail, dimensionality, location, appearance and parametric behaviour. Alphanumeric information is listed as named properties in the project property set GHX_Common and the COBie templates in the shared resources. Documentation means the drawings, schedules and reports that must accompany the model at that milestone.",
+        "The full matrix, element by element, is in Appendix B (GHX-GRH-ZZ-ZZ-SH-Z-0007) and is part of this EIR. The summary below shows the expected level for the main element groups. Where the matrix is silent for an element, the level of the nearest parent group applies, and the delivery team must ask before modelling to a higher level.",
+        "Clinical equipment is a particular risk on this project. Group 1 fixed equipment (pendants, theatre lights, MRI and CT) must be modelled as manufacturer-specific geometry with service connection points and clearance zones from LOIN-04; Group 2 and 3 equipment is represented by generic objects with the equipment code from the Authority's room data system.",
+      ],
+      table: {
+        columns: ["Element group", "LOIN-02 Schematic design (M1)", "LOIN-03 Detailed design 50% (M2)", "LOIN-04 Detailed design complete (M3)", "LOIN-06 Handover (M6)"],
+        rows: [
+          ["Spaces and zones", "Gross areas by department; space names", "Rooms with codes, net areas, clinical function, infection control category", "As LOIN-03 plus finishes and room data sheets", "As built; COBie Space and Zone complete"],
+          ["Structure (frames, slabs, cores)", "Indicative grid and slab zones", "Sized elements, 3D, correct location; fire rating", "Openings over 150 mm, connections indicative; concrete grade", "As built with pour records linked"],
+          ["Facade and envelope", "Massing and glazing ratio", "Type-level system zones; U-value, g-value", "Panel layout, brackets zone; acoustic and fire data", "As built; manufacturer and warranty"],
+          ["Doors and windows", "Not required", "Type-level 3D, size and swing; fire and acoustic rating", "Ironmongery set reference; access control flag", "COBie Component with tag and serial number"],
+          ["Mechanical (AHU, chillers, ductwork)", "Plant space allowances", "Main distribution routes and plant at true size", "All ductwork over 100 mm, access zones, system names", "Manufacturer, model, serial, maintenance data"],
+          ["Electrical and ICT", "Substation and riser allowances", "Containment over 150 mm, main equipment", "All containment, panels, circuit references", "Tagged assets with test certificates linked"],
+          ["Medical gases", "Plant room allowance", "Main routes and outlet locations per room", "All pipework, zone valves, area alarms", "As built with commissioning certificates"],
+          ["Fixed clinical equipment (Group 1)", "Not required", "Generic object with clearance zone", "Manufacturer-specific with connection points", "COBie with equipment code and warranty"],
+        ],
+      },
+    },
+    {
+      title: "Information delivery milestones",
+      note: "Each milestone has a real date, the deliverable, the required suitability code and how it will be judged. Dates allow time for the Authority's own review before the next stage starts.",
+      paragraphs: [
+        "Information must be delivered at the milestones below, which are aligned with the project programme and with the Authority's governance gates. Dates are the latest dates for submission to the Authority in the shared state; the delivery team must plan its internal checks and lead appointed party authorization before these dates.",
+        "At each milestone the lead appointed party submits a single information model package, listed in a transmittal, containing every container due under the master information delivery plan. The Authority will review the package within 10 working days and will either accept it (published with code A and the stage number) or reject it with comments for resubmission within 10 working days.",
+        "Between milestones, discipline models are shared weekly in the CDE at suitability S1 for coordination, and the federated model is made available to the Authority's information lead for monitoring. Federation takes place every Wednesday from the files at S1. Monthly progress reports must state the percentage of containers delivered against the MIDP and list any late or at-risk deliverables.",
+      ],
+      table: {
+        columns: ["Milestone", "Date", "Information deliverable", "Suitability for submission", "Acceptance criteria"],
+        rows: [
+          ["Mobilization complete", "27 March 2026", "Post-appointment BEP, MIDP, TIDPs, mobilization test report", "S3", "BEP responds to every ER reference; CDE test exchange passed"],
+          ["M1 Schematic design", "30 June 2026", "Federated models to LOIN-02, room data sheets, area schedule, cost quantities, COBie drop 1 (spaces and zones)", "S4", "Areas within 2 percent of brief; naming 100 percent compliant"],
+          ["M2 Detailed design 50%", "15 December 2026", "Federated models to LOIN-03, 1:50 room layouts, clash report, coordinated services routes", "S4", "Zero open critical clashes; clinical sign-off of all room layouts"],
+          ["M3 Detailed design complete", "30 April 2027", "Models to LOIN-04, drawings for construction packages, COBie drop 2 (types and components)", "S4", "COBie drop 2 validates with no errors; regulator submission set complete"],
+          ["M4 Construction packages and progress", "Rolling from May 2027; data quarterly", "Package drawings, sub-contractor shop models, updated models, 4D sequence, installed asset data", "S1 / S3", "Installed assets recorded within 20 working days of installation"],
+          ["M5 Testing and commissioning", "31 March 2029", "Commissioning records linked to assets, COBie drop 3, as-constructed model drafts, O&M drafts", "S6", "Sample of 10 percent of assets verified on site with no more than 2 percent errors"],
+          ["M6 Handover", "30 June 2029", "Final as-constructed models, verified COBie, O&M, certificates, asset register import file", "S7, then CR", "All acceptance criteria met; EstateHub CAFM import test successful"],
+          ["End of defects period", "30 June 2030", "Updated asset information after defects and seasonal commissioning", "S7, then CR", "All defects-related changes reflected in AIM"],
+        ],
+      },
+    },
+    {
+      title: "Information standard, methods and procedures",
+      note: "Points to the project information standard instead of repeating it, and fixes the decisions that tenderers must price: exchange format, classification, coordinates and software versions.",
+      paragraphs: [
+        "All information containers must comply with the project information standard GHX-GRH-ZZ-ZZ-SP-Z-0002. The CDE is the Authority's own Autodesk Construction Cloud (Docs) environment, hosted in the Authority's region. Container names follow the field structure of the UK National Annex: Project, Originator, Volume or System, Level or Location, Type, Role and Number, for example GHX-MEP-WT-05-M3-M-0003. Originator codes are GRH (Authority), SBC (lead appointed party) and ARC, STR, MEP, FAC and LAN for the task teams; volume codes are PD podium, WT ward tower, LB link bridge, EC energy centre, EX external works and ZZ for site-wide information. Every container must carry the metadata for status (suitability), revision and classification before it leaves the work in progress state.",
+        "Suitability and revision codes follow the UK National Annex: S0 for work in progress; S1 to S4 in the shared state for coordination, information, review and comment, and stage approval; S6 and S7 for PIM and AIM authorization; A1 to An for published information accepted for a stage; and CR for the as-constructed record. Revisions use P01.01 style for preliminary versions and C01 style for contractual revisions.",
+        "The open exchange format is IFC 4 Reference View (IFC4 ADD2 TC1) for all building models, with the native model also provided at each milestone. IFC 4.3 may be used for external works and utilities where the authoring software supports it. Issues are exchanged in BCF 2.1 or later. Drawings are issued as PDF with DWG where requested. Asset data is delivered as COBie 2.4 in XLSX format.",
+        "Classification is Uniclass 2015 throughout: Co, En and SL tables for complexes, entities and spaces; EF and Ss for elements and systems; Pr for products. Every model object must carry an Ss code and, for maintainable assets, a Pr code. Units are millimetres for building models and metres for site models; all models use the project shared coordinate system (local grid tied to the national grid by the surveyed control points in the reference information) and the project base point at gridline A1 on Level 00.",
+      ],
+      table: {
+        columns: ["Discipline", "Authoring software", "Minimum version", "Exchange format"],
+        rows: [
+          ["Architecture and medical planning", "Autodesk Revit", "2025", "IFC 4 Reference View + native"],
+          ["Structure", "Autodesk Revit / Tekla Structures", "2025 / 2025", "IFC 4 Reference View + native"],
+          ["Mechanical, electrical, public health, medical gases", "Autodesk Revit", "2025", "IFC 4 Reference View + native"],
+          ["Facade", "Tenderer to propose; Revit for coordination", "Revit 2025", "IFC 4 Reference View"],
+          ["Landscape, external works and utilities", "Autodesk Revit / Civil 3D", "2025", "IFC 4 Reference View / LandXML + DWG"],
+          ["Coordination and clash detection", "Autodesk Navisworks Manage / Solibri Office", "2025 / current release", "NWD, BCF 2.1"],
+          ["Programme and 4D", "Primavera P6 with Synchro 4D", "Current supported", "XER, 4D model"],
+        ],
+      },
+    },
+    {
+      title: "Reference information and shared resources",
+      note: "Tells tenderers what they are given and how reliable it is, so they can price surveys and checks instead of assuming the information is correct.",
+      paragraphs: [
+        "The Authority will provide the reference information below through the CDE at appointment. Its reliability is stated; where reliability is marked as to be verified, the delivery team must check it before relying on it and report any discrepancy to the Authority within 20 working days of appointment.",
+        "The shared resources listed must be used by every task team. Task teams may not create their own versions of these resources; proposed changes are submitted to the lead appointed party's information manager, who will agree them with the Authority's information lead and republish the resource with a new revision.",
+        "Information about the existing hospital (services drawings, fire compartmentation records) is partly out of date. The delivery team must allow for intrusive surveys of the connection zones and must model the existing services in those zones to LOIN-03 before milestone M2.",
+      ],
+      table: {
+        columns: ["Information or resource", "Format", "Status / reliability", "Available from"],
+        rows: [
+          ["Topographic and utilities survey, 2026", "DWG, point cloud (E57)", "Reliable; surveyed to PAS 128 quality level B in connection zones", "CDE, published folder, at appointment"],
+          ["Existing hospital record drawings", "PDF, some DWG", "To be verified; partly out of date", "CDE, at appointment"],
+          ["Geotechnical interpretive report", "PDF, AGS data", "Reliable", "CDE, at appointment"],
+          ["Authority concept design models", "Native + IFC 4", "Accepted at concept; design responsibility transfers", "CDE, at appointment"],
+          ["Project template files with shared coordinates", "Native", "Mandatory shared resource", "CDE, shared resources folder"],
+          ["GHX object library and property sets", "Native + IFC property set definitions", "Mandatory shared resource", "CDE, shared resources folder"],
+          ["COBie templates and project picklists", "XLSX", "Mandatory shared resource", "CDE, shared resources folder"],
+          ["Room data system export (clinical equipment codes)", "XLSX", "Live; reissued monthly", "CDE, shared resources folder"],
+        ],
+      },
+    },
+    {
+      title: "Roles and responsibilities",
+      note: "Names each information management role and who fills it, including the Authority's own roles, so it is clear who reviews and who accepts.",
+      paragraphs: [
+        "The Authority will provide an appointing party information lead, supported by an asset information manager from its estates and facilities directorate and a security lead. The lead appointed party must provide a full-time information manager from appointment to handover, with demonstrable experience of at least two projects delivered to ISO 19650 and of healthcare or similarly complex buildings.",
+        "Each appointed party (at appointment ARC Qasr Architects, STR Dune Structural Engineers, MEP Falcon MEP Engineering, FAC Prism Façade Systems and LAN Oasis Landscape Studio, with specialist sub-contractors added during construction) must name a task information manager responsible for its task information delivery plan, model checks and container metadata. The lead appointed party must also provide a BIM coordinator responsible for federation, clash detection and issue management, and a site-based asset data coordinator from the start of MEP installation to the end of the defects period.",
+        "Changes to the named people in the information management roles require 20 working days' notice to the Authority and a handover period, except in emergencies. The responsibility matrix in the BEP must allocate every ER reference and every LOIN entry to a task team.",
+      ],
+      table: {
+        columns: ["Role", "Party", "Key responsibilities"],
+        rows: [
+          ["Appointing party information lead", "Gulf Regional Health Authority", "Owns the EIR, reviews submissions, accepts information, manages change to requirements"],
+          ["Asset information manager", "Gulf Regional Health Authority, estates and facilities", "Owns the AIR, checks COBie and EstateHub CAFM import, witnesses site verification"],
+          ["Security lead", "Gulf Regional Health Authority", "Security triage, approval of access lists, incident response"],
+          ["Information manager", "Sahil Build Contracting LLC (lead appointed party)", "BEP, MIDP, CDE administration, audits, authorization before submission"],
+          ["BIM coordinator", "Sahil Build Contracting LLC (lead appointed party)", "Weekly federation, clash detection, BCF issue tracking"],
+          ["Task information manager", "Each task team (ARC, STR, MEP, FAC, LAN)", "TIDP, model production checks, metadata, flow-down compliance"],
+          ["Asset data coordinator", "Sahil Build Contracting LLC (site)", "Installed asset data capture, tagging, site verification"],
+        ],
+      },
+    },
+    {
+      title: "Collaboration and coordination",
+      note: "Turns the general duty to coordinate into a measurable routine: frequency, clash tests, tolerances and a definition of what is closed.",
+      paragraphs: [
+        "Every task team must upload its discipline model to the CDE in the shared state at suitability S1 by 12:00 each Tuesday. The BIM coordinator federates the models in Navisworks Manage every Wednesday and runs the clash tests in the clash matrix by close of business that day; the coordination meeting is held on Thursday with all task information managers.",
+        "Clash tests and tolerances are defined in the clash matrix (Appendix C). As a minimum: hard clashes between structure and services at zero tolerance; services against services at 10 mm; clearance zones for maintenance access, clinical equipment and MRI shielding as clearance tests. A clash is critical if it affects structure, fire compartmentation, medical gases, MRI shielding or a clinical clearance zone.",
+        "Issues are raised and tracked in BCF and closed only when the corrected model has been shared and the next clash run confirms the fix. The issue log must record originator, responsible task team, priority, target date and status. At milestones M2 and M3 there must be no open critical issues and no more than 50 open non-critical issues across the federated model, each with an agreed resolution date.",
+        "The Authority's clinical users will review 1:50 room layouts in a model-based review session for each department. Comments are recorded in BCF against the room, and the delivery team must respond to each within 10 working days.",
+      ],
+    },
+    {
+      title: "Information security",
+      note: "Follows the outcome of the security triage. A hospital is sensitive, so the EIR states controls that can be audited rather than a general duty of care.",
+      paragraphs: [
+        "The Authority has carried out a security triage in line with ISO 19650-5. The outcome is that the project is sensitive and a security-minded approach is required. The reasons are the extension's connection to a live hospital, the location of the pharmacy controlled drugs store, security control room, data centre, medical gas manifold rooms, helipad approach and power infrastructure, patient-sensitive spaces and the operating details of security and access control systems.",
+        "Information about security systems, the security control room, access control, CCTV coverage, the data centre, medical gas manifold rooms, the pharmacy controlled drugs store, the helipad approach and the main electrical infrastructure is classified as sensitive. It must be held in a restricted area of the CDE, marked in the container metadata, and shared only with named individuals approved by the Authority's security lead. It must not be included in federated models issued to the wider delivery team or in tender packages to subcontractors without approval.",
+        "Access to the CDE is by named user account with multi-factor authentication. Access rights are granted by role, reviewed monthly by the information manager and removed within one working day when a person leaves the project. Information must not be stored on personal devices or shared through consumer file-sharing or messaging services. Any suspected security breach or loss of information must be reported to the Authority's security lead within 24 hours.",
+        "The lead appointed party must flow down these requirements to every appointed party, and each organization must confirm in writing that its staff have completed the project security briefing before being given access.",
+      ],
+    },
+    {
+      title: "Asset information and handover",
+      note: "Links handover directly to the AIR and to EstateHub CAFM, with progressive data drops and site verification, so asset data is built during construction instead of collected at the end.",
+      paragraphs: [
+        "Asset information must comply with the Authority's AIR for the project (GHX-GRH-ZZ-ZZ-RI-Z-0005, C02). The AIR defines the maintainable asset types, required attributes, tagging convention and the EstateHub CAFM import format. Where this EIR and the AIR differ on asset data, the AIR prevails.",
+        "COBie is delivered progressively: drop 1 at M1 (spaces and zones), drop 2 at M3 (types, components and systems), installed asset drops quarterly during construction, drop 3 at M5 with commissioning records and the final verified drop at M6. Each drop must validate against the COBie templates and project picklists with no errors before submission.",
+        "Every maintainable asset must have a unique asset tag in the format defined in the AIR (site, building, level, system, type and number, for example GH1-B07-03-HVAC-AHU-002), matching the physical label fixed on site. Manufacturer, model, serial number, installation date, warranty start and end dates and the maintenance task reference must be populated by M6. O&M manuals, warranties, test and commissioning certificates must be supplied as searchable PDF, named per the information standard and linked to the relevant COBie component or system.",
+        "The as-constructed models must reflect what has been built, with dimensional accuracy of plus or minus 25 mm for exposed services and plus or minus 50 mm for concealed services, confirmed by laser scan survey of plant rooms, risers and ceiling voids before close-up. Before acceptance at M6, the Authority will import the COBie into a test environment of EstateHub CAFM; the import must complete without errors.",
+      ],
+      table: {
+        columns: ["Handover deliverable", "Format", "Due", "Verified by"],
+        rows: [
+          ["As-constructed federated models", "IFC 4 Reference View + native", "M6", "Model check and laser scan comparison"],
+          ["COBie asset data", "COBie 2.4 XLSX", "M1, M3, quarterly, M5, M6", "Validation tool and EstateHub CAFM import test"],
+          ["O&M manuals", "Searchable PDF, linked", "Draft M5, final M6", "Asset information manager review"],
+          ["Test and commissioning certificates", "PDF, linked to assets", "M5 and M6", "Commissioning manager and asset information manager"],
+          ["Asset register site verification", "Verification report", "M5 and M6", "Joint site walk with Authority"],
+          ["Health and safety file", "PDF + model-linked residual risks", "M6", "Principal designer and Authority"],
+        ],
+      },
+    },
+    {
+      title: "Acceptance criteria",
+      note: "Lists checks that can be passed or failed, with thresholds, and the review timetable. Without them acceptance becomes an opinion and payment milestones stall.",
+      paragraphs: [
+        "Information submitted at each milestone will be checked against the criteria below. A submission that fails any mandatory criterion will be rejected in full; the Authority may at its discretion accept with comments (code B) where only minor non-conformances remain and a dated correction plan is agreed.",
+        "The lead appointed party must carry out its own checks before submission and include a completed self-check report with each milestone package. The Authority will review within 10 working days and will issue a review record listing each non-conformance against the criterion it fails.",
+        "Health and safety information is part of acceptance. At M2, M3 and M6, the models must identify significant residual risks (work at height for maintenance, confined spaces, heavy lifts, hazardous substances) in the agreed property, and these must match the designer's risk register and the health and safety file.",
+      ],
+      table: {
+        columns: ["Criterion", "Check", "Threshold", "Applies at"],
+        rows: [
+          ["Naming and metadata", "Automated check of container names, status, revision, classification", "100 percent compliant", "All milestones"],
+          ["Level of information need", "Sample check against Appendix B for the milestone", "At least 95 percent of sampled objects compliant; no missing mandatory properties", "M1 to M6"],
+          ["Coordination", "Federated clash run against clash matrix", "Zero open critical clashes", "M2, M3, M6"],
+          ["Model integrity", "IFC validation and model audit", "No invalid entities; no unclassified objects; correct coordinates", "All model submissions"],
+          ["COBie", "Validation against templates and picklists", "Zero errors; warnings explained", "M1, M3, M5, M6"],
+          ["Asset verification", "Site sample of maintainable assets", "No more than 2 percent of sampled records wrong", "M5, M6"],
+          ["Security", "Sensitive containers in restricted area and marked", "100 percent", "All milestones"],
+        ],
+      },
+    },
+    {
+      title: "Tender response requirements",
+      note: "Tells tenderers exactly what to submit and how it will be scored, so responses can be compared fairly and the BEP is a commitment rather than marketing.",
+      paragraphs: [
+        "Tenderers must submit a pre-appointment BEP that responds to each requirement in this EIR by its reference, including the proposed information management team with CVs, the proposed federation strategy, the high-level responsibility matrix, any proposed departures from the information standard with reasons, and a schedule of software and versions.",
+        "Tenderers must also submit a capability and capacity assessment for the lead appointed party and each key task team (architecture and medical planning, structure, MEP and medical gases, facade, landscape), a mobilization plan showing how the CDE, software, people and procedures will be tested within six weeks of appointment, and an information delivery risk register with at least the top ten risks and their mitigations.",
+        "This section is retained as issued at tender for the record. The response was evaluated by the Authority's information lead and asset information manager, and the score formed part of the technical evaluation. A score below 50 percent in the information management element made a tender non-compliant regardless of price.",
+      ],
+      table: {
+        columns: ["Criterion", "Weight (%)"],
+        rows: [
+          ["Pre-appointment BEP and response to each ER reference", "35"],
+          ["Capability and capacity of the information management team and key task teams", "25"],
+          ["Asset information and handover approach, including site verification", "15"],
+          ["Mobilization plan", "10"],
+          ["Information delivery risk register", "10"],
+          ["Security-minded approach", "5"],
+        ],
+      },
+    },
+  ],
+  variants: [
+    {
+      title: "Small office fit-out",
+      projectType: "Category A to B fit-out of two office floors for a corporate tenant, 4 months",
+      differences: [
+        "A short EIR of a few pages, referring to the client's standard information protocol rather than a full project information standard.",
+        "Only two milestones: design freeze and handover, with a single review period of 5 working days.",
+        "LOIN limited to spaces, furniture, partitions and the small number of maintainable assets (fan coil units, lighting controls, access control).",
+        "Native files and PDF accepted; IFC only for the final record model so the landlord can merge it.",
+        "COBie replaced by a simple asset spreadsheet in the client's CAFM import template.",
+        "No formal security triage outcome beyond confirming that the information is not sensitive.",
+      ],
+      sample:
+        "The fit-out contractor will deliver at handover a record model in IFC 4 Reference View and the client asset spreadsheet listing every fan coil unit, lighting control module and access control reader with location, manufacturer, model and serial number. The spreadsheet must import into the client CAFM test environment without errors.",
+    },
+    {
+      title: "Highway improvement scheme",
+      projectType: "8 km dual carriageway upgrade with two junctions and three structures, public highway authority",
+      differences: [
+        "Information purposes centre on statutory consents, land take, traffic management and the authority's asset management system rather than room data.",
+        "Exchange formats include IFC 4.3 for alignment, earthworks and structures, LandXML for alignments and surfaces, and GIS formats for asset inventory.",
+        "LOIN defined by asset class (pavement, drainage, structures, signs, lighting) and linked to the authority's asset data dictionary.",
+        "Coordinate reference system and vertical datum are mandatory, with accuracy classes for survey and as-built information.",
+        "Security requirements address structures and communications infrastructure on a strategic route.",
+        "Handover data is delivered per section as the road opens in phases, not once at the end.",
+      ],
+      sample:
+        "All design models must use the national grid and the national vertical datum. As-built survey of drainage assets must achieve plus or minus 20 mm in position and level, and each asset must be delivered in the authority's asset data dictionary format within 20 working days of the section opening to traffic.",
+    },
+    {
+      title: "Residential tower for a developer client",
+      projectType: "42-storey build-to-sell residential tower, developer client with a separate facilities management company",
+      differences: [
+        "Information purposes include sales and marketing (unit areas and finishes), building safety records and handover to the owners association.",
+        "Unit-level data (net sellable area, finishes options, appliance schedules) is required per apartment, linked to the sales system.",
+        "Building safety information (fire strategy, compartmentation, cladding specifications, fire door inspections) is treated as a golden thread with strict version control.",
+        "Asset data is split between common parts for the facilities manager and in-unit assets for each purchaser handover pack.",
+        "Milestones follow sales launch and phased floor completion as well as design stages.",
+      ],
+      sample:
+        "For each apartment the delivery team must provide, at sales launch, a net sellable area measured from the coordinated model to the agreed measurement standard, within a tolerance of plus or minus 0.5 percent. Any change after sales launch must be reported to the developer within 5 working days.",
+    },
+    {
+      title: "Operational campus framework appointment",
+      projectType: "Four-year framework for minor works and refurbishments across a university campus of 60 buildings",
+      differences: [
+        "A standing EIR for the framework, supplemented by a short call-off EIR for each project stating scope, milestones and LOIN.",
+        "Requirements are driven mainly by the AIR and the existing asset information model; projects must update the campus AIM, not create stand-alone models.",
+        "Existing asset information is issued as reference information, with a duty to verify and correct it in the work area.",
+        "Small projects may deliver updated asset data and marked-up drawings without new models, where the call-off allows.",
+        "Performance is measured across the framework through data quality scores that affect future call-off allocation.",
+        "Security and access requirements follow the campus estates policies and live-occupancy rules.",
+      ],
+      sample:
+        "Each call-off will state whether a model update is required. In all cases, the contractor must update the campus asset register for every asset installed, removed or relocated, within 15 working days of practical completion of the call-off, and the data quality score for the call-off must be at least 95 percent.",
+    },
+  ],
+  caseStudies: [
+    {
+      title: "Vague level of detail led to a dispute at Stage 4",
+      sector: "Healthcare",
+      situation:
+        "A regional health client issued an EIR requiring models at LOD 400 at technical design, with no element-by-element definition and no link to purposes.",
+      whatHappened: [
+        "The design team read LOD 400 as fabrication-ready geometry for the main elements only; the client expected every service under 50 mm to be modelled.",
+        "Tender prices varied by almost 40 percent for the information scope because tenderers made different assumptions.",
+        "At the Stage 4 milestone the client rejected the models and withheld the stage payment.",
+        "Three months were spent negotiating what had been required, with claims for additional modelling.",
+        "The client eventually issued a LOIN matrix by element group as a variation.",
+      ],
+      outcome: "Stage 4 approval was delayed by eleven weeks and the client paid for additional modelling it could have specified at tender.",
+      lessons: [
+        "Define the level of information need per element group, milestone and purpose, not a single LOD number.",
+        "Say what is not required as clearly as what is required.",
+        "Ask tenderers to confirm their understanding of the LOIN in the pre-appointment BEP.",
+        "Wide variation in tender prices for information scope is a warning that the EIR is unclear.",
+      ],
+      good: false,
+    },
+    {
+      title: "Measurable acceptance criteria made milestone acceptance quick",
+      sector: "Education",
+      situation:
+        "A public schools programme rewrote its EIR so that every acceptance criterion was a pass or fail check with a threshold, supported by automated naming and model checks.",
+      whatHappened: [
+        "The EIR listed seven acceptance checks, each with the tool, the threshold and the milestones it applied to.",
+        "Delivery teams ran the same checks before submission and attached the self-check report.",
+        "The client's information lead reviewed submissions in three to five working days instead of the previous four weeks.",
+        "Rejections cited the exact criterion failed, so resubmissions were usually accepted at the next attempt.",
+        "Stage payments were linked to acceptance and paid on time.",
+      ],
+      outcome: "Across six schools the average time from submission to acceptance fell from 26 to 6 working days, with no disputes about what acceptance meant.",
+      lessons: [
+        "Write acceptance criteria that two people would assess the same way.",
+        "Share the checking rules and tools with the delivery team so they can self-check.",
+        "Link payment to acceptance only once criteria are objective.",
+      ],
+      good: true,
+    },
+    {
+      title: "Missing link to the AIR meant asset data was collected twice",
+      sector: "Commercial offices",
+      situation:
+        "An owner-occupier's EIR required COBie at handover but did not reference its AIR or its CAFM system's asset types and attributes.",
+      whatHappened: [
+        "The contractor delivered COBie that validated against the generic schema.",
+        "The FM team found that asset types, naming and attributes did not match the CAFM structure.",
+        "Around 30 percent of required maintenance attributes were missing, including filter sizes and maintenance intervals.",
+        "The FM provider was paid to resurvey 4,000 assets in the first six months of operation.",
+        "Planned maintenance started late, and some warranties were nearly lost because start dates were not recorded.",
+      ],
+      outcome: "The client paid twice for asset data and the building ran on reactive maintenance for its first half-year.",
+      lessons: [
+        "Reference the AIR in the EIR and state which prevails on asset data.",
+        "Validate COBie against the client's own templates and picklists, not only the generic schema.",
+        "Test the import into the receiving system before handover.",
+        "Bring the FM team into writing the EIR.",
+      ],
+      good: false,
+    },
+    {
+      title: "Over-specified EIR priced small firms out of a modest project",
+      sector: "Local authority community buildings",
+      situation:
+        "A local authority used its major projects EIR, written for a large hospital, unchanged for a 1,200 m2 community centre.",
+      whatHappened: [
+        "The EIR required 4D and 5D modelling, weekly federation, laser scan verification and a full-time information manager.",
+        "Several local contractors and designers declined to tender, citing the information management cost.",
+        "The two remaining tenders priced information management at around 8 percent of the construction cost.",
+        "Much of the required information had no use for the authority's small facilities team.",
+      ],
+      outcome: "The authority retendered with a proportionate EIR, losing four months and attracting five compliant bids at a much lower information cost.",
+      lessons: [
+        "Scale the EIR to the project and to the information the client will actually use.",
+        "Every requirement should trace to a purpose; remove those that do not.",
+        "Keep a short EIR template for small projects alongside the full version.",
+      ],
+      good: false,
+    },
+    {
+      title: "EIR flowed down properly through the supply chain",
+      sector: "Rail depot",
+      situation:
+        "A lead contractor for a rail maintenance depot broke the client's EIR down into specific requirements for each of its 14 appointed parties, including specialist subcontractors.",
+      whatHappened: [
+        "Each sub-appointment included a tailored extract of the EIR with the relevant ER references, LOIN entries and milestones.",
+        "Specialist subcontractors were given the COBie templates and object library at order, not at handover.",
+        "Task information managers attended a joint mobilization workshop and a test exchange before production started.",
+        "Installed asset data was captured during installation and checked monthly.",
+        "The lead contractor's information manager audited each task team quarterly against its extract.",
+      ],
+      outcome: "Handover data was accepted at the first submission and the depot's maintenance system went live on the day of handover.",
+      lessons: [
+        "The lead appointed party should write a specific EIR extract for each appointed party, not just attach the client's document.",
+        "Issue shared resources at order so information is produced right first time.",
+        "Audit task teams against their own requirements during delivery, not only at the end.",
+        "Test exchanges at mobilization find problems while they are cheap to fix.",
+      ],
+      good: true,
+    },
+  ],
+  clauses: [
+    { topic: "Information standard", label: "Compliance with the information standard", text: "All information containers must comply with the project information standard, including container naming, metadata, classification and revision conventions. Non-compliant containers will be rejected without technical review." },
+    { topic: "Information standard", label: "Naming convention", text: "Container names must follow the field structure Project-Originator-Volume-Level-Type-Role-Number of the UK National Annex, using only the codes published in the project information standard. New codes must be requested from the information manager before use." },
+    { topic: "Information standard", label: "Classification", text: "Every model object must be classified to Uniclass 2015, with an Ss code for all elements and systems and a Pr code for all maintainable products." },
+    { topic: "Formats", label: "Open exchange format", text: "Building models must be exchanged in IFC 4 Reference View at every milestone, together with the native authoring file. The IFC export must be checked for correct entity types, property sets and coordinates before sharing." },
+    { topic: "Formats", label: "Drawings and documents", text: "Drawings must be issued as PDF generated from the coordinated model, with DWG where requested. Documents must be issued as searchable PDF with the native file retained in the CDE." },
+    { topic: "Formats", label: "Issue exchange", text: "Coordination issues must be exchanged in BCF 2.1 or later and tracked to closure in the project issue log." },
+    { topic: "LOIN", label: "LOIN by purpose and milestone", text: "The level of information need is defined in the LOIN matrix by element group, milestone and purpose, covering geometry, alphanumeric information and documentation. Information beyond the stated level is not required and will not be reviewed." },
+    { topic: "LOIN", label: "Silent entries", text: "Where the LOIN matrix does not cover an element, the level of the nearest parent group applies. The delivery team must request clarification before modelling to a higher level." },
+    { topic: "CDE", label: "Use of the CDE", text: "All project information must be produced, shared and published through the project CDE. Information exchanged outside the CDE has no contractual status." },
+    { topic: "CDE", label: "Suitability and revision codes", text: "Containers must carry suitability and revision codes per the UK National Annex: S0 in work in progress, S1 to S4 when shared, S6 and S7 for PIM and AIM authorization, A codes when accepted and CR for the as-constructed record." },
+    { topic: "Security", label: "Security-minded approach", text: "The project has been assessed as sensitive. The delivery team must follow the security management plan, hold sensitive information in the restricted area of the CDE and share it only with individuals named on the approved access list." },
+    { topic: "Security", label: "Access control", text: "CDE access is by named account with multi-factor authentication. Access rights are reviewed monthly and removed within one working day of a person leaving the project." },
+    { topic: "Security", label: "Incident reporting", text: "Any suspected loss, unauthorised disclosure or breach of project information must be reported to the appointing party's security lead within 24 hours." },
+    { topic: "Milestones", label: "Milestone submissions", text: "At each milestone the lead appointed party must submit a single information package, listed in a transmittal, containing all containers due under the MIDP, authorized by the lead appointed party and with a completed self-check report." },
+    { topic: "Milestones", label: "Progress reporting", text: "The monthly report must state the percentage of containers delivered against the MIDP and identify late or at-risk deliverables with recovery actions." },
+    { topic: "Acceptance", label: "Review period", text: "The appointing party will review each submission within 10 working days and either accept it or reject it with a review record stating the criterion failed. Rejected information must be resubmitted within 10 working days." },
+    { topic: "Acceptance", label: "Objective criteria", text: "Information will be accepted when it meets every acceptance criterion and threshold stated in this EIR. The appointing party will not reject information for reasons not stated in the acceptance criteria without first issuing a change to the requirements." },
+    { topic: "COBie / asset data", label: "Progressive COBie", text: "COBie must be delivered progressively at the design, construction and handover drops in the milestone schedule, and each drop must validate against the project templates and picklists with no errors." },
+    { topic: "COBie / asset data", label: "Asset tagging", text: "Every maintainable asset must have a unique tag in the format defined in the AIR, matching the physical label fixed to the asset on site." },
+    { topic: "COBie / asset data", label: "Link to the AIR", text: "Asset information must comply with the asset information requirements. Where this EIR and the AIR differ on asset data, the AIR prevails." },
+    { topic: "COBie / asset data", label: "Site verification", text: "Before handover, a sample of at least 10 percent of maintainable assets will be verified jointly on site. If more than 2 percent of sampled records are wrong, the full register must be rechecked and resubmitted." },
+    { topic: "Software", label: "Software and versions", text: "The delivery team must use the authoring and coordination software and minimum versions listed in this EIR. Any change of software or version requires the agreement of the appointing party and a test exchange before use." },
+    { topic: "Federation", label: "Federation routine", text: "Discipline models must be shared at S1 weekly on the agreed day. The BIM coordinator federates them, runs the clash tests in the clash matrix and circulates the results before the weekly coordination meeting." },
+    { topic: "Federation", label: "Clash closure", text: "A clash is closed only when the corrected model has been shared and the next clash run confirms the fix. There must be no open critical clashes at any design milestone." },
+    { topic: "Training", label: "Competence and training", text: "The lead appointed party must ensure that everyone producing or managing information has the competence to do so, and must provide project induction on the information standard, CDE and security requirements before access is granted." },
+    { topic: "Training", label: "Client training", text: "Before handover, the lead appointed party must train up to ten nominated appointing party staff in navigating the as-constructed models and the asset information delivered." },
+    { topic: "Change control", label: "Change to requirements", text: "The appointing party may change these requirements only through a formal change notice that states the change, the reason and the effective date. The lead appointed party must assess the impact on cost, programme and the BEP within 10 working days." },
+    { topic: "Change control", label: "Flow-down", text: "The lead appointed party must flow down the relevant parts of this EIR to each appointed party in its delivery team and remains responsible for the information they deliver." },
+    { topic: "Health and safety", label: "Residual risk information", text: "Models must identify significant residual risks for construction, maintenance and demolition in the agreed property, consistent with the designers' risk register and the health and safety file." },
+  ],
+  rubric: [
+    { criterion: "Traceability to OIR, AIR and purposes", weight: 15, excellent: "Every requirement has a reference, a purpose and a decision point, and traces to the OIR, AIR or PIR.", poor: "Requirements are generic lists of deliverables with no stated purpose or link to the client's needs." },
+    { criterion: "Level of information need", weight: 15, excellent: "LOIN defined per element group and milestone for geometry, alphanumeric information and documentation, with what is not required.", poor: "A single LOD number for the whole model, or no definition at all." },
+    { criterion: "Milestones and programme", weight: 10, excellent: "Dated milestones aligned to decision points, with deliverables, suitability codes and review periods.", poor: "Milestones described only as stages, with no dates or deliverables." },
+    { criterion: "Measurable acceptance criteria", weight: 15, excellent: "Pass or fail checks with thresholds, tools and the milestones they apply to; a clear review and rejection process.", poor: "Acceptance left to the client's satisfaction or not mentioned." },
+    { criterion: "Standards, methods and formats", weight: 10, excellent: "Points to the project information standard and fixes naming, codes, classification, coordinates, open formats and software versions.", poor: "Repeats or contradicts the standard; formats and versions left open." },
+    { criterion: "Asset information and handover", weight: 10, excellent: "Linked to the AIR and receiving system, with progressive data drops, tagging, site verification and an import test.", poor: "Asks for COBie at handover with no templates, validation or link to the AIR." },
+    { criterion: "Information security", weight: 8, excellent: "States the triage outcome and auditable controls for access, sensitive information and incidents.", poor: "No security section, or a general duty of confidentiality only." },
+    { criterion: "Roles, coordination and flow-down", weight: 7, excellent: "Names roles on both sides, sets a federation routine with clash tests, and requires flow-down to appointed parties.", poor: "Roles unclear; coordination described as best endeavours; no flow-down." },
+    { criterion: "Proportionality", weight: 5, excellent: "Scope of requirements matches the project's size, risk and the client's ability to use the information.", poor: "A copied template far beyond what the project or client needs, or too thin for a complex project." },
+    { criterion: "Tender response and evaluation", weight: 5, excellent: "Lists required submissions and weighted evaluation criteria tied to the EIR references.", poor: "Asks only for a generic BIM statement with no evaluation method." },
+  ],
+};

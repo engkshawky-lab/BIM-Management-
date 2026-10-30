@@ -1,0 +1,25 @@
+/* TIDP / MIDP from the programme. Logical properties only, so the layout mirrors for Arabic (RTL). */
+.prog .prog-filters { margin-block: 12px 8px; }
+.prog .prog-filters input[type="search"] { flex: 1 1 240px; min-inline-size: 0; max-inline-size: 360px; }
+.prog-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
+.prog-check input { inline-size: auto; }
+.prog-acts { max-block-size: 420px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+.prog-acts thead, .prog-rows thead { position: sticky; inset-block-start: 0; z-index: 1; background: var(--surface); }
+.prog-acts td, .prog-rows td { vertical-align: middle; }
+.prog-acts input[type="checkbox"] { inline-size: auto; }
+.prog-summary td { font-weight: 600; color: var(--muted); background: var(--surface-2); }
+.prog-mile { color: var(--accent); margin-inline-end: 6px; font-size: 11px; }
+.prog-block { display: block; margin-block: 12px; }
+.prog-block textarea { inline-size: 100%; }
+.prog-rows { max-block-size: 560px; overflow: auto; }
+.prog-rows table { min-inline-size: 1200px; }
+.prog-rows .prog-code { min-inline-size: 56px; inline-size: 64px; }
+.prog-warn { box-shadow: inset 3px 0 0 var(--warn); }
+[dir="rtl"] .prog-warn { box-shadow: inset -3px 0 0 var(--warn); }
+.prog-issue { color: var(--warn); font-weight: 700; cursor: help; white-space: nowrap; }
+.prog-ok { color: var(--ok, #15803d); font-weight: 700; }
+.prog-confirm { border-inline-start: 3px solid var(--warn); padding-inline-start: 12px; margin-block: 10px; }
+.prog-note { border-inline-start: 3px solid var(--warn); padding-inline-start: 10px; }
+.prog-stats { margin-block: 10px; }
+.prog-flag { margin-inline-end: 4px; margin-block: 1px; }
+.prog-flag-overdue, .prog-flag-removed, .prog-flag-beforePredecessor { color: var(--danger); }

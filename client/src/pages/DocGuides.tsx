@@ -6,6 +6,8 @@ import { WF_STAGES } from "../../../shared/data/workflow/stages";
 import { ROLE_TITLES, type StageId } from "../../../shared/data/workflow/types";
 import { generateHref } from "./AiTools";
 import { TONES } from "./HubPage";
+import DeepDiveView from "./DeepDive";
+import { deepDiveFor } from "../../../shared/data/deepDives";
 
 // Document guides: what each ISO 19650 document is, who writes and approves it, what goes in each
 // section, how to create it and how to check it. /doc-guides and /doc-guides/:templateId
@@ -65,7 +67,8 @@ function Guide({ g }: { g: DocGuide }) {
   const toggle = (i: number) => { const next = done.includes(i) ? done.filter((x) => x !== i) : [...done, i]; setDone(next); store(key, next); };
   const i = DOC_GUIDES.indexOf(g);
   const prev = DOC_GUIDES[i - 1], next = DOC_GUIDES[i + 1];
-  const toc = [["dg-what", "What and why"], ["dg-who", "Who and when"], ["dg-chain", "Document chain"], ["dg-sections", "Section by section"], ["dg-how", "How to create it"], ["dg-check", "Quality checklist"], ["dg-mistakes", "Common mistakes"]];
+  const deep = deepDiveFor(g.id);
+  const toc = [...(deep ? [["dg-deep", "Worked example & case studies"]] : []), ["dg-what", "What and why"], ["dg-who", "Who and when"], ["dg-chain", "Document chain"], ["dg-sections", "Section by section"], ["dg-how", "How to create it"], ["dg-check", "Quality checklist"], ["dg-mistakes", "Common mistakes"]];
   return (
     <div className="hub" style={{ "--hub": TONES.blue } as CSSProperties}>
       <div className="hub-hero">
@@ -83,6 +86,8 @@ function Guide({ g }: { g: DocGuide }) {
         <a href="#/doc-guides">← {t("All documents")}</a>
         {toc.map(([id, label]) => <button key={id} className="linklike" onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })}>{t(label)}</button>)}
       </nav>
+
+      {deep && <DeepDiveView d={deep} name={t(g.name)} />}
 
       <div className="grid g2" id="dg-what">
         <div className="hub-tile"><b>{t("What it is")}</b><div style={{ marginTop: 4 }}>{t(g.what)}</div></div>

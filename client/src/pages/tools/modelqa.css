@@ -1,0 +1,32 @@
+/* Model QA from IDS. Logical properties only, so the layout mirrors for Arabic (RTL). */
+.mqa-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+.mqa-note { margin: 0; border-inline-start: 3px solid var(--accent); padding-inline-start: 10px; }
+.mqa-drop { display: grid; place-items: center; gap: 4px; padding: 22px 14px; border: 2px dashed var(--border); border-radius: 10px; cursor: pointer; text-align: center; margin: 0; }
+.mqa-drop.over, .mqa-drop:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.mqa-bar { block-size: 4px; margin-block-start: 8px; border-radius: 4px; overflow: hidden; background: var(--surface-2); }
+.mqa-bar > div { block-size: 100%; inline-size: 35%; background: var(--accent); border-radius: 4px; animation: mqa-slide 1.2s ease-in-out infinite; }
+@keyframes mqa-slide { from { margin-inline-start: -35%; } to { margin-inline-start: 100%; } }
+@media (prefers-reduced-motion: reduce) { .mqa-bar > div { animation: none; inline-size: 100%; opacity: .5; } }
+.mqa-facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 10px; margin: 10px 0 0; }
+.mqa-facts dt { color: var(--muted); }
+.mqa-facts dd { margin: 0; min-inline-size: 0; overflow-wrap: anywhere; }
+.mqa-presets { display: grid; gap: 4px; }
+.mqa-check { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
+.mqa-check input { inline-size: auto; }
+.mqa-meter { block-size: 6px; border-radius: 4px; background: var(--surface-2); overflow: hidden; margin-block-start: 4px; }
+.mqa-meter > div { block-size: 100%; background: var(--accent); }
+.mqa-filters { margin-block: 8px; gap: 6px; }
+.mqa-search { inline-size: auto; flex: 1 1 200px; min-inline-size: 0; }
+.mqa-table td { vertical-align: middle; }
+.mqa-table tr.on > td { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.mqa-disc td { font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .03em; color: var(--c); border-inline-start: 4px solid var(--c); background: var(--surface-2); }
+.mqa-detail > td { background: var(--surface-2); padding: 10px 12px; }
+.mqa-samples { margin-block-start: 6px; background: var(--surface); }
+.mqa-guid { direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+.mqa-advice { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-block-end: 10px; }
+.mqa-advice > div { border-inline-start: 3px solid #7c3aed; padding-inline-start: 10px; }
+.mqa-advice p { margin: 4px 0 0; white-space: pre-wrap; }
+.mqa-ai { border-block-start: 1px solid var(--border); padding-block-start: 8px; margin-block-start: 8px; }
+.mqa-ai ol { margin: 4px 0 8px; padding-inline-start: 20px; }
+.mqa-teams { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-block-start: 8px; }
+.mqa-teams label { display: grid; gap: 4px; }

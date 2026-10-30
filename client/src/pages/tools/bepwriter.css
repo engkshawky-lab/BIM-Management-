@@ -1,0 +1,41 @@
+/* BEP from the EIR. Logical properties only, so the layout mirrors for Arabic (RTL). */
+.bw { display: grid; gap: 12px; }
+.bw-h { margin-block: 0 8px; display: flex; align-items: center; gap: 8px; }
+.bw-p { margin-block: 4px 8px; line-height: 1.5; }
+.bw-n { display: inline-grid; place-items: center; inline-size: 24px; block-size: 24px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; flex: none; }
+.bw-step { display: grid; gap: 8px; }
+.bw-note, .bw-warn { border-inline-start: 3px solid var(--warn); }
+.bw-warn { padding-inline-start: 8px; margin-block: 6px; }
+.bw-error { border-inline-start: 3px solid var(--danger); color: var(--danger); }
+.bw-eir { min-block-size: 160px; }
+.bw-field { display: grid; gap: 4px; align-content: start; }
+.bw-field input, .bw-field select, .bw-field textarea { inline-size: 100%; box-sizing: border-box; }
+.bw-profile { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.bw-wide { grid-column: 1 / -1; }
+@media (min-width: 900px) { .bw-profile .bw-wide { grid-column: auto / span 1; } }
+.bw-kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.bw-kind { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+.bw-kind input { justify-self: start; }
+.bw-kind.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.bw-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bw-progress { display: grid; gap: 4px; }
+.bw-bar { block-size: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+.bw-bar > div { block-size: 100%; background: var(--accent); transition: inline-size .4s; }
+.bw-result { display: grid; gap: 12px; }
+.bw-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-block-end: 10px; }
+.bw-stat { display: grid; justify-items: center; padding: 4px 14px; min-inline-size: 80px; border-inline-start: 4px solid var(--border); }
+.bw-stat b { font-size: 20px; }
+.bw-stat span { font-size: 12px; color: var(--muted); }
+.bw-ok { border-inline-start-color: var(--ok); }
+.bw-gap { border-inline-start-color: var(--danger); }
+.bw-sec summary { cursor: pointer; padding-block: 2px; }
+.bw-md { inline-size: 100%; box-sizing: border-box; min-block-size: 260px; margin-block: 8px; font-family: ui-monospace, Consolas, monospace; font-size: 13px; line-height: 1.5; }
+.bw-table-wrap { overflow-x: auto; }
+.bw-table { inline-size: 100%; border-collapse: collapse; font-size: 13px; }
+.bw-table th, .bw-table td { border: 1px solid var(--border); padding: 6px 8px; text-align: start; vertical-align: top; }
+.bw-table th { background: var(--surface-2); }
+.bw-table td:first-child { white-space: nowrap; font-weight: 600; }
+.bw-uncovered td { background: color-mix(in srgb, var(--danger) 8%, var(--surface)); }
+.bw-cell { inline-size: 100%; box-sizing: border-box; min-block-size: 48px; font: inherit; }
+.bw-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.bw-list { inline-size: 100%; box-sizing: border-box; min-block-size: 180px; line-height: 1.5; }

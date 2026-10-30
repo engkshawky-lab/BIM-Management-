@@ -1,0 +1,89 @@
+/* ISO 19650 audit assistant. Logical properties only, so the layout mirrors for Arabic (RTL). */
+.au { display: grid; gap: 12px;
+  --au-ok: var(--ok); --au-part: #f59e0b; --au-nc: var(--danger); --au-ne: #64748b; --au-na: var(--border); }
+:root[data-theme="dark"] .au { --au-part: #fbbf24; --au-ne: #94a3b8; }
+.au-ok { --au-c: var(--au-ok); } .au-part { --au-c: var(--au-part); } .au-nc { --au-c: var(--au-nc); } .au-ne { --au-c: var(--au-ne); } .au-na { --au-c: var(--au-na); }
+.au-note { border-inline-start: 3px solid var(--warn); }
+.au-disclaimer { border-inline-start: 3px solid var(--accent); font-size: 13px; }
+.au-error { border-inline-start: 3px solid var(--danger); color: var(--danger); padding-inline-start: 10px; }
+.au-warn { color: var(--warn); }
+.au-p { margin-block: 6px 0; white-space: pre-wrap; line-height: 1.5; }
+
+.au-steps { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.au-step { display: inline-flex; gap: 8px; align-items: center; padding-block: 6px; padding-inline: 10px 14px; border-radius: 999px; }
+.au-step.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); font-weight: 600; }
+.au-step-n { display: inline-grid; place-items: center; inline-size: 22px; block-size: 22px; border-radius: 50%; background: var(--surface-2); font-size: 12px; font-weight: 700; }
+.au-step.on .au-step-n { background: var(--accent); color: #fff; }
+.au-step.done .au-step-n { background: var(--ok); color: #fff; }
+
+.au-panel { display: grid; gap: 10px; }
+.au-fs { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.au-fs legend { inline-size: 100%; margin-block-end: 4px; }
+.au-check { display: inline-flex; gap: 6px; align-items: center; }
+.au-check input, .au-cb { inline-size: auto; }
+.au-opts { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.au-field { display: grid; gap: 4px; flex: 1 1 200px; max-inline-size: 360px; }
+.au-nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.au-nav-inline { display: flex; gap: 8px; }
+
+.au-drop { display: grid; place-items: center; gap: 6px; padding: 18px; border: 2px dashed var(--border); border-radius: 10px; cursor: pointer; text-align: center; }
+.au-drop:hover { border-color: var(--accent); }
+.au-drop input { inline-size: auto; max-inline-size: 100%; }
+.au-files, .au-reg { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.au-files li { display: flex; gap: 10px; align-items: center; padding-block: 4px; border-block-end: 1px solid var(--border); }
+.au-fname { flex: 1; overflow-wrap: anywhere; }
+.au-ficon { display: inline-grid; place-items: center; min-inline-size: 36px; block-size: 22px; padding-inline: 4px; border-radius: 4px; font-size: 10px; font-weight: 700; color: #fff; background: var(--muted); direction: ltr; }
+.au-f-pdf { background: #b91c1c; } .au-f-doc { background: #1d4ed8; } .au-f-xls { background: #15803d; } .au-f-img { background: #7c3aed; } .au-f-txt { background: #475569; }
+
+.au-partcounts { display: flex; flex-wrap: wrap; gap: 8px; }
+.au-pc { padding-block: 4px; padding-inline: 10px; border-radius: 8px; background: var(--surface-2); font-size: 13px; }
+.au-preview { max-block-size: 520px; overflow: auto; }
+.au-off td { opacity: .45; }
+.au-id { font-family: Consolas, monospace; font-size: 12px; direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+
+.au-progress { display: grid; gap: 6px; }
+.au-progress-bar { block-size: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.au-progress-bar span { display: block; block-size: 100%; background: var(--accent); transition: inline-size .4s; }
+
+.au-summary { display: grid; grid-template-columns: minmax(280px, 1fr) 1.4fr; gap: 12px; }
+@media (max-width: 860px) { .au-summary { grid-template-columns: 1fr; } }
+.au-scorecard { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.au-gauge { inline-size: 120px; block-size: 120px; flex: none; }
+.au-gauge-track { fill: none; stroke: var(--surface-2); stroke-width: 12; }
+.au-gauge-bar { fill: none; stroke-width: 12; stroke-linecap: round; stroke: var(--au-c, var(--accent)); transition: stroke-dasharray .4s; }
+.au-gauge-num { font-size: 32px; font-weight: 700; fill: var(--text); }
+.au-gauge-sub { font-size: 12px; fill: var(--muted); }
+.au-verdict { font-size: 18px; font-weight: 700; }
+.au-sev { display: flex; flex-wrap: wrap; gap: 6px; margin-block-start: 10px; }
+.au-sevc { display: grid; justify-items: center; padding-block: 4px; padding-inline: 12px; min-inline-size: 80px; border-inline-start: 4px solid var(--au-s, var(--border)); }
+.au-sevc b { font-size: 18px; } .au-sevc span { font-size: 12px; color: var(--muted); }
+.au-sevc.on { background: color-mix(in srgb, var(--au-s) 12%, var(--surface)); border-color: var(--au-s); }
+.au-s-major { --au-s: var(--danger); } .au-s-minor { --au-s: var(--au-part); } .au-s-observation { --au-s: var(--accent); }
+.au-sevtag { font-size: 12px; font-weight: 700; color: var(--au-s); }
+
+.au-parts { display: grid; gap: 4px; align-content: start; }
+.au-partrow { display: grid; grid-template-columns: minmax(140px, 240px) 1fr 44px; gap: 10px; align-items: center; border-color: transparent; background: transparent; padding: 4px 6px; text-align: start; }
+.au-partrow.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.au-pct { font-size: 12px; font-weight: 600; text-align: end; }
+.au-bar { display: flex; block-size: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-2); }
+.au-seg { display: block; flex-basis: 0; background: var(--au-c); }
+.au-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-block-start: 6px; }
+.au-dot { display: inline-block; inline-size: 10px; block-size: 10px; border-radius: 2px; background: var(--au-c); vertical-align: middle; }
+
+.au-toolbar, .au-exports { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.au-toolbar input[type="search"] { flex: 1 1 240px; inline-size: auto; }
+.au-toolbar select { inline-size: auto; }
+.au-table th { white-space: nowrap; }
+.au-expand { border: 0; background: transparent; padding: 0; white-space: nowrap; }
+.au-req { font-weight: 600; }
+.au-row.open td { border-block-end-color: transparent; }
+.au-chip { display: inline-block; padding-block: 1px; padding-inline: 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap;
+  color: var(--au-c); border: 1px solid var(--au-c); background: color-mix(in srgb, var(--au-c) 10%, transparent); }
+.au-chip.au-na { color: var(--muted); }
+.au-edited { display: inline-block; margin-inline-start: 6px; font-size: 11px; font-style: italic; color: var(--ai, var(--accent)); }
+.au-detail td { background: var(--surface-2); }
+.au-edit { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.au-edit .au-field { max-inline-size: none; }
+.au-wide { grid-column: 1 / -1; }
+.au-edit textarea { min-block-size: 64px; }
+.au-reg li { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }

@@ -1,0 +1,57 @@
+/* Drawing & sheet QA. Logical properties only, so the layout mirrors in Arabic (RTL). */
+.sqa { display: grid; gap: 14px; }
+.sqa-lead { margin: 0; max-inline-size: 860px; }
+.sqa-note { margin: 0; color: var(--muted); border-inline-start: 3px solid var(--warn); padding-inline-start: 10px; }
+.sqa-off { border-inline-start: 3px solid var(--danger); }
+.sqa-off p { margin-block: 4px 0; }
+.sqa-field { display: grid; gap: 4px; font-size: 13px; }
+.sqa-field > span { color: var(--muted); }
+.sqa-check { gap: 6px; margin-block-start: 6px; align-items: center; }
+.sqa-check input { inline-size: auto; }
+.sqa-hint { margin-block-start: 8px; }
+.sqa-top { align-items: stretch; }
+.sqa-drop { display: grid; place-items: center; gap: 8px; padding: 24px; text-align: center; cursor: pointer; margin: 0;
+  border: 2px dashed var(--border); border-radius: 12px; background: var(--surface); }
+.sqa-drop.over { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 6%, var(--surface)); }
+.sqa-drop.disabled { opacity: 0.55; cursor: not-allowed; }
+.sqa-drop input[type="file"] { display: none; }
+.sqa-queue { display: grid; gap: 8px; align-content: start; }
+.sqa-files { margin: 0; padding-inline-start: 18px; font-size: 12px; max-block-size: 140px; overflow-y: auto; }
+.sqa-progress { display: grid; gap: 4px; }
+.sqa-progress .bar { block-size: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.sqa-progress .bar > div { block-size: 100%; background: var(--accent); transition: inline-size 0.3s; }
+.sqa-actions { gap: 8px; flex-wrap: wrap; }
+.sqa-errors { border-inline-start: 3px solid var(--danger); }
+.sqa-errors ul { margin: 6px 0 0; padding-inline-start: 18px; font-size: 12.5px; }
+.sqa-stat { border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; background: var(--surface); border: 1px solid var(--border); color: inherit; }
+.sqa-stat .v { font-size: 22px; font-weight: 800; line-height: 1.2; }
+.sqa-stat.on { outline: 2px solid currentColor; }
+.sqa-stat.sqa-pass .v { color: var(--ok); }
+.sqa-stat.sqa-warn .v { color: var(--warn); }
+.sqa-stat.sqa-fail .v { color: var(--danger); }
+.sqa-toolbar { gap: 8px; flex-wrap: wrap; align-items: center; }
+.sqa-toolbar select, .sqa-search { inline-size: auto; min-inline-size: 160px; }
+.sqa-spacer { flex: 1; }
+.sqa-trn textarea { font-size: 12px; direction: ltr; text-align: start; }
+.sqa-table { overflow-x: auto; max-inline-size: 100%; }
+.sqa-name { word-break: break-all; direction: ltr; unicode-bidi: isolate; }
+.sqa-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.sqa-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding-block: 1px; padding-inline: 6px; border-radius: 6px; white-space: nowrap;
+  border: 1px solid currentColor; background: transparent; }
+.sqa-chip.sqa-pass, .sqa-score.sqa-pass, .sqa-checklist li.sqa-pass > b { color: var(--ok); }
+.sqa-chip.sqa-warn, .sqa-score.sqa-warn { color: var(--warn); }
+.sqa-chip.sqa-fail, .sqa-score.sqa-fail { color: var(--danger); }
+.sqa-conf-medium { color: var(--warn); }
+.sqa-conf-low { color: var(--danger); font-weight: 600; }
+.sqa-detail > td { background: var(--surface-2); }
+.sqa-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin-block: 8px; }
+.sqa-fields input, .sqa-revs input { padding-block: 4px; padding-inline: 6px; font-size: 12.5px; }
+.sqa-fields input.edited { border-color: var(--accent); }
+.sqa-revs { display: grid; gap: 6px; margin-block-start: 8px; }
+.sqa-revs table { font-size: 12px; }
+.sqa-checklist { list-style: none; margin-block: 8px; padding: 0; display: grid; gap: 6px; }
+.sqa-checklist li { border-inline-start: 3px solid currentColor; padding-inline-start: 8px; }
+.sqa-checklist li.sqa-pass { color: var(--ok); }
+.sqa-checklist li.sqa-warn { color: var(--warn); }
+.sqa-checklist li.sqa-fail { color: var(--danger); }
+.sqa-checklist li > b, .sqa-checklist li > div { color: var(--text, inherit); }
