@@ -5,6 +5,7 @@ import { exportCsv } from "../lib/export";
 import type { ElementRow, IfcJob, IfcJobResult } from "../lib/ifcWorker";
 import { saveMarkdownDocx } from "../lib/mdDocx";
 import { TONES } from "./hubTheme";
+import RevitCheck from "./RevitCheck";
 
 // Model tools: IFC Hub (analysis, LOIN/IDS validation, AI comparison) and the QA/QC model checker (single or batch).
 // Files are read and checked in this browser; only a compact summary is sent to AI when you ask for the AI comparison.
@@ -12,6 +13,7 @@ import { TONES } from "./hubTheme";
 export const MODEL_TOOLS = [
   { id: "ifc", label: "IFC Hub", hint: "Analyse an IFC model, check it against LOIN or IDS requirements, and compare it with your EIR using AI" },
   { id: "qaqc", label: "QA/QC model checker", hint: "Grade IFC models A–F against ISO 19650 checks, one file or up to 10 side by side" },
+  { id: "revit", label: "Revit project check", hint: "Check the open Revit model against your project rules with a read-only pyRevit button or Claude through MCP, then grade the results here" },
 ] as const;
 
 const MAX_MB = 300;
@@ -280,9 +282,9 @@ export default function ModelTools({ tool }: { tool?: string }) {
   return (
     <div className="hub" style={{ "--hub": TONES.teal } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">TOOLS · BIM MODELS</div><h1>{cur.label}</h1><p>{cur.hint}</p>
-        <div className="facts"><span>IFC 2x3 · 4 · 4.3</span><span>Checked in your browser</span><span>Word and CSV reports</span></div></div>
+        <div className="facts">{cur.id === "revit" ? <><span>Revit 2017–2027</span><span>Read-only in Revit</span><span>Element IDs to select</span></> : <><span>IFC 2x3 · 4 · 4.3</span><span>Checked in your browser</span><span>Word and CSV reports</span></>}</div></div>
       <div className="hub-tabs">{MODEL_TOOLS.map((t) => <a key={t.id} className={cur.id === t.id ? "on" : ""} href={`#/model-tools/${t.id}`}>{t.label}</a>)}</div>
-      {cur.id === "ifc" ? <IfcHub /> : <QaChecker />}
+      {cur.id === "ifc" ? <IfcHub /> : cur.id === "revit" ? <RevitCheck /> : <QaChecker />}
     </div>
   );
 }

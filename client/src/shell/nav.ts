@@ -89,6 +89,7 @@ export const TEMPLATE_PAGES: NavItem[] = templates.map((t) =>
 
 export const TOOL_PAGES: NavItem[] = [
   g("r.myday", "My Day", "/my-day", "calendar", "Daily work", "What is due from your delivery plan and what is waiting on you"),
+  g("m.revit", "Revit project check", "/model-tools/revit", "check", "Daily work", "Check the open Revit model against your project rules: parameters, naming, sheets, model health"),
   g("m.naming", "File naming checker", "/tools/naming-check", "tag", "Daily work", "Check hundreds of file names at once; get corrected names and match them to the plan"),
   g("ai.projectdata", "Project data (enter once)", "/project-data", "table", "AI document tools", "Mandatory inputs every document reuses: the eight-item hard minimum and per-document inputs"),
   g("ai.review", "Document review & compare", "/ai-tools/review", "sparkles", "AI document tools", "Review EIR/BEP/MIDP; EIR ↔ BEP check; BEP versions"),

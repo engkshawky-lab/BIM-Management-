@@ -81,7 +81,7 @@ export const HUB_LINKS: Record<HubId, HubLinks> = {
       { hub: "cobie", why: "COBie parameters and export" },
       { hub: "scan-to-bim", why: "Modelling existing buildings from point clouds" },
     ],
-    tools: ["m.ifc", "m.qaqc", "ai.mcp", "s.naming"],
+    tools: ["m.revit", "m.ifc", "m.qaqc", "ai.mcp", "s.naming"],
     parts: [2, 4],
   },
   mcp: {
@@ -89,7 +89,7 @@ export const HUB_LINKS: Record<HubId, HubLinks> = {
       { hub: "revit", why: "MCP for Revit and Autodesk products, step by step" },
       { hub: "implementation", why: "Governing AI and new technology in your organisation" },
     ],
-    tools: ["ai.mcp", "ai.generate", "ai.review"],
+    tools: ["ai.mcp", "m.revit", "ai.generate", "ai.review"],
     parts: [2, 5],
   },
   "scan-to-bim": {
