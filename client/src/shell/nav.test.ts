@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ALL_PAGES, DAILY_TOOLS, DOCUMENT_PAGES, HOME_PAGES, MODEL_PAGES, RAIL, RESOURCE_PAGES, STANDARD_PAGES, pageByKey, sectionFor } from "./nav";
+import { ALL_PAGES, DAILY_TOOLS, HOME_PAGES, SECTIONS, groupsOf, locate, pageByKey } from "./nav";
+import { BIM_ROLES } from "./roles";
 
 describe("navigation layout", () => {
   it("defines every page once", () => {
@@ -9,26 +10,31 @@ describe("navigation layout", () => {
     expect(new Set(paths).size).toBe(paths.length);
   });
 
-  it("opens the section a page is listed in", () => {
-    const sections: [string, typeof HOME_PAGES][] = [["home", HOME_PAGES], ["documents", DOCUMENT_PAGES], ["tools", MODEL_PAGES], ["standards", STANDARD_PAGES], ["resources", RESOURCE_PAGES]];
-    for (const [id, items] of sections) for (const p of items) expect([p.path, sectionFor(p.path)]).toEqual([p.path, id]);
-    expect(RAIL.map((r) => r.id)).toEqual(["home", "projects", "documents", "tools", "standards", "resources"]);
+  it("has five sidebar sections, each in a few groups", () => {
+    expect(SECTIONS.map((s) => s.id)).toEqual(["home", "documents", "models", "learn", "resources"]);
+    for (const s of SECTIONS) expect(groupsOf(s.items).length).toBeLessThanOrEqual(6);
+    expect(HOME_PAGES.map((p) => p.path)).toContain("/");
   });
 
-  it("routes pages outside the menu to a sensible section", () => {
-    expect(sectionFor("/")).toBe("home");
-    expect(sectionFor("/projects/abc/delivery/plan")).toBe("projects");
-    expect(sectionFor("/hubs/revit/mcp/videos")).toBe("standards");
-    expect(sectionFor("/hubs/theme/process")).toBe("standards");
-    expect(sectionFor("/learn/guides/coordinator")).toBe("standards");
-    expect(sectionFor("/knowledge/iso19650/templates/eir")).toBe("documents");
-    expect(sectionFor("/ai-tools/plans")).toBe("documents");
-    expect(sectionFor("/model-tools/revit")).toBe("tools");
-    expect(sectionFor("/tools/fee")).toBe("resources");
-    expect(sectionFor("/admin/users")).toBe("resources");
+  it("finds the section and group a page is listed in", () => {
+    for (const s of SECTIONS) for (const p of s.items) expect([p.path, locate(p.path).section, locate(p.path).group]).toEqual([p.path, s.id, p.group]);
   });
 
-  it("keeps the daily tools pointing at real pages", () => {
+  it("places pages outside the menu sensibly", () => {
+    expect(locate("/")).toMatchObject({ section: "home" });
+    expect(locate("/projects/0b7f3c1e-0000-4000-8000-000000000000/delivery/plan")).toMatchObject({ section: "projects", group: "Appointment & planning" });
+    expect(locate("/projects/new")).toMatchObject({ section: "projects" });
+    expect(locate("/hubs/revit/mcp/videos")).toMatchObject({ section: "learn", group: "Topic hubs" });
+    expect(locate("/parts/19650-2/clauses")).toMatchObject({ section: "learn", group: "ISO 19650 parts" });
+    expect(locate("/knowledge/iso19650/templates/eir")).toMatchObject({ section: "documents", group: "Templates & samples" });
+    expect(locate("/ai-tools/plans")).toMatchObject({ section: "documents", group: "Create" });
+    expect(locate("/model-tools/revit")).toMatchObject({ section: "models", group: "Check models" });
+    expect(locate("/tools/fee")).toMatchObject({ section: "resources" });
+    expect(locate("/admin/users")).toMatchObject({ section: "account" });
+  });
+
+  it("keeps shortcuts and role favourites pointing at real pages", () => {
     for (const k of DAILY_TOOLS) expect(pageByKey(k), k).toBeTruthy();
+    for (const r of BIM_ROLES) for (const k of r.tools) expect(pageByKey(k), `${r.id}: ${k}`).toBeTruthy();
   });
 });

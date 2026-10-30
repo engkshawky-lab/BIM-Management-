@@ -39,13 +39,12 @@ export default function ProjectPage({ projectId, tab, sub }: { projectId: string
   const { project } = data;
 
   if (tab === "documents" && sub) return <DocumentEditor data={data} docId={sub} />;
-  // Navigation between hubs lives in the side panel; the page shows where you are.
+  // Navigation between hubs lives in the sidebar; the page bar shows where you are.
   const page = PROJECT_PAGES.find((x) => x.path === pathOf(tab, sub));
 
   return (
     <>
       <div className="page-head">
-        <div className="crumbs"><a href={`#/projects/${projectId}/overview`}>{project.code} · {project.name}</a>{page && <><span>›</span><span>{t(page.group)}</span><span>›</span><b>{t(page.label)}</b></>}</div>
         <h1>{page?.label === "Summary" ? project.name : page ? t(page.label) : project.name}</h1>
         <div className="row">{project.standards.map((s) => <StdBadge key={s} std={s} />)}<span className="small muted">{[project.appointingParty, project.stage].filter(Boolean).join(" · ")}{project.appointingParty || project.stage ? " · " : ""}{t("your role")}: {data.role}</span></div>
       </div>

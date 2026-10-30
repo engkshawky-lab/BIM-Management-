@@ -1,7 +1,7 @@
 import { templates } from "../../../shared/data/templates";
 import type { IconName } from "./icons";
 
-// Single registry of every page. The side panel, Ctrl+K search, favourites, roles and
+// Single registry of every page. The sidebar, breadcrumbs, Ctrl+K search, favourites, roles and
 // "recently visited" all read from here, so a page is defined exactly once.
 
 export interface NavItem {
@@ -53,51 +53,54 @@ export const PROJECT_PAGES: NavItem[] = [
   p("p.settings", "Project settings", "settings", "settings", "Team"),
 ];
 
-/** Home: your own work across projects. */
+/** Your own work across projects. */
 export const HOME_PAGES: NavItem[] = [
+  g("r.home", "Home", "/", "home", "My work", "Today, recent pages and your projects"),
   g("r.myday", "My Day", "/my-day", "calendar", "My work", "What is due from your delivery plan and what is waiting on you"),
-  g("r.portfolio", "Portfolio dashboard", "/portfolio", "grid", "My work", "Health across your projects"),
-  g("r.wizard", "Setup wizard", "/wizard", "sparkles", "My work", "Answer a few questions; get the documents and workflow you need"),
+  g("r.portfolio", "Portfolio", "/portfolio", "grid", "My work", "Health across your projects"),
 ];
-/** Daily tools, shown on the Home panel as shortcuts; each page lives in its own section. */
+/** Daily tools, offered on Home. */
 export const DAILY_TOOLS = ["m.naming", "m.revit", "ai.plans"];
 
+/** Each template has its own page; the sidebar links to the two template libraries and search finds the rest. */
 export const TEMPLATE_PAGES: NavItem[] = templates.map((t) =>
-  g(`t.${t.id}`, `${t.code} — ${t.title}`, `/knowledge/${t.standard}/templates/${t.id}`, "file", `${t.standard === "iso19650" ? "ISO 19650" : "ISO/IEC 42001"} · ${t.category}`, t.purpose));
+  g(`t.${t.id}`, `${t.code} — ${t.title}`, `/knowledge/${t.standard}/templates/${t.id}`, "file", "Templates & samples", t.purpose));
 
-/** Documents, in the order they are made: enter the project data, create, check, then samples and templates. */
+/** Documents and delivery, in the order work is done: project data and setup, create, check, then templates. */
 export const DOCUMENT_PAGES: NavItem[] = [
-  g("ai.projectdata", "Project data (enter once)", "/project-data", "table", "1 · Project data", "Mandatory inputs every document reuses: the eight-item hard minimum and per-document inputs"),
-  g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "2 · Create", "EIR, AIR, PIR, OIR, BEP, TIDP, MIDP or any custom template"),
-  g("ai.plans", "TIDP / MIDP / MPDT generator", "/ai-tools/plans", "calendar", "2 · Create", "Delivery plan tables with naming, checks and Excel export"),
-  g("ai.risks", "Risk register generator", "/ai-tools/risks", "sparkles", "2 · Create"),
-  g("ai.clash", "Clash matrix builder", "/ai-tools/clash", "sparkles", "2 · Create"),
-  g("ai.review", "Document review & compare", "/ai-tools/review", "sparkles", "3 · Check", "Review EIR/BEP/MIDP; EIR ↔ BEP check; BEP versions"),
-  g("m.naming", "File naming checker", "/tools/naming-check", "tag", "3 · Check", "Check hundreds of file names at once; get corrected names and match them to the plan"),
-  g("s.naming", "Naming & status code tool", "/knowledge/iso19650/naming", "tag", "3 · Check", "Build one container name and look up status codes"),
-  g("ai.suitability", "Suitability code hub", "/ai-tools/suitability", "sparkles", "3 · Check"),
-  g("r.samples", "Sample documents (EIR, AIR, OIR, BEP…)", "/samples", "file", "Samples & downloads", "Structured Word samples with guidance"),
-  g("r.downloads", "Downloads library", "/downloads", "library", "Samples & downloads", "Templates, checklists and guides curated by administrators"),
-  ...TEMPLATE_PAGES,
+  g("ai.projectdata", "Project data (enter once)", "/project-data", "table", "Project data & setup", "Mandatory inputs every document reuses"),
+  g("r.wizard", "Setup wizard", "/wizard", "sparkles", "Project data & setup", "Answer a few questions; get the documents and workflow you need"),
+  g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "Create", "EIR, AIR, PIR, OIR, BEP or any custom template"),
+  g("ai.plans", "TIDP / MIDP / MPDT generator", "/ai-tools/plans", "calendar", "Create", "Delivery plan tables with naming, checks and Excel export"),
+  g("ai.risks", "Risk register generator", "/ai-tools/risks", "sparkles", "Create", "Information delivery risks with owners and treatment"),
+  g("ai.clash", "Clash matrix builder", "/ai-tools/clash", "sparkles", "Create", "Discipline pairs, tolerances and priorities"),
+  g("ai.review", "Document review & compare", "/ai-tools/review", "sparkles", "Check", "Review EIR/BEP/MIDP; EIR ↔ BEP check; BEP versions"),
+  g("m.naming", "File naming checker", "/tools/naming-check", "tag", "Check", "Check hundreds of file names at once"),
+  g("s.naming", "Naming & status code tool", "/knowledge/iso19650/naming", "tag", "Check", "Build one container name and look up status codes"),
+  g("ai.suitability", "Suitability code hub", "/ai-tools/suitability", "sparkles", "Check", "Status and suitability codes and when to use them"),
+  g("t.lib19650", "ISO 19650 templates", "/knowledge/iso19650/templates", "files", "Templates & samples", "EIR, BEP, TIDP, MIDP and every other ISO 19650 document"),
+  g("t.lib42001", "ISO/IEC 42001 templates", "/knowledge/iso42001/templates", "files", "Templates & samples", "AI policy, risk, impact assessment and the other AIMS documents"),
+  g("r.samples", "Sample documents", "/samples", "file", "Templates & samples", "Structured Word samples for EIR, AIR, OIR, BEP and more"),
+  g("r.downloads", "Downloads library", "/downloads", "library", "Templates & samples", "Templates, checklists and guides curated by administrators"),
 ];
 
 /** Models: check them, then connect AI to the authoring tools. */
 export const MODEL_PAGES: NavItem[] = [
-  g("m.revit", "Revit project check", "/model-tools/revit", "check", "Check models", "Check the open Revit model against your project rules: parameters, naming, sheets, model health"),
+  g("m.revit", "Revit project check", "/model-tools/revit", "check", "Check models", "Parameters, naming, sheets and model health against your rules"),
   g("m.qaqc", "QA/QC model checker", "/model-tools/qaqc", "check", "Check models", "Grade IFC models A–F, compare up to 10"),
   g("m.ifc", "IFC Hub", "/model-tools/ifc", "layers", "Check models", "Analyse IFC models, check LOIN/IDS, compare with your EIR"),
-  g("ai.cobie", "COBie data checker", "/ai-tools/cobie", "sparkles", "Check models"),
-  g("ai.mcp", "Connect via MCP", "/ai-tools/mcp", "link", "Connect AI", "Connect Claude to Revit, IFC and CDE tools with MCP"),
+  g("ai.cobie", "COBie data checker", "/ai-tools/cobie", "sparkles", "Check models", "Sheets, required fields and handover readiness"),
+  g("ai.mcp", "Connect AI via MCP", "/ai-tools/mcp", "link", "Connect AI", "Connect Claude to Revit, IFC and CDE tools"),
 ];
 
 /** Learn: where to start, the standard itself, the in-depth topic hubs (hubs index order), ISO/IEC 42001, references. */
-export const STANDARD_PAGES: NavItem[] = [
-  g("s.learn", "Learn: quizzes, mock exam, scenarios", "/learn", "sparkles", "Start here", "Practice questions, timed exam, skill profile"),
+export const LEARN_PAGES: NavItem[] = [
+  g("s.learn", "Quizzes, mock exam, scenarios", "/learn", "sparkles", "Start here", "Practice questions, timed exam, skill profile"),
   g("s.guides", "Best-practice guides", "/learn/guides", "book", "Start here", "Practical guidance for modellers, coordinators and managers"),
   g("s.adoption", "Implementation guide", "/learn/adoption", "flow", "Start here", "Adopt ISO 19650 across your organization, step by step"),
-  g("s.19650.parts", "All parts (1–6): learning hub", "/parts", "book", "ISO 19650", "Beginner to expert, clause deep dives, checklists, Ask AI"),
-  ...[1, 2, 3, 4, 5, 6].map((n) => g(`s.19650.part${n}`, `Part ${n}`, `/parts/19650-${n}`, "book", "ISO 19650")),
-  g("s.19650.revision", "2026 revision (draft): what is changing", "/hubs/revision-2026", "alert", "ISO 19650", "Status of the Parts 1–3 revision, confirmed vs proposed changes, what to do now"),
+  g("s.19650.parts", "All parts (1–6): learning hub", "/parts", "book", "ISO 19650 parts", "Beginner to expert, clause deep dives, checklists, Ask AI"),
+  ...[1, 2, 3, 4, 5, 6].map((n) => g(`s.19650.part${n}`, `Part ${n}`, `/parts/19650-${n}`, "book", "ISO 19650 parts")),
+  g("s.19650.revision", "2026 revision (draft): what is changing", "/hubs/revision-2026", "alert", "ISO 19650 parts", "Status of the Parts 1–3 revision, confirmed vs proposed changes, what to do now"),
   g("s.19650.summary", "Parts at a glance", "/knowledge/iso19650/library/0", "book", "ISO 19650 essentials"),
   g("s.19650.process", "Delivery process (19650-2)", "/knowledge/iso19650/library/1", "flow", "ISO 19650 essentials"),
   g("s.19650.cde", "CDE & status codes", "/knowledge/iso19650/library/2", "layers", "ISO 19650 essentials"),
@@ -123,48 +126,60 @@ export const STANDARD_PAGES: NavItem[] = [
 ];
 
 export const RESOURCE_PAGES: NavItem[] = [
-  g("r.fee", "BIM fee estimator", "/tools/fee", "table", "Calculators & assessments"),
-  g("r.carbon", "Embodied carbon (6D)", "/tools/carbon", "layers", "Calculators & assessments"),
-  g("r.maturity", "BIM maturity assessment", "/tools/maturity", "check", "Calculators & assessments"),
-  g("r.dt", "Digital twin readiness", "/tools/dt", "check", "Calculators & assessments"),
-  g("r.scan", "Scan-to-BIM readiness", "/tools/scan", "check", "Calculators & assessments"),
-  g("r.standards", "Client standards", "/standards", "book", "Industry", "Client information standards and requirements"),
-  g("r.news", "BIM & ISO 19650 news", "/news", "activity", "Industry", "AI-compiled news with relevance ratings"),
-  g("r.talentme", "My talent profile", "/talent/me", "user", "Careers", "Opt-in profile for recruiters"),
-  g("r.talent", "Talent pool (recruiters)", "/talent", "users", "Careers"),
+  g("r.fee", "BIM fee estimator", "/tools/fee", "table", "Calculators"),
+  g("r.carbon", "Embodied carbon (6D)", "/tools/carbon", "layers", "Calculators"),
+  g("r.maturity", "BIM maturity assessment", "/tools/maturity", "check", "Calculators"),
+  g("r.dt", "Digital twin readiness", "/tools/dt", "check", "Calculators"),
+  g("r.scan", "Scan-to-BIM readiness", "/tools/scan", "check", "Calculators"),
+  g("r.standards", "Client standards", "/standards", "book", "Industry & careers", "Client information standards and requirements"),
+  g("r.news", "BIM & ISO 19650 news", "/news", "activity", "Industry & careers", "AI-compiled news with relevance ratings"),
+  g("r.talentme", "My talent profile", "/talent/me", "user", "Industry & careers", "Opt-in profile for recruiters"),
+  g("r.talent", "Talent pool (recruiters)", "/talent", "users", "Industry & careers"),
+];
+
+/** Reached from the account menu and the Help link rather than the sidebar sections. */
+export const ACCOUNT_PAGES: NavItem[] = [
   g("r.profile", "My profile", "/profile", "user", "Account"),
   g("r.support", "Help & support", "/support", "help", "Account", "Ask a question or report a problem; see replies"),
 ];
 
-export const ALL_PAGES = [...PROJECT_PAGES, ...HOME_PAGES, ...DOCUMENT_PAGES, ...MODEL_PAGES, ...STANDARD_PAGES, ...RESOURCE_PAGES];
+export const ALL_PAGES = [...PROJECT_PAGES, ...HOME_PAGES, ...DOCUMENT_PAGES, ...MODEL_PAGES, ...TEMPLATE_PAGES, ...LEARN_PAGES, ...RESOURCE_PAGES, ...ACCOUNT_PAGES];
 export const pageByKey = (key: string) => ALL_PAGES.find((x) => x.key === key);
 
-export interface RailSection { id: string; label: string; icon: IconName; title: string }
-/** The rail follows the working order: your day, your projects, the documents and models you produce, then learning and resources. */
-export const RAIL: RailSection[] = [
-  { id: "home", label: "Home", icon: "home", title: "Home" },
-  { id: "projects", label: "Projects", icon: "folder", title: "Projects" },
-  { id: "documents", label: "Documents", icon: "files", title: "Documents & templates" },
-  { id: "tools", label: "Models", icon: "layers", title: "Model checks & AI" },
-  { id: "standards", label: "Learn", icon: "book", title: "Learn ISO 19650" },
-  { id: "resources", label: "Resources", icon: "library", title: "Resources" },
+export interface NavSection { id: string; label: string; icon: IconName; items: NavItem[]; numbered?: boolean }
+/** Sidebar sections, one open at a time. Projects sits after My work and is built from the user's projects. */
+export const SECTIONS: NavSection[] = [
+  { id: "home", label: "My work", icon: "home", items: HOME_PAGES },
+  { id: "documents", label: "Documents & delivery", icon: "files", items: DOCUMENT_PAGES, numbered: true },
+  { id: "models", label: "Models & AI", icon: "layers", items: MODEL_PAGES },
+  { id: "learn", label: "ISO standards & learning", icon: "book", items: LEARN_PAGES },
+  { id: "resources", label: "Resources", icon: "library", items: RESOURCE_PAGES },
 ];
 
-const SECTION_PAGES: [string, NavItem[]][] = [["home", HOME_PAGES], ["documents", DOCUMENT_PAGES], ["tools", MODEL_PAGES], ["standards", STANDARD_PAGES], ["resources", RESOURCE_PAGES]];
+export const groupsOf = (items: NavItem[]) => [...new Set(items.map((i) => i.group))];
 
-/** Which rail section a route belongs to, so the right panel opens on navigation: the section of the menu page with the longest matching path. */
-export function sectionFor(route: string): string {
-  if (route.startsWith("/projects")) return "projects";
-  let best = ""; let section = "";
-  for (const [id, items] of SECTION_PAGES) for (const i of items)
-    if ((route === i.path || route.startsWith(i.path + "/")) && i.path.length > best.length) { best = i.path; section = id; }
-  if (section) return section;
+export interface Location { section: string; sectionLabel: string; group?: string; item?: NavItem }
+const SECTION_LABEL: Record<string, string> = { projects: "Projects", account: "Account", ...Object.fromEntries(SECTIONS.map((s) => [s.id, s.label])) };
+const at = (section: string, item?: NavItem, group = item?.group): Location => ({ section, sectionLabel: SECTION_LABEL[section], group, item });
+
+/** Where a route sits in the sidebar: its section, group and page (the menu page with the longest matching path). */
+export function locate(route: string): Location {
+  const proj = /^\/projects\/[^/]+\/(.+)$/.exec(route)?.[1];
+  if (proj) return at("projects", PROJECT_PAGES.find((x) => proj === x.path || proj.startsWith(x.path + "/")));
+  if (route.startsWith("/projects")) return at("projects");
+  const lists: [string, NavItem[]][] = [...SECTIONS.map((s) => [s.id, s.items] as [string, NavItem[]]), ["documents", TEMPLATE_PAGES], ["account", ACCOUNT_PAGES]];
+  let best: Location | null = null; let len = 0;
+  for (const [id, items] of lists) for (const i of items)
+    if ((route === i.path || route.startsWith(i.path + "/")) && i.path.length > len) { len = i.path.length; best = at(id, i); }
+  if (best) return best;
   // pages that are not in the menu themselves
-  if (/^\/knowledge\/[^/]+\/templates/.test(route)) return "documents";
-  if (/^\/(ai-tools|model-tools)(\/|$)/.test(route)) return "tools";
-  if (/^\/(admin|talent|standards|profile|support|billing)(\/|$)/.test(route)) return "resources";
-  if (/^\/(knowledge|learn|parts|hubs)(\/|$)/.test(route)) return "standards";
-  return "home";
+  if (/^\/knowledge\/[^/]+\/templates/.test(route)) return at("documents", undefined, "Templates & samples");
+  if (/^\/ai-tools(\/|$)/.test(route)) return at("documents");
+  if (/^\/model-tools(\/|$)/.test(route)) return at("models");
+  if (/^\/(admin|billing)(\/|$)/.test(route)) return at("account");
+  if (/^\/(talent|standards|tools)(\/|$)/.test(route)) return at("resources");
+  if (/^\/(knowledge|learn|parts|hubs)(\/|$)/.test(route)) return at("learn");
+  return at("home");
 }
 
 /** Resolve a page to a hash path; project pages need a project. */
