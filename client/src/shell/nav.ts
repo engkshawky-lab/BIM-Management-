@@ -68,6 +68,10 @@ export const TEMPLATE_PAGES: NavItem[] = templates.map((t) =>
 
 /** Documents and delivery, in the order work is done: project data and setup, create, check, then templates. */
 export const DOCUMENT_PAGES: NavItem[] = [
+  g("w.project", "Project workflow", "/workflow/project", "flow", "Workflow & roles", "Ten stages from need to operation: steps, gates, documents"),
+  g("w.documents", "Document workflow", "/workflow/documents", "files", "Workflow & roles", "How files and documents move through the CDE, step by step"),
+  g("w.matrix", "Roles by stage", "/workflow/matrix", "table", "Workflow & roles", "Who is responsible, accountable, consulted and informed at each stage"),
+  g("w.roles", "Role profiles", "/workflow/roles", "users", "Workflow & roles", "BIM manager, information manager, BIM coordinator and every other role"),
   g("ai.projectdata", "Project data (enter once)", "/project-data", "table", "Project data & setup", "Mandatory inputs every document reuses"),
   g("r.wizard", "Setup wizard", "/wizard", "sparkles", "Project data & setup", "Answer a few questions; get the documents and workflow you need"),
   g("ai.generate", "Document generator", "/ai-tools/generate", "sparkles", "Create", "EIR, AIR, PIR, OIR, BEP or any custom template"),
@@ -174,7 +178,7 @@ export function locate(route: string): Location {
   if (best) return best;
   // pages that are not in the menu themselves
   if (/^\/knowledge\/[^/]+\/templates/.test(route)) return at("documents", undefined, "Templates & samples");
-  if (/^\/ai-tools(\/|$)/.test(route)) return at("documents");
+  if (/^\/(ai-tools|workflow)(\/|$)/.test(route)) return at("documents");
   if (/^\/model-tools(\/|$)/.test(route)) return at("models");
   if (/^\/(admin|billing)(\/|$)/.test(route)) return at("account");
   if (/^\/(talent|standards|tools)(\/|$)/.test(route)) return at("resources");
