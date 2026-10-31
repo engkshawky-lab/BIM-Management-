@@ -206,6 +206,7 @@ function Sidebar({ route, projects, project, onAsk, onRole, onHide, theme, setTh
       </nav>
       <div className="sb-foot">
         <a className={"sb-mini" + (route.startsWith("/support") ? " on" : "")} href="#/support"><Icon name="help" size={14} />{t("Help & support")}</a>
+        <a className={"sb-mini" + (route.startsWith("/legal") ? " on" : "")} href="#/legal/privacy"><Icon name="file" size={14} />{t("Privacy & terms")}</a>
       </div>
     </aside>
   );

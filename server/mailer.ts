@@ -1,7 +1,7 @@
-import nodemailer from "nodemailer";
+import nodemailer, { type Transporter } from "nodemailer";
 
 // Optional SMTP delivery. Without SMTP_HOST, mail is logged instead of sent so nothing breaks.
-let transport: nodemailer.Transporter | null | undefined;
+let transport: Transporter | null | undefined;
 const get = () => {
   if (transport !== undefined) return transport;
   const host = process.env.SMTP_HOST?.trim();

@@ -51,6 +51,9 @@ docker compose up -d --build                           # first build ~5–10 min
 
 Open http://localhost:3001 — the first account becomes the administrator. Database migrations run automatically on start.
 
+Before a public or paid launch, work through [docs/LAUNCH.md](docs/LAUNCH.md) (legal pages, HTTPS, AI budget, Stripe, email,
+backups with `scripts/backup.sh`).
+
 ## Run locally
 
 ```bash

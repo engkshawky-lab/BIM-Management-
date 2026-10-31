@@ -1,6 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { loadUser, requireUser } from "./auth";
 import { runMigrations } from "./db";
 import ai from "./routes/ai";
@@ -42,10 +43,12 @@ import { aiQuota } from "./billing";
 import { paymentsRouter, stripeWebhook } from "./payments";
 import { startScheduler } from "./agents";
 import standards from "./routes/standards";
+import { securityHeaders } from "./security";
 
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
+app.use(securityHeaders);
 // Stripe needs the raw body for signature checks, so its webhook is mounted before the JSON parser.
 app.post("/api/stripe/webhook", ...stripeWebhook);
 app.use(express.json({ limit: "5mb" }));
@@ -71,7 +74,7 @@ app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: Ne
   res.status(500).json({ error: "Something went wrong on the server." });
 });
 
-const clientDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), "../client");
+const clientDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../client");
 if (process.env.NODE_ENV === "production" && fs.existsSync(clientDir)) {
   app.use(express.static(clientDir, { index: false, maxAge: "1h" }));
   app.get("*", (_req, res) => res.sendFile(path.join(clientDir, "index.html")));

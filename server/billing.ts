@@ -2,6 +2,7 @@ import { and, count, eq, inArray, sql } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
 import { planById, type Plan } from "../shared/plans";
 import { db, schema } from "./db";
+import { aiBurstExceeded } from "./security";
 
 // Plans and usage. Limits are enforced only with BILLING=on; usage is always counted.
 export const billingOn = () => process.env.BILLING === "on";
@@ -47,14 +48,20 @@ export async function assertStorage(projectId: string, incomingBytes: number) {
   if (u.storageBytes + incomingBytes > plan.storageGb * 1024 ** 3) throw new LimitError(`Storage limit reached (${plan.storageGb} GB on the ${plan.name} plan).${upgrade}`);
 }
 
-const AI_PATHS = /\/(ai-draft|assistant|requirements\/extract|contract-review|ai-triage|ask|interview|ai\/tools\/[a-z-]+(\/[a-z-]+)?|news\/refresh)$/;
-/** Counts AI requests per user per month and enforces the plan quota when billing is on. */
+const AI_PATHS = /\/(ai-draft|assistant|agent|requirements\/extract|contract-review|ai-triage|ask|interview|ai\/tools\/[a-z-]+(\/[a-z-]+)?|news\/refresh)$/;
+/** Counts AI requests per user per month and enforces the plan quota when billing is on. Without billing,
+ *  AI_MONTHLY_LIMIT (requests per user per month, 0 or unset = no cap) keeps the API budget bounded. */
 export async function aiQuota(req: Request, res: Response, next: NextFunction) {
   if (req.method !== "POST" || !AI_PATHS.test(req.path) || !req.user) return next();
   try {
+    if (aiBurstExceeded(req.user.id)) return res.status(429).json({ error: "Too many AI requests in a minute. Wait a moment and try again." });
     if (billingOn()) {
       const [plan, u] = await Promise.all([currentPlan(req.user.id), usage(req.user.id)]);
       if (u.aiThisMonth >= plan.aiPerMonth) return res.status(402).json({ error: `You've used this month's ${plan.aiPerMonth} AI requests on the ${plan.name} plan.${upgrade}` });
+    } else if (Number(process.env.AI_MONTHLY_LIMIT) > 0) {
+      const cap = Number(process.env.AI_MONTHLY_LIMIT);
+      const u = await usage(req.user.id);
+      if (u.aiThisMonth >= cap) return res.status(429).json({ error: `You've used this month's ${cap} AI requests. Ask your administrator to raise the limit.` });
     }
     await db.insert(schema.aiUsage).values({ userId: req.user.id, month: month(), count: 1 }).onDuplicateKeyUpdate({ set: { count: sql`${schema.aiUsage.count} + 1` } });
     next();

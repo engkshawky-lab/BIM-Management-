@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { api, type User } from "../lib/api";
 import { getLocale, setLocale, t } from "../i18n";
 import { applyDomLocale } from "../i18nDom";
+import { LegalFooter } from "./Legal";
 
 /** Language toggle before sign-in (remembered in this browser). */
 function LangSwitch({ onChange }: { onChange: () => void }) {
@@ -64,10 +65,12 @@ export default function Login({ onSignedIn }: { onSignedIn: (u: User) => void })
         {mode === "forgot" && <p className="small muted">Enter your account email. A one-time reset link (valid 1 hour) is issued to your portal administrator, who can also send it from the admin console.</p>}
         {sent && <p className="small" style={{ color: "var(--ok)" }}>{sent}</p>}
         {mode === "register" && <p className="small muted">At least 8 characters. If someone invited you to a project, use the same email and you'll join it automatically.</p>}
+        {mode === "register" && <p className="small muted">By creating an account you agree to the <a href="#/legal/terms">Terms of Service</a> and the <a href="#/legal/privacy">Privacy Policy</a>.</p>}
         {error && <p className="error">{error}</p>}
         <button className="primary" style={{ width: "100%", justifyContent: "center", marginTop: 12 }} disabled={busy}>{t(busy ? "Please wait…" : mode === "login" ? "Sign in" : mode === "forgot" ? "Request reset link" : "Create account")}</button>
         {mode === "forgot" && <button type="button" className="linklike small" style={{ marginTop: 8 }} onClick={() => setMode("login")}>{t("← Back to sign in")}</button>}
       </form>
+      <LegalFooter />
     </div>
   );
 }
