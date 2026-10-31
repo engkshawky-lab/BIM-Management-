@@ -6,8 +6,11 @@ import type { Hub } from "./types";
 // Public MCP Server set-up and tools pages, the AutoCAD and Civil 3D MCP Server page and the Product Help MCP page),
 // the Autodesk developer blog (blog.autodesk.io), the APS Automation API pages, the APS Navisworks developer overview,
 // Anthropic's Claude help centre and Claude Code docs, OpenAI's ChatGPT help centre, developer docs and Codex docs,
-// and the README files of the community repositories named below. General MCP concepts live in the MCP hub (/hubs/mcp).
+// the README files of the community repositories named below, and the FirstOption MCP Hub (mcp-hub.firstoption-es.com),
+// whose facts match the Revit hub's MCP section (revitAdvanced.ts). General MCP concepts live in the MCP hub (/hubs/mcp).
 // Tech previews, menus and plan rules change quickly: keep wording hedged and recheck before relying on details.
+
+const FO = "https://mcp-hub.firstoption-es.com";
 
 export const aiConnectHub: Hub = {
   id: "ai-connect",
@@ -22,6 +25,74 @@ export const aiConnectHub: Hub = {
       id: "overview",
       label: "Overview",
       tabs: [
+        {
+          id: "firstoption",
+          label: "FirstOption MCP Hub",
+          blocks: [
+            {
+              kind: "text",
+              title: "Our connectors: the FirstOption MCP Suite",
+              body: [
+                "The FirstOption MCP Hub is our own way to connect AI to Autodesk desktop software. One Windows setup installs MCP connectors for Revit, AutoCAD, Civil 3D, Plant 3D and Navisworks. Claude Code or Codex runs on your PC, the connector runs code inside the open application, and the hub shares a library of tested commands across the company.",
+                "It is route 1 (an MCP server to the live application) with project controls added: dry runs, one undo step per Revit command, verification with rollback and an audit log. The other tabs in this guide compare it with Autodesk's own MCP servers, community projects, the Automation API and file-based checks.",
+              ],
+            },
+            {
+              kind: "links",
+              title: "FirstOption MCP Hub",
+              links: [
+                { label: "MCP Hub home", href: `${FO}/`, note: "Overview, download and frequently asked questions", tone: "blue" },
+                { label: "Revit MCP", href: `${FO}/products/revit-mcp?public`, note: "Capabilities, supported versions and installation", tone: "purple" },
+                { label: "All products", href: `${FO}/products?public`, note: "AutoCAD, Civil 3D, Plant 3D and Navisworks connectors", tone: "teal" },
+                { label: "Sign up", href: `${FO}/signup`, note: "Create your company and get the code to connect each PC", tone: "green" },
+                { label: "Sign in", href: `${FO}/login`, note: "Company admin: PCs, subscription, library and audit log", tone: "amber" },
+              ],
+            },
+            {
+              kind: "table",
+              title: "The connectors",
+              columns: ["Connector", "Application versions", "What it runs", "Typical disciplines"],
+              rows: [
+                ["Revit MCP (firstoption-revit)", "Revit 2017–2027", "IronPython and C# inside Revit through pyRevit Routes and a Revit add-in", "Architecture, structure, MEP, BIM management, documentation, QA/QC"],
+                ["AutoCAD MCP (firstoption-autocad)", "AutoCAD 2015–2027, not AutoCAD LT", "AutoLISP for quick queries and edits, C# for heavy geometry, blocks, attributes and layouts", "Drafting, documentation, CAD data extraction"],
+                ["Civil 3D MCP (firstoption-civil3d)", "Civil 3D 2015–2027", "C# through the Civil 3D .NET API and AutoLISP", "Civil, infrastructure"],
+                ["Plant 3D MCP (firstoption-plant3d)", "AutoCAD Plant 3D 2015–2027", "C# through the Plant 3D .NET API and AutoLISP; reads piping, equipment and project properties", "Piping, plant design, equipment"],
+                ["Navisworks MCP (firstoption-navisworks)", "Navisworks Manage or Simulate 2020–2027, not Freedom", "C# through the Navisworks .NET API: models, selection sets, viewpoints and clash tests", "Coordination, clash detection"],
+              ],
+            },
+            {
+              kind: "cards",
+              title: "Why it suits project work",
+              cards: [
+                { title: "One undo step", body: "Each Revit command runs as a single undo step, so a change can be reversed in one go.", tone: "blue" },
+                { title: "Dry run first", body: "A dry run reports what would change and then rolls back, so you can check before anything is kept.", tone: "green" },
+                { title: "Verification and rollback", body: "A verification step rolls the change back if it fails, and Revit warnings come back as text instead of dialogs.", tone: "teal" },
+                { title: "Shared command library", body: "Commands that worked are saved with their inputs and reused, so the office builds up tested tools rather than one-off prompts.", tone: "purple" },
+                { title: "Reviewed, staged releases", body: "FirstOption reviews library changes and releases them to a pilot group of PCs before everyone.", tone: "amber" },
+                { title: "Models stay local", body: "Code runs inside the application on the PC. The hub stores the library, skills, usage figures and the audit log, without model content or prompts.", tone: "red" },
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Set it up",
+              steps: [
+                { title: "Sign up your company", body: "Create the company on the hub at mcp-hub.firstoption-es.com/signup. The company admin manages PCs, the subscription and the library." },
+                { title: "Download the suite", body: "Download the FirstOption MCP Suite for Windows from the hub. One setup covers every connector and needs no admin rights." },
+                { title: "Run the setup on each PC", body: "Run it on every workstation that will use AI. It installs the add-ins and MCP servers, and adds Claude Code, Codex, Node.js and pyRevit if they are missing." },
+                { title: "Connect the PC", body: "Open the Autodesk application and go to First Option > Hub Settings. Enter your company's code to connect the PC to the hub." },
+                { title: "Assign the PC", body: "The company admin assigns the PC to the subscription in the hub." },
+                { title: "Sign in to Claude or Codex", body: "Start Claude Code on the PC and sign in with your Claude account. Codex works the same way with an OpenAI account." },
+                { title: "Check the connection", body: "With the model or drawing open, run /mcp in Claude Code and confirm the connector, for example firstoption-revit, is listed and connected. Then ask a read-only question first." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Full install guide and troubleshooting",
+              body: "The Revit hub's MCP section (/hubs/revit) has the requirements for each PC, the supported Revit versions, troubleshooting and example prompts. Supported versions and plans are taken from the FirstOption MCP Hub in October 2026, when the suite was described as free for now with one Engineering Automation Suite subscription covering every connector. Check the hub for current details.",
+              tone: "info",
+            },
+          ],
+        },
         {
           id: "routes",
           label: "Four ways to connect",
@@ -148,6 +219,12 @@ export const aiConnectHub: Hub = {
           id: "revit-what",
           label: "What you can ask",
           blocks: [
+            {
+              kind: "callout",
+              title: "With the FirstOption Revit MCP",
+              body: "Our Revit connector (firstoption-revit) works in Revit 2017–2027, not only the 2027 preview below. Claude Code or Codex runs IronPython or C# inside Revit through pyRevit Routes, with a dry run, one undo step per command and rollback if verification fails. Set-up is in Overview › FirstOption MCP Hub.",
+              tone: "ok",
+            },
             {
               kind: "text",
               title: "Autodesk's Revit Public MCP Server",
@@ -390,10 +467,17 @@ export const aiConnectHub: Hub = {
           label: "Options",
           blocks: [
             {
+              kind: "callout",
+              title: "With the FirstOption AutoCAD MCP",
+              body: "Our AutoCAD connector (firstoption-autocad) works in AutoCAD 2015–2027, not AutoCAD LT. It runs AutoLISP for quick queries and edits and C# for heavy geometry, blocks, attributes and layouts. The same setup also installs the Plant 3D connector for AutoCAD Plant 3D 2015–2027.",
+              tone: "ok",
+            },
+            {
               kind: "table",
               title: "Ways to use AI with AutoCAD",
               columns: ["Option", "How it works", "Good for", "Notes"],
               rows: [
+                ["FirstOption AutoCAD MCP (firstoption-autocad)","Our connector from the FirstOption MCP Suite; Claude Code or Codex runs AutoLISP or C# inside the open drawing","Layer and block audits, attribute extraction, layouts and repeated drafting edits","AutoCAD 2015–2027, not LT. Shared command library and audit log"],
                 ["AutoLISP or script written by AI", "The AI drafts a .lsp routine or .scr script; you load it with APPLOAD and run it", "Layer audits, attribute extraction, block counts, purge and naming checks", "Lowest risk; works without any connection. AutoLISP needs full AutoCAD, or AutoCAD LT 2024 or later on Windows"],
                 [".NET add-in written by AI", "The AI drafts C# against the AutoCAD .NET API; a developer builds and tests it", "Heavier or repeated tasks", "Needs Visual Studio and a developer to review"],
                 ["Autodesk AutoCAD and Civil 3D MCP Server", "Autodesk's local server inside Autodesk Assistant on Windows", "Questions about the open drawing: object types, queries, counts, view and selection, comparison with a template", "Tech preview. In AutoCAD it exposes read and analysis tools only. Autodesk documents Autodesk Assistant as the client"],
@@ -527,10 +611,17 @@ export const aiConnectHub: Hub = {
           label: "Options",
           blocks: [
             {
+              kind: "callout",
+              title: "With the FirstOption Navisworks MCP",
+              body: "Autodesk lists no MCP server for Navisworks, but our Navisworks connector (firstoption-navisworks) works in Navisworks Manage or Simulate 2020–2027, not Freedom. It uses the Navisworks .NET API to read models, selection sets, viewpoints and clash tests, so you can ask Claude Code or Codex about clash results in the open file.",
+              tone: "ok",
+            },
+            {
               kind: "table",
               title: "Ways to use AI with Navisworks",
               columns: ["Option", "How it works", "Good for", "Notes"],
               rows: [
+                ["FirstOption Navisworks MCP (firstoption-navisworks)","Our connector from the FirstOption MCP Suite; Claude Code or Codex works through the Navisworks .NET API","Reading models, selection sets, viewpoints and clash tests in the open file","Manage or Simulate 2020–2027, not Freedom"],
                 ["Clash report export, then AI triage", "Export Clash Detective results as XML or HTML and load them in the platform's Clash triage", "Grouping clashes by root cause, assigning teams, meeting agendas, BCF", "No install; the report is read in the browser; AI triage sends a compact summary of groups"],
                 ["BCF exchange", "Move issues between Navisworks and authoring tools as BCF, through a BCF plug-in or a connected issue service", "Getting clash issues back to Revit or other tools", "Check whether your Navisworks set-up has a BCF add-in; the platform's BCF studio can open and edit BCF files"],
                 ["Navisworks .NET API add-in", "A plug-in, automation or control written in C#; the AI can draft it", "Search sets from rules, selection by GUID, custom reports", "Autodesk recommends the .NET API for new work; the SDK is installed in the api folder of Navisworks Manage and Simulate"],
@@ -592,7 +683,7 @@ export const aiConnectHub: Hub = {
               kind: "list",
               title: "Limits to plan for",
               items: [
-                "No official Autodesk MCP server for Navisworks was listed when this guide was checked",
+                "Autodesk listed no MCP server of its own for Navisworks when this guide was checked; the FirstOption Navisworks MCP covers Manage and Simulate 2020–2027",
                 "AI triage is a suggestion; responsibility for clash decisions stays with the coordinator and task teams",
                 "Clash reports can include file paths and names that reveal project information; check before uploading",
                 "Plan add-ins for Navisworks Manage or Simulate, where the API SDK is installed; the free Freedom viewer is not the target for them",
@@ -619,10 +710,17 @@ export const aiConnectHub: Hub = {
           label: "Options",
           blocks: [
             {
+              kind: "callout",
+              title: "With the FirstOption Civil 3D MCP",
+              body: "Our Civil 3D connector (firstoption-civil3d) works in Civil 3D 2015–2027. It runs C# through the Civil 3D .NET API and AutoLISP inside the open drawing, with the same shared command library and audit log as the other connectors.",
+              tone: "ok",
+            },
+            {
               kind: "table",
               title: "Ways to use AI with Civil 3D",
               columns: ["Option", "How it works", "Good for", "Notes"],
               rows: [
+                ["FirstOption Civil 3D MCP (firstoption-civil3d)","Our connector from the FirstOption MCP Suite; Claude Code or Codex runs C# or AutoLISP inside Civil 3D","Reports and checks on alignments, profiles, surfaces and corridors","Civil 3D 2015–2027. Shared command library and audit log"],
                 ["Dynamo for Civil 3D, graph or Python written by AI", "The AI drafts a Dynamo graph outline or Python node; you build and run it in Dynamo", "Reports on alignments, profiles, corridors and pipe networks", "Low risk when read-only; the Dynamo primer treats the Civil 3D .NET API guides as essential reading for Python"],
                 ["Civil 3D .NET API add-in", "The AI drafts C#; a developer builds and tests it", "Repeated reports and checks across many drawings", "Autodesk's Civil 3D help includes an API developer's guide"],
                 ["AutoLISP and command scripts", "As for AutoCAD; Civil 3D objects are better read through Dynamo or .NET", "Layer, block and drawing checks", "Simple and quick"],
@@ -838,6 +936,16 @@ export const aiConnectHub: Hub = {
           id: "links",
           label: "Links & ask AI",
           blocks: [
+            {
+              kind: "links",
+              title: "FirstOption MCP Hub",
+              links: [
+                { label: "MCP Hub home", href: `${FO}/`, note: "Overview, download and frequently asked questions", tone: "blue" },
+                { label: "All products", href: `${FO}/products?public`, note: "Revit, AutoCAD, Civil 3D, Plant 3D and Navisworks connectors", tone: "teal" },
+                { label: "Sign up", href: `${FO}/signup`, note: "Create your company and get the code to connect each PC", tone: "green" },
+                { label: "Revit hub: MCP for Revit & Autodesk", href: "/hubs/revit", note: "On this platform: install, supported versions and troubleshooting", tone: "purple" },
+              ],
+            },
             {
               kind: "links",
               title: "Autodesk documentation",
