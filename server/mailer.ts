@@ -1,4 +1,5 @@
 import nodemailer, { type Transporter } from "nodemailer";
+import { setting } from "./appSettings";
 
 // Optional SMTP delivery. Without SMTP_HOST, mail is logged instead of sent so nothing breaks.
 let transport: Transporter | null | undefined;
@@ -13,7 +14,7 @@ const get = () => {
 };
 
 export const mailEnabled = () => !!process.env.SMTP_HOST?.trim();
-export const publicUrl = (fallback = "") => (process.env.PUBLIC_URL?.replace(/\/$/, "") || fallback);
+export const publicUrl = (fallback = "") => (setting<string>("publicUrl").replace(/\/$/, "") || fallback);
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 

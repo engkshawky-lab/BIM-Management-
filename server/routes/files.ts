@@ -2,20 +2,17 @@ import { assertStorage } from "../billing";
 import { and, asc, desc, eq, max } from "drizzle-orm";
 import { Router } from "express";
 import fs from "fs";
-import multer from "multer";
 import path from "path";
 import { z } from "zod";
 import { atLeast, logActivity, notify, requireProject } from "../access";
 import { db, newId, schema } from "../db";
-import { UPLOAD_DIR } from "../storage";
+import { UPLOAD_DIR, diskUpload } from "../storage";
+import { setting } from "../appSettings";
 import { h, parse } from "./auth";
 import { runValidation, sharingBlocker, validationKind } from "./validation";
 
 
-const upload = multer({
-  storage: multer.diskStorage({ destination: UPLOAD_DIR, filename: (_req, _file, cb) => cb(null, newId()) }),
-  limits: { fileSize: Number(process.env.MAX_UPLOAD_MB ?? 250) * 1024 * 1024 },
-});
+const upload = diskUpload(() => setting<number>("maxUploadMb"));
 
 const INLINE_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/gif", "text/plain"]);
 

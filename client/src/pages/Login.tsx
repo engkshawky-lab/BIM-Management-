@@ -3,7 +3,7 @@ import { api, type User } from "../lib/api";
 import { getLocale, setLocale, t } from "../i18n";
 import { applyDomLocale } from "../i18nDom";
 import { LegalFooter } from "./Legal";
-import { SITE } from "../../../shared/site";
+import { Announcement, useSite } from "../lib/site";
 
 /** Language toggle before sign-in (remembered in this browser). */
 export function LangSwitch({ onChange }: { onChange: () => void }) {
@@ -28,7 +28,8 @@ export function ResetPassword({ token }: { token: string }) {
 }
 
 export default function Login({ onSignedIn, initialMode = "login" }: { onSignedIn: (u: User) => void; initialMode?: "login" | "register" }) {
-  const [mode, setMode] = useState<"login" | "register" | "forgot">(initialMode);
+  const { site } = useSite();
+  const [mode, setMode] = useState<"login" | "register" | "forgot">(initialMode === "register" && !site.allowSignups ? "login" : initialMode);
   const [, setLang] = useState(0);
   const [sent, setSent] = useState("");
   const [f, setF] = useState({ name: "", email: "", password: "", organization: "", jobTitle: "" });
@@ -48,19 +49,22 @@ export default function Login({ onSignedIn, initialMode = "login" }: { onSignedI
 
   return (
     <div className="auth-wrap">
+      <Announcement />
+      {site.maintenanceMode && <p className="banner info">{t("The portal is under maintenance. Only administrators can sign in for now.")}</p>}
       <a className="small auth-back" href="#/">{t("← Back to the home page")}</a>
       <form className="card auth" onSubmit={submit}>
-        <div className="row spread"><h1 style={{ margin: 0 }}>{SITE.name}</h1><LangSwitch onChange={() => setLang((n) => n + 1)} /></div>
+        <div className="row spread"><h1 style={{ margin: 0 }}>{site.siteName}</h1><LangSwitch onChange={() => setLang((n) => n + 1)} /></div>
         <p className="muted">{t("ISO 19650 information management · ISO/IEC 42001 AI management")}</p>
         <div className="tabs">
           <button type="button" className={mode === "login" ? "on" : ""} onClick={() => setMode("login")}>{t("Sign in")}</button>
-          <button type="button" className={mode === "register" ? "on" : ""} onClick={() => setMode("register")}>{t("Create account")}</button>
+          {site.allowSignups && <button type="button" className={mode === "register" ? "on" : ""} onClick={() => setMode("register")}>{t("Create account")}</button>}
         </div>
         {mode === "register" && <>
           <label htmlFor="login-full-name">{t("Full name")}</label><input id="login-full-name" required value={f.name} onChange={set("name")} autoComplete="name" />
           <label htmlFor="login-organization">{t("Organization")}</label><input id="login-organization" value={f.organization} onChange={set("organization")} />
           <label htmlFor="login-job-title">{t("Job title")}</label><input id="login-job-title" value={f.jobTitle} onChange={set("jobTitle")} placeholder="e.g. Information Manager" />
         </>}
+        {!site.allowSignups && mode === "login" && <p className="small muted">{t("New sign-ups are closed. If you were invited to a project, sign in with the invited email or ask the project manager.")}</p>}
         <label htmlFor="login-email">{t("Email")}</label><input id="login-email" required type="email" value={f.email} onChange={set("email")} autoComplete="email" />
         {mode !== "forgot" && <label htmlFor="login-password">{t("Password")}</label>}{mode !== "forgot" && <input id="login-password" required type="password" minLength={mode === "register" ? 8 : undefined} value={f.password} onChange={set("password")} autoComplete={mode === "login" ? "current-password" : "new-password"} />}
         {mode === "login" && <button type="button" className="linklike small" style={{ marginTop: 6 }} onClick={() => { setMode("forgot"); setError(""); setSent(""); }}>{t("Forgot password?")}</button>}

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { db, schema } from "../db";
 import { createResetLink, h, parse, sentKeys } from "./auth";
 import { newId } from "../db";
-import { mailEnabled, sendMail } from "../mailer";
+import { mailEnabled, publicUrl, sendMail } from "../mailer";
 
 // Platform administration: users, usage, platform-wide activity, feedback and branding.
 const r = Router();
@@ -53,7 +53,7 @@ r.put("/admin/users/:id", requireAdmin, h(async (req, res) => {
 r.post("/admin/users/:id/reset-link", requireAdmin, h(async (req, res) => {
   const [u] = await db.select({ id: schema.users.id, email: schema.users.email }).from(schema.users).where(eq(schema.users.id, req.params.id));
   if (!u) return res.status(404).json({ error: "User not found." });
-  const link = await createResetLink(u.id, process.env.PUBLIC_URL?.replace(/\/$/, "") || `${req.protocol}://${req.get("host")}`);
+  const link = await createResetLink(u.id, publicUrl(`${req.protocol}://${req.get("host")}`));
   console.log(`[admin] ${req.user!.email} issued a password reset link for ${u.email}`);
   res.json({ link, expiresInMinutes: 60 });
 }));

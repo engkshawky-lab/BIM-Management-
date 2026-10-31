@@ -3,12 +3,13 @@ import { useSession } from "../App";
 import { api, fmtDate } from "../lib/api";
 import { PromoCodes } from "./Billing";
 import AdminPlans from "./AdminPlans";
+import AdminSettings from "./AdminSettings";
 
 interface UserRow { id: string; name: string; email: string; organization: string; role: string; disabled: boolean; projects: number; createdAt: string; lastLoginAt: string | null; plan: string; renewsAt: string | null }
 interface Fb { id: string; kind: string; message: string; page: string; status: string; name: string; email: string; createdAt: string; reply: string; repliedAt: string | null; hasScreenshot: boolean }
 interface Act { id: string; project: string; user: string; summary: string; link: string; createdAt: string }
 interface Branding { orgName: string; color: string; logo: string; footer: string }
-const TABS = [["overview", "Overview"], ["users", "Users"], ["plans", "Plans & access"], ["codes", "Promo codes"], ["activity", "Activity log"], ["feedback", "Feedback"], ["branding", "Branding"]] as const;
+const TABS = [["overview", "Overview"], ["settings", "Settings"], ["users", "Users"], ["plans", "Plans & access"], ["codes", "Promo codes"], ["activity", "Activity log"], ["feedback", "Feedback"], ["branding", "Branding"]] as const;
 
 function Overview() {
   const { toast } = useSession();
@@ -111,7 +112,7 @@ export default function Admin({ tab }: { tab?: string }) {
     <>
       <div className="page-head"><h1>Admin console</h1></div>
       <div className="tabs">{TABS.map(([k, l]) => <a key={k} className={"tab" + (cur === k ? " on" : "")} href={`#/admin/${k}`}>{l}</a>)}</div>
-      {cur === "overview" ? <Overview /> : cur === "users" ? <Users /> : cur === "plans" ? <AdminPlans /> : cur === "codes" ? <PromoCodes /> : cur === "activity" ? <Activity /> : cur === "feedback" ? <Feedback /> : <BrandingTab />}
+      {cur === "overview" ? <Overview /> : cur === "users" ? <Users /> : cur === "settings" ? <AdminSettings /> : cur === "plans" ? <AdminPlans /> : cur === "codes" ? <PromoCodes /> : cur === "activity" ? <Activity /> : cur === "feedback" ? <Feedback /> : <BrandingTab />}
     </>
   );
 }

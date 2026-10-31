@@ -1,22 +1,19 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import fs from "fs";
-import multer from "multer";
 import path from "path";
 import { z } from "zod";
 import { COMPANY_VIDEO_TOPICS, VIDEO_FILE_TYPES, VIDEO_LANGS, parseVideoLink } from "../../shared/companyVideos";
 import { db, newId, schema } from "../db";
-import { UPLOAD_DIR } from "../storage";
+import { UPLOAD_DIR, diskUpload } from "../storage";
+import { setting } from "../appSettings";
 import { h, parse } from "./auth";
 
 // Our videos: administrators upload the organisation's own training videos (or add a YouTube / Vimeo link);
 // every signed-in user can watch them. Uploaded files are streamed with HTTP range support so players can seek.
 
 const r = Router();
-const upload = multer({
-  storage: multer.diskStorage({ destination: UPLOAD_DIR, filename: (_req, _file, cb) => cb(null, newId()) }),
-  limits: { fileSize: Number(process.env.VIDEO_MAX_MB ?? 2048) * 1024 * 1024 },
-});
+const upload = diskUpload(() => setting<number>("videoMaxMb"));
 const requireAdmin = (req: Request, res: Response, next: NextFunction) => (req.user?.role === "admin" ? next() : res.status(403).json({ error: "Only administrators can manage videos." }));
 const BY_EXT: Record<string, string> = { ".mp4": "video/mp4", ".m4v": "video/mp4", ".webm": "video/webm", ".ogv": "video/ogg", ".mov": "video/quicktime" };
 const videoType = (file: Express.Multer.File) => {

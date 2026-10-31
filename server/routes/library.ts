@@ -1,11 +1,11 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import fs from "fs";
-import multer from "multer";
 import path from "path";
 import { z } from "zod";
 import { db, newId, schema } from "../db";
-import { UPLOAD_DIR } from "../storage";
+import { UPLOAD_DIR, diskUpload } from "../storage";
+import { setting } from "../appSettings";
 import { h, parse } from "./auth";
 
 // Downloads library: administrators curate files (templates, checklists, guides); every signed-in user can browse and download.
@@ -13,10 +13,7 @@ import { h, parse } from "./auth";
 export const LIBRARY_CATEGORIES = ["EIR", "BEP", "OIR / AIR / PIR", "MIDP / TIDP", "Checklist", "Guide", "Worked example", "Standards & annexes", "Model / IFC", "General"] as const;
 
 const r = Router();
-const upload = multer({
-  storage: multer.diskStorage({ destination: UPLOAD_DIR, filename: (_req, _file, cb) => cb(null, newId()) }),
-  limits: { fileSize: Number(process.env.MAX_UPLOAD_MB ?? 250) * 1024 * 1024 },
-});
+const upload = diskUpload(() => setting<number>("maxUploadMb"));
 const requireAdmin = (req: Request, res: Response, next: NextFunction) => (req.user?.role === "admin" ? next() : res.status(403).json({ error: "Only administrators can manage the library." }));
 const INLINE_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/gif", "image/webp", "text/plain"]);
 const meta = z.object({

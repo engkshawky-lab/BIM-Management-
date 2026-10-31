@@ -6,7 +6,7 @@ import { AI_PAGES, PROJECT_PAGES, SECTIONS, TEMPLATE_PAGES, type NavItem } from 
 import { api } from "../../lib/api";
 import { plansFor, type AccessMap } from "../../../../shared/access";
 import { capacityRows, mergePlans, priceText, type Plan } from "../../../../shared/plans";
-import { SITE } from "../../../../shared/site";
+import { Announcement, useSite } from "../../lib/site";
 import "./public.css";
 
 // Public pages for visitors who are not signed in: home (/), pricing (/pricing) and about (/about).
@@ -14,24 +14,32 @@ import "./public.css";
 
 type Page = "home" | "pricing" | "about";
 
+/** Where "Start free" goes: sign-up, or sign-in when the administrator has closed sign-ups. */
+function useStart() {
+  const { site } = useSite();
+  return site.allowSignups ? { href: "#/signup", label: "Start free", account: "Create a free account" } : { href: "#/login", label: "Sign in", account: "Sign in" };
+}
+
 export function PublicLayout({ page, children }: { page: Page; children: ReactNode }) {
+  const { site } = useSite();
   const [, setLang] = useState(0);
   const [menu, setMenu] = useState(false);
   const link = (href: string, label: string, on: boolean) => <a href={href} className={on ? "on" : ""} aria-current={on ? "page" : undefined}>{t(label)}</a>;
   return (
     <div className="pub">
       <header className="pub-bar">
-        <a className="pub-brand" href="#/"><span className="pub-logo" aria-hidden="true">IM</span><b>{SITE.name}</b></a>
+        <a className="pub-brand" href="#/"><span className="pub-logo" aria-hidden="true">IM</span><b>{site.siteName}</b></a>
         <button type="button" className="pub-menu-btn" aria-expanded={menu} aria-controls="pub-nav" onClick={() => setMenu(!menu)}>{t("Menu")}</button>
         <nav id="pub-nav" className={"pub-nav" + (menu ? " open" : "")} aria-label={t("Main")}>
           {link("#/", "Home", page === "home")}
-          {link("#/pricing", "Pricing", page === "pricing")}
+          {site.showPricing && link("#/pricing", "Pricing", page === "pricing")}
           {link("#/about", "About", page === "about")}
           <LangSwitch onChange={() => setLang((n) => n + 1)} />
           <a href="#/login" className="btn">{t("Sign in")}</a>
-          <a href="#/signup" className="btn primary">{t("Start free")}</a>
+          {site.allowSignups && <a href="#/signup" className="btn primary">{t("Start free")}</a>}
         </nav>
       </header>
+      <Announcement />
       <main id="main" tabIndex={-1}>{children}</main>
       <div className="pub-foot"><LegalFooter /></div>
     </div>
@@ -69,6 +77,8 @@ const FAQ = [
 ];
 
 export function Landing() {
+  const start = useStart();
+  const { site } = useSite();
   const aiTools = AI_PAGES.filter((p) => /\/ai-studio\/|\/ai-tools\//.test(p.path)).length;
   const stats = [
     { n: "6", label: "ISO 19650 parts covered" },
@@ -84,8 +94,8 @@ export function Landing() {
           <h1>{t("Information management to ISO 19650, from learning to delivery")}</h1>
           <p className="pub-lead">{t("One place to learn the standard, write the documents, run the common data environment and check models, with AI tools built for BIM teams.")}</p>
           <div className="pub-cta">
-            <a className="btn primary lg" href="#/signup">{t("Start free")}</a>
-            <a className="btn lg" href="#/pricing">{t("See plans and pricing")}</a>
+            <a className="btn primary lg" href={start.href}>{t(start.label)}</a>
+            {site.showPricing && <a className="btn lg" href="#/pricing">{t("See plans and pricing")}</a>}
           </div>
           <p className="small muted">{t("Free plan, no card needed.")}</p>
         </div>
@@ -147,7 +157,7 @@ export function Landing() {
 
       <section className="pub-band">
         <h2>{t("Start your first ISO 19650 project today")}</h2>
-        <a className="btn primary lg" href="#/signup">{t("Create a free account")}</a>
+        <a className="btn primary lg" href={start.href}>{t(start.account)}</a>
       </section>
     </PublicLayout>
   );
@@ -257,6 +267,8 @@ const VALUES = [
 ];
 
 export function About({ embedded = false }: { embedded?: boolean }) {
+  const { site } = useSite();
+  const start = useStart();
   const body = (
     <>
       <section className={"pub-section" + (embedded ? " embedded" : "")}>
@@ -283,9 +295,9 @@ export function About({ embedded = false }: { embedded?: boolean }) {
       </section>
       <section className="pub-band">
         <h2>{t("Talk to us")}</h2>
-        {SITE.contactEmail
-          ? <a className="btn primary lg" href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>
-          : <a className="btn primary lg" href="#/signup">{t("Create a free account")}</a>}
+        {site.contactEmail
+          ? <a className="btn primary lg" href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>
+          : <a className="btn primary lg" href={start.href}>{t(start.account)}</a>}
       </section>
     </>
   );

@@ -9,6 +9,7 @@ import { ALL_PAGES, PROJECT_PAGES, SECTIONS, TEMPLATE_PAGES, groupsOf, hrefFor, 
 import { BIM_ROLES, roleById, roleKeys } from "./roles";
 import { useDialog, useDismiss } from "../components/Dialog";
 import { useAccess } from "../lib/access";
+import { Announcement, useSite } from "../lib/site";
 
 // ---------------------------------------------------------------- per-user local conveniences
 
@@ -59,6 +60,11 @@ function NavItemLink({ item, projectId, route, fav }: { item: NavItem; projectId
   // only the closest menu page lights up (/hubs/loin is the LOIN hub, not "All topic hubs")
   const on = locate(route).item?.key === item.key && (item.scope === "global" || route.startsWith(href));
   const lock = useAccess().locked(item.key);
+  const { hiddenPages } = useSite();
+  const { user } = useSession();
+  // pages an administrator hid from the menu (administrators still see them, marked)
+  const hiddenHere = hiddenPages.includes(item.key);
+  if (hiddenHere && user.role !== "admin") return null;
   return (
     <a className={"sb-item" + (on ? " on" : "")} href={"#" + href} aria-current={on ? "page" : undefined}>
       <Icon name={item.icon} size={16} />
@@ -124,6 +130,7 @@ function Inbox() {
 
 function UserMenu({ onRole, theme, setTheme, onHide }: { onRole: () => void; theme: string; setTheme: (t: string) => void; onHide: () => void }) {
   const { user, setUser } = useSession();
+  const { site } = useSite();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
@@ -132,7 +139,7 @@ function UserMenu({ onRole, theme, setTheme, onHide }: { onRole: () => void; the
     <div className="sb-anchor sb-user-row" ref={box}>
       <button ref={btn} className="sb-user" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="true" aria-label="Account menu">
         <span className="brand-logo"><Icon name="building" size={15} /></span>
-        <span className="sb-user-text"><b>BIM Management</b><small>{user.organization || user.name}</small></span>
+        <span className="sb-user-text"><b>{site.siteShort}</b><small>{user.organization || user.name}</small></span>
         <Icon name="chevron" size={12} />
       </button>
       <button className="icon-btn sb-hide" onClick={onHide} aria-label={t("Hide sidebar")} title={t("Hide sidebar")}><Icon name="panel" size={16} /></button>
@@ -451,6 +458,7 @@ export default function Shell({ route, children }: { route: string; children: Re
         onAsk={() => setAsk(true)} onRole={() => setRolePicker(true)} onHide={() => (narrow() ? setDrawer(false) : setSidebar(false))} />
       {drawer && <div className="sb-backdrop" onClick={() => setDrawer(false)} />}
       <main className="main" id="main" tabIndex={-1} ref={main}>
+        <Announcement />
         <div className="pagebar no-print">
           <button className="icon-btn sb-show" onClick={showMenu} aria-label={t("Show sidebar")} title={t("Show sidebar")}><Icon name="panel" size={16} /></button>
           <Crumbs route={route} projects={projects} />

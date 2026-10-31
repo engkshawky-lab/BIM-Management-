@@ -5,7 +5,8 @@ import { Router, type NextFunction, type Request, type Response } from "express"
 import crypto from "crypto";
 import { z } from "zod";
 import { logActivity } from "../access";
-import { mailEnabled, sendMail } from "../mailer";
+import { mailEnabled, publicUrl, sendMail } from "../mailer";
+import { setting } from "../appSettings";
 import { checkPassword, endSession, hashPassword, requireUser, startSession, toPublic } from "../auth";
 import { db, newId, schema } from "../db";
 
@@ -56,6 +57,11 @@ r.post("/auth/register", h(async (req, res) => {
   const id = newId();
   // The first account on a fresh install becomes the platform admin.
   const [anyUser] = await db.select({ id: schema.users.id }).from(schema.users).limit(1);
+  // With sign-ups closed, only people invited to a project (and the first administrator) can register.
+  if (anyUser && !setting<boolean>("allowSignups")) {
+    const [invite] = await db.select({ id: schema.invitations.id }).from(schema.invitations).where(eq(schema.invitations.email, body.email)).limit(1);
+    if (!invite) return res.status(403).json({ error: "New sign-ups are closed. Ask an administrator or project manager to invite you." });
+  }
   await db.insert(schema.users).values({
     id, email: body.email, name: body.name, organization: body.organization, jobTitle: body.jobTitle, locale: body.locale,
     passwordHash: await hashPassword(body.password), role: anyUser ? "user" : "admin", createdAt: new Date(),
@@ -98,7 +104,7 @@ r.post("/auth/forgot", h(async (req, res) => {
   forgotHits.set(key, [...hits, now]);
   const [u] = await db.select().from(schema.users).where(eq(schema.users.email, body.email));
   if (u && !u.disabled) {
-    const link = await createResetLink(u.id, process.env.PUBLIC_URL?.replace(/\/$/, "") || `${req.protocol}://${req.get("host")}`);
+    const link = await createResetLink(u.id, publicUrl(`${req.protocol}://${req.get("host")}`));
     // With SMTP configured the link is emailed; otherwise it goes to the server log and admins can issue links from the console.
     const sent = await sendMail(u.email, "Reset your portal password", [`Hello ${u.name},`, "Someone (hopefully you) asked to reset your password. The link below works once and expires in one hour.", "If you didn't ask for this, ignore this email."], { label: "Choose a new password", url: link });
     if (!sent) console.log(`[password reset] ${u.email}: ${link}`);

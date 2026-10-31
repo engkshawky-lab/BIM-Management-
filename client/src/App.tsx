@@ -4,6 +4,7 @@ import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useS
 import { api, SESSION_EXPIRED, type User } from "./lib/api";
 import ErrorBoundary, { NotFound } from "./components/ErrorBoundary";
 import { AccessProvider, LockedPage, useAccess } from "./lib/access";
+import { Maintenance, useSite } from "./lib/site";
 import { locate } from "./shell/nav";
 import Shell from "./shell/Shell";
 const Home = lazy(() => import("./pages/Home"));
@@ -78,8 +79,10 @@ export default function App() {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
   }, []);
 
-  // Arabic page content: start/stop the translation layer when the language changes
-  const loc = ((user?.locale ?? (() => { try { return localStorage.getItem("bim:locale"); } catch { return null; } })()) === "ar" ? "ar" : "en");
+  const { site } = useSite();
+  // Arabic page content: start/stop the translation layer when the language changes (the portal default applies
+  // until the user or visitor picks a language)
+  const loc = ((user?.locale ?? (() => { try { return localStorage.getItem("bim:locale"); } catch { return null; } })() ?? site.defaultLocale) === "ar" ? "ar" : "en");
   const [, setI18nReady] = useState(0);
   // re-render once the dictionary has loaded so directly translated content (lessons) updates too
   useEffect(() => { if (user !== undefined) applyDomLocale(loc).then(() => setI18nReady((n) => n + 1)); }, [loc, user === undefined]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -103,7 +106,7 @@ export default function App() {
 
   // interface language: the account setting, or the choice made on the sign-in page
   const stored = (() => { try { return localStorage.getItem("bim:locale"); } catch { return null; } })();
-  const locale = ((user?.locale ?? stored) === "ar" ? "ar" : "en") as Locale;
+  const locale = ((user?.locale ?? stored ?? site.defaultLocale) === "ar" ? "ar" : "en") as Locale;
   setLocale(locale);
   if (user === undefined) return <div className="center muted">Loading…</div>;
   const reset = /^\/reset\/([0-9a-f]{64})$/.exec(route)?.[1];
@@ -118,6 +121,9 @@ export default function App() {
     if (pub) return <Suspense fallback={<div className="center muted">Loading…</div>}>{pub}</Suspense>;
     return <Login key={route} initialMode={route === "/signup" ? "register" : "login"} onSignedIn={(u) => { if (["/login", "/signup"].includes(route)) navigate("/"); setUser(u); }} />;
   }
+
+  // maintenance mode: only administrators carry on
+  if (site.maintenanceMode && user.role !== "admin") return <Maintenance onSignOut={() => { api("/auth/logout", { method: "POST" }).finally(() => setUser(null)); }} />;
 
   const parts = route.split("/").filter(Boolean);
   let view;
@@ -180,7 +186,11 @@ export default function App() {
 /** Pages the user's plan doesn't open show the upgrade screen instead (only with billing on). */
 function Gate({ route, children }: { route: string; children: ReactNode }) {
   const { locked } = useAccess();
+  const { hiddenPages } = useSite();
+  const { user } = useSession();
   const item = locate(route).item;
+  // pages an administrator removed from the menu are closed to everyone else
+  if (item && hiddenPages.includes(item.key) && user.role !== "admin") return <NotFound />;
   return item && locked(item.key) ? <LockedPage sectionKey={item.key} label={item.label} /> : <>{children}</>;
 }
 

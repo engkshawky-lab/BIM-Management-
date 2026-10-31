@@ -40,6 +40,8 @@ import aiwork from "./routes/aiwork";
 import fourd from "./routes/fourd";
 import talent from "./routes/talent";
 import billing, { publicPlans } from "./routes/billing";
+import { adminSettings, maintenanceGate, publicSite } from "./routes/siteSettings";
+import { loadAppSettings } from "./appSettings";
 import { aiQuota, sectionGate } from "./billing";
 import { paymentsRouter, stripeWebhook } from "./payments";
 import { startScheduler } from "./agents";
@@ -72,9 +74,10 @@ app.get("/api/health", async (_req, res) => {
   try { await db.execute(sql`select 1`); res.json({ ok: true }); }
   catch { res.status(503).json({ ok: false, error: "Database unavailable." }); }
 });
-app.use("/api", publicPlans);
+app.use("/api", publicPlans, publicSite);
+app.use("/api", maintenanceGate);
 app.use("/api", auth);
-app.use("/api", requireUser, sectionGate, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news);
+app.use("/api", requireUser, sectionGate, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news, adminSettings);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: NextFunction) => {
@@ -94,4 +97,5 @@ if (process.env.NODE_ENV === "production" && fs.existsSync(clientDir)) {
 
 const port = Number(process.env.PORT ?? 3001);
 await runMigrations();
+await loadAppSettings();
 app.listen(port, () => { console.log(`Portal API listening on http://localhost:${port}`); startScheduler(); startNewsSchedule(); });

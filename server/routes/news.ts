@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { AiError, apiKey, ask, parseJson } from "../claude";
 import { UPLOAD_DIR } from "../storage";
+import { setting } from "../appSettings";
 import { h } from "./auth";
 
 // BIM & ISO 19650 news: Claude searches the web and summarises recent stories; results are cached on disk
@@ -52,8 +53,8 @@ export function refreshNews() {
 
 /** Hourly background refresh, only when explicitly enabled (each refresh is a paid web-search request). */
 export function startNewsSchedule() {
-  if (process.env.NEWS_REFRESH !== "hourly" || !apiKey()) return;
-  const run = () => { if (age(read()) >= MIN_AGE_MS) refreshNews().catch((e) => console.error("[news]", e)); };
+  // checked on each run, so the newsRefresh setting can be changed without a restart
+  const run = () => { if (setting<string>("newsRefresh") === "hourly" && apiKey() && age(read()) >= MIN_AGE_MS) refreshNews().catch((e) => console.error("[news]", e)); };
   setTimeout(run, 60_000);
   setInterval(run, 15 * 60_000);
 }
@@ -62,7 +63,7 @@ const r = Router();
 
 r.get("/news", (_req, res) => {
   const c = read();
-  res.json({ updatedAt: c?.updatedAt ?? null, items: c?.items ?? [], topics: NEWS_TOPICS, refreshing: !!running, scheduled: process.env.NEWS_REFRESH === "hourly" });
+  res.json({ updatedAt: c?.updatedAt ?? null, items: c?.items ?? [], topics: NEWS_TOPICS, refreshing: !!running, scheduled: setting<string>("newsRefresh") === "hourly" });
 });
 
 r.post("/news/refresh", h(async (_req, res) => {

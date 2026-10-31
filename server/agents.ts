@@ -4,6 +4,7 @@ import { notify } from "./access";
 import { apiKey, ask } from "./claude";
 import { db, newId, schema } from "./db";
 import { mailEnabled, publicUrl, sendMail } from "./mailer";
+import { setting } from "./appSettings";
 import { computeQuality } from "./routes/delivery";
 
 // Scheduled work: project automations ("agents"), daily health snapshots and the email digest.
@@ -110,7 +111,7 @@ export async function tick() {
     await setSetting("scheduler", { ...state, snapshotDay: day });
   }
   const hour = new Date().getUTCHours();
-  if (hour >= Number(process.env.DIGEST_HOUR_UTC ?? 6) && state.digestDay !== day) {
+  if (hour >= setting<number>("digestHourUtc") && state.digestDay !== day) {
     await dailyDigest().catch((e) => console.error("[digest]", e.message));
     await setSetting("scheduler", { ...(await getSetting("scheduler")), digestDay: day });
   }
@@ -118,8 +119,8 @@ export async function tick() {
 }
 
 export function startScheduler() {
-  if (process.env.SCHEDULER === "off") return;
-  const run = () => tick().catch((e) => console.error("[scheduler]", e));
+  // the timer always runs; each tick checks the "scheduler" setting, so an administrator can switch jobs on and off
+  const run = () => { if (setting<boolean>("scheduler")) tick().catch((e) => console.error("[scheduler]", e)); };
   setTimeout(run, 30_000);
   setInterval(run, 10 * 60_000);
 }

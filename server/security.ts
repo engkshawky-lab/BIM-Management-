@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import type { NextFunction, Request, Response } from "express";
+import { setting } from "./appSettings";
 
 // Security headers for every response. The CSP allows only what the client uses: its own scripts and workers,
 // Google Fonts, YouTube and Vimeo lesson embeds, and YouTube thumbnails. Routes can still set a stricter CSP
@@ -36,9 +37,9 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
 
 // One log line per API request: request id, method, path, status, time and user id. Bodies, query strings and
 // cookies are never logged. The id is returned as X-Request-Id so a user's error report can be matched to the log.
-// LOG_REQUESTS=errors logs only 4xx/5xx and slow (>3 s) requests; LOG_REQUESTS=off turns it off.
+// The logRequests setting: "errors" logs only 4xx/5xx and slow (>3 s) requests; "off" turns it off.
 export function requestLog(req: Request, res: Response, next: NextFunction) {
-  const mode = process.env.LOG_REQUESTS ?? "all";
+  const mode = setting<string>("logRequests");
   if (mode === "off") return next();
   const id = randomUUID().slice(0, 8);
   const start = Date.now();
@@ -53,10 +54,10 @@ export function requestLog(req: Request, res: Response, next: NextFunction) {
 }
 
 // Short burst limit on AI requests per user, on top of the monthly counts in billing.ts: stops runaway scripts
-// and double-clicks from spending the API budget. AI_PER_MINUTE (default 20) sets it; 0 turns it off.
+// and double-clicks from spending the API budget. The aiPerMinute setting (default 20) sets it; 0 turns it off.
 const hits = new Map<string, number[]>();
 export function aiBurstExceeded(userId: string, now = Date.now()) {
-  const max = Number(process.env.AI_PER_MINUTE ?? 20);
+  const max = Number(setting<number>("aiPerMinute"));
   if (!max) return false;
   const recent = (hits.get(userId) ?? []).filter((t) => now - t < 60_000);
   if (recent.length >= max) { hits.set(userId, recent); return true; }
