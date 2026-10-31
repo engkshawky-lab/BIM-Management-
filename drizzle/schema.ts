@@ -652,3 +652,21 @@ export const resources = mysqlTable("resources", {
   uploadedBy: ref("uploaded_by").notNull(),
   createdAt: created(),
 }, (t) => [index("resources_category").on(t.category)]);
+
+// The organisation's own training videos: an uploaded file streamed from storage, or a YouTube / Vimeo link.
+export const companyVideos = mysqlTable("company_videos", {
+  id: id(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: varchar("description", { length: 2000 }).notNull().default(""),
+  topic: varchar("topic", { length: 60 }).notNull(),
+  lang: varchar("lang", { length: 8 }).notNull().default("en"),
+  source: varchar("source", { length: 8 }).notNull(), // "file" | "youtube" | "vimeo"
+  url: varchar("url", { length: 500 }).notNull().default(""),
+  fileName: varchar("file_name", { length: 255 }).notNull().default(""),
+  mimeType: varchar("mime_type", { length: 120 }).notNull().default(""),
+  size: bigint("size", { mode: "number" }).notNull().default(0),
+  storageKey: varchar("storage_key", { length: 255 }).notNull().default(""),
+  views: int("views").notNull().default(0),
+  uploadedBy: ref("uploaded_by").notNull(),
+  createdAt: created(),
+}, (t) => [index("company_videos_topic").on(t.topic)]);

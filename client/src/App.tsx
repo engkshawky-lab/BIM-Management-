@@ -40,6 +40,7 @@ const PlatformGuide = lazy(() => import("./pages/PlatformGuide"));
 const Connectors = lazy(() => import("./pages/Connectors"));
 const Glossary = lazy(() => import("./pages/Glossary"));
 const Videos = lazy(() => import("./pages/Videos"));
+const OurVideos = lazy(() => import("./pages/OurVideos"));
 const LearningPaths = lazy(() => import("./pages/LearningPaths"));
 const HubRoute = lazy(() => import("./pages/HubRoute"));
 const Legal = lazy(() => import("./pages/Legal"));
@@ -115,6 +116,7 @@ export default function App() {
   else if (parts[0] === "hubs") view = <HubRoute id={parts[1]} sectionId={parts[2]} tabId={parts[3]} />;
   else if (parts[0] === "glossary") view = <Glossary q={parts[1] ? decodeURIComponent(parts[1]) : undefined} />;
   else if (parts[0] === "learning-paths") view = <LearningPaths key={parts[1] ?? ""} id={parts[1]} />;
+  else if (parts[0] === "videos" && parts[1] === "ours") view = <OurVideos />;
   else if (parts[0] === "videos") view = <Videos topic={parts[1]} />;
   else if (parts[0] === "connectors") view = <Connectors tab={parts[1]} />;
   else if (parts[0] === "guide") view = <PlatformGuide tab={parts[1]} />;

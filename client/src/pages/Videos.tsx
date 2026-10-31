@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { getLocale, t } from "../i18n";
 import { VIDEOS, VIDEO_LEVELS, VIDEO_TOPICS, type Video } from "../../../shared/data/videos";
 import { TONES } from "./HubPage";
+import { VideoTabs } from "./OurVideos";
 import "./videos.css";
 
 // Video library: curated free, public YouTube videos on ISO 19650 and BIM information management. /videos and /videos/:topic
@@ -57,6 +58,7 @@ export default function Videos({ topic }: { topic?: string }) {
 
   return (
     <div className="hub" style={{ "--hub": TONES.red } as CSSProperties}>
+      <VideoTabs on="library" />
       <div className="hub-hero">
         <div className="eyebrow">ISO 19650 · {t("VIDEO LIBRARY")}</div>
         <h1>{t("Learn ISO 19650 and BIM by watching")}</h1>

@@ -58,6 +58,8 @@ rest need the owner's accounts, keys or decisions.
 
 - [ ] Schedule `scripts/backup.sh` nightly (database and uploaded files), copy the backups off the server, and
       test a restore on a spare machine.
+- [ ] If a reverse proxy sits in front, allow uploads as large as `VIDEO_MAX_MB` (nginx: `client_max_body_size 2g;`)
+      and a long enough read timeout for video uploads under Our videos.
 - [ ] Point an uptime monitor at `https://<domain>/api/health`.
 - [ ] Collect the app's logs (`docker compose logs app`) somewhere searchable and alert on `500` errors.
 - **(done)** Code-split client: the first download is about 340 KB (was 3.5 MB); pages and the Arabic dictionary

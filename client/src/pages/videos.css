@@ -36,3 +36,16 @@ button.vid-on { background: var(--hub); border-color: var(--hub); color: #fff; }
 .vid-frame { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; }
 .vid-frame iframe { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; border: 0; }
 .vid-modal-actions { gap: 8px; flex-wrap: wrap; }
+
+/* Video library / Our videos tabs, and the Our videos upload form */
+.vid-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.vid-tabs a { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); text-decoration: none; color: inherit; font-weight: 600; }
+.vid-tabs a.on { background: var(--hub); border-color: var(--hub); color: #fff; }
+.vid-thumb video { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; background: #000; }
+.vid-thumb-label { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 700; color: var(--muted); }
+.vid-frame video { inline-size: 100%; block-size: 100%; background: #000; }
+.vid-form { display: grid; gap: 6px; max-inline-size: 640px; }
+.vid-form h3 { margin: 0 0 4px; }
+.vid-form .row.wrap { flex-wrap: wrap; gap: 12px; }
+.vid-progress { position: relative; block-size: 22px; border-radius: 6px; background: var(--surface-2); overflow: hidden; font-size: 12px; text-align: center; line-height: 22px; }
+.vid-progress span { position: absolute; inset-block: 0; inset-inline-start: 0; background: color-mix(in srgb, var(--hub) 35%, transparent); }

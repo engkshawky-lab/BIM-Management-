@@ -19,6 +19,7 @@ import toolsBepWriter from "./routes/toolsBepWriter";
 import toolsSheetQa from "./routes/toolsSheetQa";
 import toolsAudit from "./routes/toolsAudit";
 import library from "./routes/library";
+import companyVideos from "./routes/companyVideos";
 import news, { startNewsSchedule } from "./routes/news";
 import delivery from "./routes/delivery";
 import auth from "./routes/auth";
@@ -64,7 +65,7 @@ app.use("/api", (req, res, next) => {
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api", auth);
-app.use("/api", requireUser, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, news);
+app.use("/api", requireUser, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: NextFunction) => {
