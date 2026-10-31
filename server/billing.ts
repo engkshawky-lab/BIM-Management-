@@ -1,7 +1,9 @@
 import { and, count, eq, inArray, sql } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
-import { planById, type Plan } from "../shared/plans";
+import { canOpen, cheapestFor, sectionForApi } from "../shared/access";
+import { planFrom, type Plan } from "../shared/plans";
 import { db, schema } from "./db";
+import { planConfig } from "./planConfig";
 import { aiBurstExceeded } from "./security";
 
 // Plans and usage. Limits are enforced only with BILLING=on; usage is always counted.
@@ -12,7 +14,8 @@ const month = () => new Date().toISOString().slice(0, 7);
 export async function currentPlan(userId: string): Promise<Plan & { status: string; renewsAt: Date | null; source: string }> {
   const [s] = await db.select().from(schema.subscriptions).where(eq(schema.subscriptions.userId, userId));
   const expired = !!s?.renewsAt && s.renewsAt < new Date();
-  const plan = planById(!s || expired || s.status !== "active" ? "free" : s.plan);
+  const { plans } = await planConfig();
+  const plan = planFrom(plans, !s || expired || s.status !== "active" ? "free" : s.plan);
   return { ...plan, status: expired ? "expired" : s?.status ?? "active", renewsAt: s?.renewsAt ?? null, source: s?.source ?? "" };
 }
 
@@ -65,5 +68,18 @@ export async function aiQuota(req: Request, res: Response, next: NextFunction) {
     }
     await db.insert(schema.aiUsage).values({ userId: req.user.id, month: month(), count: 1 }).onDuplicateKeyUpdate({ set: { count: sql`${schema.aiUsage.count} + 1` } });
     next();
+  } catch (e) { next(e); }
+}
+
+/** With billing on, API calls behind a paid section need a plan that opens it (administrators are exempt). */
+export async function sectionGate(req: Request, res: Response, next: NextFunction) {
+  if (!billingOn() || !req.user || req.user.role === "admin" || req.method === "GET") return next();
+  const key = sectionForApi(req.path);
+  if (!key) return next();
+  try {
+    const [{ access, plans }, plan] = await Promise.all([planConfig(), currentPlan(req.user.id)]);
+    if (canOpen(key, plan.id, access)) return next();
+    const need = plans.find((p) => p.id === cheapestFor(key, access));
+    res.status(402).json({ error: `This tool is part of the ${need?.name ?? "a paid"} plan. Upgrade under Plan & billing to use it.` });
   } catch (e) { next(e); }
 }

@@ -8,6 +8,7 @@ import { Icon } from "./icons";
 import { ALL_PAGES, PROJECT_PAGES, SECTIONS, TEMPLATE_PAGES, groupsOf, hrefFor, labelForRoute, locate, pageByKey, type NavItem } from "./nav";
 import { BIM_ROLES, roleById, roleKeys } from "./roles";
 import { useDialog, useDismiss } from "../components/Dialog";
+import { useAccess } from "../lib/access";
 
 // ---------------------------------------------------------------- per-user local conveniences
 
@@ -57,11 +58,13 @@ function NavItemLink({ item, projectId, route, fav }: { item: NavItem; projectId
   const href = hrefFor(item, projectId);
   // only the closest menu page lights up (/hubs/loin is the LOIN hub, not "All topic hubs")
   const on = locate(route).item?.key === item.key && (item.scope === "global" || route.startsWith(href));
+  const lock = useAccess().locked(item.key);
   return (
     <a className={"sb-item" + (on ? " on" : "")} href={"#" + href} aria-current={on ? "page" : undefined}>
       <Icon name={item.icon} size={16} />
       <span className="sb-item-text"><b>{t(item.label)}</b>{item.hint && <small>{t(item.hint)}</small>}</span>
       {fav && <Icon name="star" size={11} className="fav-mark" />}
+      {lock && <span className="lock-mark" title={t("Upgrade to open")}><span aria-hidden="true">🔒</span><span className="sr-only">{t("Upgrade to open")}</span></span>}
     </a>
   );
 }

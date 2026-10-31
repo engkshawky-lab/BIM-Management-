@@ -1,9 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { t } from "../../i18n";
 import { LangSwitch } from "../Login";
 import { LegalFooter } from "../Legal";
-import { AI_PAGES, TEMPLATE_PAGES } from "../../shell/nav";
-import { PLANS, PLAN_COMPARISON, priceText, type Plan } from "../../../../shared/plans";
+import { AI_PAGES, PROJECT_PAGES, SECTIONS, TEMPLATE_PAGES, type NavItem } from "../../shell/nav";
+import { api } from "../../lib/api";
+import { plansFor, type AccessMap } from "../../../../shared/access";
+import { capacityRows, mergePlans, priceText, type Plan } from "../../../../shared/plans";
 import { SITE } from "../../../../shared/site";
 import "./public.css";
 
@@ -62,7 +64,7 @@ const FAQ = [
   { q: "Do I need to know ISO 19650 already?", a: "No. The learning hubs start from the basics and every tool links to the part of the standard it supports." },
   { q: "Does the portal include the ISO standards themselves?", a: "No. The content is practical guidance written in plain language. Buy the standards from ISO or your national standards body for the official text." },
   { q: "Is it available in Arabic?", a: "Yes. Switch the language to Arabic at any time; the interface and most of the guidance are translated, with right-to-left layout." },
-  { q: "Where is our project data stored?", a: "On the portal's server. Enterprise customers can also run a private installation on their own server." },
+  { q: "Where is our project data stored?", a: "On the portal's server. Organisations can also ask for a private installation on their own server." },
   { q: "Is my data used to train AI models?", a: "No. AI features send only the text needed for that request to the AI provider, and the provider does not use it for training under its commercial terms." },
 ];
 
@@ -151,22 +153,30 @@ export function Landing() {
   );
 }
 
-function PlanCards({ compact = false }: { compact?: boolean }) {
+/** Plans and section access as the administrator set them; the defaults until the server answers. */
+function usePlans() {
+  const [data, setData] = useState<{ plans: Plan[]; access: AccessMap }>({ plans: mergePlans(null), access: {} });
+  useEffect(() => { api<{ plans: Plan[]; access: AccessMap }>("/public/plans").then(setData).catch(() => undefined); }, []);
+  return data;
+}
+
+function PlanCards({ compact = false, signedIn = false }: { compact?: boolean; signedIn?: boolean }) {
+  const { plans } = usePlans();
   return (
-    <div className="pub-grid three pub-plans">
-      {PLANS.map((p) => <PlanCard key={p.id} p={p} compact={compact} featured={p.id === "pro"} />)}
+    <div className="pub-grid four pub-plans">
+      {plans.map((p) => <PlanCard key={p.id} p={p} compact={compact} featured={p.id === "pro"} signedIn={signedIn} />)}
     </div>
   );
 }
 
-function PlanCard({ p, compact, featured }: { p: Plan; compact: boolean; featured: boolean }) {
-  const cta = p.id === "free" ? { href: "#/signup", label: "Start free" }
-    : p.id === "enterprise" && SITE.contactEmail ? { href: `mailto:${SITE.contactEmail}?subject=${encodeURIComponent("Enterprise plan")}`, label: "Talk to us" }
-      : { href: "#/signup", label: p.id === "pro" ? "Start with Free, upgrade any time" : "Create an account to get in touch" };
+function PlanCard({ p, compact, featured, signedIn }: { p: Plan; compact: boolean; featured: boolean; signedIn: boolean }) {
+  const cta = signedIn ? { href: "#/billing", label: p.id === "free" ? "Your plan & billing" : `Upgrade to ${p.name}` }
+    : p.id === "free" ? { href: "#/signup", label: "Start free" }
+      : { href: "#/signup", label: `Choose ${p.name}` };
   return (
-    <article className={"pub-card plan" + (featured ? " featured" : "")}>
+    <article className={"pub-card plan" + (featured ? " featured" : "")} style={{ "--plan": p.color } as CSSProperties}>
       {featured && <span className="pub-badge">{t("Most popular")}</span>}
-      <h3>{t(p.name)}</h3>
+      <h3><span className="pub-dot" aria-hidden="true" />{t(p.name)}</h3>
       <p className="pub-price"><b>{t(priceText(p))}</b></p>
       <p className="small muted">{t(p.price.note)}</p>
       <p>{t(p.tagline)}</p>
@@ -183,31 +193,48 @@ function Cell({ v }: { v: boolean | string }) {
   return <>{t(v)}</>;
 }
 
+// The comparison follows the sidebar: one group per section, one row per page, ticked where the plan opens it.
+// The 30+ templates share one row; project pages get their own group.
+function comparisonGroups(plans: Plan[], access: AccessMap) {
+  const cells = (key: string) => plans.map((p) => plansFor(key, access).includes(p.id));
+  const rows = (items: NavItem[]) => items.map((i) => ({ label: i.label, cells: cells(i.key) as (boolean | string)[] }));
+  const groups = SECTIONS.filter((s) => s.id !== "home").map((s) => ({ title: s.label, rows: rows(s.items) }));
+  const docs = groups.find((g) => g.title === "Documents & delivery");
+  docs?.rows.push({ label: `Document templates (${TEMPLATE_PAGES.length})`, cells: cells(TEMPLATE_PAGES[0]?.key ?? "t.") });
+  return [
+    { title: "Capacity", rows: capacityRows(plans) as { label: string; cells: (boolean | string)[] }[] },
+    { title: "Projects and the common data environment", rows: rows(PROJECT_PAGES) },
+    ...groups,
+  ];
+}
+
 const PRICING_FAQ = [
-  { q: "What is different between the plans?", a: "Every plan has every tool. The plans differ in how many projects, members, storage and AI requests you get, and in the level of support." },
+  { q: "What is different between the plans?", a: "Each plan opens more of the portal and gives more capacity. Free covers the ISO 19650 basics, Starter adds the learning tools, Professional adds the document builders, templates and project tools, and Expert opens everything, including the model checkers, connectors and advanced AI tools." },
   { q: "Can I change plans later?", a: "Yes. Upgrade from the Plan & billing page at any time; your projects and documents stay as they are." },
   { q: "What counts as an AI request?", a: "Each run of an AI tool or each question to the project assistant counts as one request. Learning content, templates and non-AI checks are not counted." },
   { q: "Who counts as a member?", a: "Anyone you invite to a project. Members can be viewers, editors or managers, and each project has its own team." },
-  { q: "Can we run the portal on our own server?", a: "Yes, on the Enterprise plan. It runs with Docker on a Linux server, and your data stays on your infrastructure." },
+  { q: "Do you offer licences for a whole organisation?", a: "Yes. Contact us for several Expert licences, a private installation on your own server, or training for your team." },
 ];
 
 export function Pricing({ embedded = false }: { embedded?: boolean }) {
+  const { plans, access } = usePlans();
+  const groups = comparisonGroups(plans, access);
   const body = (
     <>
       <section className={"pub-section" + (embedded ? " embedded" : "")}>
         <p className="pub-eyebrow">{t("PRICING")}</p>
         <h1>{t("Plans and pricing")}</h1>
-        <p className="pub-lead">{t("Every plan includes every tool. Choose the plan that fits how many projects and people you have.")}</p>
-        <PlanCards />
+        <p className="pub-lead">{t("Start free, then choose the plan that opens the tools you need. Every paid plan is billed yearly and can be upgraded at any time.")}</p>
+        <PlanCards signedIn={embedded} />
       </section>
       <section className="pub-section">
         <h2>{t("Compare plans")}</h2>
         <div className="pub-table-wrap">
           <table className="pub-compare">
-            <thead><tr><th scope="col">{t("Feature")}</th>{PLANS.map((p) => <th key={p.id} scope="col">{t(p.name)}<small>{t(priceText(p))}</small></th>)}</tr></thead>
-            {PLAN_COMPARISON.map((g) => (
+            <thead><tr><th scope="col">{t("Feature")}</th>{plans.map((p) => <th key={p.id} scope="col" style={{ color: p.color }}>{t(p.name)}<small>{t(priceText(p))}</small></th>)}</tr></thead>
+            {groups.map((g) => (
               <tbody key={g.title}>
-                <tr className="pub-group"><th colSpan={4} scope="colgroup">{t(g.title)}</th></tr>
+                <tr className="pub-group"><th colSpan={plans.length + 1} scope="colgroup">{t(g.title)}</th></tr>
                 {g.rows.map((r) => <tr key={r.label}><th scope="row">{t(r.label)}</th>{r.cells.map((c, i) => <td key={i}><Cell v={c} /></td>)}</tr>)}
               </tbody>))}
           </table>

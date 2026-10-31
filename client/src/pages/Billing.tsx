@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "../App";
 import { priceText, type Plan } from "../../../shared/plans";
+import { PLAN_CHANGED } from "../lib/access";
 import { api, fmtDate } from "../lib/api";
 
 interface B { enabled: boolean; plan: Plan & { status: string; renewsAt: string | null; source: string }; usage: { projects: number; storageBytes: number; aiThisMonth: number }; plans: Plan[] }
@@ -39,7 +40,7 @@ export default function Billing({ paid = false }: { paid?: boolean }) {
         </div>
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Redeem a code</h3>
-          <form className="row" onSubmit={async (e) => { e.preventDefault(); try { await api("/billing/redeem", { body: { code } }); toast("Code redeemed — plan updated"); setCode(""); load(); } catch (err) { toast((err as Error).message, "error"); } }}>
+          <form className="row" onSubmit={async (e) => { e.preventDefault(); try { await api("/billing/redeem", { body: { code } }); toast("Code redeemed — plan updated"); setCode(""); load(); window.dispatchEvent(new Event(PLAN_CHANGED)); } catch (err) { toast((err as Error).message, "error"); } }}>
             <input aria-label="Redeem a code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. BIM-1A2B3C4D" style={{ maxWidth: 240 }} className="mono" /><button className="primary" disabled={code.length < 3}>Redeem</button></form>
           {pay.enabled ? <p className="small muted">Upgrade online with a card below{b.plan.source === "stripe" ? ", or manage your subscription and invoices." : "."}</p> : <p className="small muted">To upgrade, contact your portal administrator — they can assign a plan or issue a code.</p>}
           {pay.enabled && b.plan.source === "stripe" && <button onClick={() => go("/billing/portal")}>Manage subscription & invoices</button>}
@@ -70,7 +71,7 @@ export function PromoCodes() {
       <form className="card row" style={{ marginBottom: 12 }} onSubmit={async (e) => { e.preventDefault(); try { const r = await api<{ code: string }>("/admin/promo-codes", { body: { ...f, code: f.code || undefined } }); toast(`Code ${r.code} created`); load(); } catch (err) { toast((err as Error).message, "error"); } }}>
         <b>New code</b>
         <input className="mono" aria-label="Code (blank = random)" placeholder="Code (blank = random)" value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} style={{ maxWidth: 200 }} />
-        <select aria-label="Plan" value={f.plan} onChange={(e) => setF({ ...f, plan: e.target.value })} style={{ width: "auto" }}><option value="pro">Professional</option><option value="enterprise">Enterprise</option></select>
+        <select aria-label="Plan" value={f.plan} onChange={(e) => setF({ ...f, plan: e.target.value })} style={{ width: "auto" }}><option value="starter">Starter</option><option value="pro">Professional</option><option value="expert">Expert</option></select>
         <label className="check">Months <input type="number" min={1} max={36} value={f.months} onChange={(e) => setF({ ...f, months: +e.target.value })} style={{ width: 70 }} /></label>
         <label className="check">Uses <input type="number" min={1} value={f.maxUses} onChange={(e) => setF({ ...f, maxUses: +e.target.value })} style={{ width: 80 }} /></label>
         <label className="check">Expires <input type="date" value={f.expiresAt} onChange={(e) => setF({ ...f, expiresAt: e.target.value })} style={{ width: "auto" }} /></label>

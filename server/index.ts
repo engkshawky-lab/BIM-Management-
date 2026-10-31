@@ -39,8 +39,8 @@ import automation from "./routes/automation";
 import aiwork from "./routes/aiwork";
 import fourd from "./routes/fourd";
 import talent from "./routes/talent";
-import billing from "./routes/billing";
-import { aiQuota } from "./billing";
+import billing, { publicPlans } from "./routes/billing";
+import { aiQuota, sectionGate } from "./billing";
 import { paymentsRouter, stripeWebhook } from "./payments";
 import { startScheduler } from "./agents";
 import standards from "./routes/standards";
@@ -72,8 +72,9 @@ app.get("/api/health", async (_req, res) => {
   try { await db.execute(sql`select 1`); res.json({ ok: true }); }
   catch { res.status(503).json({ ok: false, error: "Database unavailable." }); }
 });
+app.use("/api", publicPlans);
 app.use("/api", auth);
-app.use("/api", requireUser, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news);
+app.use("/api", requireUser, sectionGate, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: NextFunction) => {

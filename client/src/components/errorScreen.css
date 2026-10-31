@@ -1,2 +1,6 @@
 .error-screen { max-width: 560px; margin: 48px auto; display: grid; gap: 10px; }
 .error-screen h1 { margin: 0; font-size: 1.35rem; }
+.locked-page { max-width: 560px; margin: 48px auto; display: grid; gap: 8px; text-align: center; justify-items: center; }
+.locked-page h1 { margin: 0; font-size: 1.35rem; }
+.locked-icon { font-size: 34px; }
+.lock-mark { margin-inline-start: auto; opacity: .7; flex: none; }

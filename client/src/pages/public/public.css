@@ -116,3 +116,6 @@
   .pub-nav .btn { justify-content: center; }
   .pub-grid.three, .pub-grid.four, .pub-steps { grid-template-columns: 1fr; }
 }
+.pub-plans .plan { border-top: 4px solid var(--plan, var(--border)); }
+.pub-plans .featured { border-top-width: 4px; border-top-color: var(--plan); }
+.pub-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--plan); margin-inline-end: 8px; }

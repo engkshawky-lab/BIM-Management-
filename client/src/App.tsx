@@ -1,8 +1,10 @@
 import { setLocale, type Locale } from "./i18n";
 import { applyDomLocale } from "./i18nDom";
-import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { api, SESSION_EXPIRED, type User } from "./lib/api";
 import ErrorBoundary, { NotFound } from "./components/ErrorBoundary";
+import { AccessProvider, LockedPage, useAccess } from "./lib/access";
+import { locate } from "./shell/nav";
 import Shell from "./shell/Shell";
 const Home = lazy(() => import("./pages/Home"));
 import Login, { ResetPassword } from "./pages/Login";
@@ -81,7 +83,17 @@ export default function App() {
   const [, setI18nReady] = useState(0);
   // re-render once the dictionary has loaded so directly translated content (lessons) updates too
   useEffect(() => { if (user !== undefined) applyDomLocale(loc).then(() => setI18nReady((n) => n + 1)); }, [loc, user === undefined]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { api<{ user: User | null }>("/auth/me").then((r) => setUser(r.user)).catch(() => setUser(null)); }, []);
+  // who is signed in; while the server is starting (no answer or 5xx) retry a few times rather than show the visitor pages
+  useEffect(() => {
+    let tries = 0; let stop = false;
+    const load = () => api<{ user: User | null }>("/auth/me").then((r) => !stop && setUser(r.user)).catch((e) => {
+      if (stop) return;
+      const status = (e as { status?: number }).status ?? 0;
+      if ((status === 0 || status >= 500) && ++tries < 5) setTimeout(load, 1500); else setUser(null);
+    });
+    load();
+    return () => { stop = true; };
+  }, []);
   // session expired or revoked (api() saw a 401): show the sign-in page; the address is kept, so the user returns to it
   useEffect(() => {
     const expired = () => { setUser((u) => (u ? null : u)); toast("Your session has ended. Sign in again to continue.", "error"); };
@@ -157,10 +169,19 @@ export default function App() {
 
   return (
     <Ctx.Provider value={{ user, setUser, toast }}>
-      <Shell route={route}><ErrorBoundary route={route}><Suspense fallback={<div className="center muted">Loading…</div>}>{view}</Suspense></ErrorBoundary></Shell>
+      <AccessProvider userId={user.id}>
+        <Shell route={route}><ErrorBoundary route={route}><Suspense fallback={<div className="center muted">Loading…</div>}><Gate route={route}>{view}</Gate></Suspense></ErrorBoundary></Shell>
+      </AccessProvider>
       <div className="toasts" role="status" aria-live="polite">{toasts.map((t) => <div key={t.id} className={"toast " + t.kind}>{t.msg}</div>)}</div>
     </Ctx.Provider>
   );
 }
 
-export const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
+/** Pages the user's plan doesn't open show the upgrade screen instead (only with billing on). */
+function Gate({ route, children }: { route: string; children: ReactNode }) {
+  const { locked } = useAccess();
+  const item = locate(route).item;
+  return item && locked(item.key) ? <LockedPage sectionKey={item.key} label={item.label} /> : <>{children}</>;
+}
+
+export const initials =(name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");

@@ -34,8 +34,9 @@ rest need the owner's accounts, keys or decisions.
 
 ## 4. Payments (Stripe)
 
-- [ ] Create the Pro and Enterprise recurring prices; set `STRIPE_SECRET_KEY`, `STRIPE_PRICE_PRO`,
-      `STRIPE_PRICE_ENTERPRISE`.
+- [ ] Create yearly recurring prices for Starter ($75), Professional ($150) and Expert ($250); set `STRIPE_SECRET_KEY`,
+      `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_EXPERT`. Edit plans and section access in Admin › Plans & access.
+
 - [ ] Add the webhook `https://<domain>/api/stripe/webhook` for `checkout.session.completed`,
       `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`; set `STRIPE_WEBHOOK_SECRET`.
 - [ ] Run a full test-mode purchase, renewal, cancellation and failed payment, then switch to live keys.

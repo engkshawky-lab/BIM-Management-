@@ -1,40 +1,68 @@
-// Subscription plans. Limits apply only when billing is switched on (BILLING=on).
-// Every plan includes every tool; plans differ in capacity (projects, members, storage, AI requests) and in support.
-// Prices: set `amount` (per month, in `currency`) when they are decided; null shows "Contact us" / "Free".
+// Subscription plans: Free, Starter, Professional and Expert. Limits and section access apply only when billing
+// is switched on (BILLING=on). Administrators can change names, prices, features and limits (Admin › Plans & access);
+// the values below are the defaults, and saved changes are merged over them.
 
-export interface PlanPrice { amount: number | null; currency: string; period: string; note: string }
+export const PLAN_IDS = ["free", "starter", "pro", "expert"] as const;
+export type PlanId = (typeof PLAN_IDS)[number];
+
+export interface PlanPrice { amount: number | null; currency: string; period: "month" | "year"; note: string }
 export interface Plan {
-  id: "free" | "pro" | "enterprise"; name: string; tagline: string; audience: string; price: PlanPrice;
+  id: PlanId; name: string; color: string; tagline: string; audience: string; price: PlanPrice;
   projects: number; members: number; storageGb: number; aiPerMonth: number; features: string[];
 }
+/** What an administrator may change on a plan. */
+export type PlanOverride = Partial<Pick<Plan, "name" | "tagline" | "audience" | "projects" | "members" | "storageGb" | "aiPerMonth" | "features">> & { price?: Partial<PlanPrice> };
 
 export const UNLIMITED = 100000;
 
-export const PLANS: Plan[] = [
+export const DEFAULT_PLANS: Plan[] = [
   {
-    id: "free", name: "Free", tagline: "Learn ISO 19650 and try every tool on a small project.", audience: "Individuals, students and small teams getting started",
-    price: { amount: 0, currency: "USD", period: "month", note: "No card needed" },
+    id: "free", name: "Free", color: "#22c55e", tagline: "Start learning ISO 19650 and try the portal on a small project.", audience: "Students and anyone new to ISO 19650",
+    price: { amount: 0, currency: "USD", period: "year", note: "No card needed" },
     projects: 2, members: 5, storageGb: 2, aiPerMonth: 20,
-    features: ["All learning hubs, quizzes and exams", "All document templates and guides", "Every tool, with 20 AI requests a month", "2 projects with up to 5 members each"],
+    features: ["ISO 19650 parts and process", "CDE and status codes", "Video library", "2 small projects"],
   },
   {
-    id: "pro", name: "Professional", tagline: "Run real projects with your delivery team.", audience: "BIM managers, coordinators and consultancies delivering projects",
-    price: { amount: null, currency: "USD", period: "month", note: "Per account, billed monthly" },
+    id: "starter", name: "Starter", color: "#3b82f6", tagline: "Learn the standard properly, with practice and progress tracking.", audience: "Individuals building ISO 19650 knowledge",
+    price: { amount: 75, currency: "USD", period: "year", note: "Billed yearly" },
+    projects: 5, members: 10, storageGb: 10, aiPerMonth: 100,
+    features: ["Video library", "Interactive quiz", "Glossary & games", "COBie guide", "Leaderboard"],
+  },
+  {
+    id: "pro", name: "Professional", color: "#a855f7", tagline: "Write the documents and run projects with your team.", audience: "BIM managers, coordinators and consultants",
+    price: { amount: 150, currency: "USD", period: "year", note: "Billed yearly" },
     projects: 25, members: 50, storageGb: 100, aiPerMonth: 1000,
-    features: ["Everything in Free", "25 projects with up to 50 members each", "100 GB of project storage", "1,000 AI requests a month", "Email support"],
+    features: ["Everything in Starter", "Expert exams & certs", "EIR / BEP builders", "RACI & COBie tools", "Templates & downloads"],
   },
   {
-    id: "enterprise", name: "Enterprise", tagline: "For organisations rolling ISO 19650 out across many projects.", audience: "Clients, contractors and design firms with many projects or teams",
-    price: { amount: null, currency: "USD", period: "month", note: "Annual agreement" },
-    projects: UNLIMITED, members: UNLIMITED, storageGb: 5000, aiPerMonth: UNLIMITED,
-    features: ["Everything in Professional", "Unlimited projects and members", "5 TB of storage and unlimited AI requests", "Private installation on your own server available", "Onboarding and training for your team", "Priority support"],
+    id: "expert", name: "Expert", color: "#f59e0b", tagline: "Every tool, for organisations and senior information managers.", audience: "Information managers, BIM leads and organisations",
+    price: { amount: 250, currency: "USD", period: "year", note: "Billed yearly" },
+    projects: UNLIMITED, members: UNLIMITED, storageGb: 1000, aiPerMonth: 5000,
+    features: ["Everything in Professional", "Gap analysis & LOIN", "Project simulator", "ACC live monitor", "CPD log & org training"],
   },
 ];
-export const planById = (id: string) => PLANS.find((p) => p.id === id) ?? PLANS[0];
+/** Kept for older imports: the default plans. Use mergePlans() for the plans an administrator has edited. */
+export const PLANS = DEFAULT_PLANS;
 
-const money = (amount: number, currency: string) =>
-  new Intl.NumberFormat("en", { style: "currency", currency, maximumFractionDigits: amount % 1 ? 2 : 0 }).format(amount);
-/** "Free", "$49 / month" or "Contact us", for cards and tables. */
+/** Older installations used "enterprise"; it maps to Expert. Unknown ids fall back to Free. */
+export const normalizePlanId = (id: string | null | undefined): PlanId =>
+  id === "enterprise" ? "expert" : (PLAN_IDS as readonly string[]).includes(id ?? "") ? (id as PlanId) : "free";
+
+export function mergePlans(overrides: Partial<Record<PlanId, PlanOverride>> | null | undefined): Plan[] {
+  return DEFAULT_PLANS.map((p) => {
+    const o = overrides?.[p.id];
+    if (!o) return p;
+    return { ...p, ...o, id: p.id, color: p.color, price: { ...p.price, ...o.price }, features: o.features?.length ? o.features : p.features };
+  });
+}
+export const planFrom = (plans: Plan[], id: string) => plans.find((p) => p.id === normalizePlanId(id)) ?? plans[0]!;
+export const planById = (id: string) => planFrom(DEFAULT_PLANS, id);
+
+const money = (amount: number, currency: string) => {
+  try { return new Intl.NumberFormat("en", { style: "currency", currency, maximumFractionDigits: amount % 1 ? 2 : 0 }).format(amount); }
+  catch { return `${amount} ${currency}`; }
+};
+/** "Free", "$75 / year" or "Contact us", for cards and tables. */
 export function priceText(p: Plan) {
   if (p.price.amount === 0) return "Free";
   if (p.price.amount === null) return "Contact us";
@@ -42,50 +70,8 @@ export function priceText(p: Plan) {
 }
 export const limitText = (n: number, unit = "") => (n >= UNLIMITED ? "Unlimited" : `${n.toLocaleString("en")}${unit}`);
 
-/** The plan comparison table on the pricing page. A cell is true / false or a short text. */
-export interface CompareRow { label: string; cells: [boolean | string, boolean | string, boolean | string] }
-export interface CompareGroup { title: string; rows: CompareRow[] }
-const [free, pro, ent] = PLANS as [Plan, Plan, Plan];
-const lim = (k: "projects" | "members" | "storageGb" | "aiPerMonth", unit = "") =>
-  [limitText(free[k], unit), limitText(pro[k], unit), limitText(ent[k], unit)] as [string, string, string];
-const all: [boolean, boolean, boolean] = [true, true, true];
-
-export const PLAN_COMPARISON: CompareGroup[] = [
-  { title: "Capacity", rows: [
-    { label: "Projects you own", cells: lim("projects") },
-    { label: "Members per project", cells: lim("members") },
-    { label: "Project storage", cells: lim("storageGb", " GB") },
-    { label: "AI requests per month", cells: lim("aiPerMonth") },
-  ] },
-  { title: "Learn ISO standards", rows: [
-    { label: "ISO 19650 parts 1–6 and ISO/IEC 42001 learning hubs", cells: all },
-    { label: "Learning paths by role, quizzes and practice exams", cells: all },
-    { label: "Glossary in English and Arabic, video library", cells: all },
-  ] },
-  { title: "Documents and delivery", rows: [
-    { label: "EIR, BEP, MIDP/TIDP and 30+ document templates", cells: all },
-    { label: "Document guides with worked examples", cells: all },
-    { label: "Delivery planner, responsibility matrix and file naming checks", cells: all },
-  ] },
-  { title: "Projects and the common data environment", rows: [
-    { label: "Shared files with WIP, Shared, Published and Archived states", cells: all },
-    { label: "Issues, risks, meetings, reviews and approval gates", cells: all },
-    { label: "Email notifications and daily digest", cells: all },
-  ] },
-  { title: "Models and coordination", rows: [
-    { label: "IFC model checks, IDS builder and BCF studio", cells: all },
-    { label: "Clash test matrix and COBie checks", cells: all },
-    { label: "Connectors for Autodesk Construction Cloud and Speckle", cells: all },
-  ] },
-  { title: "AI tools", rows: [
-    { label: "EIR writer, BEP writer and EIR ↔ BEP compliance matrix", cells: all },
-    { label: "Clash triage, model QA from IDS, sheet QA and audit assistant", cells: all },
-    { label: "Project assistant that answers from your project records", cells: all },
-  ] },
-  { title: "Administration and support", rows: [
-    { label: "Admin console, organisation videos and downloads library", cells: all },
-    { label: "Support", cells: ["Help centre", "Email", "Priority"] },
-    { label: "Onboarding and training for your team", cells: [false, false, true] },
-    { label: "Private installation on your own server", cells: [false, false, true] },
-  ] },
-];
+/** Capacity rows for the comparison table. */
+export function capacityRows(plans: Plan[]) {
+  const row = (label: string, k: "projects" | "members" | "storageGb" | "aiPerMonth", unit = "") => ({ label, cells: plans.map((p) => limitText(p[k], unit)) });
+  return [row("Projects you own", "projects"), row("Members per project", "members"), row("Project storage", "storageGb", " GB"), row("AI requests per month", "aiPerMonth")];
+}

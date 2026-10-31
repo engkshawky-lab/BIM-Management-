@@ -8,8 +8,11 @@ import { h, parse } from "./routes/auth";
 
 // Card payments through Stripe Checkout and the Stripe customer portal. Plans are kept in sync
 // by signed webhooks; nothing changes on a redirect alone.
-const PRICES: Record<string, string | undefined> = { pro: process.env.STRIPE_PRICE_PRO, enterprise: process.env.STRIPE_PRICE_ENTERPRISE };
-export const paymentsEnabled = () => !!process.env.STRIPE_SECRET_KEY && !!(PRICES.pro || PRICES.enterprise);
+// one Stripe recurring price per paid plan; STRIPE_PRICE_ENTERPRISE is still read as the Expert price for older set-ups
+const PRICES: Record<string, string | undefined> = {
+  starter: process.env.STRIPE_PRICE_STARTER, pro: process.env.STRIPE_PRICE_PRO, expert: process.env.STRIPE_PRICE_EXPERT || process.env.STRIPE_PRICE_ENTERPRISE,
+};
+export const paymentsEnabled = () => !!process.env.STRIPE_SECRET_KEY && Object.values(PRICES).some(Boolean);
 
 let client: Stripe | null = null;
 const stripe = () => (client ??= new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -29,7 +32,7 @@ paymentsRouter.get("/billing/payments", (_req, res) => res.json({ enabled: payme
 
 paymentsRouter.post("/billing/checkout", h(async (req, res) => {
   if (!paymentsEnabled()) return res.status(400).json({ error: "Online payments are not configured on this installation." });
-  const body = parse(z.object({ plan: z.enum(["pro", "enterprise"]) }), req.body, res); if (!body) return;
+  const body = parse(z.object({ plan: z.enum(["starter", "pro", "expert"]) }), req.body, res); if (!body) return;
   const price = PRICES[body.plan]; if (!price) return res.status(400).json({ error: "That plan is not sold online. Contact your administrator." });
   const [sub] = await db.select().from(schema.subscriptions).where(eq(schema.subscriptions.userId, req.user!.id));
   const base = publicUrl(`${req.protocol}://${req.get("host")}`);
