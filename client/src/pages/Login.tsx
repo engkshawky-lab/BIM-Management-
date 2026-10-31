@@ -3,9 +3,10 @@ import { api, type User } from "../lib/api";
 import { getLocale, setLocale, t } from "../i18n";
 import { applyDomLocale } from "../i18nDom";
 import { LegalFooter } from "./Legal";
+import { SITE } from "../../../shared/site";
 
 /** Language toggle before sign-in (remembered in this browser). */
-function LangSwitch({ onChange }: { onChange: () => void }) {
+export function LangSwitch({ onChange }: { onChange: () => void }) {
   const set = (l: "en" | "ar") => { try { localStorage.setItem("bim:locale", l); } catch { /* storage unavailable */ } setLocale(l); applyDomLocale(l); onChange(); };
   return <div className="seg"><button type="button" className={getLocale() === "en" ? "on" : ""} onClick={() => set("en")}>EN</button><button type="button" className={getLocale() === "ar" ? "on" : ""} onClick={() => set("ar")}>عربي</button></div>;
 }
@@ -17,7 +18,7 @@ export function ResetPassword({ token }: { token: string }) {
     <div className="auth-wrap">
       <form className="card auth" onSubmit={async (e) => { e.preventDefault(); setError(""); try { await api("/auth/reset", { body: { token, password: pw } }); setDone(true); } catch (err) { setError((err as Error).message); } }}>
         <h1>Set a new password</h1>
-        {done ? <><p>Your password has been changed. Sign in with the new password.</p><a className="btn primary" href="#/">Sign in</a></> : <>
+        {done ? <><p>Your password has been changed. Sign in with the new password.</p><a className="btn primary" href="#/login">Sign in</a></> : <>
           <label htmlFor="login-new-password">New password</label><input id="login-new-password" required type="password" minLength={8} value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
           {error && <p className="error">{error}</p>}
           <button className="primary" style={{ width: "100%", justifyContent: "center", marginTop: 12 }}>Change password</button></>}
@@ -26,8 +27,8 @@ export function ResetPassword({ token }: { token: string }) {
   );
 }
 
-export default function Login({ onSignedIn }: { onSignedIn: (u: User) => void }) {
-  const [mode, setMode] = useState<"login" | "register" | "forgot">("login");
+export default function Login({ onSignedIn, initialMode = "login" }: { onSignedIn: (u: User) => void; initialMode?: "login" | "register" }) {
+  const [mode, setMode] = useState<"login" | "register" | "forgot">(initialMode);
   const [, setLang] = useState(0);
   const [sent, setSent] = useState("");
   const [f, setF] = useState({ name: "", email: "", password: "", organization: "", jobTitle: "" });
@@ -47,8 +48,9 @@ export default function Login({ onSignedIn }: { onSignedIn: (u: User) => void })
 
   return (
     <div className="auth-wrap">
+      <a className="small auth-back" href="#/">{t("← Back to the home page")}</a>
       <form className="card auth" onSubmit={submit}>
-        <div className="row spread"><h1 style={{ margin: 0 }}>ISO Information Portal</h1><LangSwitch onChange={() => setLang((n) => n + 1)} /></div>
+        <div className="row spread"><h1 style={{ margin: 0 }}>{SITE.name}</h1><LangSwitch onChange={() => setLang((n) => n + 1)} /></div>
         <p className="muted">{t("ISO 19650 information management · ISO/IEC 42001 AI management")}</p>
         <div className="tabs">
           <button type="button" className={mode === "login" ? "on" : ""} onClick={() => setMode("login")}>{t("Sign in")}</button>

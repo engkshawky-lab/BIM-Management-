@@ -178,6 +178,8 @@ export const AI_PAGES: NavItem[] = [
 export const ACCOUNT_PAGES: NavItem[] = [
   g("r.profile", "My profile", "/profile", "user", "Account"),
   g("r.support", "Help & support", "/support", "help", "Account", "Ask a question or report a problem; see replies"),
+  g("r.pricing", "Plans & pricing", "/pricing", "award", "Account", "Compare the Free, Professional and Enterprise plans"),
+  g("r.about", "About the portal", "/about", "help", "Account", "Who makes the portal and what it covers"),
 ];
 
 export const ALL_PAGES = [...PROJECT_PAGES, ...HOME_PAGES, ...DOCUMENT_PAGES, ...MODEL_PAGES, ...AI_PAGES, ...TEMPLATE_PAGES, ...LEARN_PAGES, ...RESOURCE_PAGES, ...ACCOUNT_PAGES];

@@ -11,3 +11,4 @@
 .legal-footer { max-width: 440px; margin: 14px auto 0; text-align: center; }
 .legal-footer nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; margin-bottom: 6px; }
 .auth-wrap { align-content: center; }
+.auth-back { display: block; text-align: center; margin-bottom: 10px; }

@@ -45,6 +45,9 @@ const OurVideos = lazy(() => import("./pages/OurVideos"));
 const LearningPaths = lazy(() => import("./pages/LearningPaths"));
 const HubRoute = lazy(() => import("./pages/HubRoute"));
 const Legal = lazy(() => import("./pages/Legal"));
+const Landing = lazy(() => import("./pages/public/Public").then((m) => ({ default: m.Landing })));
+const Pricing = lazy(() => import("./pages/public/Public").then((m) => ({ default: m.Pricing })));
+const About = lazy(() => import("./pages/public/Public").then((m) => ({ default: m.About })));
 
 interface Session { user: User; setUser: (u: User | null) => void; toast: (msg: string, kind?: "ok" | "error") => void }
 const Ctx = createContext<Session>(null!);
@@ -96,11 +99,20 @@ export default function App() {
   // legal pages are public, so they can be read before signing up
   const legal = /^\/legal(?:\/([a-z]+))?$/.exec(route);
   if (!user && legal) return <Suspense fallback={<div className="center muted">Loading…</div>}><Legal standalone id={legal[1]} /></Suspense>;
-  if (!user) return <Login onSignedIn={setUser} />;
+  // public site for visitors: home, pricing and about; sign-in at /login and /signup. Any other address shows
+  // sign-in and is kept, so the visitor lands on that page after signing in.
+  if (!user) {
+    const pub = route === "/" ? <Landing /> : route === "/pricing" ? <Pricing /> : route === "/about" ? <About /> : null;
+    if (pub) return <Suspense fallback={<div className="center muted">Loading…</div>}>{pub}</Suspense>;
+    return <Login key={route} initialMode={route === "/signup" ? "register" : "login"} onSignedIn={(u) => { if (["/login", "/signup"].includes(route)) navigate("/"); setUser(u); }} />;
+  }
 
   const parts = route.split("/").filter(Boolean);
   let view;
-  if (parts[0] === "projects" && parts[1] === "new") view = <NewProject />;
+  if (["login", "signup"].includes(parts[0] ?? "")) view = <Home />;
+  else if (parts[0] === "pricing") view = <Pricing embedded />;
+  else if (parts[0] === "about") view = <About embedded />;
+  else if (parts[0] === "projects" && parts[1] === "new") view = <NewProject />;
   else if (parts[0] === "projects" && parts[1]) view = <ProjectPage projectId={parts[1]} tab={parts[2] ?? "overview"} sub={parts[3]} />;
   else if (parts[0] === "projects") view = <Home projectsOnly />;
   else if (parts[0] === "knowledge") view = <Knowledge std={parts[1] === "iso42001" ? "iso42001" : "iso19650"} section={parts[2]} arg={parts[3]} />;

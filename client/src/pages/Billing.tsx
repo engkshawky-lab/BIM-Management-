@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "../App";
-import type { Plan } from "../../../shared/plans";
+import { priceText, type Plan } from "../../../shared/plans";
 import { api, fmtDate } from "../lib/api";
 
 interface B { enabled: boolean; plan: Plan & { status: string; renewsAt: string | null; source: string }; usage: { projects: number; storageBytes: number; aiThisMonth: number }; plans: Plan[] }
@@ -48,7 +48,7 @@ export default function Billing({ paid = false }: { paid?: boolean }) {
       <div className="grid g3" style={{ marginTop: 14 }}>{b.plans.map((p) => (
         <div key={p.id} className="card" style={p.id === b.plan.id ? { borderColor: "var(--accent)" } : undefined}>
           <div className="row spread"><h3 style={{ margin: 0 }}>{p.name}</h3>{p.id === b.plan.id && <span className="chip on">Current</span>}</div>
-          <p className="small muted">{p.price}</p>
+          <p className="small muted">{priceText(p)} · {p.price.note}</p>
           <ul className="small">{p.features.map((f) => <li key={f}>{f}</li>)}
             <li>{unlimited(p.projects) ? "Unlimited" : p.projects} projects · {unlimited(p.members) ? "unlimited" : p.members} members each</li><li>{p.storageGb} GB storage · {unlimited(p.aiPerMonth) ? "unlimited" : p.aiPerMonth} AI requests / month</li></ul>
           {pay.enabled && pay.plans.includes(p.id) && p.id !== b.plan.id && <button className="primary" onClick={() => go("/billing/checkout", { plan: p.id })}>Upgrade to {p.name}</button>}
