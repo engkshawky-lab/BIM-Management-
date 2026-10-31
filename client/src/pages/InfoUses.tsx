@@ -109,7 +109,7 @@ export default function ProjectInfoUses({ data }: { data: ProjectData }) {
                 <button key={t.id} disabled={!editor} className={"chip" + (s.taskTeams.includes(t.id) ? " on" : "")}
                   onClick={() => patch(u.code, { taskTeams: s.taskTeams.includes(t.id) ? s.taskTeams.filter((x) => x !== t.id) : [...s.taskTeams, t.id] })}>{t.name}</button>
               ))}</div> : <span className="tiny muted">Add task teams under Teams & milestones</span>)}</td>
-              <td>{s && <input value={s.notes} disabled={!editor} placeholder="Scope, software, exclusions…" onChange={(e) => patch(u.code, { notes: e.target.value })} />}</td>
+              <td>{s && <input aria-label="Scope, software, exclusions…" value={s.notes} disabled={!editor} placeholder="Scope, software, exclusions…" onChange={(e) => patch(u.code, { notes: e.target.value })} />}</td>
             </tr>
           );
         })}</tbody>

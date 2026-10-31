@@ -251,7 +251,7 @@ function Faq({ projectId }: { projectId?: string }) {
   }, [q]);
   return (
     <>
-      <input placeholder={t("Search questions…")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 420 }} />
+      <input aria-label={t("Search questions…")} placeholder={t("Search questions…")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 420 }} />
       <div className="pg-faq">
         {list.map((f) => (
           <details key={f.q} className="hub-card" open={!!q.trim()}>

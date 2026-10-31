@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDialog } from "../components/Dialog";
 import { navigate, useSession } from "../App";
 import { StateTag, StdBadge } from "../components/common";
 import { suitabilityCodes } from "../../../shared/data/iso19650";
@@ -20,10 +21,10 @@ const suitDesc = (code: string) => suitabilityCodes.find((s) => s.code === code 
 
 // ---------------------------------------------------------------- fields
 
-function AutoTextarea({ value, onChange, placeholder, disabled }: { value: string; onChange: (v: string) => void; placeholder?: string; disabled?: boolean }) {
+function AutoTextarea({ id, value, onChange, placeholder, disabled }: { id?: string; value: string; onChange: (v: string) => void; placeholder?: string; disabled?: boolean }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useEffect(() => { const el = ref.current; if (el) { el.style.height = "auto"; el.style.height = Math.max(90, el.scrollHeight + 2) + "px"; } }, [value]);
-  return <textarea ref={ref} value={value} disabled={disabled} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
+  return <textarea ref={ref} id={id} value={value} disabled={disabled} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
 }
 
 function TableField({ f, rows, onChange, disabled }: { f: TemplateField; rows: string[][]; onChange: (v: string[][]) => void; disabled?: boolean }) {
@@ -69,13 +70,13 @@ function TableField({ f, rows, onChange, disabled }: { f: TemplateField; rows: s
   );
 }
 
-function FieldInput({ f, value, onChange, disabled }: { f: TemplateField; value: FieldValue | undefined; onChange: (v: FieldValue) => void; disabled?: boolean }) {
+function FieldInput({ id, f, value, onChange, disabled }: { id?: string; f: TemplateField; value: FieldValue | undefined; onChange: (v: FieldValue) => void; disabled?: boolean }) {
   if (f.type === "table") return <TableField f={f} rows={(value as string[][]) ?? []} onChange={onChange} disabled={disabled} />;
   const v = (value as string) ?? "";
-  if (f.type === "textarea") return <AutoTextarea value={v} onChange={onChange} placeholder={f.hint ?? "One item per line becomes a bulleted list in Word"} disabled={disabled} />;
-  if (f.type === "date") return <input type="date" value={v} disabled={disabled} onChange={(e) => onChange(e.target.value)} />;
-  if (f.type === "select") return <select value={v} disabled={disabled} onChange={(e) => onChange(e.target.value)}>{f.options!.map((o) => <option key={o}>{o}</option>)}</select>;
-  return <input value={v} disabled={disabled} placeholder={f.hint} onChange={(e) => onChange(e.target.value)} />;
+  if (f.type === "textarea") return <AutoTextarea id={id} value={v} onChange={onChange} placeholder={f.hint ?? "One item per line becomes a bulleted list in Word"} disabled={disabled} />;
+  if (f.type === "date") return <input id={id} type="date" value={v} disabled={disabled} onChange={(e) => onChange(e.target.value)} />;
+  if (f.type === "select") return <select id={id} value={v} disabled={disabled} onChange={(e) => onChange(e.target.value)}>{f.options!.map((o) => <option key={o}>{o}</option>)}</select>;
+  return <input id={id} value={v} disabled={disabled} placeholder={f.hint} onChange={(e) => onChange(e.target.value)} />;
 }
 
 // ---------------------------------------------------------------- preview
@@ -151,7 +152,8 @@ export function Comments({ projectId, target, sectionId, readOnly }: { projectId
 // ---------------------------------------------------------------- dialogs
 
 function Dialog({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
-  return <div className="modal-bg" onClick={onClose}><div className="modal" onClick={(e) => e.stopPropagation()}><div className="row spread"><h2 style={{ margin: 0 }}>{title}</h2><button className="ghost" onClick={onClose}>✕</button></div>{children}</div></div>;
+  const dlg = useDialog(onClose);
+  return <div className="modal-bg" onClick={onClose}><div className="modal" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}><div className="row spread"><h2 style={{ margin: 0 }}>{title}</h2><button className="ghost" onClick={onClose}>✕</button></div>{children}</div></div>;
 }
 
 // ---------------------------------------------------------------- editor
@@ -338,7 +340,7 @@ export default function DocumentEditor({ data, docId }: { data: ProjectData; doc
             </div>
             <div className="guidance">{s.guidance}</div>
             {s.fields.map((f) => (
-              <div key={f.id}><label>{f.label}</label><FieldInput f={f} value={values[f.id]} disabled={!canType} onChange={(v) => setValue(f.id, v)} /></div>
+              <div key={f.id}><label htmlFor={f.type === "table" ? undefined : `docfield-${f.id}`}>{f.label}</label><FieldInput id={`docfield-${f.id}`} f={f} value={values[f.id]} disabled={!canType} onChange={(v) => setValue(f.id, v)} /></div>
             ))}
             <div className="row spread" style={{ marginTop: 14 }}>
               <button disabled={section === 0} onClick={() => setSection(section - 1)}>← Previous</button>
@@ -394,9 +396,9 @@ function TransitionDialog({ doc, onClose, onConfirm }: { doc: DocRow; onClose: (
     <Dialog title={to === "SHARED" ? "Approve for sharing" : "Authorize & publish"} onClose={onClose}>
       <p className="muted small">{to === "SHARED" ? "ISO 19650-2 5.6.3–5.6.4: confirm the QA check and review are complete. The document becomes visible to the wider team as Shared." : "ISO 19650-2 5.7: the information is authorized and accepted and becomes Published (contractual revision)."}</p>
       {to === "SHARED" && doc.reviewStatus !== "approved" && <div className="banner">No approved review recorded for this revision.</div>}
-      <label>Suitability</label>
-      <select value={suit} onChange={(e) => setSuit(e.target.value)}>{SUITABILITY[to].map((c) => <option key={c} value={c}>{c} — {suitDesc(c)}</option>)}</select>
-      <label>Revision note</label><input value={note} onChange={(e) => setNote(e.target.value)} />
+      <label htmlFor="documenteditor-suitability">Suitability</label>
+      <select id="documenteditor-suitability" value={suit} onChange={(e) => setSuit(e.target.value)}>{SUITABILITY[to].map((c) => <option key={c} value={c}>{c} — {suitDesc(c)}</option>)}</select>
+      <label htmlFor="documenteditor-revision-note">Revision note</label><input id="documenteditor-revision-note" value={note} onChange={(e) => setNote(e.target.value)} />
       <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button><button className="primary" disabled={!note.trim()} onClick={() => onConfirm(to, suit, note)}>Confirm</button></div>
     </Dialog>
   );
@@ -413,9 +415,9 @@ function ReviewRequestDialog({ data, onClose, onSend }: { data: ProjectData; onC
   return (
     <Dialog title="Request review" onClose={onClose}>
       {reviewers.length === 0 ? <p className="muted">Add a teammate with editor or manager role in the Team tab first.</p> : <>
-        <label>Reviewer</label>
-        <select value={id} onChange={(e) => setId(e.target.value)}>{reviewers.map((m) => <option key={m.userId} value={m.userId}>{m.name} ({m.role})</option>)}</select>
-        <label>Message</label><textarea value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="What should they focus on?" />
+        <label htmlFor="documenteditor-reviewer">Reviewer</label>
+        <select id="documenteditor-reviewer" value={id} onChange={(e) => setId(e.target.value)}>{reviewers.map((m) => <option key={m.userId} value={m.userId}>{m.name} ({m.role})</option>)}</select>
+        <label htmlFor="documenteditor-message">Message</label><textarea id="documenteditor-message" value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="What should they focus on?" />
         <p className="small muted">The reviewer is notified and can approve the document for sharing.</p>
         <div className="row" style={{ justifyContent: "flex-end" }}><button onClick={onClose}>Cancel</button><button className="primary" onClick={() => onSend(id, msg)}>Send request</button></div>
       </>}
@@ -426,7 +428,7 @@ function ReviewRequestDialog({ data, onClose, onSend }: { data: ProjectData; onC
 function ReviewDecision({ onSubmit }: { onSubmit: (d: "approved" | "changes", note: string) => void }) {
   const [note, setNote] = useState("");
   return <>
-    <label>Comments for the author</label><textarea value={note} onChange={(e) => setNote(e.target.value)} />
+    <label htmlFor="documenteditor-comments-for-the-author">Comments for the author</label><textarea id="documenteditor-comments-for-the-author" value={note} onChange={(e) => setNote(e.target.value)} />
     <div className="row" style={{ justifyContent: "flex-end", marginTop: 10 }}>
       <button onClick={() => onSubmit("changes", note)}>✎ Request changes</button>
       <button className="primary" onClick={() => onSubmit("approved", note)}>✔ Approve</button>
@@ -448,8 +450,8 @@ function AiDialog({ pid, docId, t, sectionIndex, flush, onClose, onApply }: { pi
   return (
     <Dialog title={`✨ Draft "${s.title}" with AI`} onClose={onClose}>
       <p className="small muted">Uses the project details and what you've already written. You review the draft before anything changes; the author stays accountable for the content (ISO/IEC 42001 A.9).</p>
-      <label>Instructions (optional)</label>
-      <textarea value={instruction} onChange={(e) => setInstruction(e.target.value)} placeholder="e.g. Hospital project, COBie handover, Revit + Navisworks, 4 task teams" />
+      <label htmlFor="documenteditor-instructions-optional">Instructions (optional)</label>
+      <textarea id="documenteditor-instructions-optional" value={instruction} onChange={(e) => setInstruction(e.target.value)} placeholder="e.g. Hospital project, COBie handover, Revit + Navisworks, 4 task teams" />
       <button className="primary" disabled={busy} onClick={run}>{busy ? "Drafting…" : result ? "Regenerate" : "Generate draft"}</button>
       {error && <p className="error">{error}</p>}
       {result && <>
@@ -490,8 +492,8 @@ function SaveToFilesDialog({ data, doc, onClose, build }: { data: ProjectData; d
   return (
     <Dialog title="Save to project files" onClose={onClose}>
       <p className="small muted">Generates the Word document and stores it in the project CDE. Saving again to the same folder adds a new version of the same file.</p>
-      <label>Folder</label>
-      <select value={folderId} onChange={(e) => setFolderId(e.target.value)}>{folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select>
+      <label htmlFor="documenteditor-folder">Folder</label>
+      <select id="documenteditor-folder" value={folderId} onChange={(e) => setFolderId(e.target.value)}>{folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select>
       <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button><button className="primary" disabled={busy || !folderId} onClick={save}>{busy ? "Saving…" : "Save"}</button></div>
     </Dialog>
   );

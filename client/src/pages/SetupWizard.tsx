@@ -90,8 +90,8 @@ export default function SetupWizard() {
               {projects.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}
             </select>
             {target === "new" && <div className="grid g2">
-              <div><label>Project name</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-              <div><label>Project code</label><input value={form.code} maxLength={6} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="2–6 letters or digits" /></div>
+              <div><label htmlFor="setupwizard-project-name">Project name</label><input id="setupwizard-project-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+              <div><label htmlFor="setupwizard-project-code">Project code</label><input id="setupwizard-project-code" value={form.code} maxLength={6} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="2–6 letters or digits" /></div>
             </div>}
             <div className="row" style={{ marginTop: 12 }}>
               <button className="primary" disabled={busy || !picked.length || (target === "new" && (form.name.trim().length < 2 || !/^[A-Z0-9]{2,6}$/.test(form.code)))} onClick={create}>{busy ? "Creating…" : `Create ${picked.length} document${picked.length === 1 ? "" : "s"}`}</button>

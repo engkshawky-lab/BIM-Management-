@@ -80,7 +80,7 @@ export function InterviewCoach() {
         <div className="chat-log" style={{ maxHeight: 420 }}>{t.filter((m, i) => i > 0 || m.role === "assistant").map((m, i) => <div key={i} className={"bubble " + m.role}>{m.role === "assistant" ? <Markdown text={m.content} /> : m.content}</div>)}
           {busy && <div className="bubble assistant muted">…</div>}</div>
         <form className="row" style={{ marginTop: 8 }} onSubmit={(e) => { e.preventDefault(); if (!a.trim()) return; const next = [...(t.length && t[0].role === "assistant" ? [{ role: "user" as const, content: "I'm ready to start the interview." }] : []), ...t, { role: "user" as const, content: a.trim() }]; setA(""); step(next); }}>
-          <textarea value={a} onChange={(e) => setA(e.target.value)} placeholder="Your answer…" style={{ minHeight: 60, flex: 1 }} /><button className="primary" disabled={busy}>Answer</button>
+          <textarea aria-label="Your answer…" value={a} onChange={(e) => setA(e.target.value)} placeholder="Your answer…" style={{ minHeight: 60, flex: 1 }} /><button className="primary" disabled={busy}>Answer</button>
           <button type="button" className="ghost" onClick={() => setT([])}>Restart</button>
         </form>
       </>}

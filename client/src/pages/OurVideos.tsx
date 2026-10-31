@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useDialog } from "../components/Dialog";
 import { useSession } from "../App";
 import { t } from "../i18n";
 import { api } from "../lib/api";
@@ -157,13 +158,13 @@ function VideoForm({ video, onDone }: { video: CompanyVideo | null; onDone: (sav
           <button type="button" className={mode === "file" ? "on" : ""} onClick={() => setMode("file")}>{t("Upload a file")}</button>
           <button type="button" className={mode === "link" ? "on" : ""} onClick={() => setMode("link")}>{t("YouTube or Vimeo link")}</button>
         </div>)}
-      {!video && mode === "file" && <><label>{t("Video file")}</label><input type="file" accept={VIDEO_FILE_ACCEPT} onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></>}
-      {!video && mode === "link" && <><label>{t("Link")}</label><input type="url" placeholder="https://www.youtube.com/watch?v=…" value={link} onChange={(e) => setLink(e.target.value)} /></>}
-      <label>{t("Title")}</label><input value={f.title} onChange={set("title")} maxLength={200} placeholder={mode === "file" && file ? file.name.replace(/\.[^.]+$/, "") : ""} />
-      <label>{t("Description")}</label><textarea rows={3} value={f.description} onChange={set("description")} maxLength={2000} />
+      {!video && mode === "file" && <><label htmlFor="ourvideos-video-file">{t("Video file")}</label><input id="ourvideos-video-file" type="file" accept={VIDEO_FILE_ACCEPT} onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></>}
+      {!video && mode === "link" && <><label htmlFor="ourvideos-link">{t("Link")}</label><input id="ourvideos-link" type="url" placeholder="https://www.youtube.com/watch?v=…" value={link} onChange={(e) => setLink(e.target.value)} /></>}
+      <label htmlFor="ourvideos-title">{t("Title")}</label><input id="ourvideos-title" value={f.title} onChange={set("title")} maxLength={200} placeholder={mode === "file" && file ? file.name.replace(/\.[^.]+$/, "") : ""} />
+      <label htmlFor="ourvideos-description">{t("Description")}</label><textarea id="ourvideos-description" rows={3} value={f.description} onChange={set("description")} maxLength={2000} />
       <div className="row wrap">
-        <div><label>{t("Topic")}</label><select value={f.topic} onChange={set("topic")}>{COMPANY_VIDEO_TOPICS.map((tp) => <option key={tp} value={tp}>{t(tp)}</option>)}</select></div>
-        <div><label>{t("Language")}</label><select value={f.lang} onChange={set("lang")}><option value="en">{t("English")}</option><option value="ar">{t("Arabic")}</option></select></div>
+        <div><label htmlFor="ourvideos-topic">{t("Topic")}</label><select id="ourvideos-topic" value={f.topic} onChange={set("topic")}>{COMPANY_VIDEO_TOPICS.map((tp) => <option key={tp} value={tp}>{t(tp)}</option>)}</select></div>
+        <div><label htmlFor="ourvideos-language">{t("Language")}</label><select id="ourvideos-language" value={f.lang} onChange={set("lang")}><option value="en">{t("English")}</option><option value="ar">{t("Arabic")}</option></select></div>
       </div>
       {progress !== null && <div className="vid-progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><span style={{ width: progress + "%" }} />{progress}%</div>}
       <div className="row">
@@ -176,14 +177,10 @@ function VideoForm({ video, onDone }: { video: CompanyVideo | null; onDone: (sav
 }
 
 function OurPlayer({ v, onClose }: { v: CompanyVideo; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  const dlg = useDialog(onClose);
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide vid-modal" role="dialog" aria-modal="true" aria-label={v.title} onClick={(e) => e.stopPropagation()}>
+      <div className="modal wide vid-modal" ref={dlg} role="dialog" aria-modal="true" aria-label={v.title} onClick={(e) => e.stopPropagation()}>
         <div className="vid-modal-head">
           <div><b dir="auto">{v.title}</b><small className="muted">{t(v.topic)}</small></div>
           <button type="button" className="small" onClick={onClose} aria-label={t("Close")}>✕</button>

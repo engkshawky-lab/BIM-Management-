@@ -212,7 +212,7 @@ export default function MeetingMinutes() {
 
         <div className="hub-card">
           <div className="hub-title">Decisions</div>
-          <textarea value={m.decisions.join("\n")} onChange={(e) => upd({ decisions: lines(e.target.value) })} placeholder={t("One decision per line")} />
+          <textarea aria-label={t("One decision per line")} value={m.decisions.join("\n")} onChange={(e) => upd({ decisions: lines(e.target.value) })} placeholder={t("One decision per line")} />
         </div>
 
         <div className="hub-card">

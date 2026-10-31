@@ -130,16 +130,16 @@ function FileDetail({ data, fileId, folders, onChanged, onClose, onNewVersion }:
       </div>}
       {previewable && <a className="small" href={`/api/projects/${pid}/files/${fileId}/download?inline=1`} target="_blank" rel="noreferrer">Open preview ↗</a>}
       <fieldset disabled={!canEdit(data.role)} style={{ border: 0, padding: 0, margin: 0 }}>
-        <label>Container name</label>
-        <input defaultValue={f.containerName} onBlur={(e) => e.target.value !== f.containerName && update({ containerName: e.target.value.toUpperCase() })} placeholder="PRJ-ORG-ZZ-ZZ-DR-A-0001" />
+        <label htmlFor="files-container-name">Container name</label>
+        <input id="files-container-name" defaultValue={f.containerName} onBlur={(e) => e.target.value !== f.containerName && update({ containerName: e.target.value.toUpperCase() })} placeholder="PRJ-ORG-ZZ-ZZ-DR-A-0001" />
         <div className="grid" style={{ gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-          <div><label>CDE state</label><select value={f.state} onChange={(e) => { const s = e.target.value as CdeState; update({ state: s, suitability: SUITABILITY[s][0] }); }}>
+          <div><label htmlFor="files-cde-state">CDE state</label><select id="files-cde-state" value={f.state} onChange={(e) => { const s = e.target.value as CdeState; update({ state: s, suitability: SUITABILITY[s][0] }); }}>
             {(["WIP", "SHARED", "PUBLISHED", "ARCHIVED"] as CdeState[]).map((s) => <option key={s} disabled={(s === "PUBLISHED" || s === "ARCHIVED") && !canManage(data.role)}>{s}</option>)}</select></div>
-          <div><label>Suitability</label><select value={f.suitability} onChange={(e) => update({ suitability: e.target.value })}>{SUITABILITY[f.state].map((s) => <option key={s}>{s}</option>)}</select></div>
-          <div><label>Revision</label><input defaultValue={f.revision} onBlur={(e) => e.target.value !== f.revision && update({ revision: e.target.value.toUpperCase() })} /></div>
+          <div><label htmlFor="files-suitability">Suitability</label><select id="files-suitability" value={f.suitability} onChange={(e) => update({ suitability: e.target.value })}>{SUITABILITY[f.state].map((s) => <option key={s}>{s}</option>)}</select></div>
+          <div><label htmlFor="files-revision">Revision</label><input id="files-revision" defaultValue={f.revision} onBlur={(e) => e.target.value !== f.revision && update({ revision: e.target.value.toUpperCase() })} /></div>
         </div>
-        <label>Move to folder</label>
-        <select value={f.folderId} onChange={(e) => update({ folderId: e.target.value })}>{folders.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
+        <label htmlFor="files-move-to-folder">Move to folder</label>
+        <select id="files-move-to-folder" value={f.folderId} onChange={(e) => update({ folderId: e.target.value })}>{folders.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select>
       </fieldset>
 
       <div className="row spread" style={{ marginTop: 14 }}><b>Versions</b>

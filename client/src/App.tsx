@@ -1,7 +1,8 @@
 import { setLocale, type Locale } from "./i18n";
 import { applyDomLocale } from "./i18nDom";
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useState } from "react";
-import { api, type User } from "./lib/api";
+import { api, SESSION_EXPIRED, type User } from "./lib/api";
+import ErrorBoundary, { NotFound } from "./components/ErrorBoundary";
 import Shell from "./shell/Shell";
 const Home = lazy(() => import("./pages/Home"));
 import Login, { ResetPassword } from "./pages/Login";
@@ -78,6 +79,12 @@ export default function App() {
   // re-render once the dictionary has loaded so directly translated content (lessons) updates too
   useEffect(() => { if (user !== undefined) applyDomLocale(loc).then(() => setI18nReady((n) => n + 1)); }, [loc, user === undefined]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { api<{ user: User | null }>("/auth/me").then((r) => setUser(r.user)).catch(() => setUser(null)); }, []);
+  // session expired or revoked (api() saw a 401): show the sign-in page; the address is kept, so the user returns to it
+  useEffect(() => {
+    const expired = () => { setUser((u) => (u ? null : u)); toast("Your session has ended. Sign in again to continue.", "error"); };
+    window.addEventListener(SESSION_EXPIRED, expired);
+    return () => window.removeEventListener(SESSION_EXPIRED, expired);
+  }, [toast]);
 
   // interface language: the account setting, or the choice made on the sign-in page
   const stored = (() => { try { return localStorage.getItem("bim:locale"); } catch { return null; } })();
@@ -133,12 +140,13 @@ export default function App() {
   else if (parts[0] === "standards") view = <ClientStandards id={parts[1]} />;
   else if (parts[0] === "profile") view = <ProfilePage />;
   else if (parts[0] === "legal") view = <Legal id={parts[1]} />;
-  else view = <Home />;
+  else if (!parts.length) view = <Home />;
+  else view = <NotFound />;
 
   return (
     <Ctx.Provider value={{ user, setUser, toast }}>
-      <Shell route={route}><Suspense fallback={<div className="center muted">Loading…</div>}>{view}</Suspense></Shell>
-      <div className="toasts">{toasts.map((t) => <div key={t.id} className={"toast " + t.kind}>{t.msg}</div>)}</div>
+      <Shell route={route}><ErrorBoundary route={route}><Suspense fallback={<div className="center muted">Loading…</div>}>{view}</Suspense></ErrorBoundary></Shell>
+      <div className="toasts" role="status" aria-live="polite">{toasts.map((t) => <div key={t.id} className={"toast " + t.kind}>{t.msg}</div>)}</div>
     </Ctx.Provider>
   );
 }

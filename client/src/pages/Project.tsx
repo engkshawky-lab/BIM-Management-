@@ -120,7 +120,7 @@ function Team({ data, reload }: { data: ProjectData; reload: () => void }) {
       {manage && (
         <form className="card row" style={{ marginBottom: 12 }} onSubmit={(e) => { e.preventDefault(); act(async () => { const r = await api<{ invited?: boolean }>(`/projects/${pid}/members`, { body: { email, role } }); setEmail(""); if (r.invited) toast(`${email} has no account yet — they'll join automatically when they register with this email.`); }, "Team updated"); }}>
           <b>Add member</b>
-          <input type="email" required placeholder="colleague@company.com" value={email} onChange={(e) => setEmail(e.target.value)} style={{ maxWidth: 280 }} />
+          <input aria-label="Email" type="email" required placeholder="colleague@company.com" value={email} onChange={(e) => setEmail(e.target.value)} style={{ maxWidth: 280 }} />
           <select value={role} onChange={(e) => setRole(e.target.value)} style={{ width: "auto" }}><option value="viewer">Viewer — read & comment</option><option value="editor">Editor — create & edit</option><option value="manager">Manager — approve, publish, manage team</option></select>
           <button className="primary">Add</button>
         </form>
@@ -210,9 +210,9 @@ function StandardPicker({ data, reload }: { data: ProjectData; reload: () => voi
       <h3 style={{ marginTop: 0 }}>Client standard</h3>
       <p className="small muted">COBie checks and asset tags follow this client's imported requirements at the chosen stage. Manage standards under <a href="#/standards">Resources › Client standards</a>.</p>
       <div className="row">
-        <select value={sel.standardId} onChange={(e) => setSel({ standardId: e.target.value, stage: "" })} style={{ maxWidth: 320 }}>
+        <select aria-label="None (generic checks)" value={sel.standardId} onChange={(e) => setSel({ standardId: e.target.value, stage: "" })} style={{ maxWidth: 320 }}>
           <option value="">None (generic checks)</option>{list.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
-        {stages.length > 0 && <select value={sel.stage} onChange={(e) => setSel({ ...sel, stage: e.target.value })} style={{ maxWidth: 240 }}>
+        {stages.length > 0 && <select aria-label="Latest stage" value={sel.stage} onChange={(e) => setSel({ ...sel, stage: e.target.value })} style={{ maxWidth: 240 }}>
           <option value="">Latest stage</option>{stages.map((s) => <option key={s}>{s}</option>)}</select>}
         <button className="primary" onClick={async () => {
           try { await api(`/projects/${data.project.id}/standard`, { method: "PUT", body: { standardId: sel.standardId || null, stage: sel.stage } }); toast("Client standard saved"); reload(); }

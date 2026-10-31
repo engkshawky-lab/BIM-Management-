@@ -65,7 +65,7 @@ export default function Library({ std, initialTab = 0 }: { std: StandardId; init
         {" "}Summaries are paraphrased for guidance; always refer to the licensed standard.
       </p>
       <div className="seg sub-nav no-print">{tabs.map((x, i) => <button key={x} className={i === t ? "on" : ""} onClick={() => setTab(i)}>{x}</button>)}</div>
-      <input placeholder="Search this section…" value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 12, maxWidth: 420 }} />
+      <input aria-label="Search this section…" placeholder="Search this section…" value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 12, maxWidth: 420 }} />
 
       {std === "iso19650" && t === 0 && (
         <div className="grid g2">

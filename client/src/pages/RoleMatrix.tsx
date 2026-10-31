@@ -33,7 +33,7 @@ export function RoleMatrix({ b }: { b: Matrix }) {
         <span className="small muted">Stage:</span>
         <button className={"chip" + (!stage ? " on" : "")} onClick={() => setStage("")}>All stages</button>
         {b.stages.map((s) => <button key={s.id} className={"chip" + (stage === s.id ? " on" : "")} onClick={() => setStage(stage === s.id ? "" : s.id)}>{s.clause.replace(/^ISO 19650-2 /, "")} {s.label}</button>)}
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a document…" style={{ width: 200, marginInlineStart: "auto" }} />
+        <input aria-label="Find a document…" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a document…" style={{ width: 200, marginInlineStart: "auto" }} />
       </div>
       <div className="small muted">{count} documents · click any document for its purpose and required content</div>
       <div className="table-wrap">

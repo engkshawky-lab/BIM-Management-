@@ -210,7 +210,7 @@ export const revision2026Hub: Hub = {
               kind: "quiz",
               title: "Check your understanding",
               questions: [
-                { q: "Which editions should a new appointment in late 2026 cite?", options: ["The 2026 drafts", "ISO 19650-1 and -2:2018, and -3:2020", "Whichever the team prefers"], answer: 1, why: "The drafts are not published standards; the 2018 and 2020 editions remain in force." },
+                { q: "Which editions should a new appointment in late 2026 cite?", options: ["The 2026 drafts", "Parts 1–3 (2018 and 2020 editions), plus Parts 4–6 where they apply", "Whichever the team prefers"], answer: 1, why: "The drafts are not published standards. ISO 19650-1 and -2:2018 and ISO 19650-3:2020 remain in force, and Parts 4, 5 and 6 are cited where exchanges, security or health and safety information apply." },
                 { q: "What did the draft Part 2 title change to?", options: ["Delivery phase of the assets", "Information management process", "Asset information model"], answer: 1, why: "The draft retitles Part 2 'Information management process', reflecting the whole-life scope." },
                 { q: "What is Part 3 expected to become?", options: ["Deleted", "Guidance on implementing the unified process", "A health and safety standard"], answer: 1, why: "The operational requirements move into the unified Part 2 process, and Part 3 is re-scoped as guidance." },
                 { q: "What does ISO stage 40.93 mean?", options: ["Published", "A decision to run a new DIS ballot", "Withdrawn"], answer: 1, why: "40.93 means the comments led to a decision to circulate a new draft for another ballot." },

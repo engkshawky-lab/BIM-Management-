@@ -84,9 +84,9 @@ export function AdoptionGuide() {
               <tr key={s.id} className={st.status === "Done" ? "done-row" : ""}>
                 <td style={{ width: "40%" }}><b>{s.title}</b><div className="small">{s.detail}</div><div className="tiny muted">Outputs: {s.outputs.join(", ")}{s.link && <> · <a href={`#${s.link}`}>Open</a></>}</div></td>
                 <td><select value={st.status} onChange={(e) => update(s.id, { status: e.target.value })} style={{ width: "auto" }}>{STATUSES.map((x) => <option key={x}>{x}</option>)}</select></td>
-                <td><input placeholder="Owner" defaultValue={st.owner} onBlur={(e) => e.target.value !== st.owner && update(s.id, { owner: e.target.value })} style={{ width: 130 }} /></td>
+                <td><input aria-label="Owner" placeholder="Owner" defaultValue={st.owner} onBlur={(e) => e.target.value !== st.owner && update(s.id, { owner: e.target.value })} style={{ width: 130 }} /></td>
                 <td><input type="date" value={st.due} onChange={(e) => update(s.id, { due: e.target.value })} style={{ width: "auto" }} /></td>
-                <td><input placeholder="Note" defaultValue={st.note} onBlur={(e) => e.target.value !== st.note && update(s.id, { note: e.target.value })} /></td>
+                <td><input aria-label="Note" placeholder="Note" defaultValue={st.note} onBlur={(e) => e.target.value !== st.note && update(s.id, { note: e.target.value })} /></td>
               </tr>
             );
           })}</tbody></table></div>

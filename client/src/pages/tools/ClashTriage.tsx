@@ -279,7 +279,7 @@ export default function ClashTriage() {
                     <span key={x} className="chip clash-chip"><span className="no-i18n">{x}</span>
                       <button className="clash-x" aria-label={t("Remove")} onClick={() => setTeams(teams.filter((y) => y !== x))}>×</button></span>
                   ))}
-                  <input value={teamInput} placeholder={t("Add team…")} onChange={(e) => setTeamInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTeam(); } }} />
+                  <input aria-label={t("Add team…")} value={teamInput} placeholder={t("Add team…")} onChange={(e) => setTeamInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTeam(); } }} />
                   <button className="small" onClick={addTeam} disabled={!teamInput.trim()}>Add</button>
                   <button className="small ghost" onClick={() => setTeams(DEFAULT_TEAMS)}>Reset</button>
                 </div>
@@ -314,12 +314,12 @@ export default function ClashTriage() {
           <div className="card clash-panel">
             <div className="row spread">
               <div className="clash-filters">
-                <input type="search" placeholder={t("Search groups, categories, grids, root causes…")} value={q} onChange={(e) => setQ(e.target.value)} />
-                <select value={fKind} onChange={(e) => setFKind(e.target.value)}>
+                <input aria-label={t("Search groups, categories, grids, root causes…")} type="search" placeholder={t("Search groups, categories, grids, root causes…")} value={q} onChange={(e) => setQ(e.target.value)} />
+                <select aria-label={t("All group types")} value={fKind} onChange={(e) => setFKind(e.target.value)}>
                   <option value="">{t("All group types")}</option>
                   {(Object.keys(KIND_LABEL) as GroupKind[]).map((k) => <option key={k} value={k}>{t(KIND_LABEL[k])}</option>)}
                 </select>
-                <select value={fPriority} onChange={(e) => setFPriority(e.target.value)}>
+                <select aria-label={t("All priorities")} value={fPriority} onChange={(e) => setFPriority(e.target.value)}>
                   <option value="">{t("All priorities")}</option>
                   {PRIORITIES.map((p) => <option key={p} value={p}>{t(p)}</option>)}
                 </select>
@@ -333,7 +333,7 @@ export default function ClashTriage() {
                   <option value="">{t("No level")}</option>
                   {levels.map((x) => <option key={x} value={x}>{x}</option>)}
                 </select>
-                <select value={fFp} onChange={(e) => setFFp(e.target.value as "" | "hide" | "only")}>
+                <select aria-label={t("Include false positives")} value={fFp} onChange={(e) => setFFp(e.target.value as "" | "hide" | "only")}>
                   <option value="">{t("Include false positives")}</option>
                   <option value="hide">{t("Hide false positives")}</option>
                   <option value="only">{t("Only false positives")}</option>
@@ -385,8 +385,8 @@ export default function ClashTriage() {
                           </select>
                         </td>
                         <td className="center-cell"><input type="checkbox" aria-label={t("False positive")} checked={!!tr?.falsePositive} onChange={(e) => setOne(g, { falsePositive: e.target.checked })} /></td>
-                        <td><textarea className="no-i18n" rows={2} value={tr?.rootCause ?? ""} maxLength={400} placeholder={t("Root cause…")} onChange={(e) => setOne(g, { rootCause: e.target.value })} /></td>
-                        <td><textarea className="no-i18n" rows={2} value={tr?.action ?? ""} maxLength={500} placeholder={t("Action…")} onChange={(e) => setOne(g, { action: e.target.value })} /></td>
+                        <td><textarea aria-label={t("Root cause…")} className="no-i18n" rows={2} value={tr?.rootCause ?? ""} maxLength={400} placeholder={t("Root cause…")} onChange={(e) => setOne(g, { rootCause: e.target.value })} /></td>
+                        <td><textarea aria-label={t("Action…")} className="no-i18n" rows={2} value={tr?.action ?? ""} maxLength={500} placeholder={t("Action…")} onChange={(e) => setOne(g, { action: e.target.value })} /></td>
                       </tr>,
                       isOpen && (
                         <tr key={g.key + ":d"} className="clash-detail">

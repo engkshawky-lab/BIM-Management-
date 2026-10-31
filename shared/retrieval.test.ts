@@ -14,4 +14,15 @@ describe("pickSources", () => {
     const big = [s("Project", "p"), s("A", "ductwork ".repeat(100)), s("B", "ductwork ".repeat(100))];
     expect(pickSources(big, "ductwork", 1000).length).toBe(2);
   });
+  it("finds sources for Arabic questions, in Arabic or English records", () => {
+    const mixed = [s("Project", "summary"), s("Risk register", "late survey risk"), s("محضر", "تمت مناقشة المخاطر في الاجتماع"), s("Issue", "door clash")];
+    const r = pickSources(mixed, "ما هي المخاطر؟").map((x) => x.title);
+    expect(r).toContain("Risk register");
+    expect(r).toContain("محضر");
+    expect(r).not.toContain("Issue");
+  });
+  it("ignores Arabic diacritics and the definite article", () => {
+    const r = pickSources([s("Project", "p"), s("A", "تعارضٌ في السقف")], "التعارض").map((x) => x.title);
+    expect(r).toEqual(["Project", "A"]);
+  });
 });

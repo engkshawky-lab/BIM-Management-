@@ -106,8 +106,8 @@ function ElementBrowser({ r }: { r: IfcJobResult }) {
   const rows = r.elements.filter((e) => (!type || e.type === type) && (!q || `${e.name} ${e.guid} ${e.typeName} ${e.storey}`.toLowerCase().includes(q.toLowerCase()))).slice(0, 200);
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <div className="row"><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, GUID, type or storey…" style={{ flex: 1, minWidth: 200 }} />
-        <select value={type} onChange={(e) => setType(e.target.value)} style={{ width: "auto" }}><option value="">All classes</option>{types.map(([t, n]) => <option key={t} value={t}>{pretty(t)} ({n})</option>)}</select>
+      <div className="row"><input aria-label="Search name, GUID, type or storey…" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, GUID, type or storey…" style={{ flex: 1, minWidth: 200 }} />
+        <select aria-label="All classes" value={type} onChange={(e) => setType(e.target.value)} style={{ width: "auto" }}><option value="">All classes</option>{types.map(([t, n]) => <option key={t} value={t}>{pretty(t)} ({n})</option>)}</select>
         <button className="small" onClick={() => exportCsv("ifc-elements", ["GUID", "Class", "Name", "Type", "Storey", "Classification"], r.elements.map((e) => [e.guid, e.type, e.name, e.typeName, e.storey, e.classification]))}>Elements (CSV)</button></div>
       {r.truncated && <div className="small muted">Showing the first {r.elements.length.toLocaleString()} elements.</div>}
       <div className="table-wrap" style={{ maxHeight: 420, overflow: "auto" }}><table className="data hub-table"><thead><tr><th>Class</th><th>Name</th><th>Type</th><th>Storey</th><th>Psets</th></tr></thead>

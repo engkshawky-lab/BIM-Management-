@@ -38,7 +38,7 @@ function List({ data }: { data: ProjectData }) {
       }}>
         <b>New meeting</b>
         <select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })} style={{ maxWidth: 200 }}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select>
-        <input required placeholder="Title, e.g. Coordination meeting 05" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} style={{ maxWidth: 300 }} />
+        <input aria-label="Title, e.g. Coordination meeting 05" required placeholder="Title, e.g. Coordination meeting 05" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} style={{ maxWidth: 300 }} />
         <input type="date" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} style={{ maxWidth: 170 }} />
         <button className="primary">Create with standard agenda</button>
       </form>}
@@ -97,12 +97,12 @@ function Editor({ data, id }: { data: ProjectData; id: string }) {
       </div>
       <div className="card grid g3" style={{ marginBottom: 12 }}>
         <div><label>Type</label><div>{m.type} #{m.number}</div></div>
-        <div><label>Date & time</label><input type="datetime-local" disabled={!editor} value={m.date.length === 10 ? m.date + "T10:00" : m.date} onChange={(e) => set({ date: e.target.value })} /></div>
-        <div><label>Location / link</label><input disabled={!editor} value={m.location} onChange={(e) => set({ location: e.target.value })} /></div>
+        <div><label htmlFor="meetings-date-time">Date & time</label><input id="meetings-date-time" type="datetime-local" disabled={!editor} value={m.date.length === 10 ? m.date + "T10:00" : m.date} onChange={(e) => set({ date: e.target.value })} /></div>
+        <div><label htmlFor="meetings-location-link">Location / link</label><input id="meetings-location-link" disabled={!editor} value={m.location} onChange={(e) => set({ location: e.target.value })} /></div>
         <div style={{ gridColumn: "1 / -1" }}><label>Attendees</label>
           <div className="chips">{data.members.map((x) => <button key={x.userId} disabled={!editor} className={"chip" + (m.attendees.includes(x.name) ? " on" : "")} onClick={() => set({ attendees: m.attendees.includes(x.name) ? m.attendees.filter((a) => a !== x.name) : [...m.attendees, x.name] })}>{x.name}</button>)}
             {m.attendees.filter((a) => !data.members.some((x) => x.name === a)).map((a) => <span key={a} className="chip on">{a} {editor && <button className="linklike" onClick={() => set({ attendees: m.attendees.filter((y) => y !== a) })}>✕</button>}</span>)}
-            {editor && <input placeholder="+ external attendee (Enter)" style={{ maxWidth: 220 }} onKeyDown={(e) => { const v = (e.target as HTMLInputElement).value.trim(); if (e.key === "Enter" && v) { set({ attendees: [...m.attendees, v] }); (e.target as HTMLInputElement).value = ""; } }} />}
+            {editor && <input aria-label="+ external attendee (Enter)" placeholder="+ external attendee (Enter)" style={{ maxWidth: 220 }} onKeyDown={(e) => { const v = (e.target as HTMLInputElement).value.trim(); if (e.key === "Enter" && v) { set({ attendees: [...m.attendees, v] }); (e.target as HTMLInputElement).value = ""; } }} />}
           </div>
         </div>
       </div>
@@ -112,8 +112,8 @@ function Editor({ data, id }: { data: ProjectData; id: string }) {
           <div key={i} className="grid" style={{ gridTemplateColumns: "28px 1fr 160px 28px", gap: 8, marginBottom: 8, alignItems: "start" }}>
             <b className="small" style={{ paddingTop: 8 }}>{i + 1}.</b>
             <div><input disabled={!editor} value={a.item} onChange={(e) => set({ agenda: m.agenda.map((x, j) => (j === i ? { ...x, item: e.target.value } : x)) })} style={{ fontWeight: 600 }} />
-              <textarea disabled={!editor} placeholder="Minutes / decisions" value={a.minutes} onChange={(e) => set({ agenda: m.agenda.map((x, j) => (j === i ? { ...x, minutes: e.target.value } : x)) })} style={{ minHeight: 48, marginTop: 4 }} /></div>
-            <input disabled={!editor} placeholder="Presenter" value={a.presenter} onChange={(e) => set({ agenda: m.agenda.map((x, j) => (j === i ? { ...x, presenter: e.target.value } : x)) })} />
+              <textarea aria-label="Minutes / decisions" disabled={!editor} placeholder="Minutes / decisions" value={a.minutes} onChange={(e) => set({ agenda: m.agenda.map((x, j) => (j === i ? { ...x, minutes: e.target.value } : x)) })} style={{ minHeight: 48, marginTop: 4 }} /></div>
+            <input aria-label="Presenter" disabled={!editor} placeholder="Presenter" value={a.presenter} onChange={(e) => set({ agenda: m.agenda.map((x, j) => (j === i ? { ...x, presenter: e.target.value } : x)) })} />
             {editor && <button className="ghost tiny danger" onClick={() => set({ agenda: m.agenda.filter((_, j) => j !== i) })}>✕</button>}
           </div>
         ))}

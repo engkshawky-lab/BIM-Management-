@@ -34,7 +34,7 @@ function Users() {
   const list = rows.filter((u) => !q || `${u.name} ${u.email} ${u.organization}`.toLowerCase().includes(q.toLowerCase()));
   return (
     <>
-      <input placeholder="Search users…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 320, marginBottom: 10 }} />
+      <input aria-label="Search users…" placeholder="Search users…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 320, marginBottom: 10 }} />
       {link && <div className="banner info">One-time reset link for <b>{link.email}</b> (valid 60 minutes) — send it to them securely: <code style={{ wordBreak: "break-all" }}>{link.link}</code> <button className="small" onClick={() => navigator.clipboard?.writeText(link.link)}>Copy</button></div>}
       <div className="table-wrap"><table className="data">
         <thead><tr><th>Name</th><th>Email</th><th>Organisation</th><th>Projects</th><th>Joined</th><th>Last sign-in</th><th>Role</th><th>Plan</th><th>Status</th><th /></tr></thead>
@@ -42,8 +42,8 @@ function Users() {
           <tr key={u.id} style={u.disabled ? { opacity: 0.6 } : undefined}>
             <td>{u.name}</td><td className="small">{u.email}</td><td className="small">{u.organization}</td><td>{u.projects}</td>
             <td className="small">{fmtDate(u.createdAt)}</td><td className="small">{u.lastLoginAt ? fmtDate(u.lastLoginAt) : "—"}</td>
-            <td><select value={u.role} disabled={u.id === user.id} onChange={(e) => upd(u.id, { role: e.target.value })}><option value="user">User</option><option value="recruiter">Recruiter</option><option value="admin">Admin</option></select></td>
-            <td><select value={u.plan} onChange={async (e) => { const plan = e.target.value; const m = plan === "free" ? null : prompt("For how many months? (leave empty for no end date)", "12"); if (m === null && plan !== "free") return; try { await api(`/admin/users/${u.id}/plan`, { method: "PUT", body: { plan, months: m ? Number(m) : null } }); load(); } catch (err) { toast((err as Error).message, "error"); } }}>
+            <td><select aria-label="Role" value={u.role} disabled={u.id === user.id} onChange={(e) => upd(u.id, { role: e.target.value })}><option value="user">User</option><option value="recruiter">Recruiter</option><option value="admin">Admin</option></select></td>
+            <td><select aria-label="Plan" value={u.plan} onChange={async (e) => { const plan = e.target.value; const m = plan === "free" ? null : prompt("For how many months? (leave empty for no end date)", "12"); if (m === null && plan !== "free") return; try { await api(`/admin/users/${u.id}/plan`, { method: "PUT", body: { plan, months: m ? Number(m) : null } }); load(); } catch (err) { toast((err as Error).message, "error"); } }}>
               <option value="free">Free</option><option value="pro">Professional</option><option value="enterprise">Enterprise</option></select>{u.renewsAt && <div className="tiny muted">until {fmtDate(u.renewsAt)}</div>}</td>
             <td>{u.id !== user.id && <button className="small" onClick={() => upd(u.id, { disabled: !u.disabled })}>{u.disabled ? "Enable" : "Disable"}</button>}</td>
             <td><button className="small" onClick={async () => { const r = await api<{ link: string }>(`/admin/users/${u.id}/reset-link`, { body: {} }); setLink({ email: u.email, link: r.link }); }}>Reset link</button></td>
@@ -76,11 +76,11 @@ function Feedback() {
         {f.hasScreenshot && <div><button className="linklike small" onClick={() => setShot(shot === f.id ? null : f.id)}>🖼 {shot === f.id ? "Hide" : "Show"} screenshot</button>{shot === f.id && <img src={`/api/feedback/${f.id}/screenshot`} alt="Attached screenshot" style={{ display: "block", maxWidth: "100%", marginTop: 6, borderRadius: 6 }} />}</div>}
         {f.reply && <div className="guidance small" style={{ marginTop: 6, whiteSpace: "pre-wrap" }}><b>Reply:</b> {f.reply}</div>}
         <div className="row" style={{ marginTop: 6 }}>
-          <input placeholder={f.reply ? "Send another reply…" : "Reply to the user…"} value={draft[f.id] ?? ""} onChange={(e) => setDraft({ ...draft, [f.id]: e.target.value })} />
+          <input aria-label="Reply to the user…" placeholder={f.reply ? "Send another reply…" : "Reply to the user…"} value={draft[f.id] ?? ""} onChange={(e) => setDraft({ ...draft, [f.id]: e.target.value })} />
           <button className="small" disabled={!(draft[f.id] ?? "").trim()} onClick={async () => { await put(f.id, { reply: draft[f.id].trim(), ...(f.status === "New" ? { status: "In progress" } : {}) }); setDraft({ ...draft, [f.id]: "" }); }}>Reply</button>
         </div>
       </td>
-      <td><select value={f.status} onChange={(e) => put(f.id, { status: e.target.value })}>{["New", "In progress", "Done", "Won't fix"].map((s) => <option key={s}>{s}</option>)}</select></td></tr>
+      <td><select aria-label="Status" value={f.status} onChange={(e) => put(f.id, { status: e.target.value })}>{["New", "In progress", "Done", "Won't fix"].map((s) => <option key={s}>{s}</option>)}</select></td></tr>
   ))}</tbody></table> : <p className="muted">No feedback yet.</p>}</div>;
 }
 
@@ -92,11 +92,11 @@ function BrandingTab() {
   return (
     <div className="card" style={{ maxWidth: 640 }}>
       <p className="muted small">Shown on the cover and headers of Word exports.</p>
-      <label>Organisation name</label><input value={b.orgName} onChange={(e) => setB({ ...b, orgName: e.target.value })} />
-      <label>Brand colour</label><input type="color" value={b.color.startsWith("#") ? b.color : `#${b.color}`} onChange={(e) => setB({ ...b, color: e.target.value })} style={{ width: 80, height: 36 }} />
-      <label>Logo (PNG or JPEG, up to 200 KB)</label>
-      <div className="row">{b.logo && <img src={b.logo} alt="Logo" style={{ maxHeight: 48 }} />}<input type="file" accept="image/png,image/jpeg" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; if (f.size > 200_000) return toast("Logo must be under 200 KB", "error"); const rd = new FileReader(); rd.onload = () => setB({ ...b, logo: String(rd.result) }); rd.readAsDataURL(f); }} />{b.logo && <button className="ghost small" onClick={() => setB({ ...b, logo: "" })}>Remove</button>}</div>
-      <label>Footer text</label><input value={b.footer} onChange={(e) => setB({ ...b, footer: e.target.value })} placeholder="e.g. Confidential — prepared for the appointing party" />
+      <label htmlFor="admin-organisation-name">Organisation name</label><input id="admin-organisation-name" value={b.orgName} onChange={(e) => setB({ ...b, orgName: e.target.value })} />
+      <label htmlFor="admin-brand-colour">Brand colour</label><input id="admin-brand-colour" type="color" value={b.color.startsWith("#") ? b.color : `#${b.color}`} onChange={(e) => setB({ ...b, color: e.target.value })} style={{ width: 80, height: 36 }} />
+      <label htmlFor="admin-logo">Logo (PNG or JPEG, up to 200 KB)</label>
+      <div className="row">{b.logo && <img src={b.logo} alt="Logo" style={{ maxHeight: 48 }} />}<input id="admin-logo" type="file" accept="image/png,image/jpeg" onChange={(e) => { const f = e.target.files?.[0]; if (!f) return; if (f.size > 200_000) return toast("Logo must be under 200 KB", "error"); const rd = new FileReader(); rd.onload = () => setB({ ...b, logo: String(rd.result) }); rd.readAsDataURL(f); }} />{b.logo && <button className="ghost small" onClick={() => setB({ ...b, logo: "" })}>Remove</button>}</div>
+      <label htmlFor="admin-footer-text">Footer text</label><input id="admin-footer-text" value={b.footer} onChange={(e) => setB({ ...b, footer: e.target.value })} placeholder="e.g. Confidential — prepared for the appointing party" />
       <button className="primary" style={{ marginTop: 12 }} onClick={async () => { try { await api("/settings/branding", { method: "PUT", body: b }); toast("Branding saved"); } catch (e) { toast((e as Error).message, "error"); } }}>Save branding</button>
     </div>
   );

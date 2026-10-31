@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useDialog } from "../components/Dialog";
 import { useSession } from "../App";
 import { api, fmtDate, fmtSize } from "../lib/api";
 import { buildDocx, type ExportDoc } from "../lib/export";
@@ -22,6 +23,12 @@ interface Resource { id: string; title: string; description: string; category: s
 const PARTS = ["", "19650-1", "19650-2", "19650-3", "19650-4", "19650-5", "19650-6"];
 const ext = (n: string) => (/\.([a-z0-9]+)$/i.exec(n)?.[1] ?? "file").toUpperCase();
 const extColor = (e: string) => (e === "PDF" ? "#dc2626" : /DOCX?/.test(e) ? "#2563eb" : /XLSX?|CSV/.test(e) ? "#16a34a" : /PPTX?/.test(e) ? "#ea580c" : /DWG|IFC|RVT/.test(e) ? "#0e7490" : "#64748b");
+
+/** The file preview overlay: a modal dialog (Escape closes, focus stays inside and returns to the opener). */
+function PreviewDialog({ label, onClose, style, children }: { label: string; onClose: () => void; style: CSSProperties; children: ReactNode }) {
+  const dlg = useDialog(onClose);
+  return <div className="card" ref={dlg} role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.stopPropagation()} style={style}>{children}</div>;
+}
 
 export function DownloadsLibrary() {
   const { user, toast } = useSession();
@@ -58,18 +65,18 @@ export function DownloadsLibrary() {
       {admin && <div className="card" style={{ display: "grid", gap: 8, marginBottom: 12 }}>
         <b>Add a resource</b>
         <div className="grid g4">
-          <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-          <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Title (defaults to file name)" />
-          <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{cats.map((c) => <option key={c}>{c}</option>)}</select>
-          <select value={form.part} onChange={(e) => setForm({ ...form, part: e.target.value })}>{PARTS.map((p) => <option key={p} value={p}>{p ? `ISO ${p}` : tr("Any part")}</option>)}</select>
+          <input type="file" aria-label="File" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          <input aria-label="Title (defaults to file name)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Title (defaults to file name)" />
+          <select aria-label="Category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{cats.map((c) => <option key={c}>{c}</option>)}</select>
+          <select aria-label="ISO 19650 part" value={form.part} onChange={(e) => setForm({ ...form, part: e.target.value })}>{PARTS.map((p) => <option key={p} value={p}>{p ? `ISO ${p}` : tr("Any part")}</option>)}</select>
         </div>
-        <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short description" />
+        <input aria-label="Short description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short description" />
         <div className="row"><button className="primary" disabled={busy || !file} onClick={add}>{busy ? "Uploading…" : "Add to library"}</button><span className="small muted">Only upload material you have the right to share.</span></div>
       </div>}
       <div className="row" style={{ marginBottom: 12 }}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search resources…" style={{ flex: 1, minWidth: 200 }} />
-        <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} style={{ width: "auto" }}><option value="new">{tr("Newest first")}</option><option value="popular">{tr("Most downloaded")}</option><option value="name">A–Z</option></select>
-        <select value={cat} onChange={(e) => setCat(e.target.value)} style={{ width: "auto" }}><option value="">{tr("All categories")}</option>{cats.map((c) => <option key={c}>{c}</option>)}</select>
+        <input aria-label="Search resources…" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search resources…" style={{ flex: 1, minWidth: 200 }} />
+        <select aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} style={{ width: "auto" }}><option value="new">{tr("Newest first")}</option><option value="popular">{tr("Most downloaded")}</option><option value="name">A–Z</option></select>
+        <select aria-label="Category" value={cat} onChange={(e) => setCat(e.target.value)} style={{ width: "auto" }}><option value="">{tr("All categories")}</option>{cats.map((c) => <option key={c}>{c}</option>)}</select>
       </div>
       {!shown.length ? <div className="card muted">{rows.length ? "No resources match." : admin ? "The library is empty. Add the first resource above." : "The library is empty. Administrators add resources here."}</div>
         : <div className="grid g4">{shown.map((r) => { const e = ext(r.fileName); return (
@@ -89,11 +96,11 @@ export function DownloadsLibrary() {
             </div>
           </div>); })}</div>}
       {preview && <div className="modal-backdrop" onClick={() => setPreview(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.55)", display: "grid", placeItems: "center", zIndex: 50, padding: 16 }}>
-        <div className="card" onClick={(e) => e.stopPropagation()} style={{ width: "min(1000px, 100%)", height: "min(85vh, 900px)", display: "grid", gridTemplateRows: "auto 1fr", gap: 8 }}>
+        <PreviewDialog label={preview.title} onClose={() => setPreview(null)} style={{ width: "min(1000px, 100%)", height: "min(85vh, 900px)", display: "grid", gridTemplateRows: "auto 1fr", gap: 8 }}>
           <div className="row spread"><b>{preview.title}</b><button className="ghost" onClick={() => setPreview(null)}>Close</button></div>
           {preview.mimeType.startsWith("image/") ? <img src={`/api/library/${preview.id}/file?inline=1`} alt={preview.title} style={{ maxHeight: "100%", objectFit: "contain", margin: "auto" }} />
             : <iframe title={preview.title} src={`/api/library/${preview.id}/file?inline=1`} style={{ width: "100%", height: "100%", border: 0, borderRadius: 8, background: "#fff" }} />}
-        </div>
+        </PreviewDialog>
       </div>}
     </>
   );
@@ -128,7 +135,7 @@ export function NewsFeed() {
         <div className="row">
           <button className={"chip" + (!topic ? " on" : "")} onClick={() => setTopic("")}>All</button>
           {data?.topics.map((t) => <button key={t} className={"chip" + (topic === t ? " on" : "")} onClick={() => setTopic(t)}>{t}</button>)}
-          <select value={rel} onChange={(e) => setRel(e.target.value)} style={{ width: "auto" }}><option value="">{tr("Any relevance")}</option><option value="High">{tr("High")}</option><option value="Medium">{tr("Medium")}</option><option value="Low">{tr("Low")}</option></select>
+          <select aria-label="Relevance" value={rel} onChange={(e) => setRel(e.target.value)} style={{ width: "auto" }}><option value="">{tr("Any relevance")}</option><option value="High">{tr("High")}</option><option value="Medium">{tr("Medium")}</option><option value="Low">{tr("Low")}</option></select>
         </div>
         <div className="row small muted">
           {data?.updatedAt && <span>Updated {fmtDate(data.updatedAt)}{data.scheduled ? " · refreshes hourly" : ""}</span>}

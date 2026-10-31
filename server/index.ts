@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { loadUser, requireUser } from "./auth";
-import { runMigrations } from "./db";
+import { db, runMigrations } from "./db";
 import ai from "./routes/ai";
 import aitools from "./routes/aitools";
 import toolsIds from "./routes/toolsIds";
@@ -44,12 +44,14 @@ import { aiQuota } from "./billing";
 import { paymentsRouter, stripeWebhook } from "./payments";
 import { startScheduler } from "./agents";
 import standards from "./routes/standards";
-import { securityHeaders } from "./security";
+import { requestLog, securityHeaders } from "./security";
+import { sql } from "drizzle-orm";
 
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(securityHeaders);
+app.use("/api", requestLog);
 // Stripe needs the raw body for signature checks, so its webhook is mounted before the JSON parser.
 app.post("/api/stripe/webhook", ...stripeWebhook);
 app.use(express.json({ limit: "5mb" }));
@@ -59,11 +61,17 @@ app.use(loadUser);
 app.use("/api", (req, res, next) => {
   if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return next();
   const origin = req.headers.origin;
-  if (origin && new URL(origin).host !== req.headers.host) return res.status(403).json({ error: "Cross-origin request blocked." });
+  // "null" (sandboxed frames, some redirects) and malformed origins are treated as cross-site
+  const host = (() => { try { return origin ? new URL(origin).host : null; } catch { return ""; } })();
+  if (host !== null && host !== req.headers.host) return res.status(403).json({ error: "Cross-origin request blocked." });
   next();
 });
 
-app.get("/api/health", (_req, res) => res.json({ ok: true }));
+// health for uptime monitors: also checks the database answers
+app.get("/api/health", async (_req, res) => {
+  try { await db.execute(sql`select 1`); res.json({ ok: true }); }
+  catch { res.status(503).json({ ok: false, error: "Database unavailable." }); }
+});
 app.use("/api", auth);
 app.use("/api", requireUser, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
@@ -77,8 +85,10 @@ app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: Ne
 
 const clientDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../client");
 if (process.env.NODE_ENV === "production" && fs.existsSync(clientDir)) {
+  // hashed bundles never change, so browsers keep them a year; index.html is always revalidated so a release shows at once
+  app.use("/assets", express.static(path.join(clientDir, "assets"), { index: false, immutable: true, maxAge: "365d" }));
   app.use(express.static(clientDir, { index: false, maxAge: "1h" }));
-  app.get("*", (_req, res) => res.sendFile(path.join(clientDir, "index.html")));
+  app.get("*", (_req, res) => res.sendFile(path.join(clientDir, "index.html"), { headers: { "Cache-Control": "no-cache" } }));
 }
 
 const port = Number(process.env.PORT ?? 3001);

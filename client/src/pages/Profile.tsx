@@ -36,29 +36,29 @@ export default function ProfilePage() {
       <div className="grid g2">
         <form className="card" onSubmit={save}>
           <h3 style={{ marginTop: 0 }}>Profile details</h3>
-          <label>{t("Full name")}</label><input required minLength={2} value={f.name} onChange={set("name")} />
-          <label>{t("Organization")}</label><input value={f.organization} onChange={set("organization")} />
-          <label>{t("Job title")}</label><input value={f.jobTitle} onChange={set("jobTitle")} />
-          <label>{t("Phone")}</label><input value={f.phone} onChange={set("phone")} />
-          <label>{t("About / expertise")}</label><textarea value={f.bio} onChange={set("bio")} placeholder="e.g. ISO 19650 Practitioner, 10 years BIM coordination" />
+          <label htmlFor="profile-full-name">{t("Full name")}</label><input id="profile-full-name" required minLength={2} value={f.name} onChange={set("name")} />
+          <label htmlFor="profile-organization">{t("Organization")}</label><input id="profile-organization" value={f.organization} onChange={set("organization")} />
+          <label htmlFor="profile-job-title">{t("Job title")}</label><input id="profile-job-title" value={f.jobTitle} onChange={set("jobTitle")} />
+          <label htmlFor="profile-phone">{t("Phone")}</label><input id="profile-phone" value={f.phone} onChange={set("phone")} />
+          <label htmlFor="profile-about-expertise">{t("About / expertise")}</label><textarea id="profile-about-expertise" value={f.bio} onChange={set("bio")} placeholder="e.g. ISO 19650 Practitioner, 10 years BIM coordination" />
           <button className="primary" style={{ marginTop: 12 }}>{t("Save profile")}</button>
         </form>
         <div className="grid" style={{ alignContent: "start" }}>
           <form className="card" onSubmit={changePw}>
             <h3 style={{ marginTop: 0 }}>{t("Change password")}</h3>
-            <label>{t("Current password")}</label><input type="password" required value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} autoComplete="current-password" />
-            <label>{t("New password")}</label><input type="password" required minLength={8} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} autoComplete="new-password" />
-            <label>{t("Confirm new password")}</label><input type="password" required value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} autoComplete="new-password" />
+            <label htmlFor="profile-current-password">{t("Current password")}</label><input id="profile-current-password" type="password" required value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} autoComplete="current-password" />
+            <label htmlFor="profile-new-password">{t("New password")}</label><input id="profile-new-password" type="password" required minLength={8} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} autoComplete="new-password" />
+            <label htmlFor="profile-confirm-new-password">{t("Confirm new password")}</label><input id="profile-confirm-new-password" type="password" required value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} autoComplete="new-password" />
             <button style={{ marginTop: 12 }}>{t("Change password")}</button>
           </form>
           <div className="card">
             <h3 style={{ marginTop: 0 }}>{t("Email & language")}</h3>
-            <label>{t("Email notifications")}</label>
-            <select value={user.emailPref ?? "instant"} onChange={async (e) => { const r = await api<{ user: User }>("/profile", { method: "PUT", body: { emailPref: e.target.value } }); setUser(r.user); toast("Email preference saved"); }}>
+            <label htmlFor="profile-email-notifications">{t("Email notifications")}</label>
+            <select id="profile-email-notifications" value={user.emailPref ?? "instant"} onChange={async (e) => { const r = await api<{ user: User }>("/profile", { method: "PUT", body: { emailPref: e.target.value } }); setUser(r.user); toast("Email preference saved"); }}>
               <option value="instant">Instant — one email per notification</option><option value="digest">Daily digest</option><option value="off">Off (in-app only)</option>
             </select>
-            <label>{t("Language")}</label>
-            <select value={user.locale ?? "en"} onChange={async (e) => { const r = await api<{ user: User }>("/profile", { method: "PUT", body: { locale: e.target.value } }); setUser(r.user); }}>
+            <label htmlFor="profile-language">{t("Language")}</label>
+            <select id="profile-language" value={user.locale ?? "en"} onChange={async (e) => { const r = await api<{ user: User }>("/profile", { method: "PUT", body: { locale: e.target.value } }); setUser(r.user); }}>
               <option value="en">English</option><option value="ar">العربية (Arabic)</option>
             </select>
           </div>

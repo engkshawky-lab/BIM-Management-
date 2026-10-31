@@ -300,7 +300,7 @@ export default function ProgrammePlan() {
         </div>
         {acts.length > 0 && <>
           <div className="row prog-filters">
-            <input type="search" placeholder={t("Filter by code, name or WBS")} value={query} onChange={(e) => setQuery(e.target.value)} />
+            <input aria-label={t("Filter by code, name or WBS")} type="search" placeholder={t("Filter by code, name or WBS")} value={query} onChange={(e) => setQuery(e.target.value)} />
             <label className="prog-check"><input type="checkbox" checked={hideSummary} onChange={(e) => setHideSummary(e.target.checked)} />Hide summary rows</label>
             <label className="prog-check"><input type="checkbox" checked={onlySelected} onChange={(e) => setOnlySelected(e.target.checked)} />Selected only</label>
             <button className="small" onClick={() => setSelected(suggest(acts))}>Select suggested</button>

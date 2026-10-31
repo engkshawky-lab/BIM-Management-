@@ -33,12 +33,12 @@ export default function Training({ data }: { data: ProjectData }) {
         <div className="card">
           <b>Assign training</b>
           {manager ? <>
-            <label>Course</label><select value={form.courseId} onChange={(e) => setForm({ ...form, courseId: e.target.value })}>{COURSES.map((c) => <option key={c.id} value={c.id}>{c.title} ({c.lessons.length} lessons)</option>)}</select>
+            <label htmlFor="training-course">Course</label><select id="training-course" value={form.courseId} onChange={(e) => setForm({ ...form, courseId: e.target.value })}>{COURSES.map((c) => <option key={c.id} value={c.id}>{c.title} ({c.lessons.length} lessons)</option>)}</select>
             <label>Team members</label>
             <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>{data.members.map((m) => (
               <label key={m.userId} className="row small" style={{ gap: 4, margin: 0 }}><input type="checkbox" style={{ width: "auto" }} checked={form.userIds.includes(m.userId)} onChange={(e) => setForm({ ...form, userIds: e.target.checked ? [...form.userIds, m.userId] : form.userIds.filter((x) => x !== m.userId) })} />{m.name}</label>
             ))}</div>
-            <label>Due date</label><input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
+            <label htmlFor="training-due-date">Due date</label><input id="training-due-date" type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
             <button className="primary" style={{ marginTop: 10 }} disabled={!form.userIds.length} onClick={assign}>Assign</button>
           </> : <p className="small muted">A project manager assigns training. Your assigned courses appear in Learn.</p>}
         </div>

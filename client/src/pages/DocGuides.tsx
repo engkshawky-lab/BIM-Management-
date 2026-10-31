@@ -41,7 +41,7 @@ function Index() {
         <p>{t("What each document is, who writes and approves it, what goes in each section, how to create it step by step, and what to check before you issue it.")}</p>
         <div className="facts"><span>{DOC_GUIDES.length} {t("documents")}</span><span>{DOC_GUIDES.reduce((a, g) => a + g.sections.length, 0)} {t("sections explained")}</span><span>{DOC_GUIDES.reduce((a, g) => a + g.checklist.length, 0)} {t("quality checks")}</span></div>
       </div>
-      <input placeholder={t("Search documents…")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 420 }} />
+      <input aria-label={t("Search documents…")} placeholder={t("Search documents…")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 420 }} />
       <div className="dg-phases">
         {PHASES.map((p, n) => { const list = DOC_GUIDES.filter((g) => phaseOf(g) === p.id && match(g)); return (
           <section key={p.id} className="dg-phase">

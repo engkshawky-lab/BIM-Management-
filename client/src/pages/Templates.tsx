@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useDialog } from "../components/Dialog";
 import { navigate, useSession } from "../App";
 import { StdBadge } from "../components/common";
 import { templates } from "../../../shared/data/templates";
@@ -22,14 +23,15 @@ function UseDialog({ t, onClose }: { t: DocTemplate; onClose: () => void }) {
       navigate(`/projects/${pid}/documents/${r.id}`);
     } catch (e) { toast((e as Error).message, "error"); }
   };
+  const dlg = useDialog(onClose);
   return (
-    <div className="modal-bg" onClick={onClose}><div className="modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-bg" onClick={onClose}><div className="modal" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
       <h2 style={{ marginTop: 0 }}>Use {t.code} in a project</h2>
       {projects === null ? <p className="muted">Loading…</p> : projects.length === 0 ? (
         <p className="muted">You need a project with {t.standard === "iso19650" ? "ISO 19650" : "ISO/IEC 42001"} in scope where you are an editor. <a href="#/projects/new">Create a project</a>.</p>
       ) : <>
-        <label>Project</label>
-        <select value={pid} onChange={(e) => setPid(e.target.value)}>{projects.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}</select>
+        <label htmlFor="templates-project">Project</label>
+        <select id="templates-project" value={pid} onChange={(e) => setPid(e.target.value)}>{projects.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}</select>
         {t.generatedFrom ? <GeneratedNotice projectId={pid} t={t} onClose={onClose} />
           : <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button><button className="primary" onClick={create}>Create document</button></div>}
       </>}
@@ -49,7 +51,7 @@ export default function Templates({ std, focusId }: { std?: StandardId; focusId?
     <>
       <h2 style={{ marginTop: 4 }}>Template library</h2>
       <p className="muted">Structured templates with guidance, worked examples and clause references. Use one in a project to create a controlled document your team can edit, review and publish.</p>
-      <input placeholder="Search templates…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 420, margin: "8px 0 4px" }} />
+      <input aria-label="Search templates…" placeholder="Search templates…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 420, margin: "8px 0 4px" }} />
       {categories.map((c) => (
         <div key={c}>
           <h2>{c}</h2>

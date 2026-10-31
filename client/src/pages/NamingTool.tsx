@@ -29,13 +29,13 @@ export default function NamingTool() {
         <div className="grid g4">
           {namingFields.map((f) => (
             <div key={f.id}>
-              <label>{f.label} <span className="muted small">({f.hint})</span></label>
+              <label htmlFor={`naming-${f.id}`}>{f.label} <span className="muted small">({f.hint})</span></label>
               {f.id === "type" || f.id === "role" ? (
-                <select value={v[f.id]} onChange={(e) => setV({ ...v, [f.id]: e.target.value })}>
+                <select id={`naming-${f.id}`} value={v[f.id]} onChange={(e) => setV({ ...v, [f.id]: e.target.value })}>
                   {(f.id === "type" ? typeCodes : roleCodes).map((c) => { const code = c.split(" – ")[0]; return <option key={code} value={code}>{c}</option>; })}
                 </select>
               ) : (
-                <input value={v[f.id]} onChange={(e) => setV({ ...v, [f.id]: e.target.value.toUpperCase() })} style={{ borderColor: RULES[f.id].test(v[f.id]) ? undefined : "var(--danger)" }} />
+                <input id={`naming-${f.id}`} value={v[f.id]} onChange={(e) => setV({ ...v, [f.id]: e.target.value.toUpperCase() })} style={{ borderColor: RULES[f.id].test(v[f.id]) ? undefined : "var(--danger)" }} />
               )}
             </div>
           ))}
@@ -47,7 +47,7 @@ export default function NamingTool() {
 
       <div className="card" style={{ marginTop: 12 }}>
         <h3 style={{ marginTop: 0 }}>Validator</h3>
-        <input placeholder="Paste a container name, e.g. PRJ01-ABC-ZZ-01-DR-A-0001" value={check} onChange={(e) => setCheck(e.target.value)} />
+        <input aria-label="Paste a container name, e.g. PRJ01-ABC-ZZ-01-DR-A-0001" placeholder="Paste a container name, e.g. PRJ01-ABC-ZZ-01-DR-A-0001" value={check} onChange={(e) => setCheck(e.target.value)} />
         {checkResult && (checkResult.length === 0
           ? <p style={{ color: "var(--ok)" }}>✔ Name conforms to the field structure.</p>
           : <ul style={{ color: "var(--danger)" }}>{checkResult.map((r) => <li key={r}>{r}</li>)}</ul>)}

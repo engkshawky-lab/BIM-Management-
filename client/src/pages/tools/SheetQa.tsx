@@ -244,7 +244,7 @@ export default function SheetQa() {
         </div>
 
         <div className="row sqa-toolbar">
-          <input className="sqa-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("Search file, number or title")} />
+          <input aria-label={t("Search file, number or title")} className="sqa-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("Search file, number or title")} />
           <select value={checkFilter} onChange={(e) => setCheckFilter(e.target.value)} aria-label={t("Filter by check")}>
             <option value="">All checks</option>
             {checksInUse.map((c) => { const b = summary.byCheck[c.id]; return <option key={c.id} value={c.id}>{`${t(c.label)} (${b.fail + b.warn})`}</option>; })}

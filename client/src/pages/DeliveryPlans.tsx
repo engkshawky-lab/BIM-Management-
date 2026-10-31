@@ -218,7 +218,7 @@ export default function DeliveryPlans() {
             <thead><tr><th>Element / system</th><th>Classification</th><th>Model author</th>{s.stages.map((st) => <th key={st}>{st}</th>)}<th>Notes</th><th /></tr></thead>
             <tbody>{s.mpdt.map((r, i) => <tr key={i}>
               <td><input className="cell-input" value={r.element} onChange={(e) => setMpdt(i, { element: e.target.value })} /></td>
-              <td><input className="cell-input" value={r.classification} placeholder="Uniclass code" onChange={(e) => setMpdt(i, { classification: e.target.value })} /></td>
+              <td><input aria-label="Uniclass code" className="cell-input" value={r.classification} placeholder="Uniclass code" onChange={(e) => setMpdt(i, { classification: e.target.value })} /></td>
               <td><input className="cell-input" value={r.author} onChange={(e) => setMpdt(i, { author: e.target.value })} /></td>
               {s.stages.map((st) => <td key={st}><textarea className="cell-input" value={r.loin[st] ?? ""} onChange={(e) => setMpdt(i, { loin: { ...r.loin, [st]: e.target.value } })} /></td>)}
               <td><textarea className="cell-input" value={r.notes} onChange={(e) => setMpdt(i, { notes: e.target.value })} /></td>

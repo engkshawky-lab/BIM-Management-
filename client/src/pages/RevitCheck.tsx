@@ -36,12 +36,12 @@ function RulesEditor({ rules, setRules, onReset }: { rules: RevitRules; setRules
       <div className="grid g4">
         <div><label>Project code</label><div className="code no-i18n">{rules.project.code || "—"}</div><div className="tiny muted">From <a href="#/project-data">Project data</a></div></div>
         <div><label>Model file name</label><label className="row small" style={{ gap: 6, marginTop: 6 }}><input type="checkbox" style={{ width: "auto" }} checked={rules.naming.checkFileName} onChange={(e) => set({ naming: { ...rules.naming, checkFileName: e.target.checked } })} />Check against the naming convention</label></div>
-        <div><label>Sheet number pattern <span className="muted small">(optional)</span></label><input className="no-i18n" value={rules.sheets.numberPattern} placeholder="e.g. ^[A-Z]{1,2}-\d{3}$" onChange={(e) => set({ sheets: { ...rules.sheets, numberPattern: e.target.value } })} /></div>
-        <div><label>Sheet parameters to fill</label><input value={rules.sheets.params.join(", ")} onChange={(e) => set({ sheets: { ...rules.sheets, params: list(e.target.value) } })} /></div>
+        <div><label htmlFor="revitcheck-sheet-number-pattern">Sheet number pattern <span className="muted small">(optional)</span></label><input id="revitcheck-sheet-number-pattern" className="no-i18n" value={rules.sheets.numberPattern} placeholder="e.g. ^[A-Z]{1,2}-\d{3}$" onChange={(e) => set({ sheets: { ...rules.sheets, numberPattern: e.target.value } })} /></div>
+        <div><label htmlFor="revitcheck-sheet-parameters-to-fill">Sheet parameters to fill</label><input id="revitcheck-sheet-parameters-to-fill" value={rules.sheets.params.join(", ")} onChange={(e) => set({ sheets: { ...rules.sheets, params: list(e.target.value) } })} /></div>
       </div>
       <div>
-        <label>Project Information parameters <span className="muted small">(those with a value in Project data must match it)</span></label>
-        <input value={rules.projectInfo.map((x) => x.param).join(", ")} onChange={(e) => { const old = new Map(rules.projectInfo.map((x) => [x.param, x.expected])); set({ projectInfo: list(e.target.value).map((param) => ({ param, expected: old.get(param) })) }); }} />
+        <label htmlFor="revitcheck-project-information-parameters">Project Information parameters <span className="muted small">(those with a value in Project data must match it)</span></label>
+        <input id="revitcheck-project-information-parameters" value={rules.projectInfo.map((x) => x.param).join(", ")} onChange={(e) => { const old = new Map(rules.projectInfo.map((x) => [x.param, x.expected])); set({ projectInfo: list(e.target.value).map((param) => ({ param, expected: old.get(param) })) }); }} />
       </div>
       <div>
         <div className="row spread"><label style={{ margin: 0 }}>Parameters each category must carry <span className="muted small">(instance or type)</span></label>
@@ -54,10 +54,10 @@ function RulesEditor({ rules, setRules, onReset }: { rules: RevitRules; setRules
           </tr>))}</tbody></table></div>
       </div>
       <div className="grid g4">
-        <div><label>Max Revit warnings</label><input type="number" min={0} value={rules.thresholds.maxWarnings} onChange={(e) => set({ thresholds: { ...rules.thresholds, maxWarnings: +e.target.value || 0 } })} /></div>
-        <div><label>Max in-place families</label><input type="number" min={0} value={rules.thresholds.maxInPlace} onChange={(e) => set({ thresholds: { ...rules.thresholds, maxInPlace: +e.target.value || 0 } })} /></div>
-        <div><label>Max imported CAD</label><input type="number" min={0} value={rules.thresholds.maxImportedCad} onChange={(e) => set({ thresholds: { ...rules.thresholds, maxImportedCad: +e.target.value || 0 } })} /></div>
-        <div><label>Missing values allowed before "failed"</label><select value={rules.thresholds.missingShareWarn} onChange={(e) => set({ thresholds: { ...rules.thresholds, missingShareWarn: +e.target.value } })}>{[0, 0.02, 0.05, 0.1].map((v) => <option key={v} value={v}>{v * 100}%</option>)}</select></div>
+        <div><label htmlFor="revitcheck-max-revit-warnings">Max Revit warnings</label><input id="revitcheck-max-revit-warnings" type="number" min={0} value={rules.thresholds.maxWarnings} onChange={(e) => set({ thresholds: { ...rules.thresholds, maxWarnings: +e.target.value || 0 } })} /></div>
+        <div><label htmlFor="revitcheck-max-in-place-families">Max in-place families</label><input id="revitcheck-max-in-place-families" type="number" min={0} value={rules.thresholds.maxInPlace} onChange={(e) => set({ thresholds: { ...rules.thresholds, maxInPlace: +e.target.value || 0 } })} /></div>
+        <div><label htmlFor="revitcheck-max-imported-cad">Max imported CAD</label><input id="revitcheck-max-imported-cad" type="number" min={0} value={rules.thresholds.maxImportedCad} onChange={(e) => set({ thresholds: { ...rules.thresholds, maxImportedCad: +e.target.value || 0 } })} /></div>
+        <div><label htmlFor="revitcheck-missing-values-allowed-before">Missing values allowed before "failed"</label><select id="revitcheck-missing-values-allowed-before" value={rules.thresholds.missingShareWarn} onChange={(e) => set({ thresholds: { ...rules.thresholds, missingShareWarn: +e.target.value } })}>{[0, 0.02, 0.05, 0.1].map((v) => <option key={v} value={v}>{v * 100}%</option>)}</select></div>
       </div>
       <div className="row" style={{ gap: 8 }}><button className="ghost small" onClick={onReset}>Reset to defaults from Project data</button><span className="tiny muted">Rules are saved in this browser.</span></div>
     </div>
@@ -201,7 +201,7 @@ export default function RevitCheck() {
             <input type="file" accept=".json,application/json" style={{ display: "none" }} onChange={(e) => { readFile(e.target.files?.[0]); e.target.value = ""; }} />
           </label>
           <div style={{ display: "grid", gap: 6 }}>
-            <textarea rows={4} value={paste} onChange={(e) => setPaste(e.target.value)} placeholder="…or paste the JSON Claude returned" className="no-i18n" style={{ fontSize: 12 }} />
+            <textarea aria-label="…or paste the JSON Claude returned" rows={4} value={paste} onChange={(e) => setPaste(e.target.value)} placeholder="…or paste the JSON Claude returned" className="no-i18n" style={{ fontSize: 12 }} />
             <div><button disabled={!paste.trim()} onClick={() => open(paste)}>Open pasted results</button></div>
           </div>
         </div>

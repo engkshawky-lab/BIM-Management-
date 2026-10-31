@@ -252,7 +252,7 @@ export default function ProjectAgent() {
                   <div ref={end} />
                 </div>
                 <form className="agent-ask" onSubmit={(e) => { e.preventDefault(); send(q); }}>
-                  <textarea value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Ask about overdue items, changes, reviews, issues…")} maxLength={4000} disabled={ai !== true}
+                  <textarea aria-label={t("Ask about overdue items, changes, reviews, issues…")} value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Ask about overdue items, changes, reviews, issues…")} maxLength={4000} disabled={ai !== true}
                     onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(q); } }} />
                   <button className="primary" disabled={busy || ai !== true || !q.trim() || !pid}>{busy ? t("Thinking…") : t("Ask")}</button>
                 </form>

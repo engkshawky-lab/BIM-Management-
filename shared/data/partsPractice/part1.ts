@@ -88,8 +88,8 @@ export const part1Practice: PartPractice = {
       a: "No. LOD schemes usually describe a single level of detail per object. Level of information need defines what geometry, data and documentation are needed for a specific purpose at a specific milestone, so one object can have different needs for different purposes.",
     },
     {
-      q: "Can the same company be both the appointing party and a lead appointed party?",
-      a: "Yes, the roles describe a relationship in an appointment, not a type of company. A main contractor is a lead appointed party to the client, but it acts as the appointing party when it appoints its own subcontractors. Each appointment should make that relationship clear.",
+      q: "Does a main contractor become the appointing party when it appoints its own subcontractors?",
+      a: "No. The appointing party is the client who receives information from the delivery team. A main contractor appointed by the client is the lead appointed party, and it stays the lead appointed party when it appoints subcontractors such as a facade specialist; those subcontractors are appointed parties within its delivery team. Roles describe a relationship in an appointment, not a type of company, so each appointment should make that relationship clear.",
     },
     {
       q: "Can we keep using our own internal terms instead of the ISO 19650 terms?",
@@ -113,9 +113,9 @@ export const part1Practice: PartPractice = {
     ],
     [
       "A main contractor appoints a facade subcontractor. In that appointment, what is the main contractor's role?",
-      ["Task team", "Appointed party", "Appointing party", "Information manager"],
+      ["Task team", "Appointed party", "Lead appointed party", "Appointing party"],
       2,
-      "Roles depend on the appointment, so the contractor is the appointing party to its own subcontractor.",
+      "The main contractor remains the lead appointed party and the facade subcontractor is an appointed party in its delivery team. The appointing party is the client.",
     ],
     [
       "Which of these is the best example of level of information need?",

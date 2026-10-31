@@ -160,7 +160,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
             </div>))}</div>
           {redo && <div className="hub-tile" style={{ "--c": "var(--hub)", display: "grid", gap: 6 } as CSSProperties}>
             <b className="small">Redo section {redo.i + 1}</b>
-            <textarea value={redo.text} onChange={(e) => setRedo({ ...redo, text: e.target.value })} placeholder="Optional: what should change? e.g. add a RACI table, shorter, use our naming convention…" style={{ minHeight: 60 }} />
+            <textarea aria-label="Optional: what should change? e.g. add a RACI table, shorter, use our naming convention…" value={redo.text} onChange={(e) => setRedo({ ...redo, text: e.target.value })} placeholder="Optional: what should change? e.g. add a RACI table, shorter, use our naming convention…" style={{ minHeight: 60 }} />
             <div className="row"><button className="primary small" onClick={() => { const r = redo; setRedo(null); void draftOne(r.i, active, r.text); }}>Redo now</button><button className="ghost small" onClick={() => setRedo(null)}>Cancel</button></div>
           </div>}
           {finished && <>
@@ -202,7 +202,7 @@ function DocInput({ label, file, setFile, text, setText }: { label: string; file
       <b>{label}</b>
       <input type="file" accept=".pdf,.docx,.txt,.md" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
       {file ? <div className="small muted">{file.name} · {(file.size / 1024).toFixed(0)} KB <button className="ghost small" onClick={() => setFile(null)}>Remove</button></div>
-        : <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="…or paste the document text here" style={{ minHeight: 140 }} />}
+        : <textarea aria-label="…or paste the document text here" value={text} onChange={(e) => setText(e.target.value)} placeholder="…or paste the document text here" style={{ minHeight: 140 }} />}
     </div>
   );
 }

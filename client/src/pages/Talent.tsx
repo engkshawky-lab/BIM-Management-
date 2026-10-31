@@ -21,12 +21,12 @@ export function MyTalentProfile() {
         <div className="card">
           <label className="check"><input type="checkbox" checked={p.visible} onChange={(e) => setP({ ...p, visible: e.target.checked })} /> <b>List my profile in the talent pool</b></label>
           <label className="check"><input type="checkbox" checked={p.showResults} onChange={(e) => setP({ ...p, showResults: e.target.checked })} /> Show my best Learn results (mock exam and topic scores)</label>
-          <label>Headline</label><input value={p.headline} onChange={(e) => setP({ ...p, headline: e.target.value })} placeholder="e.g. ISO 19650 Information Manager — infrastructure" />
-          <label>Skills (comma separated)</label><input defaultValue={p.skills.join(", ")} onBlur={(e) => setP({ ...p, skills: list(e.target.value) })} placeholder="Revit, Navisworks, COBie, CDE administration" />
-          <label>Certifications (comma separated)</label><input defaultValue={p.certifications.join(", ")} onBlur={(e) => setP({ ...p, certifications: list(e.target.value) })} placeholder="BRE ISO 19650 Practitioner, Autodesk Certified Professional" />
-          <div className="grid g3"><div><label>Years of experience</label><input type="number" min={0} max={60} value={p.years} onChange={(e) => setP({ ...p, years: +e.target.value })} /></div>
-            <div><label>Location</label><input value={p.location} onChange={(e) => setP({ ...p, location: e.target.value })} /></div>
-            <div><label>Availability</label><select value={p.availability} onChange={(e) => setP({ ...p, availability: e.target.value })}>{AVAIL.map((a) => <option key={a}>{a}</option>)}</select></div></div>
+          <label htmlFor="talent-headline">Headline</label><input id="talent-headline" value={p.headline} onChange={(e) => setP({ ...p, headline: e.target.value })} placeholder="e.g. ISO 19650 Information Manager — infrastructure" />
+          <label htmlFor="talent-skills-comma-separated">Skills (comma separated)</label><input id="talent-skills-comma-separated" defaultValue={p.skills.join(", ")} onBlur={(e) => setP({ ...p, skills: list(e.target.value) })} placeholder="Revit, Navisworks, COBie, CDE administration" />
+          <label htmlFor="talent-certifications-comma-separated">Certifications (comma separated)</label><input id="talent-certifications-comma-separated" defaultValue={p.certifications.join(", ")} onBlur={(e) => setP({ ...p, certifications: list(e.target.value) })} placeholder="BRE ISO 19650 Practitioner, Autodesk Certified Professional" />
+          <div className="grid g3"><div><label htmlFor="talent-years-of-experience">Years of experience</label><input id="talent-years-of-experience" type="number" min={0} max={60} value={p.years} onChange={(e) => setP({ ...p, years: +e.target.value })} /></div>
+            <div><label htmlFor="talent-location">Location</label><input id="talent-location" value={p.location} onChange={(e) => setP({ ...p, location: e.target.value })} /></div>
+            <div><label htmlFor="talent-availability">Availability</label><select id="talent-availability" value={p.availability} onChange={(e) => setP({ ...p, availability: e.target.value })}>{AVAIL.map((a) => <option key={a}>{a}</option>)}</select></div></div>
           <p className="tiny muted">Your email is only shown to recruiters when you are open to offers or available.</p>
           <div className="row"><button className="primary" onClick={async () => { try { await api("/talent/me", { method: "PUT", body: p }); toast("Talent profile saved"); } catch (e) { toast((e as Error).message, "error"); } }}>Save</button>
             <button className="ghost danger" onClick={async () => { await api("/talent/me", { method: "DELETE" }); toast("Talent profile deleted"); setP({ ...p, visible: false, skills: [], certifications: [], headline: "" }); }}>Delete profile</button></div>
@@ -47,8 +47,8 @@ export function TalentSearch() {
   return (
     <>
       <div className="page-head"><h1>Talent pool</h1><p className="muted">Professionals who chose to be listed. Opening a profile notifies the person.</p></div>
-      <div className="row" style={{ marginBottom: 10 }}><input placeholder="Search skills, certifications, location…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 360 }} />
-        <select value={avail} onChange={(e) => setAvail(e.target.value)} style={{ width: "auto" }}><option value="">Any availability</option>{AVAIL.map((a) => <option key={a}>{a}</option>)}</select></div>
+      <div className="row" style={{ marginBottom: 10 }}><input aria-label="Search skills, certifications, location…" placeholder="Search skills, certifications, location…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 360 }} />
+        <select aria-label="Any availability" value={avail} onChange={(e) => setAvail(e.target.value)} style={{ width: "auto" }}><option value="">Any availability</option>{AVAIL.map((a) => <option key={a}>{a}</option>)}</select></div>
       {open && <div className="card" style={{ marginBottom: 12 }}>
         <div className="row spread"><h2 style={{ margin: 0 }}>{open.name}</h2><button className="ghost small" onClick={() => setOpen(null)}>Close</button></div>
         <p>{open.headline}</p><p className="small muted">{open.jobTitle}{open.organization && ` · ${open.organization}`} · {open.years} years · {open.location} · {open.availability}</p>

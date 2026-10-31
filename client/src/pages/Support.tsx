@@ -30,7 +30,7 @@ export function SupportForm({ route, onSent }: { route: string; onSent?: () => v
       catch (err) { toast((err as Error).message, "error"); }
     }} onPaste={(e) => { const f = [...e.clipboardData.files].find((x) => x.type.startsWith("image/")); if (f) { e.preventDefault(); attach(f); } }}>
       <div className="seg" style={{ marginBottom: 6 }}>{["Question", "Problem", "Idea"].map((k) => <button type="button" key={k} className={kind === k ? "on" : ""} onClick={() => setKind(k)}>{k}</button>)}</div>
-      <textarea required minLength={5} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="What do you need help with, what went wrong, or what would make the portal better?" style={{ minHeight: 70 }} />
+      <textarea aria-label="What do you need help with, what went wrong, or what would make the portal better?" required minLength={5} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="What do you need help with, what went wrong, or what would make the portal better?" style={{ minHeight: 70 }} />
       <div className="row" style={{ marginTop: 6, flexWrap: "wrap" }}>
         <label className="small linklike" style={{ margin: 0, cursor: "pointer" }}>📎 {shot ? "Replace screenshot" : "Attach screenshot"}<input type="file" accept="image/png,image/jpeg" hidden onChange={(e) => attach(e.target.files?.[0])} /></label>
         {shot && <><img src={shot} alt="Screenshot to send" style={{ height: 40, borderRadius: 4, border: "1px solid var(--border)" }} /><button type="button" className="ghost small" onClick={() => setShot("")}>Remove</button></>}

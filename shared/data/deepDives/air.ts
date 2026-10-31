@@ -81,7 +81,7 @@ export const airDeepDive: DeepDive = {
           ["Pump", "Pr_65_53", "Duty flow (l/s), head (kPa), motor power (kW), duty or standby", "COBie Type and Attribute", "Construction", "Q07, Q09"],
           ["Standby generator", "Pr_60_70_65_34", "Rated output (kVA), fuel type, tank capacity (l), autonomy (h), load bank test frequency", "COBie Type and Attribute", "Construction", "Q02, Q09"],
           ["Low voltage switchboard", "Pr_60_70_22", "Rated current (A), fault rating (kA), number of ways, thermographic survey frequency", "COBie Type and Attribute", "Construction", "Q02, Q09"],
-          ["Medical gas outlet", "Pr_70_55_51", "Gas type, outlet standard, area valve service unit reference", "COBie Component and Attribute", "Construction", "Q02, Q09, Q15"],
+          ["Medical gas outlet", "Pr code: check in the current Uniclass release", "Gas type, outlet standard, area valve service unit reference", "COBie Component and Attribute", "Construction", "Q02, Q09, Q15"],
           ["Fire door set", "Pr_30_59_24", "Fire rating (minutes), smoke seal, door closer type, hold-open device, inspection frequency", "IFC Pset and COBie Type", "Design", "Q02"],
           ["Lift", "Ss_80_50_60", "Rated load (kg), speed (m/s), floors served, bed lift or passenger, thorough examination frequency", "COBie Type and Attribute", "Construction", "Q02, Q09"],
           ["Isolation room space", "SL_35_10_43", "Pressure regime, air changes per hour, anteroom, infection control category", "COBie Space and Attribute", "Design", "Q04, Q09"],

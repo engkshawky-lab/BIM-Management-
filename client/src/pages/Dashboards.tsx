@@ -181,7 +181,7 @@ function SaveEstimate<T extends object>({ kind, input, summary, onLoad }: { kind
     <div className="card" style={{ marginTop: 12 }}>
       <div className="row"><b>Save to project</b>
         <select value={pid} onChange={(e) => setPid(e.target.value)} style={{ width: "auto" }}>{projects.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}</select>
-        <input placeholder="Title, e.g. Stage 3 estimate" value={title} onChange={(e) => setTitle(e.target.value)} style={{ maxWidth: 260 }} />
+        <input aria-label="Title, e.g. Stage 3 estimate" placeholder="Title, e.g. Stage 3 estimate" value={title} onChange={(e) => setTitle(e.target.value)} style={{ maxWidth: 260 }} />
         <button className="primary small" disabled={!title} onClick={async () => { try { await api(`/projects/${pid}/estimates`, { body: { kind, title, input, summary } }); toast("Estimate saved to project"); setTitle(""); load(); } catch (e) { toast((e as Error).message, "error"); } }}>Save</button></div>
       {saved.length > 0 && <table className="data" style={{ marginTop: 8 }}><tbody>{saved.map((e) => <tr key={e.id}><td>{e.title}</td><td className="small muted">{e.summary}</td><td className="small">{fmtDate(e.createdAt)}</td>
         <td className="nowrap"><button className="small" onClick={() => onLoad(e.input as T)}>Load</button><button className="ghost tiny danger" onClick={async () => { await api(`/projects/${pid}/estimates/${e.id}`, { method: "DELETE" }); load(); }}>✕</button></td></tr>)}</tbody></table>}
@@ -198,10 +198,10 @@ function FeeTool() {
     <>
       <p className="muted">Indicative effort and fee for BIM / information management services, scaled by area and complexity. Adjust rates to your market.</p>
       <div className="card grid g3">
-        <div><label>Gross floor area (m²)</label><input type="number" min={0} value={f.areaM2} onChange={(e) => setF({ ...f, areaM2: +e.target.value })} /></div>
-        <div><label>Complexity</label><select value={f.complexity} onChange={(e) => setF({ ...f, complexity: e.target.value as keyof typeof COMPLEXITY })}>{Object.keys(COMPLEXITY).map((k) => <option key={k}>{k}</option>)}</select></div>
-        <div><label>Day rate</label><input type="number" min={0} value={f.dayRate} onChange={(e) => setF({ ...f, dayRate: +e.target.value })} /></div>
-        <div><label>Programme (months)</label><input type="number" min={1} value={f.months} onChange={(e) => setF({ ...f, months: +e.target.value })} /></div>
+        <div><label htmlFor="dashboards-gross-floor-area-m">Gross floor area (m²)</label><input id="dashboards-gross-floor-area-m" type="number" min={0} value={f.areaM2} onChange={(e) => setF({ ...f, areaM2: +e.target.value })} /></div>
+        <div><label htmlFor="dashboards-complexity">Complexity</label><select id="dashboards-complexity" value={f.complexity} onChange={(e) => setF({ ...f, complexity: e.target.value as keyof typeof COMPLEXITY })}>{Object.keys(COMPLEXITY).map((k) => <option key={k}>{k}</option>)}</select></div>
+        <div><label htmlFor="dashboards-day-rate">Day rate</label><input id="dashboards-day-rate" type="number" min={0} value={f.dayRate} onChange={(e) => setF({ ...f, dayRate: +e.target.value })} /></div>
+        <div><label htmlFor="dashboards-programme-months">Programme (months)</label><input id="dashboards-programme-months" type="number" min={1} value={f.months} onChange={(e) => setF({ ...f, months: +e.target.value })} /></div>
         <div style={{ gridColumn: "1 / -1" }}><label>Services</label><div className="chips">{FEE_SERVICES.map((s) => <button key={s.id} className={"chip" + (f.services.includes(s.id) ? " on" : "")} onClick={() => setF({ ...f, services: f.services.includes(s.id) ? f.services.filter((x) => x !== s.id) : [...f.services, s.id] })}>{s.label}</button>)}</div></div>
       </div>
       <div className="card" style={{ marginTop: 12 }}>

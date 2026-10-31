@@ -15,12 +15,12 @@ export function ProjectForm({ initial, submitLabel, onSubmit }: { initial?: Part
   return (
     <form className="card" onSubmit={async (e: FormEvent) => { e.preventDefault(); setBusy(true); try { await onSubmit(f); } finally { setBusy(false); } }}>
       <div className="grid g2">
-        <div><label>Project name *</label><input required minLength={2} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
-        <div><label>Project code * <span className="muted small">(2–6 chars, first field of every container name)</span></label>
-          <input required pattern="[A-Za-z0-9]{2,6}" value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} placeholder="e.g. TWA01" /></div>
-        <div><label>Appointing party (client)</label><input value={f.appointingParty} onChange={(e) => setF({ ...f, appointingParty: e.target.value })} /></div>
-        <div><label>Location</label><input value={f.location} onChange={(e) => setF({ ...f, location: e.target.value })} /></div>
-        <div><label>Current stage</label><select value={f.stage} onChange={(e) => setF({ ...f, stage: e.target.value })}><option value="">—</option>{STAGES.map((s) => <option key={s}>{s}</option>)}</select></div>
+        <div><label htmlFor="newproject-project-name">Project name *</label><input id="newproject-project-name" required minLength={2} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
+        <div><label htmlFor="newproject-project-code">Project code * <span className="muted small">(2–6 chars, first field of every container name)</span></label>
+          <input id="newproject-project-code" required pattern="[A-Za-z0-9]{2,6}" value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} placeholder="e.g. TWA01" /></div>
+        <div><label htmlFor="newproject-appointing-party-client">Appointing party (client)</label><input id="newproject-appointing-party-client" value={f.appointingParty} onChange={(e) => setF({ ...f, appointingParty: e.target.value })} /></div>
+        <div><label htmlFor="newproject-location">Location</label><input id="newproject-location" value={f.location} onChange={(e) => setF({ ...f, location: e.target.value })} /></div>
+        <div><label htmlFor="newproject-current-stage">Current stage</label><select id="newproject-current-stage" value={f.stage} onChange={(e) => setF({ ...f, stage: e.target.value })}><option value="">—</option>{STAGES.map((s) => <option key={s}>{s}</option>)}</select></div>
         <div><label>Standards in scope *</label>
           <div className="row">
             <label className="check"><input type="checkbox" checked={f.standards.includes("iso19650")} onChange={() => toggle("iso19650")} /> ISO 19650 (BIM information management)</label>
@@ -28,7 +28,7 @@ export function ProjectForm({ initial, submitLabel, onSubmit }: { initial?: Part
           </div>
         </div>
       </div>
-      <label>Description</label><textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} placeholder="Scope, asset type, key objectives…" />
+      <label htmlFor="newproject-description">Description</label><textarea id="newproject-description" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} placeholder="Scope, asset type, key objectives…" />
       <button className="primary" style={{ marginTop: 12 }} disabled={busy || f.standards.length === 0}>{busy ? "Saving…" : submitLabel}</button>
     </form>
   );

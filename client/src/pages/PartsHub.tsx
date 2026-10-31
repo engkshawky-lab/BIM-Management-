@@ -174,7 +174,7 @@ function Faq({ items }: { items: { q: string; a: string }[] }) {
   const shown = items.filter((x) => !q || (x.q + " " + x.a + " " + t(x.q) + " " + t(x.a)).toLowerCase().includes(q.toLowerCase()));
   return (
     <>
-      <input placeholder={t("Search the questions…")} value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 10 }} />
+      <input aria-label={t("Search the questions…")} placeholder={t("Search the questions…")} value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 10 }} />
       {shown.map((x, i) => (
         <details key={x.q} className="clause" open={i === 0 && !q}>
           <summary><b>{x.q}</b></summary>

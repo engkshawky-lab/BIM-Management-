@@ -47,7 +47,7 @@ function DocInput({ label, file, setFile, text, setText }: { label: string; file
       <b>{label}</b>
       <input type="file" accept=".pdf,.docx,.txt,.md" onChange={(e) => setFile(e.target.files?.[0] ?? null)} aria-label={label} />
       {file ? <div className="small muted">{file.name} · {(file.size / 1024).toFixed(0)} KB <button className="ghost small" onClick={() => setFile(null)}>{t("Remove")}</button></div>
-        : <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={t("…or paste the document text here")} />}
+        : <textarea aria-label={t("…or paste the document text here")} value={text} onChange={(e) => setText(e.target.value)} placeholder={t("…or paste the document text here")} />}
     </div>
   );
 }

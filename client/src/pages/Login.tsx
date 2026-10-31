@@ -18,7 +18,7 @@ export function ResetPassword({ token }: { token: string }) {
       <form className="card auth" onSubmit={async (e) => { e.preventDefault(); setError(""); try { await api("/auth/reset", { body: { token, password: pw } }); setDone(true); } catch (err) { setError((err as Error).message); } }}>
         <h1>Set a new password</h1>
         {done ? <><p>Your password has been changed. Sign in with the new password.</p><a className="btn primary" href="#/">Sign in</a></> : <>
-          <label>New password</label><input required type="password" minLength={8} value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
+          <label htmlFor="login-new-password">New password</label><input id="login-new-password" required type="password" minLength={8} value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
           {error && <p className="error">{error}</p>}
           <button className="primary" style={{ width: "100%", justifyContent: "center", marginTop: 12 }}>Change password</button></>}
       </form>
@@ -55,12 +55,12 @@ export default function Login({ onSignedIn }: { onSignedIn: (u: User) => void })
           <button type="button" className={mode === "register" ? "on" : ""} onClick={() => setMode("register")}>{t("Create account")}</button>
         </div>
         {mode === "register" && <>
-          <label>{t("Full name")}</label><input required value={f.name} onChange={set("name")} autoComplete="name" />
-          <label>{t("Organization")}</label><input value={f.organization} onChange={set("organization")} />
-          <label>{t("Job title")}</label><input value={f.jobTitle} onChange={set("jobTitle")} placeholder="e.g. Information Manager" />
+          <label htmlFor="login-full-name">{t("Full name")}</label><input id="login-full-name" required value={f.name} onChange={set("name")} autoComplete="name" />
+          <label htmlFor="login-organization">{t("Organization")}</label><input id="login-organization" value={f.organization} onChange={set("organization")} />
+          <label htmlFor="login-job-title">{t("Job title")}</label><input id="login-job-title" value={f.jobTitle} onChange={set("jobTitle")} placeholder="e.g. Information Manager" />
         </>}
-        <label>{t("Email")}</label><input required type="email" value={f.email} onChange={set("email")} autoComplete="email" />
-        {mode !== "forgot" && <label>{t("Password")}</label>}{mode !== "forgot" && <input required type="password" minLength={mode === "register" ? 8 : undefined} value={f.password} onChange={set("password")} autoComplete={mode === "login" ? "current-password" : "new-password"} />}
+        <label htmlFor="login-email">{t("Email")}</label><input id="login-email" required type="email" value={f.email} onChange={set("email")} autoComplete="email" />
+        {mode !== "forgot" && <label htmlFor="login-password">{t("Password")}</label>}{mode !== "forgot" && <input id="login-password" required type="password" minLength={mode === "register" ? 8 : undefined} value={f.password} onChange={set("password")} autoComplete={mode === "login" ? "current-password" : "new-password"} />}
         {mode === "login" && <button type="button" className="linklike small" style={{ marginTop: 6 }} onClick={() => { setMode("forgot"); setError(""); setSent(""); }}>{t("Forgot password?")}</button>}
         {mode === "forgot" && <p className="small muted">Enter your account email. A one-time reset link (valid 1 hour) is issued to your portal administrator, who can also send it from the admin console.</p>}
         {sent && <p className="small" style={{ color: "var(--ok)" }}>{sent}</p>}

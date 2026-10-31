@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useDialog } from "../components/Dialog";
 import { useSession } from "../App";
 import { api, canEdit, canManage } from "../lib/api";
 import { exportCsv } from "../lib/export";
@@ -33,6 +34,7 @@ export default function HealthSafety({ data }: { data: ProjectData }) {
     catch (e) { toast((e as Error).message, "error"); }
   };
 
+  const dlg = useDialog(() => setEdit(null), !!edit);
   return (
     <>
       <div className="grid g2" style={{ marginBottom: 12 }}>
@@ -70,20 +72,20 @@ export default function HealthSafety({ data }: { data: ProjectData }) {
         ))}{list.length === 0 && <tr><td colSpan={8} className="muted">No H&S information{phase ? ` for ${phase.toLowerCase()}` : " yet"}.</td></tr>}</tbody>
       </table></div>
       {edit && (
-        <div className="modal-bg" onClick={() => setEdit(null)}><div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-bg" onClick={() => setEdit(null)}><div className="modal" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
           <h2 style={{ marginTop: 0 }}>{edit.id ? ref(edit.number!) : "New H&S item"}</h2>
-          <label>Hazard *</label><input value={edit.hazard} onChange={(e) => setEdit({ ...edit, hazard: e.target.value })} placeholder="e.g. Work at height to access roof plant" />
+          <label htmlFor="healthsafety-hazard">Hazard *</label><input id="healthsafety-hazard" value={edit.hazard} onChange={(e) => setEdit({ ...edit, hazard: e.target.value })} placeholder="e.g. Work at height to access roof plant" />
           <div className="grid g2">
-            <div><label>Location</label><input value={edit.location} onChange={(e) => setEdit({ ...edit, location: e.target.value })} /></div>
-            <div><label>Lifecycle phase</label><select value={edit.phase} onChange={(e) => setEdit({ ...edit, phase: e.target.value })}>{PHASES.map((p) => <option key={p}>{p}</option>)}</select></div>
-            <div><label>Residual risk</label><select value={edit.residual} onChange={(e) => setEdit({ ...edit, residual: e.target.value })}>{["Low", "Medium", "High"].map((p) => <option key={p}>{p}</option>)}</select></div>
-            <div><label>Status</label><select value={edit.status} onChange={(e) => setEdit({ ...edit, status: e.target.value })}>{["Open", "Closed"].map((p) => <option key={p}>{p}</option>)}</select></div>
-            <div><label>Owner</label><select value={edit.ownerId ?? ""} onChange={(e) => setEdit({ ...edit, ownerId: e.target.value || null })}><option value="">—</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
-            <div><label>Information container</label><select value={edit.fileId ?? ""} onChange={(e) => setEdit({ ...edit, fileId: e.target.value || null })}><option value="">—</option>{files.map((f) => <option key={f.id} value={f.id}>{f.name} ({f.state})</option>)}</select></div>
+            <div><label htmlFor="healthsafety-location">Location</label><input id="healthsafety-location" value={edit.location} onChange={(e) => setEdit({ ...edit, location: e.target.value })} /></div>
+            <div><label htmlFor="healthsafety-lifecycle-phase">Lifecycle phase</label><select id="healthsafety-lifecycle-phase" value={edit.phase} onChange={(e) => setEdit({ ...edit, phase: e.target.value })}>{PHASES.map((p) => <option key={p}>{p}</option>)}</select></div>
+            <div><label htmlFor="healthsafety-residual-risk">Residual risk</label><select id="healthsafety-residual-risk" value={edit.residual} onChange={(e) => setEdit({ ...edit, residual: e.target.value })}>{["Low", "Medium", "High"].map((p) => <option key={p}>{p}</option>)}</select></div>
+            <div><label htmlFor="healthsafety-status">Status</label><select id="healthsafety-status" value={edit.status} onChange={(e) => setEdit({ ...edit, status: e.target.value })}>{["Open", "Closed"].map((p) => <option key={p}>{p}</option>)}</select></div>
+            <div><label htmlFor="healthsafety-owner">Owner</label><select id="healthsafety-owner" value={edit.ownerId ?? ""} onChange={(e) => setEdit({ ...edit, ownerId: e.target.value || null })}><option value="">—</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
+            <div><label htmlFor="healthsafety-information-container">Information container</label><select id="healthsafety-information-container" value={edit.fileId ?? ""} onChange={(e) => setEdit({ ...edit, fileId: e.target.value || null })}><option value="">—</option>{files.map((f) => <option key={f.id} value={f.id}>{f.name} ({f.state})</option>)}</select></div>
           </div>
-          <label>Description</label><textarea value={edit.description} onChange={(e) => setEdit({ ...edit, description: e.target.value })} />
-          <label>Control measures</label><textarea value={edit.controls} onChange={(e) => setEdit({ ...edit, controls: e.target.value })} placeholder="Design changes, permanent measures and safe systems of work" />
-          <label>Shared with</label><input value={edit.audience} onChange={(e) => setEdit({ ...edit, audience: e.target.value })} placeholder="e.g. Contractor, facilities management, maintenance team" />
+          <label htmlFor="healthsafety-description">Description</label><textarea id="healthsafety-description" value={edit.description} onChange={(e) => setEdit({ ...edit, description: e.target.value })} />
+          <label htmlFor="healthsafety-control-measures">Control measures</label><textarea id="healthsafety-control-measures" value={edit.controls} onChange={(e) => setEdit({ ...edit, controls: e.target.value })} placeholder="Design changes, permanent measures and safe systems of work" />
+          <label htmlFor="healthsafety-shared-with">Shared with</label><input id="healthsafety-shared-with" value={edit.audience} onChange={(e) => setEdit({ ...edit, audience: e.target.value })} placeholder="e.g. Contractor, facilities management, maintenance team" />
           <div className="row spread" style={{ marginTop: 12 }}>
             {edit.id && canManage(data.role) ? <button className="danger" onClick={async () => { if (!confirm("Delete this item?")) return; await api(`/projects/${pid}/hs/${edit.id}`, { method: "DELETE" }); setEdit(null); load(); }}>Delete</button> : <span />}
             <div className="row"><button onClick={() => setEdit(null)}>Cancel</button><button className="primary" disabled={!edit.hazard?.trim()} onClick={save}>Save</button></div>

@@ -115,16 +115,16 @@ export default function IdsBuilder() {
       <section className="hub-card" style={{ "--c": "#0e7490" } as CSSProperties}>
         <div className="hub-title">Information</div>
         <div className="grid g3">
-          <div><label>Title *</label><input value={doc.info.title} onChange={(e) => setInfo({ title: e.target.value })} placeholder={t("e.g. Project X – Stage 4 handover IDS")} /></div>
-          <div><label>Author (e-mail)</label><input type="email" value={doc.info.author ?? ""} onChange={(e) => setInfo({ author: e.target.value })} placeholder="name@company.com" /></div>
-          <div><label>Version</label><input value={doc.info.version ?? ""} onChange={(e) => setInfo({ version: e.target.value })} placeholder="1.0" /></div>
-          <div><label>Date</label><input type="date" value={doc.info.date ?? ""} onChange={(e) => setInfo({ date: e.target.value })} /></div>
-          <div><label>Purpose</label><input value={doc.info.purpose ?? ""} onChange={(e) => setInfo({ purpose: e.target.value })} placeholder={t("e.g. Asset information handover")} /></div>
-          <div><label>Milestone</label><input value={doc.info.milestone ?? ""} onChange={(e) => setInfo({ milestone: e.target.value })} placeholder={t("e.g. RIBA Stage 4")} /></div>
-          <div><label>Copyright</label><input value={doc.info.copyright ?? ""} onChange={(e) => setInfo({ copyright: e.target.value })} /></div>
+          <div><label htmlFor="idsbuilder-title">Title *</label><input id="idsbuilder-title" value={doc.info.title} onChange={(e) => setInfo({ title: e.target.value })} placeholder={t("e.g. Project X – Stage 4 handover IDS")} /></div>
+          <div><label htmlFor="idsbuilder-author-e-mail">Author (e-mail)</label><input id="idsbuilder-author-e-mail" type="email" value={doc.info.author ?? ""} onChange={(e) => setInfo({ author: e.target.value })} placeholder="name@company.com" /></div>
+          <div><label htmlFor="idsbuilder-version">Version</label><input id="idsbuilder-version" value={doc.info.version ?? ""} onChange={(e) => setInfo({ version: e.target.value })} placeholder="1.0" /></div>
+          <div><label htmlFor="idsbuilder-date">Date</label><input id="idsbuilder-date" type="date" value={doc.info.date ?? ""} onChange={(e) => setInfo({ date: e.target.value })} /></div>
+          <div><label htmlFor="idsbuilder-purpose">Purpose</label><input id="idsbuilder-purpose" value={doc.info.purpose ?? ""} onChange={(e) => setInfo({ purpose: e.target.value })} placeholder={t("e.g. Asset information handover")} /></div>
+          <div><label htmlFor="idsbuilder-milestone">Milestone</label><input id="idsbuilder-milestone" value={doc.info.milestone ?? ""} onChange={(e) => setInfo({ milestone: e.target.value })} placeholder={t("e.g. RIBA Stage 4")} /></div>
+          <div><label htmlFor="idsbuilder-copyright">Copyright</label><input id="idsbuilder-copyright" value={doc.info.copyright ?? ""} onChange={(e) => setInfo({ copyright: e.target.value })} /></div>
         </div>
-        <label>Description</label>
-        <textarea rows={2} value={doc.info.description ?? ""} onChange={(e) => setInfo({ description: e.target.value })} />
+        <label htmlFor="idsbuilder-description">Description</label>
+        <textarea id="idsbuilder-description" rows={2} value={doc.info.description ?? ""} onChange={(e) => setInfo({ description: e.target.value })} />
       </section>
 
       <section className="hub-card" style={{ "--c": "#4f46e5" } as CSSProperties}>
@@ -208,26 +208,26 @@ function SpecEditor({ spec, onChange }: { spec: IdsSpec; onChange: (patch: Parti
   return (
     <div className="card" style={{ minWidth: 0 }}>
       <div className="grid g2">
-        <div><label>Specification name *</label><input value={spec.name} onChange={(e) => onChange({ name: e.target.value })} /></div>
-        <div><label>Applicability cardinality</label>
-          <select value={spec.cardinality ?? "required"} onChange={(e) => onChange({ cardinality: e.target.value as Cardinality })}>
+        <div><label htmlFor="idsbuilder-specification-name">Specification name *</label><input id="idsbuilder-specification-name" value={spec.name} onChange={(e) => onChange({ name: e.target.value })} /></div>
+        <div><label htmlFor="idsbuilder-applicability-cardinality">Applicability cardinality</label>
+          <select id="idsbuilder-applicability-cardinality" value={spec.cardinality ?? "required"} onChange={(e) => onChange({ cardinality: e.target.value as Cardinality })}>
             <option value="required">{t("Required – at least one such element must exist")}</option>
             <option value="optional">{t("Optional – check only if such elements exist")}</option>
             <option value="prohibited">{t("Prohibited – no such element may exist")}</option>
           </select></div>
       </div>
-      <label>Description</label>
-      <input value={spec.description ?? ""} onChange={(e) => onChange({ description: e.target.value })} placeholder={t("Why this is required, e.g. EIR section 4.2")} />
+      <label htmlFor="idsbuilder-description-2">Description</label>
+      <input id="idsbuilder-description-2" value={spec.description ?? ""} onChange={(e) => onChange({ description: e.target.value })} placeholder={t("Why this is required, e.g. EIR section 4.2")} />
       <label>IFC versions *</label>
       <div>{IFC_VERSIONS.map((v) => (
         <label key={v} className="ids-check"><input type="checkbox" checked={spec.ifcVersion.includes(v)} onChange={() => toggleVersion(v)} /> <span className="mono">{v}</span></label>
       ))}</div>
       <div className="grid g2">
-        <div><label>Applies to IFC entity *</label>
-          <input list="ids-entities" value={spec.applicability.entity} onChange={(e) => onChange({ applicability: { ...spec.applicability, entity: e.target.value } })} placeholder="IfcDoor" />
+        <div><label htmlFor="idsbuilder-applies-to-ifc-entity">Applies to IFC entity *</label>
+          <input id="idsbuilder-applies-to-ifc-entity" list="ids-entities" value={spec.applicability.entity} onChange={(e) => onChange({ applicability: { ...spec.applicability, entity: e.target.value } })} placeholder="IfcDoor" />
           <div className="tiny muted">IDS does not include subtypes. Separate several classes with |, e.g. IfcWall|IfcSlab.</div></div>
-        <div><label>Predefined type</label>
-          <input value={spec.applicability.predefinedType ?? ""} onChange={(e) => onChange({ applicability: { ...spec.applicability, predefinedType: e.target.value || undefined } })} placeholder={t("optional, e.g. FIREEXIT")} /></div>
+        <div><label htmlFor="idsbuilder-predefined-type">Predefined type</label>
+          <input id="idsbuilder-predefined-type" value={spec.applicability.predefinedType ?? ""} onChange={(e) => onChange({ applicability: { ...spec.applicability, predefinedType: e.target.value || undefined } })} placeholder={t("optional, e.g. FIREEXIT")} /></div>
       </div>
 
       <div className="row spread" style={{ marginTop: 14 }}>
@@ -309,8 +309,8 @@ function AiExtract({ onAdd }: { onAdd: (specs: IdsSpec[]) => void }) {
     <section className="hub-card" style={{ "--c": "#0e7490" } as CSSProperties}>
       <div className="hub-title">AI helper</div>
       {enabled === false && <div className="hub-tile small" style={{ "--c": "#0e7490", marginBottom: 10 } as CSSProperties}><b>AI isn't switched on yet.</b> Once it is, you can paste EIR or LOIN text here and get draft specifications. Everything else in the IDS builder works without it.</div>}
-      <label>Paste EIR / LOIN text</label>
-      <textarea rows={6} value={text} onChange={(e) => setText(e.target.value.slice(0, 60000))} disabled={enabled === false}
+      <label htmlFor="idsbuilder-paste-eir-loin-text">Paste EIR / LOIN text</label>
+      <textarea id="idsbuilder-paste-eir-loin-text" rows={6} value={text} onChange={(e) => setText(e.target.value.slice(0, 60000))} disabled={enabled === false}
         placeholder={t("e.g. All doors shall carry a fire rating and state whether they are external. Spaces shall have a room name and net floor area…")} />
       <div className="row spread" style={{ marginTop: 8 }}>
         <div className="row">

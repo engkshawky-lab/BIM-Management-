@@ -246,7 +246,7 @@ function CobieTool() {
     <div style={{ display: "grid", gap: 12 }}>
       <div className="card" style={{ display: "grid", gap: 8 }}>
         <input type="file" accept=".xlsx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        {!file && <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="…or paste COBie sheet data (Facility, Floor, Space, Type, Component, System…) copied from Excel" style={{ minHeight: 120 }} />}
+        {!file && <textarea aria-label="…or paste COBie sheet data (Facility, Floor, Space, Type, Component, System…) copied from Excel" value={text} onChange={(e) => setText(e.target.value)} placeholder="…or paste COBie sheet data (Facility, Floor, Space, Type, Component, System…) copied from Excel" style={{ minHeight: 120 }} />}
         <div className="row">
           <select value={stage} onChange={(e) => setStage(e.target.value)} style={{ width: "auto" }}>{["Stage 2 — Concept", "Stage 3 — Spatial coordination", "Stage 4 — Technical design", "Stage 5 — Construction", "Handover / practical completion"].map((s) => <option key={s}>{s}</option>)}</select>
           <button className="primary" disabled={busy || (!file && !text.trim())} onClick={go}>{busy ? "Checking…" : "Check COBie data"}</button>

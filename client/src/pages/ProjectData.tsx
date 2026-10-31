@@ -89,7 +89,7 @@ function FillFromProject() {
       toast(`Filled from ${project.code} — check and complete the rest.`);
     } catch (e) { toast((e as Error).message, "error"); }
   };
-  return <div className="row small"><span className="muted">Fill from a portal project:</span><select value={id} onChange={(e) => setId(e.target.value)} style={{ width: "auto" }}><option value="">{tr("Choose a project…")}</option>{projects.map((x) => <option key={x.id} value={x.id}>{x.code} — {x.name}</option>)}</select><button className="small" disabled={!id} onClick={fill}>Fill</button></div>;
+  return <div className="row small"><span className="muted">Fill from a portal project:</span><select aria-label={tr("Choose a project…")} value={id} onChange={(e) => setId(e.target.value)} style={{ width: "auto" }}><option value="">{tr("Choose a project…")}</option>{projects.map((x) => <option key={x.id} value={x.id}>{x.code} — {x.name}</option>)}</select><button className="small" disabled={!id} onClick={fill}>Fill</button></div>;
 }
 
 export default function ProjectDataPage() {

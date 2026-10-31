@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import type { NextFunction, Request, Response } from "express";
 
 // Security headers for every response. The CSP allows only what the client uses: its own scripts and workers,
@@ -30,6 +31,24 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
     // HSTS only over HTTPS (behind a proxy, req.secure follows X-Forwarded-Proto because "trust proxy" is set)
     if (req.secure) res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   }
+  next();
+}
+
+// One log line per API request: request id, method, path, status, time and user id. Bodies, query strings and
+// cookies are never logged. The id is returned as X-Request-Id so a user's error report can be matched to the log.
+// LOG_REQUESTS=errors logs only 4xx/5xx and slow (>3 s) requests; LOG_REQUESTS=off turns it off.
+export function requestLog(req: Request, res: Response, next: NextFunction) {
+  const mode = process.env.LOG_REQUESTS ?? "all";
+  if (mode === "off") return next();
+  const id = randomUUID().slice(0, 8);
+  const start = Date.now();
+  res.setHeader("X-Request-Id", id);
+  res.on("finish", () => {
+    const ms = Date.now() - start;
+    if (mode === "errors" && res.statusCode < 400 && ms < 3000) return;
+    const line = JSON.stringify({ t: new Date().toISOString(), id, m: req.method, p: req.baseUrl + req.path, s: res.statusCode, ms, u: req.user?.id });
+    if (res.statusCode >= 500) console.error(line); else console.log(line);
+  });
   next();
 }
 

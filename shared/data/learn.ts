@@ -17,12 +17,12 @@ const Q = (topic: (typeof TOPICS)[number], list: [string, string[], number, stri
 export const QUESTIONS: Question[] = [
   ...Q("Concepts & terms", [
     ["Which model holds the information needed for the operational phase of an asset?", ["Project information model", "Asset information model", "Federated model", "Design intent model"], 1, "The AIM supports operation and maintenance; the PIM supports the delivery phase."],
-    ["Who is the 'appointing party'?", ["The party receiving information from the lead appointed party", "The task team leader", "The CDE provider", "The main contractor's subcontractor"], 0, "The appointing party receives information about works, goods or services from the lead appointed party."],
+    ["Who is the 'appointing party'?", ["The client who commissions the work and receives information from the delivery team", "The task team leader", "The CDE provider", "The main contractor's subcontractor"], 0, "The appointing party is the client side of an appointment: it sets the requirements and receives the information the delivery team produces."],
     ["What does 'level of information need' define?", ["Only the geometric detail of objects", "The quality, quantity and granularity of information required for a purpose", "The number of models per discipline", "The software version to be used"], 1, "LOIN covers geometry, alphanumeric information and documentation needed for a purpose at a milestone."],
     ["Which requirement set is defined by the appointing party for each appointment?", ["OIR", "AIR", "EIR", "PIR"], 2, "Exchange information requirements are set per appointment and describe what, when, how and for what purpose information is needed."],
     ["Organisational information requirements (OIR) are mainly derived from…", ["The clash matrix", "The organisation's strategic and operational objectives", "The task team's software", "The CDE folder structure"], 1, "OIR explain the information an organisation needs for its high-level objectives."],
     ["A 'task team' is…", ["The appointing party's legal team", "A group of people performing a specific task within a delivery team", "The CDE administrators", "Any external consultant"], 1, "Task teams are assembled to carry out a specific task and are led by a task team manager."],
-    ["What is an 'information container'?", ["Only a native model file", "A named persistent set of information retrievable from a file or system hierarchy", "A folder on the CDE", "A clash test group"], 1, "A container may be a model, drawing, schedule or database record — anything named and retrievable."],
+    ["What is an 'information container'?", ["Only a native model file", "A uniquely named set of information, such as a file or database record, that can be stored and found again", "A folder on the CDE", "A clash test group"], 1, "A container may be a model, drawing, schedule or database record — anything named and retrievable."],
   ]),
   ...Q("Delivery process", [
     ["Which activity comes first in the ISO 19650-2 delivery process?", ["Tender response", "Assessment and need", "Mobilisation", "Information model delivery"], 1, "The process starts with assessment and need, before invitation to tender."],
@@ -34,7 +34,7 @@ export const QUESTIONS: Question[] = [
     ["The detailed responsibility matrix is established during…", ["Appointment", "Close-out", "Operation", "Assessment"], 0, "During appointment, the delivery team refines responsibilities into a detailed matrix."],
   ]),
   ...Q("CDE, naming & status", [
-    ["Which CDE state holds information approved for use, e.g. construction?", ["WIP", "Shared", "Published", "Archived"], 2, "Published information has been authorised for use by the appointing party."],
+    ["Which CDE state holds information approved for use, e.g. construction?", ["WIP", "Shared", "Published", "Archived"], 2, "Published information has been authorised by the lead appointed party and accepted by the appointing party for use."],
     ["A container in WIP is visible to…", ["Everyone on the project", "Only its task team", "The public", "Only the appointing party"], 1, "Work in progress stays within the task team until it is checked and shared."],
     ["Which status code typically indicates 'suitable for coordination'?", ["S1", "S4", "A1", "AR"], 0, "In the UK National Annex S1 indicates suitability for coordination."],
     ["Revision 'P02.03' indicates…", ["Contractual revision 2", "Preliminary revision 2, version 3 (WIP)", "Published revision 3", "Archive 2"], 1, "P revisions are preliminary; the decimal part tracks WIP versions."],
@@ -47,7 +47,7 @@ export const QUESTIONS: Question[] = [
     ["In a RACI matrix, how many parties should be 'Accountable' for an item?", ["None", "Exactly one", "At least two", "All task teams"], 1, "One accountable party per item avoids ambiguity."],
     ["The capability and capacity assessment is used to…", ["Choose CDE colours", "Show each task team can deliver the information requirements", "Calculate fees only", "Replace the BEP"], 1, "It evidences skills, IT and resources against the requirements."],
     ["The information delivery risk register covers…", ["Only health and safety risks", "Risks to timely delivery of information and their mitigation", "Commercial risks only", "Insurance"], 1, "It records risks affecting information delivery, with owners and mitigation."],
-    ["A model responsibility matrix (MRM) defines…", ["Who models each element and to what level at each milestone", "The meeting agenda", "The CDE access list", "The fee"], 0, "It assigns element authorship and level of development per stage."],
+    ["A model responsibility matrix (MRM) defines…", ["Who models each element and to what level at each milestone", "The meeting agenda", "The CDE access list", "The fee"], 0, "It assigns element authorship and the level of information need (ISO 7817-1) at each stage."],
   ]),
   ...Q("Asset information & handover", [
     ["COBie is mainly used to deliver…", ["Clash results", "Structured facility and asset data for operations", "Drawings", "Cost plans"], 1, "COBie carries spaces, types, components, systems and documents for FM."],

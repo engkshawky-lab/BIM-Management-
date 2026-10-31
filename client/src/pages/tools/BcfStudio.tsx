@@ -247,7 +247,7 @@ export default function BcfStudio() {
             </div>
 
             <div className="bcf-filters">
-              <input type="search" placeholder={t("Search title, description, GUID, comments…")} value={q} onChange={(e) => setQ(e.target.value)} />
+              <input aria-label={t("Search title, description, GUID, comments…")} type="search" placeholder={t("Search title, description, GUID, comments…")} value={q} onChange={(e) => setQ(e.target.value)} />
               <select value={fStatus ?? "\u0000"} onChange={(e) => setFStatus(e.target.value === "\u0000" ? null : e.target.value)}>
                 <option value={"\u0000"}>{t("All statuses")}</option>
                 {Object.keys(summary.byStatus).sort().map((s) => <option key={s} value={s}>{s} ({summary.byStatus[s]})</option>)}
@@ -273,15 +273,15 @@ export default function BcfStudio() {
           {selected.size > 0 && (
             <div className="card bcf-bulk">
               <b>{selected.size}</b><span>selected</span>
-              <select value="" onChange={(e) => e.target.value && updateMany(selected, { status: e.target.value })}>
+              <select aria-label={t("Set status…")} value="" onChange={(e) => e.target.value && updateMany(selected, { status: e.target.value })}>
                 <option value="">{t("Set status…")}</option>
                 {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
-              <select value="" onChange={(e) => e.target.value && updateMany(selected, { priority: e.target.value })}>
+              <select aria-label={t("Set priority…")} value="" onChange={(e) => e.target.value && updateMany(selected, { priority: e.target.value })}>
                 <option value="">{t("Set priority…")}</option>
                 {priorities.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
-              <input list="bcf-assignees" placeholder={t("Assign to…")} value={bulkAssignee} onChange={(e) => setBulkAssignee(e.target.value)} style={{ width: 200 }} />
+              <input aria-label={t("Assign to…")} list="bcf-assignees" placeholder={t("Assign to…")} value={bulkAssignee} onChange={(e) => setBulkAssignee(e.target.value)} style={{ width: 200 }} />
               <button className="small" onClick={() => { updateMany(selected, { assignedTo: bulkAssignee.trim() }); setBulkAssignee(""); }}>Assign</button>
               <button className="small ghost" onClick={() => { if (window.confirm(t("Delete the selected issues?"))) remove(selected); }}>Delete selected</button>
               <button className="small ghost" onClick={() => setSelected(new Set())}>Clear selection</button>
@@ -355,7 +355,7 @@ export default function BcfStudio() {
                       <p className="no-i18n">{c.text}</p>
                     </div>
                   ))}
-                  <textarea rows={2} placeholder={t("Add a comment…")} value={comment} onChange={(e) => setComment(e.target.value)} style={{ width: "100%" }} />
+                  <textarea aria-label={t("Add a comment…")} rows={2} placeholder={t("Add a comment…")} value={comment} onChange={(e) => setComment(e.target.value)} style={{ width: "100%" }} />
                   <div className="row"><button className="small primary" disabled={!comment.trim()} onClick={addComment}>Add comment</button></div>
                 </div>
 

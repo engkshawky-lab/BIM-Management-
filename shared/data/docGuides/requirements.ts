@@ -232,7 +232,7 @@ export const REQUIREMENT_GUIDES: DocGuide[] = [
       {
         title: "Acceptance criteria",
         whatToWrite: "Explain how the appointing party will review and accept each deliverable, including the checks, timescales and suitability codes. Say what happens when information is rejected.",
-        example: "Reviewed within 10 working days at S4; accepted as A3 if all checks pass; rejected items returned with comments as S3.",
+        example: "Reviewed within 10 working days at S4; accepted as A3 if all checks pass; rejected items go back to work in progress (S0) with recorded reasons and are reissued at a new revision.",
       },
       {
         title: "Tender response requirements",

@@ -4,6 +4,8 @@ export class ApiError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
 
+export const SESSION_EXPIRED = "bim:session-expired";
+
 export async function api<T = unknown>(path: string, opts: { method?: string; body?: unknown; form?: FormData; keepalive?: boolean } = {}): Promise<T> {
   const res = await fetch("/api" + path, {
     method: opts.method ?? (opts.body || opts.form ? "POST" : "GET"),
@@ -13,6 +15,8 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
     body: opts.form ?? (opts.body ? JSON.stringify(opts.body) : undefined),
   });
   const data = await res.json().catch(() => ({}));
+  // a 401 outside the sign-in calls means the session ended: App shows the sign-in page
+  if (res.status === 401 && !path.startsWith("/auth/")) window.dispatchEvent(new Event(SESSION_EXPIRED));
   if (!res.ok) throw new ApiError((data as { error?: string }).error ?? `Request failed (${res.status})`, res.status);
   return data as T;
 }

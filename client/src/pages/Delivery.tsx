@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDialog } from "../components/Dialog";
 import { navigate, useSession } from "../App";
 import { Progress } from "../components/common";
 import { roleCodes, typeCodes } from "../../../shared/data/iso19650";
@@ -87,31 +88,32 @@ function DeliverableDialog({ initial, data, members, projectCode, onSave, onClos
     const used = data.deliverables.map((d) => d.containerName).filter((n) => n.startsWith(prefix)).map((n) => parseInt(n.split("-")[6] ?? "0", 10)).filter(Number.isFinite);
     set("containerName", containerName({ project: projectCode, originator: team.originatorCode || "XXX", type: f.typeCode || "M3", role: team.roleCode || "Z", number: Math.max(0, ...used) + 1 }));
   };
+  const dlg = useDialog(onClose);
   return (
-    <div className="modal-bg" onClick={onClose}><div className="modal wide" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-bg" onClick={onClose}><div className="modal wide" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
       <h2 style={{ marginTop: 0 }}>{initial ? "Edit information container" : "Add information container"}</h2>
       <div className="grid g2">
-        <div><label>Task team *</label><select value={f.taskTeamId} onChange={(e) => set("taskTeamId", e.target.value)}>{data.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
-        <div><label>Title / description *</label><input value={f.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. Architectural model — Level 1" /></div>
-        <div><label>Type</label><select value={f.typeCode} onChange={(e) => set("typeCode", e.target.value)}>{typeCodes.map((c) => <option key={c} value={c.slice(0, 2)}>{c}</option>)}</select></div>
-        <div><label>Container name</label><div className="row" style={{ flexWrap: "nowrap" }}><input className="mono" value={f.containerName} onChange={(e) => set("containerName", e.target.value.toUpperCase())} /><button type="button" onClick={suggest} title="Next free number for this task team">Auto</button></div></div>
-        <div><label>Delivery milestone</label><select value={f.milestoneId ?? ""} onChange={(e) => set("milestoneId", e.target.value || null)}><option value="">—</option>{data.milestones.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.date})</option>)}</select></div>
-        <div><label>Level of information need</label><input list="loin-refs" value={f.loin} onChange={(e) => set("loin", e.target.value)} placeholder="e.g. LOIN-03" /><datalist id="loin-refs">{data.loin.map((l) => <option key={l.id} value={l.ref}>{l.element}</option>)}</datalist></div>
-        <div><label>Start</label><input type="date" value={f.startDate} onChange={(e) => set("startDate", e.target.value)} /></div>
-        <div><label>Due</label><input type="date" value={f.dueDate} onChange={(e) => set("dueDate", e.target.value)} /></div>
-        <div><label>Responsible person</label><select value={f.assigneeId ?? ""} onChange={(e) => set("assigneeId", e.target.value || null)}><option value="">—</option>{members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
-        <div><label>Status</label><select value={f.status} onChange={(e) => set("status", e.target.value)}>{DELIVERABLE_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}</select></div>
+        <div><label htmlFor="delivery-task-team">Task team *</label><select id="delivery-task-team" value={f.taskTeamId} onChange={(e) => set("taskTeamId", e.target.value)}>{data.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+        <div><label htmlFor="delivery-title-description">Title / description *</label><input id="delivery-title-description" value={f.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. Architectural model — Level 1" /></div>
+        <div><label htmlFor="delivery-type">Type</label><select id="delivery-type" value={f.typeCode} onChange={(e) => set("typeCode", e.target.value)}>{typeCodes.map((c) => <option key={c} value={c.slice(0, 2)}>{c}</option>)}</select></div>
+        <div><label htmlFor="delivery-container-name">Container name</label><div className="row" style={{ flexWrap: "nowrap" }}><input id="delivery-container-name" className="mono" value={f.containerName} onChange={(e) => set("containerName", e.target.value.toUpperCase())} /><button type="button" onClick={suggest} title="Next free number for this task team">Auto</button></div></div>
+        <div><label htmlFor="delivery-delivery-milestone">Delivery milestone</label><select id="delivery-delivery-milestone" value={f.milestoneId ?? ""} onChange={(e) => set("milestoneId", e.target.value || null)}><option value="">—</option>{data.milestones.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.date})</option>)}</select></div>
+        <div><label htmlFor="delivery-level-of-information-need">Level of information need</label><input id="delivery-level-of-information-need" list="loin-refs" value={f.loin} onChange={(e) => set("loin", e.target.value)} placeholder="e.g. LOIN-03" /><datalist id="loin-refs">{data.loin.map((l) => <option key={l.id} value={l.ref}>{l.element}</option>)}</datalist></div>
+        <div><label htmlFor="delivery-start">Start</label><input id="delivery-start" type="date" value={f.startDate} onChange={(e) => set("startDate", e.target.value)} /></div>
+        <div><label htmlFor="delivery-due">Due</label><input id="delivery-due" type="date" value={f.dueDate} onChange={(e) => set("dueDate", e.target.value)} /></div>
+        <div><label htmlFor="delivery-responsible-person">Responsible person</label><select id="delivery-responsible-person" value={f.assigneeId ?? ""} onChange={(e) => set("assigneeId", e.target.value || null)}><option value="">—</option>{members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
+        <div><label htmlFor="delivery-status">Status</label><select id="delivery-status" value={f.status} onChange={(e) => set("status", e.target.value)}>{DELIVERABLE_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}</select></div>
       </div>
       <label>Depends on (predecessors)</label>
       <div className="dep-list">{data.deliverables.filter((d) => d.id !== initial?.id).map((d) => (
         <label key={d.id} className="check"><input type="checkbox" checked={f.dependsOn?.includes(d.id)} onChange={(e) => set("dependsOn", e.target.checked ? [...(f.dependsOn ?? []), d.id] : (f.dependsOn ?? []).filter((x) => x !== d.id))} />{d.containerName || d.title}</label>
       ))}{data.deliverables.length <= (initial ? 1 : 0) && <span className="small muted">No other containers yet.</span>}</div>
       <div className="grid g3">
-        <div><label>Formats</label><input value={(f.formats ?? []).join(", ")} placeholder="IFC, NWC, PDF, DWG, COBie" onChange={(e) => setF({ ...f, formats: e.target.value.split(",").map((x) => x.trim().toUpperCase()).filter(Boolean) })} /></div>
-        <div><label>Classification</label><input value={f.classification ?? ""} placeholder="e.g. Uniclass Ss_25 / NRM1 2.5" onChange={(e) => setF({ ...f, classification: e.target.value })} /></div>
-        <div><label>Actual delivery date</label><input type="date" value={f.actualDate ?? ""} onChange={(e) => setF({ ...f, actualDate: e.target.value })} /></div>
+        <div><label htmlFor="delivery-formats">Formats</label><input id="delivery-formats" value={(f.formats ?? []).join(", ")} placeholder="IFC, NWC, PDF, DWG, COBie" onChange={(e) => setF({ ...f, formats: e.target.value.split(",").map((x) => x.trim().toUpperCase()).filter(Boolean) })} /></div>
+        <div><label htmlFor="delivery-classification">Classification</label><input id="delivery-classification" value={f.classification ?? ""} placeholder="e.g. Uniclass Ss_25 / NRM1 2.5" onChange={(e) => setF({ ...f, classification: e.target.value })} /></div>
+        <div><label htmlFor="delivery-actual-delivery-date">Actual delivery date</label><input id="delivery-actual-delivery-date" type="date" value={f.actualDate ?? ""} onChange={(e) => setF({ ...f, actualDate: e.target.value })} /></div>
       </div>
-      <label>Notes</label><input value={f.notes} onChange={(e) => set("notes", e.target.value)} />
+      <label htmlFor="delivery-notes">Notes</label><input id="delivery-notes" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
       <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button><button className="primary" disabled={!f.title || !f.taskTeamId} onClick={() => onSave(f)}>Save</button></div>
     </div></div>
   );
@@ -125,8 +127,9 @@ function ImportDialog({ data, onImport, onClose }: { data: DeliveryData; onImpor
   const parsed = rows.map((r) => ({ team: team(r[0] ?? ""), row: r }));
   const bad = parsed.filter((p) => !p.team || !p.row[2]).length;
   const normDate = (s = "") => (/^\d{4}-\d{2}-\d{2}$/.test(s.trim()) ? s.trim() : /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.test(s.trim()) ? s.trim().replace(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/, (_, d, m, y) => `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`) : "");
+  const dlg = useDialog(onClose);
   return (
-    <div className="modal-bg" onClick={onClose}><div className="modal wide" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-bg" onClick={onClose}><div className="modal wide" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
       <h2 style={{ marginTop: 0 }}>Import containers from Excel / CSV</h2>
       <p className="small muted">Paste rows with columns: <b>Task team</b> (name or originator code) · <b>Container name</b> · <b>Title</b> · <b>LOIN</b> · <b>Milestone</b> (name) · <b>Start</b> · <b>Due</b>. Dates as YYYY-MM-DD or DD/MM/YYYY.</p>
       <textarea style={{ minHeight: 160 }} value={text} onChange={(e) => setText(e.target.value)} placeholder={"Architecture\tTWA-ARC-ZZ-ZZ-M3-A-0001\tArchitectural model\tLOIN-03\tStage 3\t2026-01-05\t2026-02-20"} />
@@ -221,8 +224,8 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
       </div>
       <div className="row spread" style={{ marginBottom: 10 }}>
         <div className="row">
-          <select value={teamFilter} onChange={(e) => setTeamFilter(e.target.value)} style={{ width: "auto" }}><option value="">MIDP — all task teams</option>{d.teams.map((t) => <option key={t.id} value={t.id}>TIDP — {t.name}</option>)}</select>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: "auto" }}><option value="">All statuses</option>{DELIVERABLE_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}</select>
+          <select aria-label="MIDP — all task teams" value={teamFilter} onChange={(e) => setTeamFilter(e.target.value)} style={{ width: "auto" }}><option value="">MIDP — all task teams</option>{d.teams.map((t) => <option key={t.id} value={t.id}>TIDP — {t.name}</option>)}</select>
+          <select aria-label="All statuses" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: "auto" }}><option value="">All statuses</option>{DELIVERABLE_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}</select>
           <div className="seg"><button className={view === "table" ? "on" : ""} onClick={() => setView("table")}>Table</button><button className={view === "gantt" ? "on" : ""} onClick={() => setView("gantt")}>Gantt</button></div>
         </div>
         <div className="row">
@@ -286,11 +289,12 @@ function ImpactDialog({ d, item, editor, projectId, call, onClose }: { d: Delive
     }
     onClose();
   };
+  const dlg = useDialog(onClose);
   return (
-    <div className="modal-bg" onClick={onClose}><div className="modal wide" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-bg" onClick={onClose}><div className="modal wide" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
       <h2 style={{ marginTop: 0 }}>Change impact: {item.containerName || item.title}</h2>
       {!item.dueDate ? <p className="muted">This container has no due date.</p> : <>
-        <div className="row"><label style={{ margin: 0 }}>If it is delayed by</label><input type="number" min={-60} max={365} value={days} onChange={(e) => setDays(+e.target.value)} style={{ width: 90 }} /><span>days (due {item.dueDate} → {addDays(item.dueDate, days)})</span></div>
+        <div className="row"><label htmlFor="delivery-if-it-is-delayed" style={{ margin: 0 }}>If it is delayed by</label><input id="delivery-if-it-is-delayed" type="number" min={-60} max={365} value={days} onChange={(e) => setDays(+e.target.value)} style={{ width: 90 }} /><span>days (due {item.dueDate} → {addDays(item.dueDate, days)})</span></div>
         <h3>Containers affected ({r.shifted.length})</h3>
         <table className="data"><thead><tr><th>Container</th><th>Due now</th><th>New due</th></tr></thead>
           <tbody>{r.shifted.map((s) => <tr key={s.id}><td>{s.label}</td><td>{s.from}</td><td><b>{s.to}</b></td></tr>)}</tbody></table>
@@ -322,11 +326,11 @@ function Setup({ d, members, role, call }: { d: DeliveryData; members: Member[];
           {d.teams.length === 0 && <tr><td colSpan={5} className="muted">No task teams yet.</td></tr>}
         </tbody></table>
         {editor && <form className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 10 }} onSubmit={async (e) => { e.preventDefault(); if (await call("task-teams", "POST", { ...team, leadUserId: team.leadUserId || null }, "Task team added")) setTeam({ name: "", organization: "", originatorCode: "", roleCode: "A", leadUserId: "" }); }}>
-          <input required placeholder="Team name, e.g. Architecture" value={team.name} onChange={(e) => setTeam({ ...team, name: e.target.value })} />
-          <input placeholder="Organization" value={team.organization} onChange={(e) => setTeam({ ...team, organization: e.target.value })} />
-          <input placeholder="Originator code (3–6)" pattern="[A-Za-z0-9]{3,6}" value={team.originatorCode} onChange={(e) => setTeam({ ...team, originatorCode: e.target.value.toUpperCase() })} />
+          <input aria-label="Team name, e.g. Architecture" required placeholder="Team name, e.g. Architecture" value={team.name} onChange={(e) => setTeam({ ...team, name: e.target.value })} />
+          <input aria-label="Organization" placeholder="Organization" value={team.organization} onChange={(e) => setTeam({ ...team, organization: e.target.value })} />
+          <input aria-label="Originator code (3–6)" placeholder="Originator code (3–6)" pattern="[A-Za-z0-9]{3,6}" value={team.originatorCode} onChange={(e) => setTeam({ ...team, originatorCode: e.target.value.toUpperCase() })} />
           <select value={team.roleCode} onChange={(e) => setTeam({ ...team, roleCode: e.target.value })}>{roleCodes.map((c) => <option key={c} value={c.split(" ")[0]}>{c}</option>)}</select>
-          <select value={team.leadUserId} onChange={(e) => setTeam({ ...team, leadUserId: e.target.value })}><option value="">Team lead —</option>{members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select>
+          <select aria-label="Team lead —" value={team.leadUserId} onChange={(e) => setTeam({ ...team, leadUserId: e.target.value })}><option value="">Team lead —</option>{members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select>
           <button className="primary">+ Add task team</button>
         </form>}
       </div>
@@ -341,7 +345,7 @@ function Setup({ d, members, role, call }: { d: DeliveryData; members: Member[];
         {editor && <form className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 10 }} onSubmit={async (e) => { e.preventDefault(); if (await call("milestones", "POST", ms, "Milestone added")) setMs({ name: "", date: "", description: "" }); }}>
           <input required placeholder="e.g. Stage 3 — Spatial coordination" value={ms.name} onChange={(e) => setMs({ ...ms, name: e.target.value })} />
           <input required type="date" value={ms.date} onChange={(e) => setMs({ ...ms, date: e.target.value })} />
-          <input placeholder="Purpose / decision" value={ms.description} onChange={(e) => setMs({ ...ms, description: e.target.value })} style={{ gridColumn: "1 / -1" }} />
+          <input aria-label="Purpose / decision" placeholder="Purpose / decision" value={ms.description} onChange={(e) => setMs({ ...ms, description: e.target.value })} style={{ gridColumn: "1 / -1" }} />
           <button className="primary">+ Add milestone</button>
         </form>}
       </div>
@@ -385,8 +389,8 @@ function Responsibility({ d, project, role, call }: { d: DeliveryData; project: 
           </tbody>
         </table>
         {editor && <form className="row" style={{ marginTop: 10 }} onSubmit={async (e) => { e.preventDefault(); if (await call("responsibility", "POST", { item, stage, sortOrder: d.responsibility.length })) { setItem(""); } }}>
-          <input required placeholder="Information / element, e.g. Structural frame model" value={item} onChange={(e) => setItem(e.target.value)} style={{ maxWidth: 340 }} />
-          <input placeholder="Stage / milestone" value={stage} onChange={(e) => setStage(e.target.value)} style={{ maxWidth: 200 }} />
+          <input aria-label="Information / element, e.g. Structural frame model" required placeholder="Information / element, e.g. Structural frame model" value={item} onChange={(e) => setItem(e.target.value)} style={{ maxWidth: 340 }} />
+          <input aria-label="Stage / milestone" placeholder="Stage / milestone" value={stage} onChange={(e) => setStage(e.target.value)} style={{ maxWidth: 200 }} />
           <button className="primary">+ Add row</button>
           {d.deliverables.length > 0 && d.responsibility.length === 0 && <button type="button" onClick={async () => {
             for (const [i, x] of d.deliverables.entries()) await call("responsibility", "POST", { item: x.title, stage: d.milestones.find((m) => m.id === x.milestoneId)?.name ?? "", loin: x.loin, cells: { [x.taskTeamId]: "R" }, sortOrder: i });
@@ -441,13 +445,13 @@ function Loin({ d, role, call }: { d: DeliveryData; role: ProjectData["role"]; c
         </table>
         {editor && <form className="grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 8, marginTop: 10 }} onSubmit={async (e) => { e.preventDefault(); if (await call("loin", "POST", row, "LOIN entry added")) setRow(blank); }}>
           <input required value={row.ref} onChange={(e) => setRow({ ...row, ref: e.target.value })} />
-          <input required placeholder="Element, e.g. Door" value={row.element} onChange={(e) => setRow({ ...row, element: e.target.value })} />
-          <input placeholder="IFC class, e.g. IfcDoor" value={row.ifcClass} onChange={(e) => setRow({ ...row, ifcClass: e.target.value })} />
-          <select value={row.milestoneId ?? ""} onChange={(e) => setRow({ ...row, milestoneId: e.target.value || null })}><option value="">Milestone —</option>{d.milestones.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-          <input placeholder="Purpose" value={row.purpose} onChange={(e) => setRow({ ...row, purpose: e.target.value })} />
-          <input placeholder="Geometry (detail, dimensionality, location, appearance)" value={row.geometry} onChange={(e) => setRow({ ...row, geometry: e.target.value })} />
-          <input placeholder="Alphanumeric (properties)" value={row.alphanumeric} onChange={(e) => setRow({ ...row, alphanumeric: e.target.value })} />
-          <input placeholder="Documentation" value={row.documentation} onChange={(e) => setRow({ ...row, documentation: e.target.value })} />
+          <input aria-label="Element, e.g. Door" required placeholder="Element, e.g. Door" value={row.element} onChange={(e) => setRow({ ...row, element: e.target.value })} />
+          <input aria-label="IFC class, e.g. IfcDoor" placeholder="IFC class, e.g. IfcDoor" value={row.ifcClass} onChange={(e) => setRow({ ...row, ifcClass: e.target.value })} />
+          <select aria-label="Milestone —" value={row.milestoneId ?? ""} onChange={(e) => setRow({ ...row, milestoneId: e.target.value || null })}><option value="">Milestone —</option>{d.milestones.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+          <input aria-label="Purpose" placeholder="Purpose" value={row.purpose} onChange={(e) => setRow({ ...row, purpose: e.target.value })} />
+          <input aria-label="Geometry (detail, dimensionality, location, appearance)" placeholder="Geometry (detail, dimensionality, location, appearance)" value={row.geometry} onChange={(e) => setRow({ ...row, geometry: e.target.value })} />
+          <input aria-label="Alphanumeric (properties)" placeholder="Alphanumeric (properties)" value={row.alphanumeric} onChange={(e) => setRow({ ...row, alphanumeric: e.target.value })} />
+          <input aria-label="Documentation" placeholder="Documentation" value={row.documentation} onChange={(e) => setRow({ ...row, documentation: e.target.value })} />
           <button className="primary">+ Add LOIN</button>
         </form>}
       </div>
@@ -471,7 +475,7 @@ function Mrm({ d, project, role, call }: { d: DeliveryData; project: ProjectData
       <div className="row spread" style={{ marginBottom: 10 }}>
         <p className="small muted" style={{ margin: 0, maxWidth: 760 }}>For each model element and milestone, choose the task team that models it and its level of development. LOD should never go down between milestones. Hover an LOD for its meaning.</p>
         <div className="row">
-          {disciplines.length > 1 && <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ width: "auto" }}><option value="">All disciplines</option>{disciplines.map((x) => <option key={x}>{x}</option>)}</select>}
+          {disciplines.length > 1 && <select aria-label="All disciplines" value={filter} onChange={(e) => setFilter(e.target.value)} style={{ width: "auto" }}><option value="">All disciplines</option>{disciplines.map((x) => <option key={x}>{x}</option>)}</select>}
           <button onClick={() => exportCsv(`${project.code}-MRM`, ["Discipline", "System", "Element", ...d.milestones.flatMap((m) => [`${m.name} team`, `${m.name} LOD`])], d.mrm.map((r) => [r.discipline, r.system, r.element, ...d.milestones.flatMap((m) => [d.teams.find((t) => t.id === r.cells[m.id]?.teamId)?.name ?? "", r.cells[m.id]?.lod ?? ""])]))}>⬇ CSV</button>
           {editor && d.mrm.length > 0 && <button onClick={async () => { const r = (await call("delivery/generate", "POST", { kind: "mrm" }, "MRM document generated")) as { id: string } | undefined; if (r) navigate(`/projects/${project.id}/documents/${r.id}`); }}>📄 Generate MRM document</button>}
         </div>
@@ -486,7 +490,7 @@ function Mrm({ d, project, role, call }: { d: DeliveryData; project: ProjectData
                 {d.milestones.map((m) => { const c = r.cells[m.id] ?? { teamId: "", lod: "" }; return (
                   <td key={m.id} className="center-cell" style={{ minWidth: 150 }}>
                     <select className="tiny" disabled={!editor} value={c.teamId} onChange={(e) => setCell(r, m.id, { teamId: e.target.value })}><option value="">—</option>{d.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
-                    <select className="tiny" disabled={!editor} value={c.lod} title={c.lod ? LOD_MEANING[c.lod as Lod] : ""} onChange={(e) => setCell(r, m.id, { lod: e.target.value as Lod })}><option value="">LOD</option>{LODS.map((l) => <option key={l} value={l} title={LOD_MEANING[l]}>{l}</option>)}</select>
+                    <select aria-label="LOD" className="tiny" disabled={!editor} value={c.lod} title={c.lod ? LOD_MEANING[c.lod as Lod] : ""} onChange={(e) => setCell(r, m.id, { lod: e.target.value as Lod })}><option value="">LOD</option>{LODS.map((l) => <option key={l} value={l} title={LOD_MEANING[l]}>{l}</option>)}</select>
                   </td>); })}
                 <td>{editor && <button className="ghost tiny danger" onClick={() => call(`mrm/${r.id}`, "DELETE")}>✕</button>}</td>
               </tr>
@@ -495,10 +499,10 @@ function Mrm({ d, project, role, call }: { d: DeliveryData; project: ProjectData
           </tbody>
         </table>
         {editor && <form className="row" style={{ marginTop: 10 }} onSubmit={async (e) => { e.preventDefault(); if (await call("mrm", "POST", { ...row, sortOrder: d.mrm.length })) setRow({ ...row, element: "" }); }}>
-          <input required placeholder="Discipline" value={row.discipline} onChange={(e) => setRow({ ...row, discipline: e.target.value })} style={{ maxWidth: 160 }} list="mrm-disc" />
+          <input aria-label="Discipline" required placeholder="Discipline" value={row.discipline} onChange={(e) => setRow({ ...row, discipline: e.target.value })} style={{ maxWidth: 160 }} list="mrm-disc" />
           <datalist id="mrm-disc">{disciplines.map((x) => <option key={x} value={x} />)}</datalist>
-          <input placeholder="System" value={row.system} onChange={(e) => setRow({ ...row, system: e.target.value })} style={{ maxWidth: 180 }} />
-          <input required placeholder="Element, e.g. Cable trays" value={row.element} onChange={(e) => setRow({ ...row, element: e.target.value })} style={{ maxWidth: 260 }} />
+          <input aria-label="System" placeholder="System" value={row.system} onChange={(e) => setRow({ ...row, system: e.target.value })} style={{ maxWidth: 180 }} />
+          <input aria-label="Element, e.g. Cable trays" required placeholder="Element, e.g. Cable trays" value={row.element} onChange={(e) => setRow({ ...row, element: e.target.value })} style={{ maxWidth: 260 }} />
           <button className="primary">+ Add element</button>
         </form>}
       </div>

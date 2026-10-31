@@ -59,7 +59,7 @@ export default function CobieReference() {
       </div>
       <div className="small muted">{cobieSchema.length} sheets · {total} columns. The workbook has every sheet with colour-coded headers, a note on each header, and an Instruction sheet explaining every column.</div>
       <div style={{ position: "relative" }}>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a column, e.g. SerialNumber or WarrantyDuration…" />
+        <input aria-label="Find a column, e.g. SerialNumber or WarrantyDuration…" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a column, e.g. SerialNumber or WarrantyDuration…" />
         {hits.length > 0 && <div className="hub-card" style={{ position: "absolute", insetInline: 0, top: 42, zIndex: 20, boxShadow: "0 10px 30px rgba(0,0,0,.25)", display: "grid", gap: 2 }}>
           {hits.map(({ sheet: sh, c }) => <button key={sh + c.name} className="ghost" style={{ textAlign: "start" }} onClick={() => { setSheet(sh); setQ(""); }}><b className="no-i18n">{sh}.{c.name}</b> <span className="small muted">{c.description.slice(0, 90)}</span></button>)}
         </div>}

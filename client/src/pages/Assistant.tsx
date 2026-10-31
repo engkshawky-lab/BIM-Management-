@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useDialog } from "../components/Dialog";
 import { useSession } from "../App";
 import { Markdown } from "../components/Markdown";
 import { api, canEdit } from "../lib/api";
@@ -54,7 +55,7 @@ export function ProjectAssistant({ data }: { data: ProjectData }) {
         <div ref={end} />
       </div>
       <form className="row" onSubmit={(e) => { e.preventDefault(); send(q); }}>
-        <textarea value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask about this project…" style={{ minHeight: 44, flex: 1 }}
+        <textarea aria-label="Ask about this project…" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask about this project…" style={{ minHeight: 44, flex: 1 }}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(q); } }} />
         <button className="primary" disabled={busy || !q.trim()}>Ask</button>
         {turns.length > 0 && <button type="button" className="ghost" onClick={() => setTurns([])}>New chat</button>}
@@ -83,7 +84,7 @@ export function ContractReview({ data }: { data: ProjectData }) {
       <p className="muted">Upload an appointment, contract or BIM specification (PDF) or paste its text. The AI checks it for ISO 19650 information-management obligations — information protocol, EIR, BEP, MIDP/TIDP, CDE, IP and licence, liability, security, handover — with clause references. This is a checklist aid, not legal advice.</p>
       <div className="card">
         <div className="row"><input type="file" accept=".pdf,.txt" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /><span className="small muted">or paste text below</span></div>
-        {!file && <textarea value={text} onChange={(e) => setText(e.target.value)} style={{ minHeight: 120, marginTop: 8 }} placeholder="Paste contract text…" />}
+        {!file && <textarea aria-label="Paste contract text…" value={text} onChange={(e) => setText(e.target.value)} style={{ minHeight: 120, marginTop: 8 }} placeholder="Paste contract text…" />}
         <button className="primary" style={{ marginTop: 8 }} disabled={busy || (!file && text.length < 200)} onClick={run}>{busy ? "Reviewing… (up to a minute)" : "Review document"}</button>
       </div>
       {r && <div className="card" style={{ marginTop: 12 }}>
@@ -110,8 +111,9 @@ export function ClashTriage({ projectId, onClose, onApplied }: { projectId: stri
     api<{ items: Triage[] }>(`/projects/${projectId}/issues/ai-triage`, { body: {} })
       .then((r) => setItems(r.items.map((x) => ({ ...x, on: true })))).catch((e) => { toast((e as Error).message, "error"); onClose(); }).finally(() => setBusy(false));
   }, [projectId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const dlg = useDialog(onClose);
   return (
-    <div className="modal-bg" onClick={onClose}><div className="modal wide" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-bg" onClick={onClose}><div className="modal wide" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
       <h2 style={{ marginTop: 0 }}>✨ AI clash triage</h2>
       <p className="small muted">Suggested priority, responsible task team and action for each open clash. Review, untick anything you disagree with, then apply — a comment records each accepted suggestion.</p>
       {busy ? <p className="muted">Analysing clashes… (up to a minute)</p> : items && <>
@@ -147,7 +149,7 @@ export function Notebooks({ data, sub }: { data: ProjectData; sub?: string }) {
     <>
       <p className="muted">Collect sources — pasted text, project documents, PDFs from the project files — then ask questions to summarise, compare or check them. Answers cite the sources and are saved as notes.</p>
       {canEdit(data.role) && <form className="card row" style={{ marginBottom: 12 }} onSubmit={async (e) => { e.preventDefault(); try { const r = await api<{ id: string }>(`/projects/${pid}/notebooks`, { body: { title } }); location.hash = `#/projects/${pid}/notebook/${r.id}`; } catch (err) { toast((err as Error).message, "error"); } }}>
-        <input required placeholder="Notebook title, e.g. Compare client EIRs" value={title} onChange={(e) => setTitle(e.target.value)} style={{ maxWidth: 360 }} /><button className="primary">New notebook</button></form>}
+        <input aria-label="Notebook title, e.g. Compare client EIRs" required placeholder="Notebook title, e.g. Compare client EIRs" value={title} onChange={(e) => setTitle(e.target.value)} style={{ maxWidth: 360 }} /><button className="primary">New notebook</button></form>}
       <div className="grid g3">{list.map((n) => <a key={n.id} className="card project-card" href={`#/projects/${pid}/notebook/${n.id}`}><h3 style={{ marginTop: 0 }}>{n.title}</h3><p className="small muted">{n.sources} sources · {n.notes} notes</p></a>)}</div>
       {!list.length && <p className="muted">No notebooks yet.</p>}
     </>
@@ -180,12 +182,12 @@ function Notebook({ data, id }: { data: ProjectData; id: string }) {
           <h3 style={{ marginTop: 0 }}>Sources ({nb.sources.length}/20)</h3>
           {nb.sources.map((s, i) => <div key={s.id} className="row spread small" style={{ marginBottom: 4 }}><span><b>[N{i + 1}]</b> {s.name} <span className="tiny muted">{s.kind}</span></span>{editor && <button className="ghost tiny danger" onClick={() => put({ removeSource: s.id })}>✕</button>}</div>)}
           {editor && <>
-            <label>Add a project document</label>
-            <select value="" onChange={(e) => { const d = docs.find((x) => x.id === e.target.value); if (d) put({ addSource: { kind: "document", name: d.title, refId: d.id } }); }}><option value="">Choose…</option>{docs.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}</select>
-            {files.length > 0 && <><label>Add a project file (PDF or text)</label>
-              <select value="" onChange={(e) => { const f = files.find((x) => x.id === e.target.value); if (f) put({ addSource: { kind: "file", name: f.name, refId: f.id } }); }}><option value="">Choose…</option>{files.filter((f) => /\.(pdf|txt|md|csv)$/i.test(f.name)).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select></>}
-            <label>Or paste text</label>
-            <input placeholder="Source name" value={paste.name} onChange={(e) => setPaste({ ...paste, name: e.target.value })} />
+            <label htmlFor="assistant-add-a-project-document">Add a project document</label>
+            <select id="assistant-add-a-project-document" value="" onChange={(e) => { const d = docs.find((x) => x.id === e.target.value); if (d) put({ addSource: { kind: "document", name: d.title, refId: d.id } }); }}><option value="">Choose…</option>{docs.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}</select>
+            {files.length > 0 && <><label htmlFor="assistant-add-a-project-file">Add a project file (PDF or text)</label>
+              <select id="assistant-add-a-project-file" value="" onChange={(e) => { const f = files.find((x) => x.id === e.target.value); if (f) put({ addSource: { kind: "file", name: f.name, refId: f.id } }); }}><option value="">Choose…</option>{files.filter((f) => /\.(pdf|txt|md|csv)$/i.test(f.name)).map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select></>}
+            <label htmlFor="assistant-or-paste-text">Or paste text</label>
+            <input id="assistant-or-paste-text" placeholder="Source name" value={paste.name} onChange={(e) => setPaste({ ...paste, name: e.target.value })} />
             <textarea value={paste.text} onChange={(e) => setPaste({ ...paste, text: e.target.value })} style={{ minHeight: 80, marginTop: 4 }} />
             <button className="small" disabled={!paste.name || paste.text.length < 20} onClick={async () => { await put({ addSource: { kind: "text", name: paste.name, text: paste.text } }); setPaste({ name: "", text: "" }); }}>Add text source</button>
           </>}

@@ -21,8 +21,8 @@ function List() {
         try { const r = await api<{ id: string }>("/standards", { body: f }); navigate(`/standards/${r.id}`); } catch (err) { toast((err as Error).message, "error"); }
       }}>
         <b>New standard</b>
-        <input required minLength={2} placeholder="Name, e.g. Asset Information Standard R0" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} style={{ maxWidth: 320 }} />
-        <input placeholder="Client" value={f.client} onChange={(e) => setF({ ...f, client: e.target.value })} style={{ maxWidth: 220 }} />
+        <input aria-label="Name, e.g. Asset Information Standard R0" required minLength={2} placeholder="Name, e.g. Asset Information Standard R0" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} style={{ maxWidth: 320 }} />
+        <input aria-label="Client" placeholder="Client" value={f.client} onChange={(e) => setF({ ...f, client: e.target.value })} style={{ maxWidth: 220 }} />
         <button className="primary"><Icon name="plus" size={16} /> Create</button>
       </form>
       {rows === null ? <p className="muted">Loading…</p> : rows.length === 0 ? <div className="card empty muted">No client standards yet. Create one, then import the client's appendix workbooks.</div> : (

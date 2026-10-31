@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useDialog } from "../components/Dialog";
 import { navigate, useSession } from "../App";
 import { StateTag, StdBadge } from "../components/common";
 import { templateById, templates } from "../../../shared/data/templates";
@@ -48,12 +49,13 @@ export function NewDocumentDialog({ data, initialTemplate, onClose }: { data: Pr
     } catch (e) { toast((e as Error).message, "error"); }
   };
 
+  const dlg = useDialog(onClose);
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <h2 style={{ marginTop: 0 }}>New controlled document</h2>
-        <label>Template</label>
-        <select value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+        <label htmlFor="documents-template">Template</label>
+        <select id="documents-template" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
           {(["iso19650", "iso42001"] as const).filter((s) => project.standards.includes(s)).map((s) => (
             <optgroup key={s} label={s === "iso19650" ? "ISO 19650" : "ISO/IEC 42001"}>
               {available.filter((x) => x.standard === s).map((x) => <option key={x.id} value={x.id}>{x.code} — {x.title}</option>)}
@@ -62,12 +64,12 @@ export function NewDocumentDialog({ data, initialTemplate, onClose }: { data: Pr
         </select>
         {t && <p className="small muted">{t.purpose} <br />{t.clauseRefs.join(" · ")} · {t.sections.length} sections. Project details are filled in automatically.</p>}
         {t?.generatedFrom ? <GeneratedNotice projectId={project.id} t={t} onClose={onClose} /> : <>
-        {houseFor.length > 0 && <><label>Start from</label><select value={houseId} onChange={(e) => setHouseId(e.target.value)}>
+        {houseFor.length > 0 && <><label htmlFor="documents-start-from">Start from</label><select id="documents-start-from" value={houseId} onChange={(e) => setHouseId(e.target.value)}>
           <option value="">Standard template</option>
           {houseFor.map((h) => <option key={h.id} value={h.id}>⭐ {h.name}{h.createdByName && ` (${h.createdByName})`}</option>)}
         </select><p className="tiny muted">House templates carry your organization's approved content; project details still come from this project.</p></>}
-        <label>Title</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t?.title} />
-        <label>Container name / document number</label><input value={container} onChange={(e) => setContainer(e.target.value.toUpperCase())} />
+        <label htmlFor="documents-title">Title</label><input id="documents-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t?.title} />
+        <label htmlFor="documents-container-name-document-number">Container name / document number</label><input id="documents-container-name-document-number" value={container} onChange={(e) => setContainer(e.target.value.toUpperCase())} />
         <p className="small muted">Replace XXX with your originator code. See the <a href="#/knowledge/iso19650/naming" target="_blank">naming tool</a>.</p>
         <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button><button className="primary" onClick={create}>Create document</button></div>
         </>}
@@ -93,8 +95,8 @@ export default function Documents({ data }: { data: ProjectData }) {
     <>
       <div className="row spread" style={{ marginBottom: 12 }}>
         <div className="row">
-          <input placeholder="Search documents…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 260 }} />
-          <select value={state} onChange={(e) => setState(e.target.value)} style={{ width: "auto" }}><option value="">All states</option>{["WIP", "SHARED", "PUBLISHED", "ARCHIVED"].map((s) => <option key={s}>{s}</option>)}</select>
+          <input aria-label="Search documents…" placeholder="Search documents…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 260 }} />
+          <select aria-label="All states" value={state} onChange={(e) => setState(e.target.value)} style={{ width: "auto" }}><option value="">All states</option>{["WIP", "SHARED", "PUBLISHED", "ARCHIVED"].map((s) => <option key={s}>{s}</option>)}</select>
         </div>
         {canEdit(data.role) && <button className="primary" onClick={() => setCreating(true)}>+ New document</button>}
       </div>

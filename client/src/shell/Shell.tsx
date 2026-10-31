@@ -7,6 +7,7 @@ import { api, canManage, type Notification, type Project } from "../lib/api";
 import { Icon } from "./icons";
 import { ALL_PAGES, PROJECT_PAGES, SECTIONS, TEMPLATE_PAGES, groupsOf, hrefFor, labelForRoute, locate, pageByKey, type NavItem } from "./nav";
 import { BIM_ROLES, roleById, roleKeys } from "./roles";
+import { useDialog, useDismiss } from "../components/Dialog";
 
 // ---------------------------------------------------------------- per-user local conveniences
 
@@ -14,6 +15,19 @@ const store = {
   get<T>(key: string, fallback: T): T { try { const v = localStorage.getItem(key); return v ? (JSON.parse(v) as T) : fallback; } catch { return fallback; } },
   set(key: string, v: unknown) { try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* storage unavailable */ } },
 };
+
+/** On sign-out, drop this browser's per-user data (drafts, recents, chat history…) so the next person on a shared PC
+ *  starts clean. Language and theme are device preferences, not user data, and are kept. */
+const KEEP_ON_SIGN_OUT = new Set(["bim:locale", "bim:theme"]);
+export function clearUserStorage() {
+  for (const area of [localStorage, sessionStorage]) {
+    try {
+      const keys: string[] = [];
+      for (let i = 0; i < area.length; i++) { const k = area.key(i); if (k && k.startsWith("bim:") && !KEEP_ON_SIGN_OUT.has(k)) keys.push(k); }
+      keys.forEach((k) => area.removeItem(k));
+    } catch { /* storage unavailable */ }
+  }
+}
 
 export interface RecentEntry { path: string; label: string; ts: number }
 const recentKey = (uid: string) => `bim:recent:${uid}`;
@@ -74,14 +88,24 @@ function SectionHead({ icon, label, count, open, onClick }: { icon: NavItem["ico
 function Inbox() {
   const [items, setItems] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  useDismiss(open, () => setOpen(false), box, btn);
   const load = useCallback(() => api<{ notifications: Notification[] }>("/notifications").then((r) => setItems(r.notifications)).catch(() => undefined), []);
-  useEffect(() => { load(); const t = setInterval(load, 20_000); return () => clearInterval(t); }, [load]);
+  useEffect(() => {
+    load();
+    // poll only while the tab is visible; catch up once when it becomes visible again
+    const t = setInterval(() => { if (!document.hidden) load(); }, 20_000);
+    const onVis = () => { if (!document.hidden) load(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", onVis); };
+  }, [load]);
   const unread = items.filter((n) => !n.read).length;
   return (
-    <div className="sb-anchor">
-      <button className="sb-mini" onClick={() => setOpen(!open)} aria-label={`Inbox${unread ? ` (${unread} unread)` : ""}`}><Icon name="bell" size={14} />{t("Inbox")}{unread > 0 && <span className="sb-count">{unread}</span>}</button>
+    <div className="sb-anchor" ref={box}>
+      <button ref={btn} className="sb-mini" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="true" aria-label={`Inbox${unread ? ` (${unread} unread)` : ""}`}><Icon name="bell" size={14} />{t("Inbox")}{unread > 0 && <span className="sb-count">{unread}</span>}</button>
       {open && (
-        <div className="popover sb-pop">
+        <div className="popover sb-pop" role="region" aria-label="Inbox">
           <div className="row spread"><b>{t("Inbox")}</b>{unread > 0 && <button className="ghost small" onClick={() => api("/notifications/read", { body: {} }).then(load)}>Mark all read</button>}</div>
           {items.length === 0 && <p className="muted small">Nothing yet.</p>}
           {items.map((n) => (
@@ -98,9 +122,12 @@ function Inbox() {
 function UserMenu({ onRole, theme, setTheme, onHide }: { onRole: () => void; theme: string; setTheme: (t: string) => void; onHide: () => void }) {
   const { user, setUser } = useSession();
   const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  useDismiss(open, () => setOpen(false), box, btn);
   return (
-    <div className="sb-anchor sb-user-row">
-      <button className="sb-user" onClick={() => setOpen(!open)} aria-label="Account menu">
+    <div className="sb-anchor sb-user-row" ref={box}>
+      <button ref={btn} className="sb-user" onClick={() => setOpen(!open)} aria-expanded={open} aria-haspopup="true" aria-label="Account menu">
         <span className="brand-logo"><Icon name="building" size={15} /></span>
         <span className="sb-user-text"><b>BIM Management</b><small>{user.organization || user.name}</small></span>
         <Icon name="chevron" size={12} />
@@ -113,7 +140,7 @@ function UserMenu({ onRole, theme, setTheme, onHide }: { onRole: () => void; the
         {user.role === "admin" && <a href="#/admin"><Icon name="settings" size={16} />{t("Admin console")}</a>}
         <button onClick={onRole}><Icon name="target" size={16} />{t("Set my role")}</button>
         <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}><Icon name={theme === "dark" ? "sun" : "moon"} size={16} />{t(theme === "dark" ? "Light theme" : "Dark theme")}</button>
-        <button onClick={async () => { await api("/auth/logout", { body: {} }); setUser(null); navigate("/"); }}><Icon name="logout" size={16} />{t("Sign out")}</button>
+        <button onClick={async () => { await api("/auth/logout", { body: {} }).catch(() => undefined); clearUserStorage(); setUser(null); navigate("/"); }}><Icon name="logout" size={16} />{t("Sign out")}</button>
       </div>}
     </div>
   );
@@ -255,6 +282,7 @@ function CommandPalette({ projects, project, onClose }: { projects: Project[]; p
   const [q, setQ] = useState("");
   const [i, setI] = useState(0);
   const input = useRef<HTMLInputElement>(null);
+  const dlg = useDialog(onClose);
   useEffect(() => input.current?.focus(), []);
   const results = useMemo(() => {
     const items: { label: string; sub: string; href: string; icon: NavItem["icon"] }[] = [
@@ -267,13 +295,12 @@ function CommandPalette({ projects, project, onClose }: { projects: Project[]; p
   const go = (href: string) => { onClose(); navigate(href); };
   return (
     <div className="modal-bg palette-bg" onClick={onClose}>
-      <div className="palette" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Search">
-        <label className="palette-input"><Icon name="search" size={18} /><input ref={input} value={q} placeholder="Search pages, tools, templates, projects…" onChange={(e) => { setQ(e.target.value); setI(0); }}
+      <div className="palette" ref={dlg} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Search">
+        <label className="palette-input"><Icon name="search" size={18} /><input ref={input} data-autofocus aria-label="Search" value={q} placeholder="Search pages, tools, templates, projects…" onChange={(e) => { setQ(e.target.value); setI(0); }}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") { e.preventDefault(); setI((n) => Math.min(n + 1, results.length - 1)); }
             if (e.key === "ArrowUp") { e.preventDefault(); setI((n) => Math.max(n - 1, 0)); }
             if (e.key === "Enter" && results[i]) go(results[i].href);
-            if (e.key === "Escape") onClose();
           }} /><kbd>Esc</kbd></label>
         <div className="palette-list">
           {results.map((r, n) => (
@@ -294,6 +321,7 @@ function AskAi({ onClose, route }: { onClose: () => void; route: string }) {
   const projectId = /^\/projects\/([0-9a-f-]{36})/.exec(route)?.[1];
   const [q, setQ] = useState("");
   const [enabled, setEnabled] = useState<boolean | null>(null);
+  const dlg = useDialog<HTMLElement>(onClose);
   useEffect(() => { api<{ enabled: boolean }>("/ai/status").then((r) => setEnabled(r.enabled)).catch(() => setEnabled(false)); }, []);
   // Quick answers from the knowledge base; project questions go to the project assistant.
   const hits = useMemo(() => {
@@ -308,9 +336,9 @@ function AskAi({ onClose, route }: { onClose: () => void; route: string }) {
   }, [q]);
   return (
     <div className="drawer-bg" onClick={onClose}>
-      <aside className="drawer" onClick={(e) => e.stopPropagation()} aria-label="Ask AI">
+      <aside className="drawer" ref={dlg} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Ask AI">
         <div className="panel-head"><h2><Icon name="sparkles" size={18} /> Ask</h2><button className="icon-btn" onClick={onClose} aria-label="Close"><Icon name="close" size={16} /></button></div>
-        <label className="search-box"><Icon name="search" size={15} /><input autoFocus placeholder="e.g. TIDP, acceptance criteria, impact assessment" value={q} onChange={(e) => setQ(e.target.value)} /></label>
+        <label className="search-box"><Icon name="search" size={15} /><input data-autofocus aria-label="Ask" placeholder="e.g. TIDP, acceptance criteria, impact assessment" value={q} onChange={(e) => setQ(e.target.value)} /></label>
         {projectId && enabled && <a className="btn primary" href={`#/projects/${projectId}/assistant`} onClick={onClose} style={{ margin: "4px 16px 8px", display: "inline-block" }}>✨ Ask the project assistant about this project →</a>}
         <p className="tiny muted">{enabled ? "Results below come from the built-in ISO knowledge base. Open a project to ask the AI assistant questions answered from its records." : "Results come from the built-in ISO knowledge base. The AI project assistant needs CLAUDE_API_KEY on the server."}</p>
         <div className="drawer-results">
@@ -327,6 +355,7 @@ function AskAi({ onClose, route }: { onClose: () => void; route: string }) {
 export function RolePicker({ onClose }: { onClose: () => void }) {
   const { user, setUser, toast } = useSession();
   const [pick, setPick] = useState<string | null>(user.bimRole);
+  const dlg = useDialog(onClose);
   const apply = async () => {
     const role = roleById(pick);
     if (!role) return;
@@ -336,7 +365,7 @@ export function RolePicker({ onClose }: { onClose: () => void }) {
   };
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="role-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-labelledby="role-title">
+      <div className="role-modal" ref={dlg} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="role-title">
         <div className="role-icon"><Icon name="target" size={26} /></div>
         <h2 id="role-title">What is your BIM role?</h2>
         <p className="muted">Select your job description to get a personalised Favourites list with the most relevant tools for your role.</p>
@@ -414,10 +443,11 @@ export default function Shell({ route, children }: { route: string; children: Re
 
   return (
     <div className={"shell" + (sidebar ? "" : " sb-hidden") + (drawer ? " sb-drawer" : "")}>
+      <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); main.current?.focus(); }}>Skip to main content</a>
       <Sidebar route={route} projects={projects} project={project} theme={theme} setTheme={setTheme}
         onAsk={() => setAsk(true)} onRole={() => setRolePicker(true)} onHide={() => (narrow() ? setDrawer(false) : setSidebar(false))} />
       {drawer && <div className="sb-backdrop" onClick={() => setDrawer(false)} />}
-      <main className="main" ref={main}>
+      <main className="main" id="main" tabIndex={-1} ref={main}>
         <div className="pagebar no-print">
           <button className="icon-btn sb-show" onClick={showMenu} aria-label={t("Show sidebar")} title={t("Show sidebar")}><Icon name="panel" size={16} /></button>
           <Crumbs route={route} projects={projects} />

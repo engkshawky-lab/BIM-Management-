@@ -1,4 +1,5 @@
 import { MRM_STARTER } from "../../../shared/mrm";
+import { useDialog } from "../components/Dialog";
 import { ClashTriage } from "./Assistant";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { navigate, useSession } from "../App";
@@ -29,21 +30,22 @@ function useTeams(pid: string) {
 function NewIssue({ data, teams, onDone }: { data: ProjectData; teams: TaskTeam[]; onDone: () => void }) {
   const { toast } = useSession();
   const [f, setF] = useState({ title: "", description: "", type: "Issue", priority: "Normal", assigneeId: "", taskTeamId: "", dueDate: "" });
+  const dlg = useDialog<HTMLFormElement>(onDone);
   return (
-    <div className="modal-bg" onClick={onDone}><form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={async (e) => {
+    <div className="modal-bg" onClick={onDone}><form className="modal" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} onSubmit={async (e) => {
       e.preventDefault();
       try { await api(`/projects/${data.project.id}/issues`, { body: { ...f, assigneeId: f.assigneeId || null, taskTeamId: f.taskTeamId || null } }); toast("Issue raised"); onDone(); }
       catch (err) { toast((err as Error).message, "error"); }
     }}>
       <h2 style={{ marginTop: 0 }}>Raise issue</h2>
-      <label>Title *</label><input required value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
-      <label>Description</label><textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
+      <label htmlFor="coordination-title">Title *</label><input id="coordination-title" required value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
+      <label htmlFor="coordination-description">Description</label><textarea id="coordination-description" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
       <div className="grid g3">
-        <div><label>Type</label><select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
-        <div><label>Priority</label><select value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value })}>{PRIORITIES.map((t) => <option key={t}>{t}</option>)}</select></div>
-        <div><label>Due</label><input type="date" value={f.dueDate} onChange={(e) => setF({ ...f, dueDate: e.target.value })} /></div>
-        <div><label>Assignee</label><select value={f.assigneeId} onChange={(e) => setF({ ...f, assigneeId: e.target.value })}><option value="">—</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
-        <div><label>Task team</label><select value={f.taskTeamId} onChange={(e) => setF({ ...f, taskTeamId: e.target.value })}><option value="">—</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+        <div><label htmlFor="coordination-type">Type</label><select id="coordination-type" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}>{TYPES.map((t) => <option key={t}>{t}</option>)}</select></div>
+        <div><label htmlFor="coordination-priority">Priority</label><select id="coordination-priority" value={f.priority} onChange={(e) => setF({ ...f, priority: e.target.value })}>{PRIORITIES.map((t) => <option key={t}>{t}</option>)}</select></div>
+        <div><label htmlFor="coordination-due">Due</label><input id="coordination-due" type="date" value={f.dueDate} onChange={(e) => setF({ ...f, dueDate: e.target.value })} /></div>
+        <div><label htmlFor="coordination-assignee">Assignee</label><select id="coordination-assignee" value={f.assigneeId} onChange={(e) => setF({ ...f, assigneeId: e.target.value })}><option value="">—</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
+        <div><label htmlFor="coordination-task-team">Task team</label><select id="coordination-task-team" value={f.taskTeamId} onChange={(e) => setF({ ...f, taskTeamId: e.target.value })}><option value="">—</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
       </div>
       <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button type="button" onClick={onDone}>Cancel</button><button className="primary">Raise issue</button></div>
     </form></div>
@@ -62,12 +64,12 @@ function IssueDetail({ data, issue, teams, onChanged }: { data: ProjectData; iss
       <div className="tiny muted">Raised {fmtDate(issue.createdAt)} · updated {fmtDate(issue.updatedAt)}{issue.closedAt && ` · closed ${fmtDate(issue.closedAt)}`}</div>
       <fieldset disabled={!may} style={{ border: 0, padding: 0, margin: "8px 0" }}>
         <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <div><label>Status</label><select value={issue.status} onChange={(e) => set({ status: e.target.value })}>{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
-          <div><label>Priority</label><select value={issue.priority} onChange={(e) => set({ priority: e.target.value })}>{PRIORITIES.map((s) => <option key={s}>{s}</option>)}</select></div>
-          <div><label>Assignee</label><select value={issue.assigneeId ?? ""} onChange={(e) => set({ assigneeId: e.target.value || null })}><option value="">—</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
-          <div><label>Due</label><input type="date" value={issue.dueDate} onChange={(e) => set({ dueDate: e.target.value })} /></div>
-          <div><label>Type</label><select value={issue.type} onChange={(e) => set({ type: e.target.value })}>{TYPES.map((s) => <option key={s}>{s}</option>)}</select></div>
-          <div><label>Task team</label><select value={issue.taskTeamId ?? ""} onChange={(e) => set({ taskTeamId: e.target.value || null })}><option value="">—</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+          <div><label htmlFor="coordination-status">Status</label><select id="coordination-status" value={issue.status} onChange={(e) => set({ status: e.target.value })}>{STATUSES.map((s) => <option key={s}>{s}</option>)}</select></div>
+          <div><label htmlFor="coordination-priority-2">Priority</label><select id="coordination-priority-2" value={issue.priority} onChange={(e) => set({ priority: e.target.value })}>{PRIORITIES.map((s) => <option key={s}>{s}</option>)}</select></div>
+          <div><label htmlFor="coordination-assignee-2">Assignee</label><select id="coordination-assignee-2" value={issue.assigneeId ?? ""} onChange={(e) => set({ assigneeId: e.target.value || null })}><option value="">—</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
+          <div><label htmlFor="coordination-due-2">Due</label><input id="coordination-due-2" type="date" value={issue.dueDate} onChange={(e) => set({ dueDate: e.target.value })} /></div>
+          <div><label htmlFor="coordination-type-2">Type</label><select id="coordination-type-2" value={issue.type} onChange={(e) => set({ type: e.target.value })}>{TYPES.map((s) => <option key={s}>{s}</option>)}</select></div>
+          <div><label htmlFor="coordination-task-team-2">Task team</label><select id="coordination-task-team-2" value={issue.taskTeamId ?? ""} onChange={(e) => set({ taskTeamId: e.target.value || null })}><option value="">—</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
         </div>
       </fieldset>
       {issue.description && <p style={{ whiteSpace: "pre-wrap" }} className="small">{issue.description}</p>}
@@ -112,9 +114,9 @@ function Issues({ data, teams }: { data: ProjectData; teams: TaskTeam[] }) {
       </div>
       <div className="row spread" style={{ marginBottom: 10 }}>
         <div className="row">
-          <input placeholder="Search issues…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 220 }} />
+          <input aria-label="Search issues…" placeholder="Search issues…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 220 }} />
           <select value={status} onChange={(e) => setStatus(e.target.value)} style={{ width: "auto" }}><option value="active">Open & in progress</option><option value="">All</option>{STATUSES.map((s) => <option key={s}>{s}</option>)}</select>
-          <select value={type} onChange={(e) => setType(e.target.value)} style={{ width: "auto" }}><option value="">All types</option>{TYPES.map((s) => <option key={s}>{s}</option>)}</select>
+          <select aria-label="All types" value={type} onChange={(e) => setType(e.target.value)} style={{ width: "auto" }}><option value="">All types</option>{TYPES.map((s) => <option key={s}>{s}</option>)}</select>
           <label className="check"><input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> Assigned to me</label>
           {overdue > 0 && <span className="badge" style={{ color: "var(--danger)" }}>{overdue} overdue</span>}
         </div>
@@ -215,7 +217,7 @@ function SetList({ label, value, onChange }: { label: string; value: string[]; o
   return (
     <div><label>{label}</label>
       <div className="chips" style={{ marginBottom: 4 }}>{value.map((x) => <span key={x} className="chip">{x} <button className="linklike" onClick={() => onChange(value.filter((y) => y !== x))}>✕</button></span>)}</div>
-      <input list="set-suggest" placeholder="Add search set, e.g. HVAC – Ductwork" value={add} onChange={(e) => setAdd(e.target.value)}
+      <input aria-label="Add search set, e.g. HVAC – Ductwork" list="set-suggest" placeholder="Add search set, e.g. HVAC – Ductwork" value={add} onChange={(e) => setAdd(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && add.trim()) { e.preventDefault(); if (!value.includes(add.trim())) onChange([...value, add.trim()]); setAdd(""); } }} />
     </div>
   );
@@ -224,23 +226,24 @@ function SetList({ label, value, onChange }: { label: string; value: string[]; o
 function ClashEditor({ initial, defaultCode, label, onSave, onDelete, onClose }: { initial?: ClashTest; defaultCode: string; label: string; onSave: (v: Omit<ClashTest, "id" | "teamA" | "teamB">) => void; onDelete?: () => void; onClose: () => void }) {
   const [v, setV] = useState({ kind: initial?.kind ?? "hard", toleranceMm: initial?.toleranceMm ?? 0, priority: initial?.priority ?? "Normal", frequency: initial?.frequency ?? "Weekly", notes: initial?.notes ?? "",
     code: initial?.code || defaultCode, setsA: initial?.setsA ?? [], setsB: initial?.setsB ?? [] });
+  const dlg = useDialog(onClose);
   return (
-    <div className="modal-bg" onClick={onClose}><div className="modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-bg" onClick={onClose}><div className="modal" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
       <h2 style={{ marginTop: 0 }}>Clash test: {label}</h2>
       <div className="grid g2">
-        <div><label>Type</label><select value={v.kind} onChange={(e) => setV({ ...v, kind: e.target.value })}><option value="hard">Hard clash</option><option value="clearance">Clearance</option><option value="duplicate">Duplicates</option></select></div>
-        <div><label>Tolerance (mm)</label><input type="number" min={0} value={v.toleranceMm} onChange={(e) => setV({ ...v, toleranceMm: +e.target.value })} /></div>
-        <div><label>Priority</label><select value={v.priority} onChange={(e) => setV({ ...v, priority: e.target.value })}>{PRIORITIES.map((p) => <option key={p}>{p}</option>)}</select></div>
-        <div><label>Frequency</label><select value={v.frequency} onChange={(e) => setV({ ...v, frequency: e.target.value })}>{["Daily", "Weekly", "Fortnightly", "Per milestone"].map((p) => <option key={p}>{p}</option>)}</select></div>
+        <div><label htmlFor="coordination-type-3">Type</label><select id="coordination-type-3" value={v.kind} onChange={(e) => setV({ ...v, kind: e.target.value })}><option value="hard">Hard clash</option><option value="clearance">Clearance</option><option value="duplicate">Duplicates</option></select></div>
+        <div><label htmlFor="coordination-tolerance-mm">Tolerance (mm)</label><input id="coordination-tolerance-mm" type="number" min={0} value={v.toleranceMm} onChange={(e) => setV({ ...v, toleranceMm: +e.target.value })} /></div>
+        <div><label htmlFor="coordination-priority-3">Priority</label><select id="coordination-priority-3" value={v.priority} onChange={(e) => setV({ ...v, priority: e.target.value })}>{PRIORITIES.map((p) => <option key={p}>{p}</option>)}</select></div>
+        <div><label htmlFor="coordination-frequency">Frequency</label><select id="coordination-frequency" value={v.frequency} onChange={(e) => setV({ ...v, frequency: e.target.value })}>{["Daily", "Weekly", "Fortnightly", "Per milestone"].map((p) => <option key={p}>{p}</option>)}</select></div>
       </div>
       <div className="grid g2" style={{ marginTop: 8 }}>
-        <div><label>Test code</label><input className="mono" value={v.code} onChange={(e) => setV({ ...v, code: e.target.value.toUpperCase() })} /></div>
+        <div><label htmlFor="coordination-test-code">Test code</label><input id="coordination-test-code" className="mono" value={v.code} onChange={(e) => setV({ ...v, code: e.target.value.toUpperCase() })} /></div>
         <div />
         <SetList label="Search sets — side A" value={v.setsA} onChange={(setsA) => setV({ ...v, setsA })} />
         <SetList label="Search sets — side B" value={v.setsB} onChange={(setsB) => setV({ ...v, setsB })} />
       </div>
       <datalist id="set-suggest">{SET_SUGGESTIONS.map((x) => <option key={x} value={x} />)}</datalist>
-      <label>Notes / rules</label><input value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} placeholder="e.g. exclude insulation; ducts vs primary steel only" />
+      <label htmlFor="coordination-notes-rules">Notes / rules</label><input id="coordination-notes-rules" value={v.notes} onChange={(e) => setV({ ...v, notes: e.target.value })} placeholder="e.g. exclude insulation; ducts vs primary steel only" />
       <div className="row spread" style={{ marginTop: 12 }}>{onDelete ? <button className="danger" onClick={onDelete}>Remove test</button> : <span />}<div className="row"><button onClick={onClose}>Cancel</button><button className="primary" onClick={() => onSave(v)}>Save</button></div></div>
     </div></div>
   );
@@ -252,17 +255,18 @@ function ClashImport({ data, teams, onClose }: { data: ProjectData; teams: TaskT
   const [testName, setTestName] = useState("MEP vs Structure");
   const [assigneeId, setAssigneeId] = useState(""); const [taskTeamId, setTaskTeamId] = useState(""); const [group, setGroup] = useState(true);
   const rows = useMemo(() => parseTabular(text), [text]);
+  const dlg = useDialog(onClose);
   return (
-    <div className="modal-bg" onClick={onClose}><div className="modal wide" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-bg" onClick={onClose}><div className="modal wide" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
       <h2 style={{ marginTop: 0 }}>Import clash report</h2>
       <p className="small muted">Paste the clash report (CSV/TSV with headers such as Clash Name, Status, Distance, Grid Location, Item1 GUID, Item2 GUID, Item1 Name, Item2 Name) or choose a CSV file. Resolved/approved clashes are skipped.</p>
       <input type="file" accept=".csv,.txt,.tsv" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setText(await f.text()); }} />
       <textarea style={{ minHeight: 140, marginTop: 8 }} value={text} onChange={(e) => setText(e.target.value)} />
       {rows.length > 1 && <p className="small">{rows.length - 1} clash rows detected · columns: {rows[0].slice(0, 8).join(", ")}</p>}
       <div className="grid g2">
-        <div><label>Test name</label><input value={testName} onChange={(e) => setTestName(e.target.value)} /></div>
-        <div><label>Assign to</label><select value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}><option value="">—</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
-        <div><label>Responsible task team</label><select value={taskTeamId} onChange={(e) => setTaskTeamId(e.target.value)}><option value="">—</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+        <div><label htmlFor="coordination-test-name">Test name</label><input id="coordination-test-name" value={testName} onChange={(e) => setTestName(e.target.value)} /></div>
+        <div><label htmlFor="coordination-assign-to">Assign to</label><select id="coordination-assign-to" value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}><option value="">—</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
+        <div><label htmlFor="coordination-responsible-task-team">Responsible task team</label><select id="coordination-responsible-task-team" value={taskTeamId} onChange={(e) => setTaskTeamId(e.target.value)}><option value="">—</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
         <div><label>Grouping</label><label className="check"><input type="checkbox" checked={group} onChange={(e) => setGroup(e.target.checked)} /> One issue per grid location</label></div>
       </div>
       <div className="row" style={{ justifyContent: "flex-end", marginTop: 12 }}><button onClick={onClose}>Cancel</button>
@@ -344,21 +348,22 @@ export function Risks({ data }: { data: ProjectData }) {
 
 function RiskDialog({ data, initial, onSave, onDelete, onClose }: { data: ProjectData; initial?: Risk; onSave: (v: Partial<Risk>) => void; onDelete?: () => void; onClose: () => void }) {
   const [v, setV] = useState<Partial<Risk>>(initial ?? { title: "", category: RISK_CATEGORIES[0], cause: "", likelihood: 3, impact: 3, mitigation: "", ownerId: null, status: "Open", residualLikelihood: null, residualImpact: null, reviewDate: "" });
-  const num = (k: keyof Risk) => <select value={(v[k] as number | null) ?? ""} onChange={(e) => setV({ ...v, [k]: e.target.value ? +e.target.value : null })}>{(k.startsWith("residual") ? ["", 1, 2, 3, 4, 5] : [1, 2, 3, 4, 5]).map((n) => <option key={n} value={n}>{n || "—"}</option>)}</select>;
+  const num = (k: keyof Risk) => <select id={`risk-${String(k)}`} value={(v[k] as number | null) ?? ""} onChange={(e) => setV({ ...v, [k]: e.target.value ? +e.target.value : null })}>{(k.startsWith("residual") ? ["", 1, 2, 3, 4, 5] : [1, 2, 3, 4, 5]).map((n) => <option key={n} value={n}>{n || "—"}</option>)}</select>;
+  const dlg = useDialog(onClose);
   return (
-    <div className="modal-bg" onClick={onClose}><div className="modal" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-bg" onClick={onClose}><div className="modal" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
       <h2 style={{ marginTop: 0 }}>{initial ? `Risk R${String(initial.number).padStart(2, "0")}` : "New risk"}</h2>
-      <label>Risk *</label><input value={v.title} onChange={(e) => setV({ ...v, title: e.target.value })} placeholder="e.g. Late survey information delays design models" />
+      <label htmlFor="coordination-risk">Risk *</label><input id="coordination-risk" value={v.title} onChange={(e) => setV({ ...v, title: e.target.value })} placeholder="e.g. Late survey information delays design models" />
       <div className="grid g2">
-        <div><label>Category</label><select value={v.category} onChange={(e) => setV({ ...v, category: e.target.value })}>{RISK_CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
-        <div><label>Owner</label><select value={v.ownerId ?? ""} onChange={(e) => setV({ ...v, ownerId: e.target.value || null })}><option value="">—</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
-        <div><label>Likelihood (1–5)</label>{num("likelihood")}</div><div><label>Impact (1–5)</label>{num("impact")}</div>
-        <div><label>Residual likelihood</label>{num("residualLikelihood")}</div><div><label>Residual impact</label>{num("residualImpact")}</div>
-        <div><label>Status</label><select value={v.status} onChange={(e) => setV({ ...v, status: e.target.value })}>{["Open", "Mitigating", "Closed"].map((c) => <option key={c}>{c}</option>)}</select></div>
-        <div><label>Next review</label><input type="date" value={v.reviewDate} onChange={(e) => setV({ ...v, reviewDate: e.target.value })} /></div>
+        <div><label htmlFor="coordination-category">Category</label><select id="coordination-category" value={v.category} onChange={(e) => setV({ ...v, category: e.target.value })}>{RISK_CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></div>
+        <div><label htmlFor="coordination-owner">Owner</label><select id="coordination-owner" value={v.ownerId ?? ""} onChange={(e) => setV({ ...v, ownerId: e.target.value || null })}><option value="">—</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></div>
+        <div><label htmlFor="risk-likelihood">Likelihood (1–5)</label>{num("likelihood")}</div><div><label htmlFor="risk-impact">Impact (1–5)</label>{num("impact")}</div>
+        <div><label htmlFor="risk-residualLikelihood">Residual likelihood</label>{num("residualLikelihood")}</div><div><label htmlFor="risk-residualImpact">Residual impact</label>{num("residualImpact")}</div>
+        <div><label htmlFor="coordination-status-2">Status</label><select id="coordination-status-2" value={v.status} onChange={(e) => setV({ ...v, status: e.target.value })}>{["Open", "Mitigating", "Closed"].map((c) => <option key={c}>{c}</option>)}</select></div>
+        <div><label htmlFor="coordination-next-review">Next review</label><input id="coordination-next-review" type="date" value={v.reviewDate} onChange={(e) => setV({ ...v, reviewDate: e.target.value })} /></div>
       </div>
-      <label>Cause</label><input value={v.cause} onChange={(e) => setV({ ...v, cause: e.target.value })} />
-      <label>Mitigation / treatment</label><textarea value={v.mitigation} onChange={(e) => setV({ ...v, mitigation: e.target.value })} />
+      <label htmlFor="coordination-cause">Cause</label><input id="coordination-cause" value={v.cause} onChange={(e) => setV({ ...v, cause: e.target.value })} />
+      <label htmlFor="coordination-mitigation-treatment">Mitigation / treatment</label><textarea id="coordination-mitigation-treatment" value={v.mitigation} onChange={(e) => setV({ ...v, mitigation: e.target.value })} />
       <div className="row spread" style={{ marginTop: 12 }}>{onDelete ? <button className="danger" onClick={() => confirm("Delete this risk?") && onDelete()}>Delete</button> : <span />}
         <div className="row"><button onClick={onClose}>Cancel</button><button className="primary" disabled={!v.title} onClick={() => onSave(v)}>Save</button></div></div>
     </div></div>
@@ -395,8 +400,8 @@ export function Handover({ data }: { data: ProjectData }) {
             <tr key={i.id} className={i.status === "Complete" ? "done-row" : ""}>
               <td style={{ width: "40%" }}>{i.title}<div className="tiny muted">{i.clause}</div></td>
               <td><select disabled={!editor} value={i.status} onChange={(e) => set(i.id, { status: e.target.value })} style={{ width: "auto" }}>{["Not started", "In progress", "Complete", "N/A"].map((s) => <option key={s}>{s}</option>)}</select></td>
-              <td><select disabled={!editor} value={i.ownerId ?? ""} onChange={(e) => set(i.id, { ownerId: e.target.value || null })} style={{ width: "auto" }}><option value="">Owner —</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></td>
-              <td><select disabled={!editor} value={i.fileId ?? ""} onChange={(e) => set(i.id, { fileId: e.target.value || null })} style={{ maxWidth: 220 }}><option value="">Evidence file —</option>{files.map((f) => <option key={f.id} value={f.id}>{f.name} ({f.state})</option>)}</select>
+              <td><select aria-label="Owner —" disabled={!editor} value={i.ownerId ?? ""} onChange={(e) => set(i.id, { ownerId: e.target.value || null })} style={{ width: "auto" }}><option value="">Owner —</option>{data.members.map((m) => <option key={m.userId} value={m.userId}>{m.name}</option>)}</select></td>
+              <td><select aria-label="Evidence file —" disabled={!editor} value={i.fileId ?? ""} onChange={(e) => set(i.id, { fileId: e.target.value || null })} style={{ maxWidth: 220 }}><option value="">Evidence file —</option>{files.map((f) => <option key={f.id} value={f.id}>{f.name} ({f.state})</option>)}</select>
                 {i.fileId && <a className="small" href={`/api/projects/${pid}/files/${i.fileId}/download`}> ⬇</a>}</td>
             </tr>
           ))}</tbody></table>
@@ -404,7 +409,7 @@ export function Handover({ data }: { data: ProjectData }) {
       ))}
       {editor && <form className="row" onSubmit={async (e) => { e.preventDefault(); await api(`/projects/${pid}/handover`, { body: newItem }); setNewItem({ ...newItem, title: "" }); load(); }}>
         <select value={newItem.category} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })} style={{ width: "auto" }}>{[...new Set([...cats, "Documentation"])].map((c) => <option key={c}>{c}</option>)}</select>
-        <input required placeholder="Add a project-specific handover item" value={newItem.title} onChange={(e) => setNewItem({ ...newItem, title: e.target.value })} style={{ maxWidth: 360 }} />
+        <input aria-label="Add a project-specific handover item" required placeholder="Add a project-specific handover item" value={newItem.title} onChange={(e) => setNewItem({ ...newItem, title: e.target.value })} style={{ maxWidth: 360 }} />
         <button>+ Add item</button>
       </form>}
     </>

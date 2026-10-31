@@ -36,10 +36,10 @@ function List({ data }: { data: ProjectData }) {
         try { const r = await api<{ id: string }>(`/projects/${pid}/reviews`, { body: { ...f, taskTeamId: f.taskTeamId || null } }); navigate(`/projects/${pid}/reviews/${r.id}`); } catch (err) { toast((err as Error).message, "error"); }
       }}>
         <b>New review</b>
-        <input required placeholder="Model / review title, e.g. ARC model – Stage 3" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} style={{ maxWidth: 300 }} />
+        <input aria-label="Model / review title, e.g. ARC model – Stage 3" required placeholder="Model / review title, e.g. ARC model – Stage 3" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} style={{ maxWidth: 300 }} />
         <select value={f.discipline} onChange={(e) => setF({ ...f, discipline: e.target.value })} style={{ maxWidth: 160 }}>{DISCIPLINES.map((d) => <option key={d}>{d}</option>)}</select>
-        <select value={f.taskTeamId} onChange={(e) => setF({ ...f, taskTeamId: e.target.value })} style={{ maxWidth: 200 }}><option value="">Task team —</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
-        <input placeholder="Milestone / stage" value={f.milestone} onChange={(e) => setF({ ...f, milestone: e.target.value })} style={{ maxWidth: 180 }} />
+        <select aria-label="Task team —" value={f.taskTeamId} onChange={(e) => setF({ ...f, taskTeamId: e.target.value })} style={{ maxWidth: 200 }}><option value="">Task team —</option>{teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
+        <input aria-label="Milestone / stage" placeholder="Milestone / stage" value={f.milestone} onChange={(e) => setF({ ...f, milestone: e.target.value })} style={{ maxWidth: 180 }} />
         <button className="primary">Start review</button>
       </form>}
       <div className="table-wrap"><table className="data">
@@ -108,7 +108,7 @@ function Editor({ data, id }: { data: ProjectData; id: string }) {
                   <button key={g.g} disabled={!editable} title={g.label} className={res.grade === g.g ? "on" : ""} style={res.grade === g.g && g.g !== "NA" ? { background: GRADE_COLOR[g.g], color: "#fff" } : undefined}
                     onClick={() => setResult(c.id, { grade: (res.grade === g.g ? "" : g.g) as Grade | "" })}>{g.g === "NA" ? "N/A" : g.g}</button>
                 ))}</div></td>
-                <td style={{ width: "30%" }}><input disabled={!editable} defaultValue={res.comment} placeholder="Comment / evidence" onBlur={(e) => e.target.value !== res.comment && setResult(c.id, { comment: e.target.value })} /></td>
+                <td style={{ width: "30%" }}><input aria-label="Comment / evidence" disabled={!editable} defaultValue={res.comment} placeholder="Comment / evidence" onBlur={(e) => e.target.value !== res.comment && setResult(c.id, { comment: e.target.value })} /></td>
               </tr>
             );
           })}</tbody></table>

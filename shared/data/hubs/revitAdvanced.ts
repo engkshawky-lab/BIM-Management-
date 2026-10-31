@@ -98,7 +98,7 @@ export const revitAdvancedSection: HubSection = {
           title: "Classification and data sources",
           columns: ["Source", "What it gives you", "How it is used in Revit"],
           rows: [
-            ["Uniclass 2015", "UK classification tables such as Ss systems, Pr products and EF elements", "Classification parameters on types, exported to IfcClassificationReference"],
+            ["Uniclass", "UK classification tables such as Ss systems, Pr products and EF elements", "Classification parameters on types, exported to IfcClassificationReference"],
             ["OmniClass", "North American classification tables, including table 23 for products", "Assembly code or a shared parameter, depending on the project"],
             ["buildingSMART Data Dictionary (bSDD)", "Shared definitions of classes and properties from many dictionaries", "Reference for property names and allowed values; some tools link to it directly"],
             ["IFC property sets (Pset_)", "Standard properties for each IFC class", "Target of the export mapping"],

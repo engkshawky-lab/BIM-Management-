@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useDialog } from "../components/Dialog";
 import { getLocale, t } from "../i18n";
 import { VIDEOS, VIDEO_LEVELS, VIDEO_TOPICS, type Video } from "../../../shared/data/videos";
 import { TONES } from "./HubPage";
@@ -137,14 +138,10 @@ export default function Videos({ topic }: { topic?: string }) {
 }
 
 function Player({ v, arSummary, seen, onToggle, onClose }: { v: Video; arSummary: boolean; seen: boolean; onToggle: () => void; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  const dlg = useDialog(onClose);
   return (
     <div className="modal-bg" onClick={onClose}>
-      <div className="modal wide vid-modal" role="dialog" aria-modal="true" aria-label={v.title} onClick={(e) => e.stopPropagation()}>
+      <div className="modal wide vid-modal" ref={dlg} role="dialog" aria-modal="true" aria-label={v.title} onClick={(e) => e.stopPropagation()}>
         <div className="vid-modal-head">
           <div><b dir="auto">{v.title}</b><small className="muted" dir="auto">{v.channel}</small></div>
           <button type="button" className="small" onClick={onClose} aria-label={t("Close")}>✕</button>

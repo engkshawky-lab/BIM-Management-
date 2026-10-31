@@ -67,7 +67,7 @@ export default function Traceability({ data }: { data: ProjectData }) {
             <tr key={r.id}>
               <td className="mono small">{r.ref}<div className="tiny muted">{r.source}</div></td>
               <td className="small">{r.text}{r.category && <div className="tiny muted">{r.category}</div>}</td>
-              <td><textarea disabled={!editor} defaultValue={r.response} placeholder="How the BEP responds…" style={{ minHeight: 40 }} onBlur={(e) => e.target.value !== r.response && put(r.id, { response: e.target.value })} /></td>
+              <td><textarea aria-label="How the BEP responds…" disabled={!editor} defaultValue={r.response} placeholder="How the BEP responds…" style={{ minHeight: 40 }} onBlur={(e) => e.target.value !== r.response && put(r.id, { response: e.target.value })} /></td>
               <td>
                 <div className="chips">{r.deliverableIds.map((x) => { const d = dels.find((y) => y.id === x); return d ? <span key={x} className="chip">{d.containerName || d.title} {editor && <button className="linklike" onClick={() => put(r.id, { deliverableIds: r.deliverableIds.filter((y) => y !== x) })}>✕</button>}</span> : null; })}</div>
                 {editor && dels.length > 0 && <select value="" onChange={(e) => e.target.value && put(r.id, { deliverableIds: [...r.deliverableIds, e.target.value] })} style={{ marginTop: 4 }}><option value="">+ link container…</option>{dels.filter((d) => !r.deliverableIds.includes(d.id)).map((d) => <option key={d.id} value={d.id}>{d.containerName || d.title}</option>)}</select>}

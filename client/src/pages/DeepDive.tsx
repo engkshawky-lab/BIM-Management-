@@ -89,7 +89,7 @@ export default function DeepDiveView({ d, name }: { d: DeepDive; name: string })
       </div>}
 
       {tab === "clauses" && <>
-        <input placeholder={t("Search clauses…")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 380, marginBottom: 8 }} />
+        <input aria-label={t("Search clauses…")} placeholder={t("Search clauses…")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 380, marginBottom: 8 }} />
         {topics.map((tp) => { const list = d.clauses.filter((c) => c.topic === tp && (!q || (c.label + " " + c.text + " " + t(c.label) + " " + t(c.text)).toLowerCase().includes(q.toLowerCase()))); return list.length ? (
           <div key={tp} style={{ marginBottom: 10 }}>
             <div className="wf-sub">{t(tp)}</div>

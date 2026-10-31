@@ -136,7 +136,7 @@ export const templates: DocTemplate[] = [
     sections: [projectInfo,
       sec("table", "Model production and delivery", "One row per element or system. Use LOIN references from the delivery plan.", [
         table("rows", "MPDT", ["Element / system", "Classification", "Model author (task team)", "Stage 2 LOIN", "Stage 3 LOIN", "Stage 4 LOIN", "Stage 5 LOIN", "Notes"], [
-          ["External walls", "Ss_25_10", "Architecture", "LOIN-02", "LOIN-03", "LOIN-04", "LOIN-05", ""],
+          ["External walls", "EF_25_10 Walls", "Architecture", "LOIN-02", "LOIN-03", "LOIN-04", "LOIN-05", ""],
           ["Structural frame", "Ss_20_10", "Structures", "LOIN-02", "LOIN-03", "LOIN-04", "LOIN-05", ""],
           ["Ductwork", "Ss_65_40", "MEP", "", "LOIN-03", "LOIN-04", "LOIN-05", "Fabrication model by contractor at Stage 5"],
         ]),

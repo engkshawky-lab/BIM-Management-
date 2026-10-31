@@ -53,9 +53,9 @@ export default function NamingCheck() {
 
       <div className="card" style={{ marginBottom: 12 }}>
         <div className="grid g4">
-          <div><label>Project code</label><input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. HOS01" /></div>
-          <div><label>Originator codes <span className="muted small">(comma separated, optional)</span></label><input value={orgs} onChange={(e) => setOrgs(e.target.value.toUpperCase())} placeholder="e.g. ABC, XYZ" /></div>
-          <div><label>Field separator</label><select value={sep} onChange={(e) => setSep(e.target.value)}><option value="-">- (hyphen)</option><option value="_">_ (underscore)</option></select></div>
+          <div><label htmlFor="namingcheck-project-code">Project code</label><input id="namingcheck-project-code" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="e.g. HOS01" /></div>
+          <div><label htmlFor="namingcheck-originator-codes">Originator codes <span className="muted small">(comma separated, optional)</span></label><input id="namingcheck-originator-codes" value={orgs} onChange={(e) => setOrgs(e.target.value.toUpperCase())} placeholder="e.g. ABC, XYZ" /></div>
+          <div><label htmlFor="namingcheck-field-separator">Field separator</label><select id="namingcheck-field-separator" value={sep} onChange={(e) => setSep(e.target.value)}><option value="-">- (hyphen)</option><option value="_">_ (underscore)</option></select></div>
           <div><label>Delivery plan</label>
             {plan ? <label className="row small" style={{ gap: 6, marginTop: 6 }}><input type="checkbox" checked={usePlan} onChange={(e) => setUsePlan(e.target.checked)} style={{ width: "auto" }} />Match against the {plan.kind.toUpperCase()} ({plan.rows.length} containers)</label>
               : <div className="small muted" style={{ marginTop: 6 }}>No TIDP or MIDP saved yet. <a href="#/ai-tools/plans">Create one</a> to check names against it.</div>}

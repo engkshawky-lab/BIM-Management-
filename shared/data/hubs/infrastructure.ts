@@ -256,7 +256,7 @@ export const infrastructureHub: Hub = {
                 ["International", "ISO 19650 parts 1 to 6", "Information management across the asset life cycle, including operation (part 3), security (part 5) and health and safety information (part 6, first published in 2025)"],
                 ["International", "ISO 16739-1:2024 (IFC 4.3 ADD2)", "Open data schema for exchanging building and infrastructure models"],
                 ["International", "ISO 7817-1:2024", "Level of information need concepts and principles for specifying information"],
-                ["International", "ISO 23386 and ISO 23387 (current edition 2025)", "Describing and maintaining properties in interconnected data dictionaries, and data templates for construction objects"],
+                ["International", "ISO 23386:2020 and ISO 23387:2020 (check for later editions)", "Describing and maintaining properties in interconnected data dictionaries, and data templates for construction objects"],
                 ["International", "ISO 12006-2 and ISO 12006-3", "Frameworks for classification and for object-oriented information"],
                 ["International", "ISO 55000 series", "Asset management systems that the asset information model should serve"],
                 ["International", "ISO 19100 series (geographic information)", "Geospatial data standards that matter when BIM data meets GIS, including ISO 19111 for coordinate reference systems"],

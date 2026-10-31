@@ -179,8 +179,8 @@ export default function BepWriter() {
         {source === "eir" ? <>
           <input type="file" accept=".pdf,.docx,.txt,.md" onChange={(e) => setFile(e.target.files?.[0] ?? null)} aria-label={t("EIR file")} disabled={!ai} />
           {file ? <div className="small muted">{file.name} · {(file.size / 1024).toFixed(0)} KB <button className="ghost small" onClick={() => setFile(null)}>{t("Remove")}</button></div>
-            : <textarea className="bw-eir" value={text} onChange={(e) => setText(e.target.value)} placeholder={t("…or paste the EIR text here")} disabled={!ai} />}
-        </> : <textarea className="bw-eir" value={brief} onChange={(e) => setBrief(e.target.value)} disabled={!ai}
+            : <textarea aria-label={t("…or paste the EIR text here")} className="bw-eir" value={text} onChange={(e) => setText(e.target.value)} placeholder={t("…or paste the EIR text here")} disabled={!ai} />}
+        </> : <textarea aria-label={t("Asset type and size, client, procurement route, stages in scope, key milestones, disciplines, software and CDE, any special requirements (security, COBie, LOIN)…")} className="bw-eir" value={brief} onChange={(e) => setBrief(e.target.value)} disabled={!ai}
           placeholder={t("Asset type and size, client, procurement route, stages in scope, key milestones, disciplines, software and CDE, any special requirements (security, COBie, LOIN)…")} />}
         <label className="bw-field">{t("Project name")}<input value={projectName} onChange={(e) => setProjectName(e.target.value)} disabled={!ai} /></label>
       </section>
