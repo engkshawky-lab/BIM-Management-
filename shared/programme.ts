@@ -71,6 +71,11 @@ const firstDate = (...vs: unknown[]) => { for (const v of vs) { const d = toIsoD
 
 // ---------------------------------------------------------------- text decoding
 
+// Windows-1252 bytes 0x80–0x9F (€, smart quotes, dashes…). Some Node builds decode the "windows-1252" label as
+// Latin-1 and turn these into control characters, so they are mapped here; 0x81, 0x8D, 0x8F, 0x90 and 0x9D are unassigned.
+const CP1252_HIGH = "\u20ac\u0081\u201a\u0192\u201e\u2026\u2020\u2021\u02c6\u2030\u0160\u2039\u0152\u008d\u017d\u008f\u0090\u2018\u2019\u201c\u201d\u2022\u2013\u2014\u02dc\u2122\u0161\u203a\u0153\u009d\u017e\u0178";
+const decodeCp1252 = (b: Uint8Array) => { let out = ""; for (const x of b) out += x >= 0x80 && x <= 0x9f ? CP1252_HIGH[x - 0x80] : String.fromCharCode(x); return out; };
+
 /**
  * File bytes → text: honours a UTF-8 / UTF-16 byte-order mark, UTF-16 without one (an XML file starting "<\0"),
  * an XML encoding declaration, and falls back to Windows-1252 (P6 XER and Excel CSV exports) when the bytes are not UTF-8.
@@ -85,8 +90,9 @@ export function decodeText(data: ArrayBuffer | Uint8Array): string {
   if (b.length >= 4 && b[0] === 0 && b[2] === 0 && b[1] !== 0) return dec("utf-16be", b);
   const declared = /^\s*<\?xml[^>]*\bencoding\s*=\s*["']([\w.:-]+)["']/i.exec(String.fromCharCode(...b.subarray(0, 200)))?.[1].toLowerCase();
   try { return dec("utf-8", b, true); } catch { /* not UTF-8 */ }
-  if (declared && !/^utf-?8$/.test(declared)) { try { return dec(declared, b); } catch { /* unknown label */ } }
-  return dec("windows-1252", b);
+  // WHATWG treats ISO-8859-1 / ASCII labels as Windows-1252 too
+  if (declared && !/^utf-?8$/.test(declared) && !/^(windows-1252|cp1252|iso-8859-1|latin-?1|us-ascii|ascii)$/.test(declared)) { try { return dec(declared, b); } catch { /* unknown label */ } }
+  return decodeCp1252(b);
 }
 
 /** Whole days from a to b (ISO dates); 0 when either is missing. */
