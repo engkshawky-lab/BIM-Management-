@@ -1,12 +1,13 @@
 import { Component, type ReactNode } from "react";
 import "./errorScreen.css";
+import { reportError } from "../lib/reportError";
 
 // Catches render errors and failed page downloads (for example after a new release replaced the files),
 // so the user sees a way out instead of a blank screen. Resets when the route changes.
 export default class ErrorBoundary extends Component<{ route: string; children: ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };
   static getDerivedStateFromError(error: Error) { return { error }; }
-  componentDidCatch(error: Error) { console.error(error); }
+  componentDidCatch(error: Error) { console.error(error); reportError(error); }
   componentDidUpdate(prev: { route: string }) { if (prev.route !== this.props.route && this.state.error) this.setState({ error: null }); }
   render() {
     const { error } = this.state;

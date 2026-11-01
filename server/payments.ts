@@ -19,7 +19,12 @@ const stripe = () => (client ??= new Stripe(process.env.STRIPE_SECRET_KEY!, {
   // STRIPE_API_HOST lets the test suite point at a local stand-in; production uses Stripe's default host
   ...(process.env.STRIPE_API_HOST ? { host: process.env.STRIPE_API_HOST, port: Number(process.env.STRIPE_API_PORT ?? 443), protocol: (process.env.STRIPE_API_PROTOCOL ?? "https") as "http" | "https" } : {}),
 }));
-const planForPrice = (price?: string | null) => Object.entries(PRICES).find(([, id]) => id && id === price)?.[0] ?? null;
+/** Stop an online subscription at once (used when an account is deleted). Never throws. */
+export async function cancelStripeSubscription(id: string | null | undefined) {
+  if (!id || !process.env.STRIPE_SECRET_KEY) return;
+  try { await stripe().subscriptions.cancel(id); } catch (e) { console.error("[stripe] cancel failed:", (e as Error).message); }
+}
+const planForPrice =(price?: string | null) => Object.entries(PRICES).find(([, id]) => id && id === price)?.[0] ?? null;
 
 async function upsert(userId: string, set: Partial<typeof schema.subscriptions.$inferInsert>) {
   const row = { plan: "free", status: "active", source: "stripe", ...set, updatedAt: new Date() };

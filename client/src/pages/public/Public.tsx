@@ -1,3 +1,4 @@
+import { ContactForm } from "./Contact";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { t } from "../../i18n";
 import { LangSwitch } from "../Login";
@@ -28,12 +29,12 @@ export function PublicLayout({ page, children }: { page: Page; children: ReactNo
   return (
     <div className="pub">
       <header className="pub-bar">
-        <a className="pub-brand" href="#/"><span className="pub-logo" aria-hidden="true">IM</span><b>{site.siteName}</b></a>
+        <a className="pub-brand" href="/"><span className="pub-logo" aria-hidden="true">IM</span><b>{site.siteName}</b></a>
         <button type="button" className="pub-menu-btn" aria-expanded={menu} aria-controls="pub-nav" onClick={() => setMenu(!menu)}>{t("Menu")}</button>
         <nav id="pub-nav" className={"pub-nav" + (menu ? " open" : "")} aria-label={t("Main")}>
-          {link("#/", "Home", page === "home")}
-          {site.showPricing && link("#/pricing", "Pricing", page === "pricing")}
-          {link("#/about", "About", page === "about")}
+          {link("/", "Home", page === "home")}
+          {site.showPricing && link("/pricing", "Pricing", page === "pricing")}
+          {link("/about", "About", page === "about")}
           <LangSwitch onChange={() => setLang((n) => n + 1)} />
           <a href="#/login" className="btn">{t("Sign in")}</a>
           {site.allowSignups && <a href="#/signup" className="btn primary">{t("Start free")}</a>}
@@ -95,7 +96,7 @@ export function Landing() {
           <p className="pub-lead">{t("One place to learn the standard, write the documents, run the common data environment and check models, with AI tools built for BIM teams.")}</p>
           <div className="pub-cta">
             <a className="btn primary lg" href={start.href}>{t(start.label)}</a>
-            {site.showPricing && <a className="btn lg" href="#/pricing">{t("See plans and pricing")}</a>}
+            {site.showPricing && <a className="btn lg" href="/pricing">{t("See plans and pricing")}</a>}
           </div>
           <p className="small muted">{t("Free plan, no card needed.")}</p>
         </div>
@@ -147,7 +148,7 @@ export function Landing() {
       <section className="pub-section alt">
         <h2>{t("Plans for every stage")}</h2>
         <PlanCards compact />
-        <p className="pub-center"><a href="#/pricing">{t("Compare all features →")}</a></p>
+        <p className="pub-center"><a href="/pricing">{t("Compare all features →")}</a></p>
       </section>
 
       <section className="pub-section">
@@ -268,7 +269,6 @@ const VALUES = [
 
 export function About({ embedded = false }: { embedded?: boolean }) {
   const { site } = useSite();
-  const start = useStart();
   const body = (
     <>
       <section className={"pub-section" + (embedded ? " embedded" : "")}>
@@ -294,10 +294,9 @@ export function About({ embedded = false }: { embedded?: boolean }) {
         </ul>
       </section>
       <section className="pub-band">
-        <h2>{t("Talk to us")}</h2>
-        {site.contactEmail
-          ? <a className="btn primary lg" href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>
-          : <a className="btn primary lg" href={start.href}>{t(start.account)}</a>}
+        <h2 id="contact">{t("Talk to us")}</h2>
+        <p className="muted">{t("Questions about plans, a demo for your team, or help getting started: send us a message.")}</p>
+        <ContactForm source={embedded ? "about (signed in)" : "about"} email={site.contactEmail || undefined} />
       </section>
     </>
   );

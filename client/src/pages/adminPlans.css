@@ -33,3 +33,13 @@
 .adm-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
 .adm-link { display: grid; gap: 2px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; color: var(--text); background: var(--surface-2); }
 .adm-link:hover { border-color: var(--accent); }
+.adm-weeks { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; align-items: end; height: 120px; margin: 8px 0 4px; }
+.adm-weeks > div { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+.adm-weeks span { display: block; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; }
+.adm-weeks b { position: absolute; top: -2px; inset-inline: 0; text-align: center; font-size: 10px; font-weight: 600; color: var(--muted); }
+.adm-board { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; max-width: 760px; }
+.adm-board li { display: grid; grid-template-columns: 40px 1fr auto 60px; gap: 10px; align-items: center; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.adm-board li > b:last-child { text-align: end; font-size: 16px; }
+.adm-rank { font-weight: 700; text-align: center; font-size: 16px; }
+.adm-check-frame { position: absolute; width: 1280px; height: 800px; left: -10000px; top: 0; border: 0; visibility: hidden; }
+@media (max-width: 600px) { .adm-board li { grid-template-columns: 32px 1fr 50px; } .adm-board li > span.small { display: none; } }

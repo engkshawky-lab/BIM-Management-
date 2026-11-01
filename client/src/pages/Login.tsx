@@ -42,8 +42,9 @@ export default function Login({ onSignedIn, initialMode = "login" }: { onSignedI
     try {
       if (mode === "forgot") { const r = await api<{ message: string }>("/auth/forgot", { body: { email: f.email } }); setSent(r.message); return; }
       const body = mode === "login" ? { email: f.email, password: f.password } : { ...f, locale: getLocale() };
-      const r = await api<{ user: User }>(`/auth/${mode}`, { body });
-      onSignedIn(r.user);
+      const r = await api<{ user?: User; pending?: boolean; message?: string }>(`/auth/${mode}`, { body });
+      if (r.pending) { setSent(r.message ?? ""); setMode("login"); return; }
+      onSignedIn(r.user!);
     } catch (err) { setError((err as Error).message); } finally { setBusy(false); }
   };
 

@@ -26,7 +26,6 @@ export function SiteProvider({ children }: { children: ReactNode }) {
       .catch(() => undefined);
   }, []);
   useEffect(() => { refresh(); window.addEventListener(SITE_CHANGED, refresh); return () => window.removeEventListener(SITE_CHANGED, refresh); }, [refresh]);
-  useEffect(() => { document.title = state.site.siteName; }, [state.site.siteName]);
   return <Ctx.Provider value={{ ...state, refresh }}>{children}</Ctx.Provider>;
 }
 

@@ -32,7 +32,7 @@ r.post("/admin/mail/test", requireAdmin, h(async (req, res) => {
 }));
 
 r.get("/admin/users", requireAdmin, h(async (_req, res) => {
-  const users = await db.select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, organization: schema.users.organization, role: schema.users.role, disabled: schema.users.disabled, createdAt: schema.users.createdAt, lastLoginAt: schema.users.lastLoginAt }).from(schema.users).orderBy(desc(schema.users.createdAt));
+  const users = await db.select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, organization: schema.users.organization, role: schema.users.role, disabled: schema.users.disabled, createdAt: schema.users.createdAt, lastLoginAt: schema.users.lastLoginAt, emailVerifiedAt: schema.users.emailVerifiedAt }).from(schema.users).orderBy(desc(schema.users.createdAt));
   const memberships = await db.select({ userId: schema.projectMembers.userId, n: count() }).from(schema.projectMembers).groupBy(schema.projectMembers.userId);
   const m = new Map(memberships.map((x) => [x.userId, Number(x.n)]));
   const subs = new Map((await db.select().from(schema.subscriptions)).map((s) => [s.userId, s]));

@@ -1,7 +1,8 @@
 import { t } from "../i18n";
 import { useEffect, useState, type FormEvent } from "react";
-import { initials, useSession } from "../App";
+import { initials, navigate, useSession } from "../App";
 import { api, fmtDate, type Project, type User } from "../lib/api";
+import { MyData } from "./Account";
 
 export default function ProfilePage() {
   const { user, setUser, toast } = useSession();
@@ -69,6 +70,7 @@ export default function ProfilePage() {
               <a key={p.id} href={`#/projects/${p.id}`} className="list-item"><span><b>{p.code}</b> {p.name}</span><span className="badge">{p.role}</span></a>
             ))}
           </div>
+          <MyData user={user} toast={toast} onDeleted={() => { setUser(null); navigate("/"); }} />
         </div>
       </div>
     </>

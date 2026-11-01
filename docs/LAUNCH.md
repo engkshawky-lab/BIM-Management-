@@ -46,6 +46,9 @@ rest need the owner's accounts, keys or decisions.
 - [ ] Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`. Without them, password
       reset links only show in the admin console.
 - [ ] Add SPF, DKIM and DMARC records for the sending domain, then test sign-up, reset and the daily digest.
+- [ ] Test the sign-up confirmation email: a new account sees "Confirm your email address" until it opens the link
+      (Admin › Settings › Confirm email on sign-up; administrators can confirm an address by hand in Users).
+- [ ] Decide whether new accounts need approval (Admin › Settings › Approve new accounts; queue in Admin › Pending).
 
 ## 6. Connectors and AI tools
 
@@ -62,6 +65,14 @@ rest need the owner's accounts, keys or decisions.
 - [ ] If a reverse proxy sits in front, allow uploads as large as `VIDEO_MAX_MB` (nginx: `client_max_body_size 2g;`)
       and a long enough read timeout for video uploads under Our videos.
 - [ ] Point an uptime monitor at `https://<domain>/api/health`.
-- [ ] Collect the app's logs (`docker compose logs app`) somewhere searchable and alert on `500` errors.
+- [ ] Collect the app's logs (`docker compose logs app`) somewhere searchable.
+- [ ] Check error alerts reach you: set Admin › Settings › Logging › Alert email (or a Slack/Teams webhook).
+      Server 500s, background failures and page crashes are sent once an hour per kind; Recent errors lists them.
+- [ ] Set `PUBLIC_URL` / Public address so robots.txt, sitemap.xml and canonical links use the real domain, then
+      submit `https://<domain>/sitemap.xml` to Google Search Console and Bing Webmaster Tools.
+- **(done)** Public pages have real addresses (/, /pricing, /about, /legal/…) with their own titles, descriptions and
+  link-preview tags; favicon, robots.txt and sitemap.xml are served.
+- **(done)** Users can download their data and delete their account (Profile › Your data); administrators can do the
+  same for a user in Admin › Users when a request comes by email.
 - **(done)** Code-split client: the first download is about 340 KB (was 3.5 MB); pages and the Arabic dictionary
   load on demand.

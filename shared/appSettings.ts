@@ -29,6 +29,8 @@ export const SETTINGS: SettingDef[] = [
   { key: "defaultLocale", group: "General", label: "Default language", help: "Language for visitors and new users who have not chosen one.", type: "select", default: "en", options: [{ value: "en", label: "English" }, { value: "ar", label: "Arabic" }], public: true },
   // Sign-up & access
   { key: "allowSignups", group: "Sign-up & access", label: "Allow new sign-ups", help: "When off, only invited people (and the first administrator) can create an account.", type: "bool", default: true, public: true },
+  { key: "verifyEmail", group: "Sign-up & access", label: "Confirm email on sign-up", help: "New accounts open the link in a confirmation email before they can use the portal. Applies only when email (SMTP) is set up.", type: "bool", default: true, env: "VERIFY_EMAIL", fromEnv: (v) => v !== "off" },
+  { key: "approveSignups", group: "Sign-up & access", label: "Approve new accounts", help: "New accounts wait in Admin › Pending until an administrator approves them. People invited to a project are approved at once.", type: "bool", default: false, public: true },
   { key: "maintenanceMode", group: "Sign-up & access", label: "Maintenance mode", help: "When on, only administrators can use the portal; everyone else sees the maintenance message.", type: "bool", default: false, public: true },
   { key: "maintenanceMessage", group: "Sign-up & access", label: "Maintenance message", help: "Shown to users while maintenance mode is on.", type: "textarea", default: "The portal is being updated and will be back shortly. Thank you for your patience.", public: true },
   // Announcement
@@ -57,6 +59,9 @@ export const SETTINGS: SettingDef[] = [
   // Logging
   { key: "logRequests", group: "Logging", label: "API request log", help: "One line per request with an id, never bodies or cookies.", type: "select", default: "all", env: "LOG_REQUESTS",
     options: [{ value: "all", label: "Every request" }, { value: "errors", label: "Errors and slow requests" }, { value: "off", label: "Off" }] },
+  { key: "errorAlerts", group: "Logging", label: "Error alerts", help: "Email or post a message when the server or a page fails. Each kind of error is reported at most once an hour.", type: "bool", default: true, env: "ERROR_ALERTS", fromEnv: (v) => v !== "off" },
+  { key: "alertEmail", group: "Logging", label: "Alert email", help: "Where error alerts go. Empty = every administrator. Needs email (SMTP).", type: "email", default: "", env: "ALERT_EMAIL" },
+  { key: "alertWebhook", group: "Logging", label: "Alert webhook", help: "Optional Slack, Teams or other incoming-webhook address that receives each alert as a message.", type: "url", default: "", env: "ALERT_WEBHOOK" },
 ];
 
 export const settingDef = (key: string) => SETTINGS.find((s) => s.key === key);
@@ -87,7 +92,7 @@ export function cleanSettings(input: Record<string, unknown>): SettingsMap {
     if (s.type === "select" && !s.options?.some((o) => o.value === str)) continue;
     if (s.type === "email" && str && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str)) continue;
     if (s.type === "url" && str && !/^https?:\/\/[^\s]+$/.test(str)) continue;
-    if (s.key === "announcementLink" && str && !/^(#\/|https?:\/\/)/.test(str)) continue;
+    if (s.key === "announcementLink" && str && !/^(#?\/(?!\/)|https?:\/\/)/.test(str)) continue;
     out[s.key] = str;
   }
   return out;

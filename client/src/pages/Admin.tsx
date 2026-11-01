@@ -4,12 +4,26 @@ import { api, fmtDate } from "../lib/api";
 import { PromoCodes } from "./Billing";
 import AdminPlans from "./AdminPlans";
 import AdminSettings from "./AdminSettings";
+import { AiUsage, Learning, Leads, PageCheck, Pending, Sessions, Statistics, Subscriptions } from "./AdminInsights";
+import { t } from "../i18n";
 
-interface UserRow { id: string; name: string; email: string; organization: string; role: string; disabled: boolean; projects: number; createdAt: string; lastLoginAt: string | null; plan: string; renewsAt: string | null }
+interface UserRow { id: string; name: string; email: string; organization: string; role: string; disabled: boolean; projects: number; createdAt: string; lastLoginAt: string | null; plan: string; renewsAt: string | null; emailVerifiedAt: string | null }
 interface Fb { id: string; kind: string; message: string; page: string; status: string; name: string; email: string; createdAt: string; reply: string; repliedAt: string | null; hasScreenshot: boolean }
 interface Act { id: string; project: string; user: string; summary: string; link: string; createdAt: string }
 interface Branding { orgName: string; color: string; logo: string; footer: string }
-const TABS = [["overview", "Overview"], ["settings", "Settings"], ["users", "Users"], ["plans", "Plans & access"], ["codes", "Promo codes"], ["activity", "Activity log"], ["feedback", "Feedback"], ["branding", "Branding"]] as const;
+// grouped as in the old control panel: people, money, usage, content and site, and health
+const TABS = [
+  ["overview", "Overview"], ["stats", "Statistics"], ["users", "Users"], ["pending", "Pending"], ["sessions", "Sessions"],
+  ["plans", "Plans & access"], ["subscriptions", "Subscriptions"], ["codes", "Promo codes"], ["leads", "Leads"],
+  ["ai", "AI usage"], ["learning", "Learning progress"], ["leaderboard", "Leaderboard"],
+  ["settings", "Settings"], ["branding", "Branding"], ["feedback", "Feedback"], ["activity", "Activity log"], ["check", "Page check"],
+] as const;
+// managed on their own pages
+const LINK_TABS = [["#/videos/ours", "Videos"], ["#/downloads", "Downloads"]] as const;
+const VIEWS: Record<string, () => JSX.Element> = {
+  stats: Statistics, pending: Pending, sessions: Sessions, subscriptions: Subscriptions, leads: Leads, ai: AiUsage,
+  learning: () => <Learning />, leaderboard: () => <Learning board />, check: PageCheck,
+};
 
 function Overview() {
   const { toast } = useSession();
@@ -33,13 +47,15 @@ function Users() {
   useEffect(() => { load(); }, [load]);
   if (!rows) return <p className="muted">Loading…</p>;
   const upd = async (id: string, body: object) => { try { await api(`/admin/users/${id}`, { method: "PUT", body }); load(); } catch (e) { toast((e as Error).message, "error"); } };
-  const list = rows.filter((u) => !q || `${u.name} ${u.email} ${u.organization}`.toLowerCase().includes(q.toLowerCase()));
+  const list = rows.filter((u) => !u.email.endsWith("@deleted.invalid") || q === "deleted").filter((u) => !q || q === "deleted" || `${u.name} ${u.email} ${u.organization}`.toLowerCase().includes(q.toLowerCase()));
+  const act = async (path: string, method: string, done: string) => { try { await api(path, { method, body: {} }); toast(done); load(); } catch (e) { toast((e as Error).message, "error"); } };
+  const remove = (u: UserRow) => { if (prompt(`Delete ${u.name} (${u.email})? Personal details are erased, projects only they belong to are deleted and shared projects they own pass to another member. Type DELETE to confirm.`) === "DELETE") act(`/admin/users/${u.id}`, "DELETE", "User deleted"); };
   return (
     <>
       <input aria-label="Search users…" placeholder="Search users…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 320, marginBottom: 10 }} />
       {link && <div className="banner info">One-time reset link for <b>{link.email}</b> (valid 60 minutes) — send it to them securely: <code style={{ wordBreak: "break-all" }}>{link.link}</code> <button className="small" onClick={() => navigator.clipboard?.writeText(link.link)}>Copy</button></div>}
       <div className="table-wrap"><table className="data">
-        <thead><tr><th>Name</th><th>Email</th><th>Organisation</th><th>Projects</th><th>Joined</th><th>Last sign-in</th><th>Role</th><th>Plan</th><th>Status</th><th /></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Organisation</th><th>Projects</th><th>Joined</th><th>Last sign-in</th><th>Role</th><th>Plan</th><th>Status</th><th>Email</th><th>Actions</th></tr></thead>
         <tbody>{list.map((u) => (
           <tr key={u.id} style={u.disabled ? { opacity: 0.6 } : undefined}>
             <td>{u.name}</td><td className="small">{u.email}</td><td className="small">{u.organization}</td><td>{u.projects}</td>
@@ -48,7 +64,12 @@ function Users() {
             <td><select aria-label="Plan" value={u.plan === "enterprise" ? "expert" : u.plan} onChange={async (e) => { const plan = e.target.value; const m = plan === "free" ? null : prompt("For how many months? (leave empty for no end date)", "12"); if (m === null && plan !== "free") return; try { await api(`/admin/users/${u.id}/plan`, { method: "PUT", body: { plan, months: m ? Number(m) : null } }); load(); } catch (err) { toast((err as Error).message, "error"); } }}>
               <option value="free">Free</option><option value="starter">Starter</option><option value="pro">Professional</option><option value="expert">Expert</option></select>{u.renewsAt && <div className="tiny muted">until {fmtDate(u.renewsAt)}</div>}</td>
             <td>{u.id !== user.id && <button className="small" onClick={() => upd(u.id, { disabled: !u.disabled })}>{u.disabled ? "Enable" : "Disable"}</button>}</td>
-            <td><button className="small" onClick={async () => { const r = await api<{ link: string }>(`/admin/users/${u.id}/reset-link`, { body: {} }); setLink({ email: u.email, link: r.link }); }}>Reset link</button></td>
+            <td className="small">{u.emailVerifiedAt ? <span style={{ color: "var(--ok)" }}>✓ Confirmed</span> : <>Not confirmed <button className="small" onClick={() => act(`/admin/users/${u.id}/verify`, "POST", "Email marked as confirmed")}>Confirm</button></>}</td>
+            <td><div className="row" style={{ gap: 4, flexWrap: "nowrap" }}>
+              <button className="small" onClick={async () => { const r = await api<{ link: string }>(`/admin/users/${u.id}/reset-link`, { body: {} }); setLink({ email: u.email, link: r.link }); }}>Reset link</button>
+              <a className="btn small" href={`/api/admin/users/${u.id}/export`} download title="Download everything the portal holds about this user (for data requests)">Export data</a>
+              {u.id !== user.id && <button className="small danger" onClick={() => remove(u)}>Delete</button>}
+            </div></td>
           </tr>
         ))}</tbody>
       </table></div>
@@ -111,8 +132,9 @@ export default function Admin({ tab }: { tab?: string }) {
   return (
     <>
       <div className="page-head"><h1>Admin console</h1></div>
-      <div className="tabs">{TABS.map(([k, l]) => <a key={k} className={"tab" + (cur === k ? " on" : "")} href={`#/admin/${k}`}>{l}</a>)}</div>
-      {cur === "overview" ? <Overview /> : cur === "users" ? <Users /> : cur === "settings" ? <AdminSettings /> : cur === "plans" ? <AdminPlans /> : cur === "codes" ? <PromoCodes /> : cur === "activity" ? <Activity /> : cur === "feedback" ? <Feedback /> : <BrandingTab />}
+      <div className="tabs" style={{ flexWrap: "wrap" }}>{TABS.map(([k, l]) => <a key={k} className={"tab" + (cur === k ? " on" : "")} href={`#/admin/${k}`}>{t(l)}</a>)}
+        {LINK_TABS.map(([href, l]) => <a key={href} className="tab" href={href}>{t(l)} ↗</a>)}</div>
+      {VIEWS[cur] ? (() => { const V = VIEWS[cur]; return <V />; })() : cur === "overview" ? <Overview /> : cur === "users" ? <Users /> : cur === "settings" ? <AdminSettings /> : cur === "plans" ? <AdminPlans /> : cur === "codes" ? <PromoCodes /> : cur === "activity" ? <Activity /> : cur === "feedback" ? <Feedback /> : <BrandingTab />}
     </>
   );
 }

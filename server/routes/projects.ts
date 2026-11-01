@@ -69,8 +69,8 @@ r.put("/projects/:projectId", requireProject("manager"), h(async (req, res) => {
   res.json({ ok: true });
 }));
 
-r.delete("/projects/:projectId", requireProject("owner"), h(async (req, res) => {
-  const pid = req.params.projectId;
+/** Remove a project and everything in it. Stored file blobs are left for an offline cleanup job; they are unreachable once rows are gone. */
+export async function deleteProjectData(pid: string) {
   const docIds = (await db.select({ id: schema.documents.id }).from(schema.documents).where(eq(schema.documents.projectId, pid))).map((d) => d.id);
   const fileIds = (await db.select({ id: schema.files.id }).from(schema.files).where(eq(schema.files.projectId, pid))).map((f) => f.id);
   await db.transaction(async (tx) => {
@@ -80,7 +80,10 @@ r.delete("/projects/:projectId", requireProject("owner"), h(async (req, res) => 
       await tx.delete(t).where(eq(t.projectId, pid));
     await tx.delete(schema.projects).where(eq(schema.projects.id, pid));
   });
-  // Stored file blobs are left for an offline cleanup job; they are unreachable once rows are gone.
+}
+
+r.delete("/projects/:projectId", requireProject("owner"), h(async (req, res) => {
+  await deleteProjectData(req.params.projectId);
   res.json({ ok: true });
 }));
 

@@ -3,11 +3,14 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { and, eq, gt } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
 import { db, newId, schema } from "./db";
+import { setting } from "./appSettings";
+import { mailEnabled } from "./mailer";
 
 export const SESSION_COOKIE = "portal_session";
 const TTL_SECONDS = 60 * 60 * 24 * 14;
 
-export type PublicUser = Omit<typeof schema.users.$inferSelect, "passwordHash">;
+/** mustVerify: the account has to confirm its email before using the portal (see the verifyEmail setting). */
+export type PublicUser = Omit<typeof schema.users.$inferSelect, "passwordHash"> & { mustVerify: boolean };
 declare module "express-serve-static-core" {
   interface Request { user?: PublicUser }
 }
@@ -45,7 +48,16 @@ export const checkPassword = (pw: string, hash: string) => bcrypt.compare(pw, ha
 
 export function toPublic(u: typeof schema.users.$inferSelect): PublicUser {
   const { passwordHash: _omit, ...rest } = u;
-  return rest;
+  return { ...rest, mustVerify: mustVerify(u) };
+}
+
+export const verificationOn = () => setting<boolean>("verifyEmail") && mailEnabled();
+export const mustVerify = (u: { emailVerifiedAt: Date | null; role: string }) => verificationOn() && !u.emailVerifiedAt && u.role !== "admin";
+
+/** Signed-in users who still have to confirm their email can only reach the account routes. */
+export function requireVerified(req: Request, res: Response, next: NextFunction) {
+  if (req.user?.mustVerify) return res.status(403).json({ error: "Confirm your email address first: open the link we sent you, or ask for a new one.", code: "verify" });
+  next();
 }
 
 export async function startSession(res: Response, userId: string) {

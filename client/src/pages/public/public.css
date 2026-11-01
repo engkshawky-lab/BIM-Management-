@@ -119,3 +119,10 @@
 .pub-plans .plan { border-top: 4px solid var(--plan, var(--border)); }
 .pub-plans .featured { border-top-width: 4px; border-top-color: var(--plan); }
 .pub-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--plan); margin-inline-end: 8px; }
+.pub-contact { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; max-width: 680px; margin: 14px auto 0; text-align: start; }
+.pub-contact > div { display: grid; gap: 4px; min-width: 0; }
+.pub-contact .wide { grid-column: 1 / -1; }
+.pub-contact .row { gap: 12px; align-items: center; flex-wrap: wrap; }
+.pub-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.pub-contact-done { font-weight: 600; margin-top: 12px; }
+@media (max-width: 600px) { .pub-contact { grid-template-columns: 1fr; } }

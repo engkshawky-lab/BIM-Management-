@@ -2,7 +2,7 @@ import express, { type NextFunction, type Request, type Response } from "express
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { loadUser, requireUser } from "./auth";
+import { loadUser, requireUser, requireVerified } from "./auth";
 import { db, runMigrations } from "./db";
 import ai from "./routes/ai";
 import aitools from "./routes/aitools";
@@ -23,6 +23,10 @@ import companyVideos from "./routes/companyVideos";
 import news, { startNewsSchedule } from "./routes/news";
 import delivery from "./routes/delivery";
 import auth from "./routes/auth";
+import account, { clientErrors } from "./routes/account";
+import adminInsights, { publicContact } from "./routes/adminInsights";
+import { reportError } from "./alerts";
+import { seoRoutes } from "./seo";
 import documents from "./routes/documents";
 import files from "./routes/files";
 import projects from "./routes/projects";
@@ -74,16 +78,17 @@ app.get("/api/health", async (_req, res) => {
   try { await db.execute(sql`select 1`); res.json({ ok: true }); }
   catch { res.status(503).json({ ok: false, error: "Database unavailable." }); }
 });
-app.use("/api", publicPlans, publicSite);
+app.use("/api", publicPlans, publicSite, clientErrors, publicContact);
 app.use("/api", maintenanceGate);
-app.use("/api", auth);
-app.use("/api", requireUser, sectionGate, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news, adminSettings);
+app.use("/api", auth, account);
+app.use("/api", requireUser, requireVerified, sectionGate, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news, adminSettings, adminInsights);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
-app.use((err: Error & { code?: string }, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error & { code?: string }, req: Request, res: Response, _next: NextFunction) => {
   if ((err as { type?: string }).type === "entity.parse.failed") return res.status(400).json({ error: "Malformed request body." });
   if (err.code === "LIMIT_FILE_SIZE") return res.status(413).json({ error: "File is too large." });
   console.error(err);
+  reportError("server", err, `${req.method} ${req.baseUrl}${req.path}`, res.getHeader("X-Request-Id") as string | undefined);
   res.status(500).json({ error: "Something went wrong on the server." });
 });
 
@@ -92,8 +97,13 @@ if (process.env.NODE_ENV === "production" && fs.existsSync(clientDir)) {
   // hashed bundles never change, so browsers keep them a year; index.html is always revalidated so a release shows at once
   app.use("/assets", express.static(path.join(clientDir, "assets"), { index: false, immutable: true, maxAge: "365d" }));
   app.use(express.static(clientDir, { index: false, maxAge: "1h" }));
-  app.get("*", (_req, res) => res.sendFile(path.join(clientDir, "index.html"), { headers: { "Cache-Control": "no-cache" } }));
+  app.use(seoRoutes(path.join(clientDir, "index.html")));
 }
+
+// failures outside a request still reach the administrators; an uncaught exception leaves the process unsafe, so it exits
+// (the process manager or container restarts it) once the alert has had a moment to go out
+process.on("unhandledRejection", (e) => { console.error("[unhandled rejection]", e); reportError("server", e, "background task"); });
+process.on("uncaughtException", (e) => { console.error("[uncaught exception]", e); reportError("server", e, "process"); setTimeout(() => process.exit(1), 3000).unref(); });
 
 const port = Number(process.env.PORT ?? 3001);
 await runMigrations();

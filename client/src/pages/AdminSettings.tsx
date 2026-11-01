@@ -11,6 +11,7 @@ import "./adminPlans.css";
 // Admin › Settings: every portal setting that can change while the portal runs, grouped as in shared/appSettings.ts,
 // the pages shown in the menu, and the status of what lives in the server environment (keys and passwords).
 
+interface ErrorEntry { source: "server" | "page"; message: string; where: string; first: string; last: string; count: number; requestId?: string }
 interface Integration { name: string; ok: boolean; env: string; note: string }
 interface Resp { settings: SettingsMap; saved: SettingsMap; defaults: SettingsMap; hiddenPages: string[]; integrations: Integration[] }
 
@@ -31,9 +32,11 @@ export default function AdminSettings() {
   const [hidden, setHidden] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [q, setQ] = useState("");
+  const [errors, setErrors] = useState<ErrorEntry[] | null>(null);
+  const loadErrors = () => api<{ errors: ErrorEntry[] }>("/admin/errors").then((r) => setErrors(r.errors)).catch(() => setErrors([]));
 
   const load = () => api<Resp>("/admin/settings").then((r) => { setData(r); setForm(r.settings); setHidden(r.hiddenPages); }).catch((e) => toast((e as Error).message, "error"));
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); loadErrors(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pageGroups = useMemo(() => [
     ...SECTIONS.map((s) => ({ title: s.label, items: s.items })),
@@ -95,6 +98,16 @@ export default function AdminSettings() {
           {data.integrations.map((i) => (
             <tr key={i.name}><td>{i.ok ? <span style={{ color: "var(--ok)" }}>✓ {t("Set")}</span> : <span className="muted">— {t("Not set")}</span>}</td><td><b>{t(i.name)}</b><div className="tiny muted">{t(i.note)}</div></td><td className="mono tiny">{i.env}</td></tr>))}
         </tbody></table>
+      </section>
+
+      <section className="card adm-set-group">
+        <div className="row spread"><h2>{t("Recent errors")}</h2><button type="button" className="small" onClick={loadErrors}>{t("Refresh")}</button></div>
+        <p className="small muted">{t("Server failures and pages that crashed in a browser since the portal last started. Alerts go out as set under Logging.")}</p>
+        {errors === null ? <p className="muted small">{t("Loading…")}</p> : errors.length === 0 ? <p className="small" style={{ color: "var(--ok)" }}>✓ {t("No errors since the portal started.")}</p> : (
+          <div className="table-wrap"><table className="data">
+            <thead><tr><th>{t("Last seen")}</th><th>{t("Where")}</th><th>{t("Error")}</th><th>{t("Times")}</th></tr></thead>
+            <tbody>{errors.map((e, i) => <tr key={i}><td className="small">{new Date(e.last).toLocaleString()}</td><td className="small">{t(e.source === "page" ? "Page" : "Server")}<div className="tiny muted mono">{e.where}</div></td><td className="small">{e.message}{e.requestId && <div className="tiny muted mono">id {e.requestId}</div>}</td><td>{e.count}</td></tr>)}</tbody>
+          </table></div>)}
       </section>
 
       <section className="card adm-set-group">

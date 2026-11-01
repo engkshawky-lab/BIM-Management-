@@ -8,7 +8,7 @@ export default function Legal({ id, standalone }: { id?: string; standalone?: bo
     <div className={"legal" + (standalone ? " legal-standalone" : "")}>
       {standalone && <p className="small"><a href="#/">← Back to the portal</a></p>}
       <nav className="tabs legal-tabs" aria-label="Legal documents">
-        {LEGAL_DOCS.map((d) => <a key={d.id} className={d.id === doc.id ? "on" : ""} href={`#/legal/${d.id}`}>{d.title}</a>)}
+        {LEGAL_DOCS.map((d) => <a key={d.id} className={d.id === doc.id ? "on" : ""} href={`/legal/${d.id}`}>{d.title}</a>)}
       </nav>
       <article className="card legal-doc">
         <h1>{doc.title}</h1>
@@ -30,7 +30,7 @@ export default function Legal({ id, standalone }: { id?: string; standalone?: bo
 export function LegalFooter() {
   return (
     <footer className="legal-footer small muted">
-      <nav>{LEGAL_DOCS.map((d) => <a key={d.id} href={`#/legal/${d.id}`}>{d.title}</a>)}</nav>
+      <nav>{LEGAL_DOCS.map((d) => <a key={d.id} href={`/legal/${d.id}`}>{d.title}</a>)}</nav>
       <p>{TRADEMARK_NOTICE}</p>
     </footer>
   );

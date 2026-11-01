@@ -7,7 +7,8 @@ import { z } from "zod";
 import { logActivity } from "../access";
 import { mailEnabled, publicUrl, sendMail } from "../mailer";
 import { setting } from "../appSettings";
-import { checkPassword, endSession, hashPassword, requireUser, startSession, toPublic } from "../auth";
+import { checkPassword, endSession, hashPassword, mustVerify, requireUser, startSession, toPublic } from "../auth";
+import { sendVerification } from "../verify";
 import { db, newId, schema } from "../db";
 
 export const h = (fn: (req: Request, res: Response) => Promise<unknown>) => (req: Request, res: Response, next: NextFunction) => fn(req, res).catch((e) => {
@@ -58,17 +59,25 @@ r.post("/auth/register", h(async (req, res) => {
   // The first account on a fresh install becomes the platform admin.
   const [anyUser] = await db.select({ id: schema.users.id }).from(schema.users).limit(1);
   // With sign-ups closed, only people invited to a project (and the first administrator) can register.
-  if (anyUser && !setting<boolean>("allowSignups")) {
-    const [invite] = await db.select({ id: schema.invitations.id }).from(schema.invitations).where(eq(schema.invitations.email, body.email)).limit(1);
-    if (!invite) return res.status(403).json({ error: "New sign-ups are closed. Ask an administrator or project manager to invite you." });
-  }
+  const [invite] = await db.select({ id: schema.invitations.id }).from(schema.invitations).where(eq(schema.invitations.email, body.email)).limit(1);
+  if (anyUser && !setting<boolean>("allowSignups") && !invite) return res.status(403).json({ error: "New sign-ups are closed. Ask an administrator or project manager to invite you." });
+  // with "Approve new accounts" on, uninvited accounts wait (disabled = 2) until an administrator approves them
+  const pending = !!anyUser && !invite && setting<boolean>("approveSignups");
   await db.insert(schema.users).values({
     id, email: body.email, name: body.name, organization: body.organization, jobTitle: body.jobTitle, locale: body.locale,
-    passwordHash: await hashPassword(body.password), role: anyUser ? "user" : "admin", createdAt: new Date(),
+    passwordHash: await hashPassword(body.password), role: anyUser ? "user" : "admin", createdAt: new Date(), disabled: pending ? 2 : 0,
   });
   await acceptInvitations(id, body.email);
-  await startSession(res, id);
   const [u] = await db.select().from(schema.users).where(eq(schema.users.id, id));
+  const base = publicUrl(`${req.protocol}://${req.get("host")}`);
+  // new accounts confirm their address before using the portal (when email is set up and the setting is on)
+  if (mustVerify(u)) await sendVerification(u, base);
+  if (pending) {
+    const admins = await db.select({ email: schema.users.email }).from(schema.users).where(and(eq(schema.users.role, "admin"), eq(schema.users.disabled, 0)));
+    for (const a of admins) await sendMail(a.email, "New account waiting for approval", [`${u.name} (${u.email}${u.organization ? `, ${u.organization}` : ""}) created an account and is waiting for your approval.`], { label: "Review pending accounts", url: `${base}/#/admin/pending` });
+    return res.status(202).json({ pending: true, message: "Thank you. Your account is waiting for approval by an administrator. We'll email you when it's ready." });
+  }
+  await startSession(res, id);
   res.status(201).json({ user: toPublic(u) });
 }));
 
@@ -82,6 +91,7 @@ r.post("/auth/login", h(async (req, res) => {
   const [u] = await db.select().from(schema.users).where(eq(schema.users.email, body.email));
   if (!u || !(await checkPassword(body.password, u.passwordHash))) { loginFails.set(key, [...fails, now]); return res.status(401).json({ error: "Incorrect email or password." }); }
   loginFails.delete(key);
+  if (u.disabled === 2) return res.status(403).json({ error: "Your account is waiting for approval by an administrator. We'll email you when it's ready." });
   if (u.disabled) return res.status(403).json({ error: "This account is disabled. Contact your administrator." });
   await acceptInvitations(u.id, u.email);
   await startSession(res, u.id);

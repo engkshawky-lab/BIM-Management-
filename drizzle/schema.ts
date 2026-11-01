@@ -29,6 +29,8 @@ export const users = mysqlTable("users", {
   /** instant | digest | off */
   emailPref: varchar("email_pref", { length: 10 }).notNull().default("instant"),
   locale: varchar("locale", { length: 5 }).notNull().default("en"),
+  /** set when the user opens the link in the sign-up email; accounts made before verification existed count as verified */
+  emailVerifiedAt: datetime("email_verified_at", { mode: "date" }),
 }, (t) => [uniqueIndex("users_email").on(t.email)]);
 
 export const sessions = mysqlTable("sessions", {
@@ -442,6 +444,30 @@ export const passwordResets = mysqlTable("password_resets", {
   usedAt: datetime("used_at", { mode: "date" }),
   createdAt: created(),
 }, (t) => [uniqueIndex("password_resets_token").on(t.tokenHash)]);
+
+/** Enquiries sent from the public "Talk to us" form (Admin › Leads). */
+export const leads = mysqlTable("leads", {
+  id: id(),
+  name: varchar("name", { length: 120 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  company: varchar("company", { length: 160 }).notNull().default(""),
+  phone: varchar("phone", { length: 40 }).notNull().default(""),
+  interest: varchar("interest", { length: 40 }).notNull().default(""),
+  message: varchar("message", { length: 4000 }).notNull().default(""),
+  source: varchar("source", { length: 120 }).notNull().default(""),
+  status: varchar("status", { length: 16 }).notNull().default("New"),
+  note: varchar("note", { length: 2000 }).notNull().default(""),
+  createdAt: created(),
+}, (t) => [index("leads_created").on(t.createdAt)]);
+
+export const emailVerifications = mysqlTable("email_verifications", {
+  id: id(),
+  userId: ref("user_id").notNull(),
+  tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+  expiresAt: datetime("expires_at", { mode: "date" }).notNull(),
+  usedAt: datetime("used_at", { mode: "date" }),
+  createdAt: created(),
+}, (t) => [uniqueIndex("email_verifications_token").on(t.tokenHash), index("email_verifications_user").on(t.userId)]);
 
 export const feedback = mysqlTable("feedback", {
   id: id(),

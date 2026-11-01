@@ -6,9 +6,11 @@ import ErrorBoundary, { NotFound } from "./components/ErrorBoundary";
 import { AccessProvider, LockedPage, useAccess } from "./lib/access";
 import { Maintenance, useSite } from "./lib/site";
 import { locate } from "./shell/nav";
+import { pageMeta } from "../../shared/pageMeta";
 import Shell from "./shell/Shell";
 const Home = lazy(() => import("./pages/Home"));
 import Login, { ResetPassword } from "./pages/Login";
+import { VerifyEmail, VerifyLink } from "./pages/Account";
 
 // Pages load on first visit, so the first download holds only the shell, sign-in and home page.
 const ClientStandards = lazy(() => import("./pages/ClientStandards"));
@@ -56,15 +58,33 @@ interface Session { user: User; setUser: (u: User | null) => void; toast: (msg: 
 const Ctx = createContext<Session>(null!);
 export const useSession = () => useContext(Ctx);
 
-export const navigate = (path: string) => { window.location.hash = path; };
+// The app uses #/ addresses. Public pages (home, pricing, about, legal, sign-in) also have real addresses such as
+// /pricing, which the server sends with the page's own title and description for search engines and link previews.
+export const navigate = (path: string) => {
+  if (window.location.pathname === "/") { window.location.hash = path; return; }
+  history.pushState(null, "", "/#" + path);
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+};
+const PUBLIC_PATH = /^\/(pricing|about|login|signup|legal(\/[a-z]+)?)?$/;
 
 function useRoute() {
-  const get = () => window.location.hash.replace(/^#/, "") || "/";
+  // an in-page anchor such as #contact is not a route
+  const get = () => (/^#\//.test(window.location.hash) ? window.location.hash.slice(1) : PUBLIC_PATH.test(window.location.pathname) ? window.location.pathname : "/");
   const [route, setRoute] = useState(get);
   useEffect(() => {
     const on = () => { setRoute(get()); window.scrollTo(0, 0); };
+    // links to real addresses (/pricing) and, away from the root, to #/ addresses are handled here without a reload
+    const click = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = (e.target as Element).closest?.("a"); const href = a?.getAttribute("href");
+      if (!a || !href || a.target || a.hasAttribute("download")) return;
+      if (PUBLIC_PATH.test(href)) { e.preventDefault(); history.pushState(null, "", href); on(); }
+      else if (href.startsWith("#/") && window.location.pathname !== "/") { e.preventDefault(); navigate(href.slice(1)); }
+    };
     window.addEventListener("hashchange", on);
-    return () => window.removeEventListener("hashchange", on);
+    window.addEventListener("popstate", on);
+    document.addEventListener("click", click);
+    return () => { window.removeEventListener("hashchange", on); window.removeEventListener("popstate", on); document.removeEventListener("click", click); };
   }, []);
   return route;
 }
@@ -80,6 +100,8 @@ export default function App() {
   }, []);
 
   const { site } = useSite();
+  // browser tab title: the public page's own title for visitors, else the portal name
+  useEffect(() => { document.title = (!user && pageMeta(route, site.siteName)?.title) || site.siteName; }, [route, user, site.siteName]);
   // Arabic page content: start/stop the translation layer when the language changes (the portal default applies
   // until the user or visitor picks a language)
   const loc = ((user?.locale ?? (() => { try { return localStorage.getItem("bim:locale"); } catch { return null; } })() ?? site.defaultLocale) === "ar" ? "ar" : "en");
@@ -111,6 +133,9 @@ export default function App() {
   if (user === undefined) return <div className="center muted">Loading…</div>;
   const reset = /^\/reset\/([0-9a-f]{64})$/.exec(route)?.[1];
   if (reset) return <ResetPassword token={reset} />;
+  const reload = () => api<{ user: User | null }>("/auth/me").then((r) => setUser(r.user)).catch(() => undefined);
+  const verify = /^\/verify\/([0-9a-f]{64})$/.exec(route)?.[1];
+  if (verify) return <VerifyLink token={verify} onDone={() => { navigate("/"); reload(); }} />;
   // legal pages are public, so they can be read before signing up
   const legal = /^\/legal(?:\/([a-z]+))?$/.exec(route);
   if (!user && legal) return <Suspense fallback={<div className="center muted">Loading…</div>}><Legal standalone id={legal[1]} /></Suspense>;
@@ -122,6 +147,8 @@ export default function App() {
     return <Login key={route} initialMode={route === "/signup" ? "register" : "login"} onSignedIn={(u) => { if (["/login", "/signup"].includes(route)) navigate("/"); setUser(u); }} />;
   }
 
+  // new accounts confirm their email address first (when email is set up and the setting is on)
+  if (user.mustVerify) return <VerifyEmail user={user} onVerified={reload} onSignOut={() => { api("/auth/logout", { method: "POST" }).finally(() => setUser(null)); }} />;
   // maintenance mode: only administrators carry on
   if (site.maintenanceMode && user.role !== "admin") return <Maintenance onSignOut={() => { api("/auth/logout", { method: "POST" }).finally(() => setUser(null)); }} />;
 
