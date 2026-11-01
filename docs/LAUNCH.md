@@ -18,8 +18,14 @@ rest need the owner's accounts, keys or decisions.
 ## 2. Server and security
 
 - [ ] Serve only over HTTPS behind a proxy that sets `X-Forwarded-Proto`, and set `COOKIE_SECURE=true`.
+      A ready nginx config is in `deploy/nginx.conf` (HTTPS redirect, forwarded headers, 2 GB uploads, long timeouts).
 - [ ] Set a fresh `SESSION_SECRET` (32+ random characters) and strong `DB_PASSWORD` / `DB_ROOT_PASSWORD`.
+      `./scripts/new-env.sh https://<domain>` writes a `.env` with all three generated, `PUBLIC_URL`, `COOKIE_SECURE=true`
+      and `AI_MONTHLY_LIMIT=300`.
 - [ ] Set `PUBLIC_URL` to the public address (used in email links).
+- **(done)** Startup checks (`server/preflight.ts`): the server refuses to start with the example, short or predictable
+  `SESSION_SECRET`, and in production logs a warning for a default database password, missing or non-HTTPS
+  `PUBLIC_URL`, `COOKIE_SECURE` not true, AI without a monthly cap, Stripe without a webhook secret or in test mode.
 - **(done)** Security headers on every response: Content-Security-Policy, X-Frame-Options, nosniff,
   Referrer-Policy, Permissions-Policy, and HSTS over HTTPS (`server/security.ts`).
 - **(done)** Dependencies updated: no high-severity advisories. 7 moderate advisories remain inside `exceljs`
@@ -61,9 +67,11 @@ rest need the owner's accounts, keys or decisions.
 ## 7. Operations
 
 - [ ] Schedule `scripts/backup.sh` nightly (database and uploaded files), copy the backups off the server, and
-      test a restore on a spare machine.
+      test a restore on a spare machine with `./scripts/restore.sh backups/db-<stamp>.sql.gz backups/files-<stamp>.tar.gz`.
+- **(done)** Backup and restore tested end to end on the Docker Compose install: a failed backup reports
+  `BACKUP FAILED` and leaves no partial files; the restore brings back the database and uploaded files exactly.
 - [ ] If a reverse proxy sits in front, allow uploads as large as `VIDEO_MAX_MB` (nginx: `client_max_body_size 2g;`)
-      and a long enough read timeout for video uploads under Our videos.
+      and a long enough read timeout for video uploads under Our videos (both set in `deploy/nginx.conf`).
 - [ ] Point an uptime monitor at `https://<domain>/api/health`.
 - [ ] Collect the app's logs (`docker compose logs app`) somewhere searchable.
 - [ ] Check error alerts reach you: set Admin › Settings › Logging › Alert email (or a Slack/Teams webhook).

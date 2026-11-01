@@ -5,6 +5,7 @@ import type { NextFunction, Request, Response } from "express";
 import { db, newId, schema } from "./db";
 import { setting } from "./appSettings";
 import { mailEnabled } from "./mailer";
+import { sessionSecretProblem } from "./preflight";
 
 export const SESSION_COOKIE = "portal_session";
 const TTL_SECONDS = 60 * 60 * 24 * 14;
@@ -16,9 +17,9 @@ declare module "express-serve-static-core" {
 }
 
 function secret() {
-  const s = process.env.SESSION_SECRET ?? "";
-  if (s.length < 32) throw new Error("SESSION_SECRET must contain at least 32 characters.");
-  return s;
+  const problem = sessionSecretProblem(process.env.SESSION_SECRET);
+  if (problem) throw new Error(problem);
+  return process.env.SESSION_SECRET!;
 }
 
 export function parseCookieHeader(header: string | undefined): Record<string, string> {

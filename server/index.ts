@@ -52,6 +52,7 @@ import { startScheduler } from "./agents";
 import standards from "./routes/standards";
 import { requestLog, securityHeaders } from "./security";
 import { sql } from "drizzle-orm";
+import { runPreflight } from "./preflight";
 
 const app = express();
 app.disable("x-powered-by");
@@ -108,4 +109,5 @@ process.on("uncaughtException", (e) => { console.error("[uncaught exception]", e
 const port = Number(process.env.PORT ?? 3001);
 await runMigrations();
 await loadAppSettings();
+runPreflight();
 app.listen(port, () => { console.log(`Portal API listening on http://localhost:${port}`); startScheduler(); startNewsSchedule(); });
