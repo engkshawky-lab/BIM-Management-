@@ -19,7 +19,10 @@ export type SettingGroup = (typeof SETTING_GROUPS)[number];
 const onOff = (v: string) => v === "on" || v === "true" || v === "1";
 const num = (v: string) => Number(v) || 0;
 
+import { DEFAULT_AI_PRICES } from "./aiPricing";
+
 export const SETTINGS: SettingDef[] = [
+  { key: "aiTokenPrices", group: "AI", label: "AI token prices (JSON)", help: "USD per million tokens: input, output, cacheWrite, cacheRead by model. Estimates use current prices and exclude tool fees. Unknown models are unpriced.", type: "textarea", default: JSON.stringify(DEFAULT_AI_PRICES) },
   // General
   { key: "siteName", group: "General", label: "Portal name", help: "Shown on the home page, sign-in page and browser tab.", type: "text", default: "ISO Information Management Portal", public: true },
   { key: "siteShort", group: "General", label: "Short name", help: "Used where space is tight, such as the sidebar.", type: "text", default: "BIM Management", public: true },
