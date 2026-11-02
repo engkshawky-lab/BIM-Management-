@@ -1,51 +1,51 @@
-/* Colour palettes from iso19650-platform client/public/fo-ui.css and fo-auth.css.
+/* Colour palettes from iso19650-platform client/public/fo-ui.css, with the final fo-scan.css surface palette.
    Keep this portal's typography, geometry and component structure. */
 :root {
-  --bg: #f5f4f1;
-  --panel: #fbfaf8;
-  --surface: #ffffff;
-  --surface-2: #f3f2ef;
-  --surface-3: #eae9e5;
-  --text: #20242d;
-  --muted: #5c6574;
-  --text-secondary: #515b6b;
-  --border: #e1e1e3;
-  --border-strong: #c9ccd2;
-  --accent: #4658b8;
-  --accent-strong: #37479b;
+  --bg: #dfe7e8;
+  --panel: #e8eff0;
+  --surface: #f1f5f6;
+  --surface-2: #e5ecec;
+  --surface-3: #d9e2e3;
+  --text: #21313d;
+  --muted: #4d6070;
+  --text-secondary: #46596a;
+  --border: #c9d5d8;
+  --border-strong: #aebdc1;
+  --accent: #3e5f9d;
+  --accent-strong: #2f4c82;
   --on-accent: #ffffff;
   --ok: #236b4d;
   --on-ok: #ffffff;
-  --warn: #805c16;
+  --warn: #795512;
   --on-warn: #ffffff;
-  --danger: #b23838;
+  --danger: #ab3434;
   --on-danger: #ffffff;
-  --info: #1d6aa6;
+  --info: #1a6299;
   --purple: #5f45b8;
-  --teal: #0f6f66;
-  --orange: #a24d12;
+  --teal: #0c625a;
+  --orange: #97470f;
   --pink: #a3346e;
-  --overlay: rgba(20,24,34,.45);
-  --focus: rgba(70,88,184,.22);
+  --overlay: rgba(17,30,40,.45);
+  --focus: rgba(62,95,157,.22);
   color-scheme: light;
   --primary: var(--accent); --ai: var(--teal);
   --hero-a: var(--surface-2); --hero-b: var(--bg); --hero-line: var(--accent); --hero-accent: var(--teal);
   --radius: 12px; --font: "Inter", system-ui, sans-serif;
 }
 :root[data-theme="dark"] {
-  --bg: #181b22;
-  --panel: #1c2028;
-  --surface: #222731;
-  --surface-2: #2a303b;
-  --surface-3: #313846;
-  --text: #f2f4f8;
-  --muted: #98a4b5;
-  --text-secondary: #b7c0ce;
-  --border: #343b48;
-  --border-strong: #4a5263;
-  --accent: #a5b4fc;
-  --accent-strong: #c7d2fe;
-  --on-accent: #1b2140;
+  --bg: #111e28;
+  --panel: #142430;
+  --surface: #1e2d39;
+  --surface-2: #253644;
+  --surface-3: #2c3f4e;
+  --text: #eff5f8;
+  --muted: #9fb2c0;
+  --text-secondary: #b7c7d3;
+  --border: #2c3e4c;
+  --border-strong: #415667;
+  --accent: #9fb8fa;
+  --accent-strong: #c3d3fd;
+  --on-accent: #13203a;
   --ok: #79c6a3;
   --on-ok: #0f2a1f;
   --warn: #e7bf78;
@@ -57,8 +57,8 @@
   --teal: #6fcfc4;
   --orange: #eeac78;
   --pink: #f0a2cb;
-  --overlay: rgba(8,9,13,.72);
-  --focus: rgba(165,180,252,.32);
+  --overlay: rgba(6,12,17,.72);
+  --focus: rgba(159,184,250,.32);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -232,7 +232,7 @@ tr.late td { background: rgba(220, 38, 38, .06); }
 .gauge { display: grid; justify-items: center; color: var(--text); }
 .center-cell { text-align: center !important; }
 .raci-cell { width: 44px; justify-content: center; font-weight: 700; padding: 4px; }
-.raci-R { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent); } .raci-A { background: var(--info); color: var(--info); } .raci-C { background: color-mix(in srgb, var(--teal) 12%, var(--surface)); color: var(--border); }
+.raci-R { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent); } .raci-A { background: color-mix(in srgb, var(--info) 12%, var(--surface)); color: var(--info); } .raci-C { background: color-mix(in srgb, var(--teal) 12%, var(--surface)); color: var(--teal); }
 .raci-I { background: var(--surface-2); color: var(--text); } .raci-RA { background: color-mix(in srgb, var(--ok) 12%, var(--surface)); color: var(--ok); } .raci-none { color: var(--muted); }
 .cell-input { border-color: transparent; padding: 4px 6px; font-size: 12.5px; min-width: 110px; }
 textarea.cell-input { min-height: 34px; resize: vertical; }

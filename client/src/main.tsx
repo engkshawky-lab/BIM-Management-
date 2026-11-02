@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import { SiteProvider } from "./lib/site";
 import "./styles.css";
+import "./art.css";
 import { watchErrors } from "./lib/reportError";
 
 watchErrors();
