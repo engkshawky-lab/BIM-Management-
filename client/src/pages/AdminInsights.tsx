@@ -1,3 +1,4 @@
+import AiTokenUsage from "./AiTokenUsage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSession } from "../App";
 import { t } from "../i18n";
@@ -62,6 +63,9 @@ export function Statistics() {
 
 interface AiUse { month: string; months: string[]; billing: boolean; monthlyLimit: number; perMinute: number; users: { userId: string; name: string | null; email: string | null; n: number; plan: string; limit: number | null }[] }
 export function AiUsage() {
+  return <><AiTokenUsage /><details><summary>{t("Request quotas")}</summary><AiQuotaUsage /></details></>;
+}
+function AiQuotaUsage() {
   const [month, setMonth] = useState("");
   const [d] = useLoad<AiUse>(`/admin/ai-usage${month ? `?month=${month}` : ""}`);
   if (!d) return <Loading />;

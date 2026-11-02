@@ -1,6 +1,8 @@
 // Interface language. English strings are the keys; Arabic switches the layout to right-to-left.
 // Untranslated strings fall back to English, so content pages stay readable while coverage grows.
 
+import en from "./locales/en.json";
+import ar from "./locales/ar.json";
 export type Locale = "en" | "ar";
 let current: Locale = "en";
 
@@ -59,4 +61,4 @@ export const setLocale = (l: Locale) => {
   document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
 };
 export const getLocale = () => current;
-export const t = (s: string) => (current === "ar" ? AR[s] ?? s : s);
+export const t = (s: string) => (current === "ar" ? AR[s] ?? (ar as Record<string, string>)[s] ?? s : (en as Record<string, string>)[s] ?? s);

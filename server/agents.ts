@@ -1,3 +1,4 @@
+import { aiContext } from "./aiMetering";
 import { progressPct } from "../shared/delivery";
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { notify } from "./access";
@@ -45,7 +46,7 @@ async function qualityReview(pid: string, actor: string) {
   if (top.length) text += ` Top problems: ${top.map((f) => f.message).join(" | ")}`;
   if (apiKey()) {
     try {
-      const { text: ai } = await ask({ system: "You are an ISO 19650 information manager. Write three short, specific recommendations (one line each, no preamble) for the project team based on the quality summary.", messages: [{ role: "user", content: text }], maxTokens: 1000, effort: "low" });
+      const { text: ai } = await ask({ usageContext: { userId: aiContext.getStore()?.userId ?? null, feature: "agents.quality-review" }, system: "You are an ISO 19650 information manager. Write three short, specific recommendations (one line each, no preamble) for the project team based on the quality summary.", messages: [{ role: "user", content: text }], maxTokens: 1000, effort: "low" });
       text += `\nRecommendations:\n${ai}`;
     } catch { /* AI is optional here */ }
   }

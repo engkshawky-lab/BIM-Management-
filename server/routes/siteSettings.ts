@@ -35,6 +35,8 @@ function integrations() {
   ];
 }
 
+import { priceSchema } from "../../shared/aiPricing";
+
 export const adminSettings = Router();
 adminSettings.get("/admin/settings", requireAdmin, (_req, res) => {
   res.json({ settings: allSettings(), saved: savedSettings(), defaults: baseSettings(process.env), hiddenPages: hiddenPages(), integrations: integrations() });
@@ -45,6 +47,12 @@ adminSettings.put("/admin/settings", requireAdmin, h(async (req, res) => {
     settings: z.record(z.string(), z.union([z.string().max(1000), z.number(), z.boolean(), z.null()])).refine((o) => Object.keys(o).every((k) => keys.includes(k)), "Unknown setting."),
     hiddenPages: z.array(z.string().max(60)).max(500).optional(),
   }), req.body, res); if (!body) return;
+  if (typeof body.settings.aiTokenPrices === "string") {
+    let prices: unknown;
+    try { prices = JSON.parse(body.settings.aiTokenPrices); }
+    catch { return res.status(400).json({ error: "Invalid AI price JSON." }); }
+    if (!priceSchema.safeParse(prices).success) return res.status(400).json({ error: "AI prices must contain non-negative input, output, cacheWrite and cacheRead numbers for each model." });
+  }
   await saveAppSettings(body.settings, body.hiddenPages);
   res.json({ settings: allSettings(), saved: savedSettings(), hiddenPages: hiddenPages() });
 }));

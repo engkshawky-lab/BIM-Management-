@@ -54,6 +54,8 @@ import { requestLog, securityHeaders } from "./security";
 import { sql } from "drizzle-orm";
 import { runPreflight } from "./preflight";
 
+import { aiUsageContext } from "./aiMetering";
+
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
@@ -63,6 +65,7 @@ app.use("/api", requestLog);
 app.post("/api/stripe/webhook", ...stripeWebhook);
 app.use(express.json({ limit: "5mb" }));
 app.use(loadUser);
+app.use(aiUsageContext);
 
 // Reject cross-site state-changing requests (cookies are SameSite=Lax, this is defence in depth).
 app.use("/api", (req, res, next) => {
