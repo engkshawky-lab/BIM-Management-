@@ -136,7 +136,7 @@ function Report({ r }: { r: RevitResults }) {
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <div className="row" style={{ gap: 14, flexWrap: "wrap" }}>
-        <div style={{ width: 72, height: 72, borderRadius: 16, background: gradeColor(grade), color: "#fff", display: "grid", placeItems: "center", flexShrink: 0 }}><div style={{ textAlign: "center" }}><b style={{ fontSize: 28, lineHeight: 1 }}>{grade}</b><div className="tiny" style={{ opacity: .9 }}>{score}/100</div></div></div>
+        <div style={{ width: 72, height: 72, borderRadius: 16, background: gradeColor(grade), color: "var(--on-accent)", display: "grid", placeItems: "center", flexShrink: 0 }}><div style={{ textAlign: "center" }}><b style={{ fontSize: 28, lineHeight: 1 }}>{grade}</b><div className="tiny" style={{ opacity: .9 }}>{score}/100</div></div></div>
         <div style={{ flex: 1 }}><b className="no-i18n">{r.model.title}</b>
           <div className="small muted">Checked {r.checked}{r.model.revitVersion ? ` · Revit ${r.model.revitVersion}` : ""}{r.model.user ? ` · ${r.model.user}` : ""}{r.rulesFor ? ` · rules for ${r.rulesFor}` : ""}</div>
           <div className="tiny muted">Grade: A ≥ 90, B ≥ 75, C ≥ 60, D ≥ 40. Passed checks count 1, checks to confirm count ½, information is not scored.</div></div>

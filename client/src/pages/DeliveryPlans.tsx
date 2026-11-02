@@ -163,7 +163,7 @@ export default function DeliveryPlans() {
 
   return (
     <div style={{ display: "grid", gap: 12 }}>
-      <div className="row">{KINDS.map((k) => <button key={k.id} onClick={() => switchKind(k.id)} style={kind === k.id ? { background: k.c, color: "#fff", borderColor: k.c } : { borderColor: k.c, color: k.c }}><b>{k.label}</b> <span className="small" style={{ opacity: .85 }}>· {k.full}</span></button>)}
+      <div className="row">{KINDS.map((k) => <button key={k.id} onClick={() => switchKind(k.id)} style={kind === k.id ? { background: k.c, color: "var(--on-accent)", borderColor: k.c } : { borderColor: k.c, color: k.c }}><b>{k.label}</b> <span className="small" style={{ opacity: .85 }}>· {k.full}</span></button>)}
         <span className="small muted">{meta.clause}</span></div>
 
       <div id="plan-gate" style={{ scrollMarginTop: 12 }}><ProjectDataGate docType={kind === "mpdt" ? undefined : meta.label} what={`the ${meta.label}`} /></div>
@@ -202,7 +202,7 @@ export default function DeliveryPlans() {
             {kind !== "mpdt" && <label className="small" style={{ margin: 0 }}><input type="file" accept=".csv,.txt" multiple={kind === "midp"} style={{ display: "none" }} onChange={(e) => { void importCsv(e.target.files); e.target.value = ""; }} /><span className="btn">{kind === "midp" ? "Import TIDP CSVs" : "Import CSV"}</span></label>}
             <button onClick={() => kind === "mpdt" ? setS({ ...s, mpdt: [...s.mpdt, { element: "", classification: "", author: "", notes: "", loin: {} }] }) : setS({ ...s, rows: numberRows([...s.rows, emptyRow(s.rows.length, DISCIPLINES[s.header.discipline]?.role)]) })}>+ Add row</button>
             {!confirmReset ? <button className="ghost danger" onClick={() => setConfirmReset(true)}>Reset</button>
-              : <span className="row hub-tile" style={{ ...cv(TONES.red), padding: "4px 8px" }}><span className="small">Clear this {meta.label} and start again?</span><button className="small" style={{ background: TONES.red, color: "#fff", borderColor: TONES.red }} onClick={reset}>Yes, reset</button><button className="ghost small" onClick={() => setConfirmReset(false)}>Cancel</button></span>}
+              : <span className="row hub-tile" style={{ ...cv(TONES.red), padding: "4px 8px" }}><span className="small">Clear this {meta.label} and start again?</span><button className="small" style={{ background: TONES.red, color: "var(--on-accent)", borderColor: TONES.red }} onClick={reset}>Yes, reset</button><button className="ghost small" onClick={() => setConfirmReset(false)}>Cancel</button></span>}
           </div></div>
         {!ready && <Blockers items={blockers} what="Generate with AI" onShow={showGate} />}
         <div className="small muted">{kind === "mpdt" ? "Who models each element, and the level of information need at each stage." : "Container names are built from project code, originator, volume, level, type, role and number (ISO 19650-2 naming). Edit any cell."}{" "}The standard starter list works without AI; "Generate with AI" uses one AI request.</div>

@@ -1,3 +1,4 @@
+import { useTheme, type Theme } from "../lib/theme";
 import { t } from "../i18n";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { initials, navigate, useSession } from "../App";
@@ -128,7 +129,7 @@ function Inbox() {
   );
 }
 
-function UserMenu({ onRole, theme, setTheme, onHide }: { onRole: () => void; theme: string; setTheme: (t: string) => void; onHide: () => void }) {
+function UserMenu({ onRole, theme, setTheme, onHide }: { onRole: () => void; theme: Theme; setTheme: (t: Theme) => void; onHide: () => void }) {
   const { user, setUser } = useSession();
   const { site } = useSite();
   const [open, setOpen] = useState(false);
@@ -157,7 +158,7 @@ function UserMenu({ onRole, theme, setTheme, onHide }: { onRole: () => void; the
 }
 
 function Sidebar({ route, projects, project, onAsk, onRole, onHide, theme, setTheme }: {
-  route: string; projects: Project[]; project?: Project; onAsk: () => void; onRole: () => void; onHide: () => void; theme: string; setTheme: (t: string) => void;
+  route: string; projects: Project[]; project?: Project; onAsk: () => void; onRole: () => void; onHide: () => void; theme: Theme; setTheme: (t: Theme) => void;
 }) {
   const { user } = useSession();
   const favs = new Set(user.favourites ?? []);
@@ -412,9 +413,7 @@ export default function Shell({ route, children }: { route: string; children: Re
   const [palette, setPalette] = useState(false);
   const [ask, setAsk] = useState(false);
   const [rolePicker, setRolePicker] = useState(false);
-  const [theme, setThemeState] = useState(() => store.get("bim:theme", "dark"));
-  const setTheme = (t: string) => { setThemeState(t); store.set("bim:theme", t); };
-  useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
+  const [theme, setTheme] = useTheme();
   useEffect(() => store.set(`bim:sidebar:${user.id}`, sidebar), [sidebar, user.id]);
 
   const loadProjects = useCallback(() => api<{ projects: Project[] }>("/projects").then((r) => setProjects(r.projects)).catch(() => undefined), []);

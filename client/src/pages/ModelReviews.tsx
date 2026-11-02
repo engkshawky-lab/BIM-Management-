@@ -8,9 +8,9 @@ import type { ProjectData } from "./Project";
 
 interface Review { id: string; number: number; title: string; discipline: string; taskTeamId: string | null; fileId: string | null; milestone: string; reviewerId: string; results: Record<string, QaResult>; status: "Draft" | "Completed"; score: number; grade: string; updatedAt: string }
 
-const GRADE_COLOR: Record<string, string> = { A: "#16a34a", B: "#65a30d", C: "#38bdf8", D: "#dc2626", "—": "#64748b" };
+const GRADE_COLOR: Record<string, string> = { A: "var(--ok)", B: "var(--ok)", C: "var(--info)", D: "var(--danger)", "—": "var(--muted)" };
 const tag = (n: number) => `QA-${String(n).padStart(3, "0")}`;
-export const GradeBadge = ({ g }: { g: string }) => <span className="badge" style={{ background: GRADE_COLOR[g] ?? "#64748b", color: "#fff" }}>{g}</span>;
+export const GradeBadge = ({ g }: { g: string }) => <span className="badge" style={{ background: GRADE_COLOR[g] ?? "var(--muted)", color: "var(--on-accent)" }}>{g}</span>;
 
 function List({ data }: { data: ProjectData }) {
   const { toast } = useSession();
@@ -105,7 +105,7 @@ function Editor({ data, id }: { data: ProjectData; id: string }) {
                 <td className="mono tiny" style={{ width: 70 }}>{c.id}</td>
                 <td>{c.text} {c.priority === 3 && <span className="badge" title="Critical check">critical</span>}</td>
                 <td style={{ width: 230 }}><div className="seg">{GRADES.map((g) => (
-                  <button key={g.g} disabled={!editable} title={g.label} className={res.grade === g.g ? "on" : ""} style={res.grade === g.g && g.g !== "NA" ? { background: GRADE_COLOR[g.g], color: "#fff" } : undefined}
+                  <button key={g.g} disabled={!editable} title={g.label} className={res.grade === g.g ? "on" : ""} style={res.grade === g.g && g.g !== "NA" ? { background: GRADE_COLOR[g.g], color: "var(--on-accent)" } : undefined}
                     onClick={() => setResult(c.id, { grade: (res.grade === g.g ? "" : g.g) as Grade | "" })}>{g.g === "NA" ? "N/A" : g.g}</button>
                 ))}</div></td>
                 <td style={{ width: "30%" }}><input aria-label="Comment / evidence" disabled={!editable} defaultValue={res.comment} placeholder="Comment / evidence" onBlur={(e) => e.target.value !== res.comment && setResult(c.id, { comment: e.target.value })} /></td>

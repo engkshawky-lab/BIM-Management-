@@ -22,7 +22,7 @@ const Head = ({ eyebrow, title, intro, color }: { eyebrow: string; title: string
 interface Resource { id: string; title: string; description: string; category: string; part: string; fileName: string; mimeType: string; size: number; downloads: number; createdAt: string; previewable: boolean }
 const PARTS = ["", "19650-1", "19650-2", "19650-3", "19650-4", "19650-5", "19650-6"];
 const ext = (n: string) => (/\.([a-z0-9]+)$/i.exec(n)?.[1] ?? "file").toUpperCase();
-const extColor = (e: string) => (e === "PDF" ? "#dc2626" : /DOCX?/.test(e) ? "#2563eb" : /XLSX?|CSV/.test(e) ? "#16a34a" : /PPTX?/.test(e) ? "#ea580c" : /DWG|IFC|RVT/.test(e) ? "#0e7490" : "#64748b");
+const extColor = (e: string) => (e === "PDF" ? "var(--danger)" : /DOCX?/.test(e) ? "var(--accent)" : /XLSX?|CSV/.test(e) ? "var(--ok)" : /PPTX?/.test(e) ? "var(--orange)" : /DWG|IFC|RVT/.test(e) ? "var(--teal)" : "var(--muted)");
 
 /** The file preview overlay: a modal dialog (Escape closes, focus stays inside and returns to the opener). */
 function PreviewDialog({ label, onClose, style, children }: { label: string; onClose: () => void; style: CSSProperties; children: ReactNode }) {
@@ -61,7 +61,7 @@ export function DownloadsLibrary() {
 
   return (
     <>
-      <Head color="#0d9488" eyebrow="ISO 19650 · RESOURCES" title="Downloads" intro="Curated templates, checklists, guides and worked examples maintained by the platform administrators. Word, Excel, PDF, DWG, IFC and other files are supported." />
+      <Head color="var(--teal)" eyebrow="ISO 19650 · RESOURCES" title="Downloads" intro="Curated templates, checklists, guides and worked examples maintained by the platform administrators. Word, Excel, PDF, DWG, IFC and other files are supported." />
       {admin && <div className="card" style={{ display: "grid", gap: 8, marginBottom: 12 }}>
         <b>Add a resource</b>
         <div className="grid g4">
@@ -82,7 +82,7 @@ export function DownloadsLibrary() {
         : <div className="grid g4">{shown.map((r) => { const e = ext(r.fileName); return (
           <div key={r.id} className="card" style={{ display: "grid", gap: 6, alignContent: "start" }}>
             <div className="row" style={{ flexWrap: "nowrap", alignItems: "start" }}>
-              <span style={{ background: extColor(e), color: "#fff", borderRadius: 6, padding: "4px 6px", fontSize: 11, fontWeight: 700, minWidth: 40, textAlign: "center" }}>{e}</span>
+              <span style={{ background: extColor(e), color: "var(--on-accent)", borderRadius: 6, padding: "4px 6px", fontSize: 11, fontWeight: 700, minWidth: 40, textAlign: "center" }}>{e}</span>
               <div><b>{r.title}</b><div className="small muted">{r.category}{r.part && ` · ISO ${r.part}`} · {fmtSize(r.size)}</div></div>
             </div>
             {r.description && <div className="small">{r.description}</div>}
@@ -99,7 +99,7 @@ export function DownloadsLibrary() {
         <PreviewDialog label={preview.title} onClose={() => setPreview(null)} style={{ width: "min(1000px, 100%)", height: "min(85vh, 900px)", display: "grid", gridTemplateRows: "auto 1fr", gap: 8 }}>
           <div className="row spread"><b>{preview.title}</b><button className="ghost" onClick={() => setPreview(null)}>Close</button></div>
           {preview.mimeType.startsWith("image/") ? <img src={`/api/library/${preview.id}/file?inline=1`} alt={preview.title} style={{ maxHeight: "100%", objectFit: "contain", margin: "auto" }} />
-            : <iframe title={preview.title} src={`/api/library/${preview.id}/file?inline=1`} style={{ width: "100%", height: "100%", border: 0, borderRadius: 8, background: "#fff" }} />}
+            : <iframe title={preview.title} src={`/api/library/${preview.id}/file?inline=1`} style={{ width: "100%", height: "100%", border: 0, borderRadius: 8, background: "var(--on-accent)" }} />}
         </PreviewDialog>
       </div>}
     </>
@@ -130,7 +130,7 @@ export function NewsFeed() {
   const relColor = (r: string) => (r === "High" ? "var(--ok)" : r === "Medium" ? "var(--warn)" : "var(--muted)");
   return (
     <>
-      <Head color="#dc2626" eyebrow="LIVE INTELLIGENCE" title="BIM & ISO 19650 news" intro="Recent developments in BIM, ISO 19650 and information management, found by AI web search across standards bodies, governments, buildingSMART, professional institutions and software vendors. Each story is summarised with a relevance rating and the parts of ISO 19650 it affects. Always read the original source." />
+      <Head color="var(--danger)" eyebrow="LIVE INTELLIGENCE" title="BIM & ISO 19650 news" intro="Recent developments in BIM, ISO 19650 and information management, found by AI web search across standards bodies, governments, buildingSMART, professional institutions and software vendors. Each story is summarised with a relevance rating and the parts of ISO 19650 it affects. Always read the original source." />
       <div className="row spread" style={{ marginBottom: 12 }}>
         <div className="row">
           <button className={"chip" + (!topic ? " on" : "")} onClick={() => setTopic("")}>All</button>
@@ -160,14 +160,14 @@ export function NewsFeed() {
 // ---------------------------------------------------------------- Sample documents
 
 const SAMPLES: { id: string; color: string; scope: string }[] = [
-  { id: "eir", color: "#3b82f6", scope: "ISO 19650-2 · issued with the invitation to tender" },
-  { id: "air", color: "#22c55e", scope: "ISO 19650-3 · asset information for operations" },
-  { id: "oir", color: "#06b6d4", scope: "ISO 19650-1 · organisational strategy" },
-  { id: "bep-pre", color: "#ef4444", scope: "ISO 19650-2 · tender response to the EIR" },
-  { id: "bep-post", color: "#38bdf8", scope: "ISO 19650-2 · confirmed after appointment" },
-  { id: "info-standard", color: "#14b8a6", scope: "ISO 19650-2 5.1.4 · naming, formats, classification, LOIN" },
-  { id: "info-protocol", color: "#eab308", scope: "ISO 19650-2 5.1.8 · contractual obligations and licences" },
-  { id: "security-triage", color: "#64748b", scope: "ISO 19650-5 · sensitivity assessment and security plan" },
+  { id: "eir", color: "var(--accent)", scope: "ISO 19650-2 · issued with the invitation to tender" },
+  { id: "air", color: "var(--ok)", scope: "ISO 19650-3 · asset information for operations" },
+  { id: "oir", color: "var(--teal)", scope: "ISO 19650-1 · organisational strategy" },
+  { id: "bep-pre", color: "var(--danger)", scope: "ISO 19650-2 · tender response to the EIR" },
+  { id: "bep-post", color: "var(--info)", scope: "ISO 19650-2 · confirmed after appointment" },
+  { id: "info-standard", color: "var(--teal)", scope: "ISO 19650-2 5.1.4 · naming, formats, classification, LOIN" },
+  { id: "info-protocol", color: "var(--warn)", scope: "ISO 19650-2 5.1.8 · contractual obligations and licences" },
+  { id: "security-triage", color: "var(--muted)", scope: "ISO 19650-5 · sensitivity assessment and security plan" },
 ];
 
 /** A structured sample: every field shows its guidance as a placeholder; tables keep their starter rows. */
@@ -193,7 +193,7 @@ export function SampleDocuments() {
   };
   return (
     <>
-      <Head color="#3b82f6" eyebrow="ISO 19650 · TEMPLATES" title="Sample documents" intro="Ready-to-use ISO 19650 document structures with the correct sections, clause references and guidance notes. Download a structured Word sample, preview the sections, start a controlled project document from the template, or let AI draft a filled sample for a project you describe." />
+      <Head color="var(--accent)" eyebrow="ISO 19650 · TEMPLATES" title="Sample documents" intro="Ready-to-use ISO 19650 document structures with the correct sections, clause references and guidance notes. Download a structured Word sample, preview the sections, start a controlled project document from the template, or let AI draft a filled sample for a project you describe." />
       <div className="grid g2">
         {SAMPLES.map(({ id, color, scope }) => { const t = templateById(id); if (!t) return null; const fields = t.sections.reduce((a, s) => a + s.fields.length, 0); return (
           <div key={id} className="card" style={{ borderTop: `3px solid ${color}`, display: "grid", gap: 8, alignContent: "start" }}>
@@ -208,7 +208,7 @@ export function SampleDocuments() {
             </div>
             {open === id && <ol className="small" style={{ margin: 0 }}>{t.sections.map((s) => <li key={s.id} style={{ marginBottom: 4 }}><b>{s.title}</b><div className="muted">{s.guidance}</div></li>)}</ol>}
           </div>); })}
-        <div className="card" style={{ borderTop: "3px solid #eab308", display: "grid", gap: 8, alignContent: "start" }}>
+        <div className="card" style={{ borderTop: "3px solid var(--warn)", display: "grid", gap: 8, alignContent: "start" }}>
           <div><b>Project Information Requirements (PIR)</b><div className="small muted">ISO 19650-2 5.1.2 · information needed for the project's key decisions</div></div>
           <div className="small">There is no fixed PIR template in the portal yet. Use the AI generator to draft one from your project's purpose, key decision points and stakeholders.</div>
           <div className="row"><a href={generateHref("Project Information Requirements (PIR)")}><button className="primary">Draft PIR with AI</button></a></div>

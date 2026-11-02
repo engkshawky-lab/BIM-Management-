@@ -1,3 +1,4 @@
+import { ThemeToggle } from "../components/ThemeToggle";
 import { useState, type FormEvent } from "react";
 import { api, type User } from "../lib/api";
 import { getLocale, setLocale, t } from "../i18n";
@@ -54,7 +55,7 @@ export default function Login({ onSignedIn, initialMode = "login" }: { onSignedI
       {site.maintenanceMode && <p className="banner info">{t("The portal is under maintenance. Only administrators can sign in for now.")}</p>}
       <a className="small auth-back" href="#/">{t("← Back to the home page")}</a>
       <form className="card auth" onSubmit={submit}>
-        <div className="row spread"><h1 style={{ margin: 0 }}>{site.siteName}</h1><LangSwitch onChange={() => setLang((n) => n + 1)} /></div>
+        <div className="row spread"><h1 style={{ margin: 0 }}>{site.siteName}</h1><ThemeToggle /><LangSwitch onChange={() => setLang((n) => n + 1)} /></div>
         <p className="muted">{t("ISO 19650 information management · ISO/IEC 42001 AI management")}</p>
         <div className="tabs">
           <button type="button" className={mode === "login" ? "on" : ""} onClick={() => setMode("login")}>{t("Sign in")}</button>

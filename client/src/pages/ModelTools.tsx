@@ -50,14 +50,14 @@ function Drop({ multiple, onFiles, busy, label }: { multiple?: boolean; onFiles:
 
 function ScoreBadge({ score }: { score: number }) {
   const g = grade(score);
-  return <div style={{ width: 72, height: 72, borderRadius: 16, background: gradeColor(g), color: "#fff", display: "grid", placeItems: "center", flexShrink: 0 }}><div style={{ textAlign: "center" }}><b style={{ fontSize: 28, lineHeight: 1 }}>{g}</b><div className="tiny" style={{ opacity: .9 }}>{score}/100</div></div></div>;
+  return <div style={{ width: 72, height: 72, borderRadius: 16, background: gradeColor(g), color: "var(--on-accent)", display: "grid", placeItems: "center", flexShrink: 0 }}><div style={{ textAlign: "center" }}><b style={{ fontSize: 28, lineHeight: 1 }}>{g}</b><div className="tiny" style={{ opacity: .9 }}>{score}/100</div></div></div>;
 }
 
 function Checks({ r }: { r: IfcJobResult }) {
   return (
     <div className="grid g3">{r.report.checks.map((c, i) => { const total = c.passed + c.failed; const pct = total ? Math.round((c.passed / total) * 100) : 100; const col = pct >= 90 ? TONES.green : pct >= 60 ? TONES.amber : TONES.red; return (
       <div key={c.id} className="hub-tile" style={cv(col)}>
-        <div className="row spread"><b>{i + 1}. {c.name}</b><span className="badge" style={{ background: col, color: "#fff", borderColor: col }}>{pct}%</span></div>
+        <div className="row spread"><b>{i + 1}. {c.name}</b><span className="badge" style={{ background: col, color: "var(--on-accent)", borderColor: col }}>{pct}%</span></div>
         <div className="progress" style={{ margin: "6px 0" }}><div style={{ width: pct + "%", background: col }} /></div>
         <div className="small muted">{c.detail}</div>
       </div>); })}</div>

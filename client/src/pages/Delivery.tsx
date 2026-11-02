@@ -26,7 +26,7 @@ interface DeliveryData {
 }
 
 const STATUS_LABEL: Record<DeliverableStatus, string> = { planned: "Planned", in_progress: "In progress", shared: "Shared", published: "Published" };
-const STATUS_COLOR: Record<DeliverableStatus, string> = { planned: "#94a3b8", in_progress: "#0e7c86", shared: "#2563eb", published: "#16a34a" };
+const STATUS_COLOR: Record<DeliverableStatus, string> = { planned: "var(--muted)", in_progress: "var(--teal)", shared: "var(--accent)", published: "var(--ok)" };
 const today = () => new Date().toISOString().slice(0, 10);
 const SEV_ICON = { error: "⛔", warning: "⚠", info: "ℹ" };
 

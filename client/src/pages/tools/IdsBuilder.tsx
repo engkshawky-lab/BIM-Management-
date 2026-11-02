@@ -112,7 +112,7 @@ export default function IdsBuilder() {
         </div>
       )}
 
-      <section className="hub-card" style={{ "--c": "#0e7490" } as CSSProperties}>
+      <section className="hub-card" style={{ "--c": "var(--teal)" } as CSSProperties}>
         <div className="hub-title">Information</div>
         <div className="grid g3">
           <div><label htmlFor="idsbuilder-title">Title *</label><input id="idsbuilder-title" value={doc.info.title} onChange={(e) => setInfo({ title: e.target.value })} placeholder={t("e.g. Project X – Stage 4 handover IDS")} /></div>
@@ -127,7 +127,7 @@ export default function IdsBuilder() {
         <textarea id="idsbuilder-description" rows={2} value={doc.info.description ?? ""} onChange={(e) => setInfo({ description: e.target.value })} />
       </section>
 
-      <section className="hub-card" style={{ "--c": "#4f46e5" } as CSSProperties}>
+      <section className="hub-card" style={{ "--c": "var(--accent)" } as CSSProperties}>
         <div className="row spread" style={{ marginBottom: 10 }}>
           <div className="hub-title" style={{ margin: 0 }}>Specifications</div>
           <div className="row">
@@ -170,7 +170,7 @@ export default function IdsBuilder() {
 
       <AiExtract onAdd={(specs) => { addSpecs(specs); setNotice({ kind: "ok", text: `${t("Specifications added by AI, review each one before export:")} ${specs.length}` }); }} />
 
-      <section className="hub-card" style={{ "--c": errorCount ? "#dc2626" : "#16a34a" } as CSSProperties}>
+      <section className="hub-card" style={{ "--c": errorCount ? "var(--danger)" : "var(--ok)" } as CSSProperties}>
         <div className="hub-title">Checks</div>
         {issues.length === 0 ? <div className="small">No problems found. The file is ready to export.</div> : (
           <ul className="ids-issues small">
@@ -184,7 +184,7 @@ export default function IdsBuilder() {
         )}
       </section>
 
-      <section className="hub-card" style={{ "--c": "#0f766e" } as CSSProperties}>
+      <section className="hub-card" style={{ "--c": "var(--teal)" } as CSSProperties}>
         <div className="row spread">
           <div className="hub-title" style={{ margin: 0 }}>Export</div>
           <div className="row">
@@ -306,9 +306,9 @@ function AiExtract({ onAdd }: { onAdd: (specs: IdsSpec[]) => void }) {
     finally { setBusy(false); }
   };
   return (
-    <section className="hub-card" style={{ "--c": "#0e7490" } as CSSProperties}>
+    <section className="hub-card" style={{ "--c": "var(--teal)" } as CSSProperties}>
       <div className="hub-title">AI helper</div>
-      {enabled === false && <div className="hub-tile small" style={{ "--c": "#0e7490", marginBottom: 10 } as CSSProperties}><b>AI isn't switched on yet.</b> Once it is, you can paste EIR or LOIN text here and get draft specifications. Everything else in the IDS builder works without it.</div>}
+      {enabled === false && <div className="hub-tile small" style={{ "--c": "var(--teal)", marginBottom: 10 } as CSSProperties}><b>AI isn't switched on yet.</b> Once it is, you can paste EIR or LOIN text here and get draft specifications. Everything else in the IDS builder works without it.</div>}
       <label htmlFor="idsbuilder-paste-eir-loin-text">Paste EIR / LOIN text</label>
       <textarea id="idsbuilder-paste-eir-loin-text" rows={6} value={text} onChange={(e) => setText(e.target.value.slice(0, 60000))} disabled={enabled === false}
         placeholder={t("e.g. All doors shall carry a fire rating and state whether they are external. Spaces shall have a room name and net floor area…")} />

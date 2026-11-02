@@ -1,6 +1,6 @@
 /* EIR ↔ BEP compliance matrix. Logical properties only, so the layout mirrors for Arabic (RTL). */
-.cm { display: grid; gap: 12px; --cm-met: var(--ok); --cm-partial: #38bdf8; --cm-missing: var(--danger); --cm-conflict: var(--ai); }
-:root[data-theme="dark"] .cm { --cm-partial: #7dd3fc; }
+.cm { display: grid; gap: 12px; --cm-met: var(--ok); --cm-partial: var(--info); --cm-missing: var(--danger); --cm-conflict: var(--ai); }
+:root[data-theme="dark"] .cm { --cm-partial: var(--info); }
 .cm-input { display: grid; gap: 8px; }
 .cm-input textarea { min-block-size: 140px; }
 .cm-opts { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }

@@ -17,7 +17,7 @@ interface Issue {
 const TYPES = ["Issue", "Clash", "RFI", "Request", "Comment", "Error", "Remark"];
 const STATUSES = ["Open", "In progress", "Resolved", "Closed"];
 const PRIORITIES = ["Low", "Normal", "High", "Critical"];
-const PRIORITY_COLOR: Record<string, string> = { Low: "#94a3b8", Normal: "#0e7c86", High: "#38bdf8", Critical: "#dc2626" };
+const PRIORITY_COLOR: Record<string, string> = { Low: "var(--muted)", Normal: "var(--teal)", High: "var(--info)", Critical: "var(--danger)" };
 const today = () => new Date().toISOString().slice(0, 10);
 const issueIdFromHash = () => window.location.hash.split("/")[5];
 
@@ -286,7 +286,7 @@ export default function Coordination({ data, sub }: { data: ProjectData; sub?: s
 // ---------------------------------------------------------------- risk register
 
 interface Risk { id: string; number: number; title: string; category: string; cause: string; likelihood: number; impact: number; mitigation: string; ownerId: string | null; status: string; residualLikelihood: number | null; residualImpact: number | null; reviewDate: string }
-const riskTone = (s: number) => (s >= 15 ? "#dc2626" : s >= 8 ? "#38bdf8" : "#16a34a");
+const riskTone = (s: number) => (s >= 15 ? "var(--danger)" : s >= 8 ? "var(--info)" : "var(--ok)");
 const RISK_CATEGORIES = ["Information delivery", "Technology / CDE", "Resources & capability", "Programme", "Security (19650-5)", "Commercial", "AI (42001)"];
 
 export function Risks({ data }: { data: ProjectData }) {
@@ -309,7 +309,7 @@ export function Risks({ data }: { data: ProjectData }) {
             {[5, 4, 3, 2, 1].map((l) => [<div key={"l" + l} className="tiny muted">{l}</div>, ...[1, 2, 3, 4, 5].map((i) => {
               const n = open.filter((r) => r.likelihood === l && r.impact === i).length;
               const on = cell && cell[0] === l && cell[1] === i;
-              return <div key={l + "-" + i} onClick={() => setCell(on ? null : [l, i])} style={{ background: riskTone(l * i) + (n ? "" : "33"), color: n ? "#fff" : "transparent", cursor: "pointer", outline: on ? "2px solid var(--text)" : undefined }}>{n || "·"}</div>;
+              return <div key={l + "-" + i} onClick={() => setCell(on ? null : [l, i])} style={{ background: n ? riskTone(l * i) : `color-mix(in srgb, ${riskTone(l * i)} 20%, transparent)`, color: n ? "var(--on-accent)" : "transparent", cursor: "pointer", outline: on ? "2px solid var(--text)" : undefined }}>{n || "·"}</div>;
             })])}
             <div />{[1, 2, 3, 4, 5].map((i) => <div key={"i" + i} className="tiny muted">{i}</div>)}
           </div>

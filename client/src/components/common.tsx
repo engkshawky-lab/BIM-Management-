@@ -7,7 +7,7 @@ export function StdBadge({ std }: { std: StandardId }) {
 
 export function StateTag({ state }: { state: string }) {
   const s = cdeStates.find((c) => c.id === state);
-  return <span className="state" style={{ background: s?.color ?? "#64748b" }}>{state}</span>;
+  return <span className="state" style={{ background: ({ WIP: "var(--muted)", SHARED: "var(--accent)", PUBLISHED: "var(--ok)", ARCHIVED: "var(--teal)" } as Record<string, string>)[s?.id ?? ""] ?? "var(--muted)" }}>{state}</span>;
 }
 
 export function Progress({ value }: { value: number }) {

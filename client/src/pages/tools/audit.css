@@ -1,7 +1,7 @@
 /* ISO 19650 audit assistant. Logical properties only, so the layout mirrors for Arabic (RTL). */
 .au { display: grid; gap: 12px;
-  --au-ok: var(--ok); --au-part: #f59e0b; --au-nc: var(--danger); --au-ne: #64748b; --au-na: var(--border); }
-:root[data-theme="dark"] .au { --au-part: #fbbf24; --au-ne: #94a3b8; }
+  --au-ok: var(--ok); --au-part: var(--warn); --au-nc: var(--danger); --au-ne: var(--muted); --au-na: var(--border); }
+:root[data-theme="dark"] .au { --au-part: var(--warn); --au-ne: var(--muted); }
 .au-ok { --au-c: var(--au-ok); } .au-part { --au-c: var(--au-part); } .au-nc { --au-c: var(--au-nc); } .au-ne { --au-c: var(--au-ne); } .au-na { --au-c: var(--au-na); }
 .au-note { border-inline-start: 3px solid var(--warn); }
 .au-disclaimer { border-inline-start: 3px solid var(--accent); font-size: 13px; }
@@ -13,8 +13,8 @@
 .au-step { display: inline-flex; gap: 8px; align-items: center; padding-block: 6px; padding-inline: 10px 14px; border-radius: 999px; }
 .au-step.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); font-weight: 600; }
 .au-step-n { display: inline-grid; place-items: center; inline-size: 22px; block-size: 22px; border-radius: 50%; background: var(--surface-2); font-size: 12px; font-weight: 700; }
-.au-step.on .au-step-n { background: var(--accent); color: #fff; }
-.au-step.done .au-step-n { background: var(--ok); color: #fff; }
+.au-step.on .au-step-n { background: var(--accent); color: var(--on-accent); }
+.au-step.done .au-step-n { background: var(--ok); color: var(--on-ok); }
 
 .au-panel { display: grid; gap: 10px; }
 .au-fs { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
@@ -32,8 +32,8 @@
 .au-files, .au-reg { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .au-files li { display: flex; gap: 10px; align-items: center; padding-block: 4px; border-block-end: 1px solid var(--border); }
 .au-fname { flex: 1; overflow-wrap: anywhere; }
-.au-ficon { display: inline-grid; place-items: center; min-inline-size: 36px; block-size: 22px; padding-inline: 4px; border-radius: 4px; font-size: 10px; font-weight: 700; color: #fff; background: var(--muted); direction: ltr; }
-.au-f-pdf { background: #b91c1c; } .au-f-doc { background: #1d4ed8; } .au-f-xls { background: #15803d; } .au-f-img { background: #0e7490; } .au-f-txt { background: #475569; }
+.au-ficon { display: inline-grid; place-items: center; min-inline-size: 36px; block-size: 22px; padding-inline: 4px; border-radius: 4px; font-size: 10px; font-weight: 700; color: var(--on-accent); background: var(--muted); direction: ltr; }
+.au-f-pdf { background: var(--danger); } .au-f-doc { background: var(--accent); } .au-f-xls { background: var(--ok); } .au-f-img { background: var(--teal); } .au-f-txt { background: var(--muted); }
 
 .au-partcounts { display: flex; flex-wrap: wrap; gap: 8px; }
 .au-pc { padding-block: 4px; padding-inline: 10px; border-radius: 8px; background: var(--surface-2); font-size: 13px; }

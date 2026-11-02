@@ -4,7 +4,7 @@ import type { GraphicId } from "../../../shared/data/hubs/types";
 // Built-in explanatory illustrations for the hubs. Drawn as SVG with theme colours so they read in
 // light and dark mode; labels are plain text nodes, so the Arabic layer translates them too.
 
-const C = { blue: "#3b82f6", green: "#16a34a", amber: "#38bdf8", purple: "#0e7490", red: "#dc2626", teal: "#0d9488" };
+const C = { blue: "var(--accent)", green: "var(--ok)", amber: "var(--info)", purple: "var(--teal)", red: "var(--danger)", teal: "var(--teal)" };
 const ink = "var(--text)", muted = "var(--muted)", card = "var(--surface-2)";
 
 /**
@@ -58,8 +58,8 @@ function Frame({ w, h, children, label }: { w: number; h: number; children: Reac
 const Box = ({ x, y, w, h, c, title, sub, filled }: { x: number; y: number; w: number; h: number; c: string; title: string; sub?: string; filled?: boolean }) => (
   <g>
     <rect x={x} y={y} width={w} height={h} rx={10} fill={filled ? c : card} stroke={c} strokeWidth={1.5} />
-    <text x={x + w / 2} y={y + (sub ? h / 2 - 4 : h / 2 + 5)} textAnchor="middle" fontSize={13} fontWeight={700} fill={filled ? "#fff" : ink}>{title}</text>
-    {sub && <text x={x + w / 2} y={y + h / 2 + 13} textAnchor="middle" fontSize={11} fill={filled ? "#fff" : muted}>{sub}</text>}
+    <text x={x + w / 2} y={y + (sub ? h / 2 - 4 : h / 2 + 5)} textAnchor="middle" fontSize={13} fontWeight={700} fill={filled ? "var(--on-accent)" : ink}>{title}</text>
+    {sub && <text x={x + w / 2} y={y + h / 2 + 13} textAnchor="middle" fontSize={11} fill={filled ? "var(--on-accent)" : muted}>{sub}</text>}
   </g>
 );
 const Arrow = ({ x1, y1, x2, y2, c = muted }: { x1: number; y1: number; x2: number; y2: number; c?: string }) => {
@@ -140,7 +140,7 @@ function LoinExample() {
           <g key={k.m}>
             <rect x={x} y={40} width={277} height={240} rx={12} fill={card} stroke={k.c} strokeWidth={1.5} />
             <rect x={x} y={40} width={277} height={34} rx={12} fill={k.c} />
-            <text x={x + 138} y={62} textAnchor="middle" fontSize={13} fontWeight={700} fill="#fff">{k.m}</text>
+            <text x={x + 138} y={62} textAnchor="middle" fontSize={13} fontWeight={700} fill="var(--on-accent)">{k.m}</text>
             {[["Geometry", k.g, C.blue], ["Alphanumeric", k.a, C.purple], ["Documentation", k.d, C.amber]].map(([h, v, c], j) => (
               <g key={h}>
                 <text x={x + 14} y={98 + j * 62} fontSize={11} fontWeight={700} fill={c}>{h}</text>
