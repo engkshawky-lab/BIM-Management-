@@ -696,3 +696,15 @@ export const companyVideos = mysqlTable("company_videos", {
   uploadedBy: ref("uploaded_by").notNull(),
   createdAt: created(),
 }, (t) => [index("company_videos_topic").on(t.topic)]);
+
+/** One row per completed Claude API response, including pause-turn continuations. Independent of quotas. */
+export const aiTokenUsage = mysqlTable("ai_token_usage", {
+  id: id(), userId: ref("user_id"), feature: varchar("feature", { length: 255 }).notNull(),
+  model: varchar("model", { length: 120 }).notNull(),
+  inputTokens: bigint("input_tokens", { mode: "number", unsigned: true }).notNull(),
+  outputTokens: bigint("output_tokens", { mode: "number", unsigned: true }).notNull(),
+  cacheCreationInputTokens: bigint("cache_creation_input_tokens", { mode: "number", unsigned: true }).notNull(),
+  cacheReadInputTokens: bigint("cache_read_input_tokens", { mode: "number", unsigned: true }).notNull(),
+  serverToolUse: json<Record<string, number>>("server_tool_use").notNull(),
+  rawUsage: json<Record<string, unknown>>("raw_usage").notNull(), createdAt: created(),
+}, (t) => [index("ai_token_usage_time").on(t.createdAt), index("ai_token_usage_user_time").on(t.userId, t.createdAt)]);

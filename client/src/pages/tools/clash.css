@@ -5,7 +5,7 @@
 .clash-panel { display: grid; gap: 10px; }
 .clash-file { display: inline-flex; align-items: center; gap: 4px; }
 .clash-x { border: 0; background: none; padding: 0 2px; margin-inline-start: 2px; cursor: pointer; color: var(--muted); font-size: 14px; line-height: 1; }
-.clash-x:hover { color: #b91c1c; }
+.clash-x:hover { color: var(--danger); }
 .clash-inline { gap: 6px; align-items: center; cursor: pointer; }
 .clash-kpis { display: flex; flex-wrap: wrap; gap: 10px; }
 .clash-kpis > div { display: grid; gap: 2px; min-inline-size: 120px; padding-block: 8px; padding-inline: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); }
@@ -30,12 +30,12 @@
 .clash-table td select { font-size: 12.5px; }
 .clash-label { font-weight: 600; margin-block-start: 4px; max-inline-size: 360px; }
 .clash-expand { border: 0; background: none; padding: 0; margin-inline-end: 6px; cursor: pointer; color: var(--muted); }
-.clash-kind.k-duplicate { background: color-mix(in srgb, #0e7490 14%, var(--surface)); color: #0e7490; }
-.clash-kind.k-cluster { background: color-mix(in srgb, #0284c7 14%, var(--surface)); color: #0369a1; }
-.clash-row.p-critical td:first-child { border-inline-start: 3px solid #b91c1c; }
-.clash-row.p-high td:first-child { border-inline-start: 3px solid #ea580c; }
-.clash-row.p-normal td:first-child { border-inline-start: 3px solid #2563eb; }
-.clash-row.p-low td:first-child { border-inline-start: 3px solid #9ca3af; }
+.clash-kind.k-duplicate { background: color-mix(in srgb, var(--teal) 14%, var(--surface)); color: var(--teal); }
+.clash-kind.k-cluster { background: color-mix(in srgb, var(--info) 14%, var(--surface)); color: var(--info); }
+.clash-row.p-critical td:first-child { border-inline-start: 3px solid var(--danger); }
+.clash-row.p-high td:first-child { border-inline-start: 3px solid var(--orange); }
+.clash-row.p-normal td:first-child { border-inline-start: 3px solid var(--accent); }
+.clash-row.p-low td:first-child { border-inline-start: 3px solid var(--muted); }
 .clash-row.fp td { opacity: 0.6; }
 .clash-detail > td { background: var(--surface-2); }
 .clash-detail table { font-size: 12px; }

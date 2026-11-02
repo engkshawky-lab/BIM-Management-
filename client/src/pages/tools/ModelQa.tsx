@@ -17,7 +17,7 @@ const IDS_DRAFT_KEY = "bim:ids:draft";
 const SOFTWARE = ["Revit", "Archicad", "Tekla", "Civil 3D", "Other"] as const;
 type Software = (typeof SOFTWARE)[number];
 const DISC_LABEL: Record<Discipline, string> = { architecture: "Architecture", structure: "Structure", MEP: "MEP", civil: "Civil", other: "Other" };
-const DISC_COLOR: Record<Discipline, string> = { architecture: "#2563eb", structure: "#b45309", MEP: "#0d9488", civil: "#65a30d", other: "#64748b" };
+const DISC_COLOR: Record<Discipline, string> = { architecture: "var(--accent)", structure: "var(--warn)", MEP: "var(--teal)", civil: "var(--ok)", other: "var(--muted)" };
 const PRIO_COLOR = { high: "var(--danger)", medium: "var(--warn)", low: "var(--muted)" } as const;
 const STAGE: Record<string, string> = { read: "Reading the file…", parse: "Parsing IFC entities…", model: "Building the model (property sets, storeys)…", check: "Checking requirements…" };
 
@@ -291,7 +291,7 @@ export default function ModelQa() {
         <>
           <div className="grid g4">
             <div className="card stat-card"><span className="small muted">{t("Elements checked")}</span><span className="stat">{summary.elementsChecked.toLocaleString()}</span></div>
-            <div className="card stat-card"><span className="small muted">{t("Pass rate")}</span><span className="stat" style={{ color: passPct >= 90 ? "var(--ok, #16a34a)" : passPct >= 60 ? "var(--warn)" : "var(--danger)" }}>{passPct}%</span>
+            <div className="card stat-card"><span className="small muted">{t("Pass rate")}</span><span className="stat" style={{ color: passPct >= 90 ? "var(--ok, var(--ok))" : passPct >= 60 ? "var(--warn)" : "var(--danger)" }}>{passPct}%</span>
               <div className="mqa-meter"><div style={{ inlineSize: passPct + "%" }} /></div></div>
             <div className="card stat-card"><span className="small muted">{t("Failing elements")}</span><span className="stat">{failingElements.toLocaleString()}</span></div>
             <div className="card stat-card"><span className="small muted">{t("Failing groups")}</span><span className="stat">{groups.length.toLocaleString()}</span></div>
@@ -383,7 +383,7 @@ export default function ModelQa() {
           {groups.length > 0 && (
             <div className="mqa-steps">
               {/* 4 AI */}
-              <section className="hub-card" style={{ "--c": "#0e7490" } as CSSProperties}>
+              <section className="hub-card" style={{ "--c": "var(--teal)" } as CSSProperties}>
                 <div className="hub-title">{t("4. Explain with AI (optional)")}</div>
                 {aiEnabled === false && <div className="hub-tile small" style={{ marginBottom: 10 }}><b>{t("AI isn't switched on yet.")}</b> {t("Once it is, you can get a plain-language explanation, a fix for your authoring software and a priority for each group. The check and exports work without it.")}</div>}
                 <div className="row">

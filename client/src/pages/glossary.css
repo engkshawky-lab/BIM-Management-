@@ -6,11 +6,11 @@
 
 .gl-letters { display: flex; flex-wrap: wrap; gap: 4px; }
 .gl-letters button { min-inline-size: 32px; justify-content: center; padding-block: 4px; padding-inline: 6px; font-size: 13px; font-weight: 700; direction: ltr; }
-.gl-letters button.on { background: var(--hub); border-color: var(--hub); color: #fff; }
+.gl-letters button.on { background: var(--hub); border-color: var(--hub); color: var(--on-accent); }
 
 .gl-cats { display: flex; flex-wrap: wrap; gap: 6px; }
 .gl-cats button.chip { padding-block: 4px; padding-inline: 10px; font-size: 12.5px; }
-.gl-cats button.chip.on { background: var(--hub); color: #fff; }
+.gl-cats button.chip.on { background: var(--hub); color: var(--on-accent); }
 .gl-cats .gl-n { margin-inline-start: 6px; opacity: .75; font-weight: 500; }
 
 .gl-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
@@ -34,7 +34,7 @@
 
 .gl-foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .gl-foot .chip { cursor: pointer; }
-.gl-foot .chip:hover { background: var(--hub); color: #fff; }
+.gl-foot .chip:hover { background: var(--hub); color: var(--on-accent); }
 .gl-meta { margin-inline-start: auto; display: inline-flex; gap: 8px; align-items: center; }
 
 .gl-empty { text-align: center; padding-block: 28px; }

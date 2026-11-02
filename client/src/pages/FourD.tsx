@@ -10,7 +10,7 @@ const STATE: Record<CellState, { label: string; bg: string; fg: string }> = {
   none: { label: "Not linked", bg: "transparent", fg: "var(--muted)" },
   "not-started": { label: "Not started", bg: "var(--surface-2)", fg: "var(--text)" },
   "in-progress": { label: "In progress", bg: "color-mix(in srgb, var(--accent) 40%, var(--surface))", fg: "var(--text)" },
-  complete: { label: "Complete", bg: "var(--accent)", fg: "#fff" },
+  complete: { label: "Complete", bg: "var(--accent)", fg: "var(--on-accent)" },
 };
 const blank = (): Activity => ({ id: crypto.randomUUID(), code: "", name: "", start: "", finish: "", actualStart: "", actualFinish: "", storeys: [], classes: [] });
 const addDays = (d: string, n: number) => new Date(Date.parse(d) + n * 864e5).toISOString().slice(0, 10);

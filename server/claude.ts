@@ -1,3 +1,4 @@
+import { recordUsage, type UsageContext } from "./aiMetering";
 import Anthropic from "@anthropic-ai/sdk";
 import { setting } from "./appSettings";
 
@@ -24,7 +25,7 @@ const getClient = () => {
  * Ask Claude and return the text answer. Uses the server-side refusal fallback (routed by
  * refusal category) so a policy decline is retried on a suitable model within the same call.
  */
-export async function ask(opts: { system: string; messages: Anthropic.Beta.BetaMessageParam[]; maxTokens?: number; effort?: "low" | "medium" | "high"; tools?: unknown[] }) {
+export async function ask(opts: { usageContext?: UsageContext; system: string; messages: Anthropic.Beta.BetaMessageParam[]; maxTokens?: number; effort?: "low" | "medium" | "high"; tools?: unknown[] }) {
   try {
     const messages = [...opts.messages];
     let msg;
@@ -47,6 +48,7 @@ export async function ask(opts: { system: string; messages: Anthropic.Beta.BetaM
       msg = params.max_tokens > 16000
         ? await getClient().beta.messages.stream(params).finalMessage()
         : await getClient().beta.messages.create(params);
+      await recordUsage(msg, opts.usageContext);
       if (msg.stop_reason !== "pause_turn") break;
       messages.push({ role: "assistant", content: msg.content as Anthropic.Beta.BetaContentBlockParam[] });
     }

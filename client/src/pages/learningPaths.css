@@ -20,16 +20,16 @@
 .lp-steps { list-style: none; padding: 0; margin: 14px 0; display: grid; gap: 10px; counter-reset: none; }
 .lp-step { display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; border-inline-start: 3px solid var(--hub); }
 .lp-step.done { opacity: .78; border-inline-start-color: var(--ok); }
-.lp-n { flex: none; inline-size: 30px; block-size: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: #fff; background: var(--hub); }
+.lp-n { flex: none; inline-size: 30px; block-size: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: var(--on-accent); background: var(--hub); }
 .lp-step.done .lp-n { background: var(--ok); }
 .lp-body { flex: 1; min-inline-size: 0; }
 .lp-body p { margin-block: 4px 8px; }
 .lp-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .lp-kind { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--text); }
-.lp-kind.k-read { background: color-mix(in srgb, #3b82f6 14%, var(--surface)); color: #2563eb; }
-.lp-kind.k-practise { background: color-mix(in srgb, #0d9488 14%, var(--surface)); color: #0f766e; }
-.lp-kind.k-tool { background: color-mix(in srgb, #0e7490 14%, var(--surface)); color: #155e75; }
-.lp-kind.k-quiz { background: color-mix(in srgb, #f59e0b 16%, var(--surface)); color: #b45309; }
+.lp-kind.k-read { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent); }
+.lp-kind.k-practise { background: color-mix(in srgb, var(--teal) 14%, var(--surface)); color: var(--teal); }
+.lp-kind.k-tool { background: color-mix(in srgb, var(--teal) 14%, var(--surface)); color: var(--border); }
+.lp-kind.k-quiz { background: color-mix(in srgb, var(--warn) 16%, var(--surface)); color: var(--warn); }
 .lp-tick { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
 .lp-tick input { margin: 0; }
 .lp-finish { border-top-color: var(--ok); }

@@ -48,7 +48,7 @@ export async function notify(projectId: string, actorId: string, message: string
   const [project] = await db.select({ code: schema.projects.code, name: schema.projects.name }).from(schema.projects).where(eq(schema.projects.id, projectId));
   for (const u of users.filter((x) => x.pref === "instant" && !x.disabled)) {
     const row = rows.find((r) => r.userId === u.id)!;
-    void sendMail(u.email, `[${project?.code ?? "Portal"}] ${message.slice(0, 120)}`, [message, `Project: ${project?.code} — ${project?.name}`], link ? { label: "Open in the portal", url: `${publicUrl()}/#${link}` } : undefined)
+    void sendMail(u.email, `[${project?.code ?? "Portal"}] ${message.slice(0, 120)}`, [message, `Project: ${project?.code} — ${project?.name}`], link ? { label: "Open in the portal", url: `${publicUrl()}/#${link}` } : undefined, { badge: { text: project?.code ? `Project ${project.code}` : "Project update", tone: "info" }, heading: "Project update", reason: "You receive this because you are a member of this project. Change email settings in your profile." })
       .then(async (ok) => { if (ok) await db.update(schema.notifications).set({ emailed: true }).where(eq(schema.notifications.id, row.id)); })
       .catch(() => undefined);
   }

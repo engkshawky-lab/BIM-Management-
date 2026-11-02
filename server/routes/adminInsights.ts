@@ -1,4 +1,5 @@
-import { and, count, desc, eq, gt, max, sql } from "drizzle-orm";
+import { estimateCost, priceSchema } from "../../shared/aiPricing";
+import { and, count, desc, eq, gt, gte, lt, max, sql } from "drizzle-orm";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
 import { db, newId, schema } from "../db";
@@ -62,6 +63,25 @@ r.get("/admin/ai-usage", requireAdmin, h(async (req, res) => {
   });
 }));
 
+// UTC inclusive calendar dates, with an exclusive next-day upper bound.
+r.get("/admin/ai-tokens", requireAdmin, h(async (req, res) => {
+  const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((v) => Number.isFinite(Date.parse(v)) && new Date(v).toISOString().slice(0, 10) === v);
+  const q = parse(z.object({ from: date.optional(), to: date.optional() }), req.query, res); if (!q) return;
+  if (q.from && q.to && q.from > q.to) return res.status(400).json({ error: "Invalid date range." });
+  const u = schema.aiTokenUsage;
+  const rows = await db.select({ userId: u.userId, name: schema.users.name, email: schema.users.email, feature: u.feature, model: u.model,
+    requests: count(), inputTokens: sql<number>`sum(${u.inputTokens})`, outputTokens: sql<number>`sum(${u.outputTokens})`,
+    cacheCreationInputTokens: sql<number>`sum(${u.cacheCreationInputTokens})`, cacheReadInputTokens: sql<number>`sum(${u.cacheReadInputTokens})`,
+  }).from(u).leftJoin(schema.users, eq(u.userId, schema.users.id))
+    .where(and(q.from ? gte(u.createdAt, new Date(q.from)) : undefined, q.to ? lt(u.createdAt, new Date(Date.parse(q.to) + 864e5)) : undefined))
+    .groupBy(u.userId, schema.users.name, schema.users.email, u.feature, u.model);
+  const prices = priceSchema.parse(JSON.parse(setting<string>("aiTokenPrices")));
+  res.json({ rows: rows.map((row) => {
+    const tokens = { inputTokens: Number(row.inputTokens), outputTokens: Number(row.outputTokens), cacheCreationInputTokens: Number(row.cacheCreationInputTokens), cacheReadInputTokens: Number(row.cacheReadInputTokens) };
+    return { ...row, ...tokens, requests: Number(row.requests), estimatedUsd: estimateCost(tokens, row.model, prices) };
+  }) });
+}));
+
 /** Points for the leaderboard: 10 per lesson completed plus the best score in each quiz topic. */
 export function learningRows(lessons: { userId: string; at: Date }[], quizzes: { userId: string; topic: string; score: number; total: number; at: Date }[]) {
   const by = new Map<string, { lessons: number; quizzes: number; pct: number[]; best: Map<string, number>; last: number }>();
@@ -118,7 +138,7 @@ r.post("/admin/users/:id/approve", requireAdmin, h(async (req, res) => {
   if (!u) return res.status(404).json({ error: "No account waiting for approval with that id." });
   await db.update(schema.users).set({ disabled: 0 }).where(eq(schema.users.id, u.id));
   const base = publicUrl(`${req.protocol}://${req.get("host")}`);
-  await sendMail(u.email, "Your account is ready", [`Hello ${u.name},`, "An administrator has approved your account. You can sign in now."], { label: "Sign in", url: `${base}/login` });
+  await sendMail(u.email, "Your account is ready", [`Hello ${u.name},`, "An administrator has approved your account. You can sign in now."], { label: "Sign in", url: `${base}/#/login` }, { badge: { text: "Account approved", tone: "success" } });
   console.log(`[admin] ${req.user!.email} approved user ${u.id}`);
   res.json({ ok: true });
 }));
@@ -141,7 +161,7 @@ publicContact.post("/public/contact", h(async (req, res) => {
   const { website: _w, ...lead } = body;
   await db.insert(schema.leads).values({ id: newId(), ...lead, createdAt: new Date() });
   const to = setting<string>("contactEmail");
-  if (to) await sendMail(to, `New enquiry from ${lead.name}`, [`${lead.name} <${lead.email}>${lead.company ? ` · ${lead.company}` : ""}${lead.phone ? ` · ${lead.phone}` : ""}`, ...(lead.interest ? [`Interested in: ${lead.interest}`] : []), lead.message || "(no message)"], { label: "Open leads", url: `${publicUrl(`${req.protocol}://${req.get("host")}`)}/#/admin/leads` });
+  if (to) await sendMail(to, `New enquiry from ${lead.name}`, [`${lead.name} <${lead.email}>${lead.company ? ` · ${lead.company}` : ""}${lead.phone ? ` · ${lead.phone}` : ""}`, ...(lead.interest ? [`Interested in: ${lead.interest}`] : []), lead.message || "(no message)"], { label: "Open leads", url: `${publicUrl(`${req.protocol}://${req.get("host")}`)}/#/admin/leads` }, { badge: { text: "New enquiry", tone: "gold" }, reason: "You receive this because you are an administrator of the portal." });
   res.json({ ok: true });
 }));
 

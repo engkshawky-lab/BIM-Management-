@@ -290,7 +290,7 @@ export default function ProgrammePlan() {
       {notice && <div className={`card small ${notice.kind === "error" ? "danger" : ""}`} role="status">
         <div className="row spread"><span>{notice.text}</span><button className="tiny ghost" aria-label={t("Dismiss")} onClick={() => setNotice(null)}>✕</button></div></div>}
 
-      <section className="hub-card" style={cv("#0e7490")}>
+      <section className="hub-card" style={cv("var(--teal)")}>
         <div className="hub-title">1. Programme</div>
         <div className="row">
           <input ref={fileRef} type="file" accept=".xml,.xer,.csv,.txt,.xlsx" hidden onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ""; }} />
@@ -325,7 +325,7 @@ export default function ProgrammePlan() {
         </>}
       </section>
 
-      <section className="hub-card" style={cv("#4f46e5")}>
+      <section className="hub-card" style={cv("var(--accent)")}>
         <div className="hub-title">2. Plan settings</div>
         <div className="grid g3">
           <label className="small">Plan<select value={kind} onChange={(e) => { setKind(e.target.value as Kind); setConfirm(false); }}><option value="tidp">TIDP</option><option value="midp">MIDP</option></select></label>
@@ -345,7 +345,7 @@ export default function ProgrammePlan() {
         </div>
       </section>
 
-      {gen.length > 0 && <section className="hub-card" style={cv("#15803d")}>
+      {gen.length > 0 && <section className="hub-card" style={cv("var(--ok)")}>
         <div className="row spread">
           <div className="hub-title" style={{ margin: 0 }}>3. Information containers</div>
           <div className="row">
@@ -382,7 +382,7 @@ export default function ProgrammePlan() {
         {kind === "midp" && new Set(numbered.map((r) => r.originator || header.originator)).size > 1 && <p className="small muted prog-note">The plan generator names every container with one originator ({header.originator || "—"}). The originator proposed for each row is kept in the exports.</p>}
       </section>}
 
-      <section className="hub-card" style={cv("#b45309")}>
+      <section className="hub-card" style={cv("var(--warn)")}>
         <div className="hub-title">Programme changed?</div>
         <p className="small muted" style={{ marginBlockStart: 0 }}>Load the new version of the programme to see which containers in the saved {kind.toUpperCase()} are linked to activities that moved or were removed. {linked} saved rows are linked to activities.</p>
         <div className="row">

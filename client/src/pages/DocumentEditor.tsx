@@ -84,7 +84,7 @@ function FieldInput({ id, f, value, onChange, disabled }: { id?: string; f: Temp
 export function Preview({ title, doc, values, t }: { title: string; doc: DocRow; values: Values; t: DocTemplate }) {
   return (
     <div className="preview">
-      <div className="small" style={{ color: "#5b6b7b" }}>{t.standard === "iso19650" ? "ISO 19650" : "ISO/IEC 42001"} · {t.code} · {t.clauseRefs.join(", ")}</div>
+      <div className="small" style={{ color: "var(--muted)" }}>{t.standard === "iso19650" ? "ISO 19650" : "ISO/IEC 42001"} · {t.code} · {t.clauseRefs.join(", ")}</div>
       <h1>{title}</h1>
       <table><tbody>
         <tr><th>Document no.</th><td>{doc.containerName || "—"}</td><th>Revision</th><td>{doc.revision}</td></tr>

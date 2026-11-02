@@ -28,7 +28,7 @@ Prefer primary sources (ISO, BSI, CEN, buildingSMART International, UK BIM Frame
 Respond with one JSON object only, no Markdown fences:
 {"items": [{"title": string, "summary": "3–5 sentence neutral summary in your own words", "source": "publisher name", "url": "https://…", "date": "YYYY-MM-DD or empty if unknown",
 "topic": ${NEWS_TOPICS.map((t) => `"${t}"`).join(" | ")}, "relevance": "High" | "Medium" | "Low", "parts": ["19650-1".."19650-6" affected, may be empty]}]}`;
-  const { text } = await ask({
+  const { text } = await ask({ usageContext: { userId: null, feature: "news.refresh" },
     system, messages: [{ role: "user", content: `Today is ${new Date().toISOString().slice(0, 10)}. Compile the news feed.` }],
     tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }], maxTokens: 12000,
   });

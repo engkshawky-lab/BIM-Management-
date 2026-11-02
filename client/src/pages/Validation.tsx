@@ -14,7 +14,7 @@ export const STATUS_STYLE: Record<string, { label: string; color: string }> = {
   pass: { label: "PASS", color: "var(--ok)" }, warn: { label: "PASS with warnings", color: "var(--warn)" },
   fail: { label: "FAIL", color: "var(--danger)" }, error: { label: "ERROR", color: "var(--danger)" },
 };
-export const RunBadge = ({ status }: { status: string }) => <span className="state" style={{ background: STATUS_STYLE[status]?.color ?? "#64748b" }}>{STATUS_STYLE[status]?.label ?? status}</span>;
+export const RunBadge = ({ status }: { status: string }) => <span className="state" style={{ background: STATUS_STYLE[status]?.color ?? "var(--muted)" }}>{STATUS_STYLE[status]?.label ?? status}</span>;
 
 function Overview({ data }: { data: ProjectData }) {
   const { toast } = useSession();

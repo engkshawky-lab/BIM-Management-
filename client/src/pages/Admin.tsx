@@ -7,7 +7,7 @@ import AdminSettings from "./AdminSettings";
 import { AiUsage, Learning, Leads, PageCheck, Pending, Sessions, Statistics, Subscriptions } from "./AdminInsights";
 import { t } from "../i18n";
 
-interface UserRow { id: string; name: string; email: string; organization: string; role: string; disabled: boolean; projects: number; createdAt: string; lastLoginAt: string | null; plan: string; renewsAt: string | null; emailVerifiedAt: string | null }
+interface UserRow { aiRequests: number; aiTokens: number; id: string; name: string; email: string; organization: string; role: string; disabled: boolean; projects: number; createdAt: string; lastLoginAt: string | null; plan: string; renewsAt: string | null; emailVerifiedAt: string | null }
 interface Fb { id: string; kind: string; message: string; page: string; status: string; name: string; email: string; createdAt: string; reply: string; repliedAt: string | null; hasScreenshot: boolean }
 interface Act { id: string; project: string; user: string; summary: string; link: string; createdAt: string }
 interface Branding { orgName: string; color: string; logo: string; footer: string }
@@ -55,10 +55,10 @@ function Users() {
       <input aria-label="Search users…" placeholder="Search users…" value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 320, marginBottom: 10 }} />
       {link && <div className="banner info">One-time reset link for <b>{link.email}</b> (valid 60 minutes) — send it to them securely: <code style={{ wordBreak: "break-all" }}>{link.link}</code> <button className="small" onClick={() => navigator.clipboard?.writeText(link.link)}>Copy</button></div>}
       <div className="table-wrap"><table className="data">
-        <thead><tr><th>Name</th><th>Email</th><th>Organisation</th><th>Projects</th><th>Joined</th><th>Last sign-in</th><th>Role</th><th>Plan</th><th>Status</th><th>Email</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Name</th><th>Email</th><th>Organisation</th><th>Projects</th><th>{t("AI tokens (all time)")}</th><th>Joined</th><th>Last sign-in</th><th>Role</th><th>Plan</th><th>Status</th><th>Email</th><th>Actions</th></tr></thead>
         <tbody>{list.map((u) => (
           <tr key={u.id} style={u.disabled ? { opacity: 0.6 } : undefined}>
-            <td>{u.name}</td><td className="small">{u.email}</td><td className="small">{u.organization}</td><td>{u.projects}</td>
+            <td>{u.name}</td><td className="small">{u.email}</td><td className="small">{u.organization}</td><td>{u.projects}</td><td><a href="#/admin/ai">{u.aiTokens.toLocaleString()}</a><div className="tiny muted">{u.aiRequests} {t("Requests")}</div></td>
             <td className="small">{fmtDate(u.createdAt)}</td><td className="small">{u.lastLoginAt ? fmtDate(u.lastLoginAt) : "—"}</td>
             <td><select aria-label="Role" value={u.role} disabled={u.id === user.id} onChange={(e) => upd(u.id, { role: e.target.value })}><option value="user">User</option><option value="recruiter">Recruiter</option><option value="admin">Admin</option></select></td>
             <td><select aria-label="Plan" value={u.plan === "enterprise" ? "expert" : u.plan} onChange={async (e) => { const plan = e.target.value; const m = plan === "free" ? null : prompt("For how many months? (leave empty for no end date)", "12"); if (m === null && plan !== "free") return; try { await api(`/admin/users/${u.id}/plan`, { method: "PUT", body: { plan, months: m ? Number(m) : null } }); load(); } catch (err) { toast((err as Error).message, "error"); } }}>

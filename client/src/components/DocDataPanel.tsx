@@ -47,7 +47,7 @@ export function DocDataPanel({ data, what, code }: { data: ReturnType<typeof use
     <div className="hub-card" style={{ "--c": missing.length ? "var(--warn)" : "var(--ok)", display: "grid", gap: 10 } as CSSProperties}>
       <div className="row spread">
         <div><b>Document data — required before {what}</b><div className="small muted">Controlled project, organisation and appointment details. They are written into the cover page, the document control table and every export.</div></div>
-        <span className="badge" style={missing.length ? { background: "var(--warn)", color: "#fff", borderColor: "var(--warn)" } : { background: "var(--ok)", color: "#fff", borderColor: "var(--ok)" }}>{missing.length ? `${missing.length} required` : "✓ Complete"}</span>
+        <span className="badge" style={missing.length ? { background: "var(--warn)", color: "var(--on-accent)", borderColor: "var(--warn)" } : { background: "var(--ok)", color: "var(--on-accent)", borderColor: "var(--ok)" }}>{missing.length ? `${missing.length} required` : "✓ Complete"}</span>
       </div>
       <div className="grid g4">{REQUIRED.map((f) => field(f, true))}</div>
       <button type="button" className="ghost small" style={{ justifySelf: "start" }} onClick={() => setMore(!more)}>{more ? "▾ Hide optional details" : "▸ Optional details: project code, owner, checked/approved by, issue date, security, CDE"}</button>

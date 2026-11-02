@@ -14,7 +14,7 @@ import { ProjectDataGate, useGenerationReady } from "./ProjectData";
 // AI document generator (outline → section-by-section drafting) and AI document review (compliance matrix).
 
 const Field = ({ label, children }: { label: string; children: ReactNode }) => <label className="small" style={{ display: "grid", gap: 4, fontWeight: 400, margin: 0 }}><span className="muted">{label}</span>{children}</label>;
-const tone = (s: string) => (["critical", "missing", "Not fit for purpose"].includes(s) ? "var(--danger)" : ["major", "partial", "Major revisions", "changed"].includes(s) ? "var(--warn)" : ["minor", "Minor revisions"].includes(s) ? "#3b82f6" : "var(--ok)");
+const tone = (s: string) => (["critical", "missing", "Not fit for purpose"].includes(s) ? "var(--danger)" : ["major", "partial", "Major revisions", "changed"].includes(s) ? "var(--warn)" : ["minor", "Minor revisions"].includes(s) ? "var(--accent)" : "var(--ok)");
 const Pill = ({ text }: { text: string }) => <span className="badge" style={{ color: tone(text), borderColor: tone(text), background: "transparent", textTransform: "capitalize" }}>{text}</span>;
 const slug = (s: string) => s.replace(/[^\w-]+/g, "-").replace(/-+/g, "-").slice(0, 60);
 const load = <T,>(k: string): T | null => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) as T : null; } catch { return null; } };
@@ -110,7 +110,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <div className="hub-tile small">Writing a full EIR and AIR, or a BEP that answers a client's EIR? The AI studio has dedicated tools: <a href="#/ai-studio/eir-writer">EIR writer</a> · <a href="#/ai-studio/bep-writer">BEP from EIR</a>.</div>
-      <div className="row">{STEPS.map((s, i) => <span key={s} className="chip" style={i + 1 === step ? { background: "var(--hub)", color: "#fff" } : i + 1 < step ? { color: "var(--ok)" } : undefined}>{i + 1 < step ? "✓" : i + 1}. {s}</span>)}</div>
+      <div className="row">{STEPS.map((s, i) => <span key={s} className="chip" style={i + 1 === step ? { background: "var(--hub)", color: "var(--on-accent)" } : i + 1 < step ? { color: "var(--ok)" } : undefined}>{i + 1 < step ? "✓" : i + 1}. {s}</span>)}</div>
 
       {!outline && <ProjectDataGate docType={f.docType} what={f.docType || "this document"} />}
       {!outline && <DocDataPanel data={doc} what="generating the document" code={code} />}
@@ -170,7 +170,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
               <button className="small" onClick={() => { void navigator.clipboard?.writeText(assembled); toast("Copied."); }}>Copy</button>
               <button className="ghost small" onClick={startOver}>New document</button>
             </div>
-            {toConfirm.length > 0 && <div className="hub-tile" style={{ "--c": "#ca8a04" } as CSSProperties}>
+            {toConfirm.length > 0 && <div className="hub-tile" style={{ "--c": "var(--warn)" } as CSSProperties}>
               <b className="small">{toConfirm.length} item{toConfirm.length > 1 ? "s" : ""} to confirm</b>
               <div className="small muted">Highlighted in yellow in the draft and in Word.</div>
               <ul className="small" style={{ margin: "4px 0 0", maxHeight: 160, overflow: "auto" }}>{toConfirm.slice(0, 30).map((p) => <li key={p}>{p}</li>)}</ul>
@@ -286,10 +286,10 @@ function ReviewResult({ r, mode }: { r: Review; mode: string }) {
           <div style={{ width: 74, height: 74, borderRadius: "50%", background: "var(--surface)", display: "grid", placeItems: "center", textAlign: "center" }}><div><b style={{ fontSize: 24, color: ring }}>{r.score}</b><div className="tiny muted">of 100</div></div></div>
         </div>
         <div style={{ flex: 1, minWidth: 220, display: "grid", gap: 6 }}>
-          <div className="row"><span className="badge" style={{ background: ring, color: "#fff", borderColor: ring, fontSize: 13 }}>{r.verdict}</span><b>{r.docType || "Document"}</b></div>
+          <div className="row"><span className="badge" style={{ background: ring, color: "var(--on-accent)", borderColor: ring, fontSize: 13 }}>{r.verdict}</span><b>{r.docType || "Document"}</b></div>
           <div className="small muted">Requirement coverage {r.coveragePct}% · {fc("critical")} critical · {fc("major")} major · {fc("minor")} minor findings</div>
           <div style={{ display: "flex", height: 10, borderRadius: 5, overflow: "hidden", background: "var(--surface-2)" }}>
-            {[["met", "var(--ok)"], ["partial", "var(--warn)"], ["missing", "var(--danger)"], ["changed", "#3b82f6"]].map(([s, c]) => counts(s) > 0 && <div key={s} title={`${counts(s)} ${s}`} style={{ width: `${(counts(s) / total) * 100}%`, background: c }} />)}
+            {[["met", "var(--ok)"], ["partial", "var(--warn)"], ["missing", "var(--danger)"], ["changed", "var(--accent)"]].map(([s, c]) => counts(s) > 0 && <div key={s} title={`${counts(s)} ${s}`} style={{ width: `${(counts(s) / total) * 100}%`, background: c }} />)}
           </div>
           <div className="row small">{[["met", "Met"], ["partial", "Partly met"], ["missing", "Missing"], ["changed", "Changed"]].map(([s, l]) => counts(s) > 0 && <span key={s} style={{ color: tone(s === "met" ? "ok" : s) }}>● {counts(s)} {l}</span>)}</div>
         </div>

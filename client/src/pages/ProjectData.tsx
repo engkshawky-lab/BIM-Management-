@@ -47,7 +47,7 @@ export function ProjectDataGate({ docType, what }: { docType?: string; what: str
     <div className="hub-card" style={{ ...cv(r.ready ? "var(--ok)" : "var(--danger)"), display: "grid", gap: 10 }}>
       <div className="row spread">
         <div><b>Project data — hard minimum for {what}</b><div className="small muted">Entered once on the Project data page and reused by every document.</div></div>
-        <div className="row"><span className="badge" style={{ background: ok ? "var(--ok)" : "var(--danger)", color: "#fff", borderColor: "transparent" }}>{ok ? "✓ 8 of 8" : `${8 - r.gaps.length} of 8`}</span><a href="#/project-data"><button className="small">{ok ? "Edit project data" : "Complete project data →"}</button></a></div>
+        <div className="row"><span className="badge" style={{ background: ok ? "var(--ok)" : "var(--danger)", color: "var(--on-accent)", borderColor: "transparent" }}>{ok ? "✓ 8 of 8" : `${8 - r.gaps.length} of 8`}</span><a href="#/project-data"><button className="small">{ok ? "Edit project data" : "Complete project data →"}</button></a></div>
       </div>
       {!ok && <div className="grid g2">{r.gaps.map((g) => <div key={g.id} className="small" style={{ color: "var(--danger)" }}>✗ <b>{g.label}:</b> {g.reason}</div>)}</div>}
       {r.kind && DOC_INPUTS[r.kind] && <div style={{ display: "grid", gap: 8 }}>

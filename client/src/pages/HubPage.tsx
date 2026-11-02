@@ -253,7 +253,7 @@ export default function HubPage({ hub, sectionId, tabId, base = `#/hubs/${hub.id
           {best.length > 0 && <span>Best quiz score {Math.round(Math.max(...best.map((b) => b.best / b.of)) * 100)}%</span>}</div>
         <div style={{ position: "relative", zIndex: 1, marginTop: 12, maxWidth: 420 }}>
           <div className="small" style={{ opacity: .9, marginBottom: 4 }}>{explored === order.length ? "You have explored every topic in this hub!" : <>You have explored {explored} of {order.length} topics</>}</div>
-          <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,.25)" }}><div style={{ width: pct + "%", height: "100%", borderRadius: 3, background: "#fff" }} /></div>
+          <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,.25)" }}><div style={{ width: pct + "%", height: "100%", borderRadius: 3, background: "var(--on-accent)" }} /></div>
         </div>
       </div>}
       <HubSearch hub={hub} base={base} />

@@ -1,3 +1,4 @@
+import { ThemeToggle } from "../../components/ThemeToggle";
 import { ContactForm } from "./Contact";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { t } from "../../i18n";
@@ -35,7 +36,7 @@ export function PublicLayout({ page, children }: { page: Page; children: ReactNo
           {link("/", "Home", page === "home")}
           {site.showPricing && link("/pricing", "Pricing", page === "pricing")}
           {link("/about", "About", page === "about")}
-          <LangSwitch onChange={() => setLang((n) => n + 1)} />
+          <ThemeToggle /><LangSwitch onChange={() => setLang((n) => n + 1)} />
           <a href="#/login" className="btn">{t("Sign in")}</a>
           {site.allowSignups && <a href="#/signup" className="btn primary">{t("Start free")}</a>}
         </nav>

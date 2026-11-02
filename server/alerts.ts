@@ -63,7 +63,7 @@ async function deliver(e: { source: string; message: string; where: string; at: 
     to = (await db.select({ email: schema.users.email }).from(schema.users).where(and(eq(schema.users.role, "admin"), eq(schema.users.disabled, 0)))).map((u) => u.email);
   }
   const url = publicUrl();
-  for (const addr of to) await sendMail(addr, `[Alert] ${title}`, lines, url ? { label: "Open Admin › Settings", url: `${url}/#/admin/settings` } : undefined);
+  for (const addr of to) await sendMail(addr, `[Alert] ${title}`, lines, url ? { label: "Open Admin › Settings", url: `${url}/#/admin/settings` } : undefined, { badge: { text: "Portal alert", tone: "danger" }, reason: "You receive this because you are an administrator of the portal." });
 }
 
 /** test hook */
