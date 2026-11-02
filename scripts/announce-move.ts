@@ -13,6 +13,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import type { EmailBlocks } from "../server/emailLayout";
 
 const { values } = parseArgs({ options: {
   "public-url": { type: "string" }, "test-to": { type: "string" }, send: { type: "boolean" },
@@ -25,34 +26,45 @@ const delay = Number(values["delay-ms"] ?? 4000);
 const PLAN_NAMES: Record<string, string> = { free: "Free", starter: "Starter", pro: "Professional", expert: "Expert" };
 const day = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
-export function message(name: string, plan: string, renewsAt: Date | null) {
-  const planLine = plan === "free" || !PLAN_NAMES[plan] ? "" : !renewsAt ? `Your ${PLAN_NAMES[plan]} plan has come over with you.`
-    : renewsAt < new Date() ? `Your ${PLAN_NAMES[plan]} plan ended on ${day(renewsAt)}. You can still sign in, and renew under Plan & billing or contact us.`
-      : `Your ${PLAN_NAMES[plan]} plan has come over with you and runs until ${day(renewsAt)}.`;
+export function message(name: string, email: string, plan: string, renewsAt: Date | null): EmailBlocks {
+  const planName = PLAN_NAMES[plan];
+  const ended = !!renewsAt && renewsAt < new Date();
+  const host = new URL(origin).host;
   return {
     subject: "The ISO 19650 platform has moved to a new home",
-    lines: [
-      `Dear ${name},`,
-      `The BIM Management and ISO 19650 platform has moved to a new, faster portal at ${origin}.`,
-      "Sign in with the same email address and password you used before. Nothing needs to be set up again.",
-      ...(planLine ? [planLine] : []),
-      "If you don't remember your password, choose \"Forgot password\" on the sign-in page and we'll email you a link.",
-      "انتقلت منصة إدارة معلومات البناء (BIM) ومعايير ISO 19650 إلى عنوان جديد. سجّل الدخول بنفس البريد الإلكتروني وكلمة المرور السابقة، ويمكنك اختيار العربية من قائمة اللغة.",
-      "Thank you for learning with us. If anything doesn't work, reply to this email.",
-      "FirstOption BIM Management team",
+    preheader: "Same email, same password: sign in at the new address.",
+    badge: { text: "Platform moved", tone: "gold" },
+    heading: "Your platform has a new home",
+    intro: `Dear ${name}, the BIM Management and ISO 19650 learning platform has moved to a new, faster portal. Your account came with it.`,
+    paragraphs: ["Sign in with the same email address and password you used before. Nothing needs to be set up again."],
+    rows: [
+      ["New address", host],
+      ["Your email", email],
+      ["Your plan", planName && plan !== "free" ? planName : null],
+      [ended ? "Plan ended" : "Valid until", planName && plan !== "free" ? (renewsAt ? day(renewsAt) : "No end date") : null],
     ],
-    action: { label: "Open the new portal", url: `${origin}/#/login` },
+    steps: [
+      `Open ${host}.`,
+      "Sign in with your usual email and password.",
+      "Forgotten it? Choose “Forgot password” on the sign-in page and we’ll email you a link.",
+    ],
+    notice: ended
+      ? { tone: "info", text: `Your ${planName} plan ended on ${day(renewsAt!)}. You can still sign in; to renew, open Plan & billing or reply to this email.` }
+      : { tone: "info", dir: "rtl", text: "انتقلت منصة BIM Management و ISO 19650 إلى عنوان جديد. سجّل الدخول بنفس البريد الإلكتروني وكلمة المرور، ويمكنك اختيار العربية من قائمة اللغة داخل المنصة." },
+    button: { label: "Open the new portal", url: `${origin}/#/login` },
+    reason: "You receive this because you have an account on the BIM Management and ISO 19650 platform, which has moved.",
+    portalUrl: origin,
   };
 }
 
 async function main() {
   if (!origin.startsWith("https://")) throw new Error("--public-url must be the portal's https:// address");
-  const { sendMail, mailEnabled } = await import("../server/mailer");
+  const { sendEmail, mailEnabled } = await import("../server/mailer");
   if ((values.send || values["test-to"]) && !mailEnabled()) throw new Error("SMTP is not configured (SMTP_HOST missing)");
 
   if (values["test-to"]) {
-    const m = message("Ahmed", "expert", new Date(Date.UTC(2027, 0, 31)));
-    const ok = await sendMail(values["test-to"], `[TEST] ${m.subject}`, m.lines, m.action);
+    const m = message("Ahmed", values["test-to"], "expert", new Date(Date.UTC(2027, 0, 31)));
+    const ok = await sendEmail(values["test-to"], { ...m, subject: `[TEST] ${m.subject}` });
     console.log(JSON.stringify({ test: true, sent: ok }));
     return;
   }
@@ -73,8 +85,8 @@ async function main() {
     mkdirSync(LOG_DIR, { recursive: true });
     let ok = 0, failed = 0;
     for (const r of todo) {
-      const m = message(r.name, r.plan, r.renewsAt);
-      if (await sendMail(r.email, m.subject, m.lines, m.action)) { appendFileSync(LOG, r.email.toLowerCase() + "\n"); ok++; } else failed++;
+      const m = message(r.name, r.email, r.plan, r.renewsAt);
+      if (await sendEmail(r.email, m)) { appendFileSync(LOG, r.email.toLowerCase() + "\n"); ok++; } else failed++;
       await sleep(delay); // stay well under the mailbox's hourly sending limit
     }
     console.log(JSON.stringify({ sent: ok, failed }));

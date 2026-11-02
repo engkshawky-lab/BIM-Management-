@@ -75,7 +75,7 @@ r.post("/auth/register", h(async (req, res) => {
   if (mustVerify(u)) await sendVerification(u, base);
   if (pending) {
     const admins = await db.select({ email: schema.users.email }).from(schema.users).where(and(eq(schema.users.role, "admin"), eq(schema.users.disabled, 0)));
-    for (const a of admins) await sendMail(a.email, "New account waiting for approval", [`${u.name} (${u.email}${u.organization ? `, ${u.organization}` : ""}) created an account and is waiting for your approval.`], { label: "Review pending accounts", url: `${base}/#/admin/pending` });
+    for (const a of admins) await sendMail(a.email, "New account waiting for approval", [`${u.name} (${u.email}${u.organization ? `, ${u.organization}` : ""}) created an account and is waiting for your approval.`], { label: "Review pending accounts", url: `${base}/#/admin/pending` }, { badge: { text: "Approval needed", tone: "gold" }, reason: "You receive this because you are an administrator of the portal." });
     return res.status(202).json({ pending: true, message: "Thank you. Your account is waiting for approval by an administrator. We'll email you when it's ready." });
   }
   await startSession(res, id);
@@ -117,7 +117,7 @@ r.post("/auth/forgot", h(async (req, res) => {
   if (u && !u.disabled) {
     const link = await createResetLink(u.id, publicUrl(`${req.protocol}://${req.get("host")}`));
     // With SMTP configured the link is emailed; otherwise it goes to the server log and admins can issue links from the console.
-    const sent = await sendMail(u.email, "Reset your portal password", [`Hello ${u.name},`, "Someone (hopefully you) asked to reset your password. The link below works once and expires in one hour.", "If you didn't ask for this, ignore this email."], { label: "Choose a new password", url: link });
+    const sent = await sendMail(u.email, "Reset your portal password", [`Hello ${u.name},`, "Someone (hopefully you) asked to reset your password. The link below works once and expires in one hour.", "If you didn't ask for this, ignore this email."], { label: "Choose a new password", url: link }, { badge: { text: "Password reset", tone: "danger" }, heading: "Reset your password" });
     if (!sent) console.log(`[password reset] ${u.email}: ${link}`);
     await db.insert(schema.notifications).values({ id: newId(), userId: u.id, projectId: null, message: "A password reset was requested for your account. If this wasn't you, contact your administrator.", link: "/profile", read: false, createdAt: new Date() }).catch(() => undefined);
   }

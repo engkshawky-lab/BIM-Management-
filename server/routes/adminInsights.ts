@@ -138,7 +138,7 @@ r.post("/admin/users/:id/approve", requireAdmin, h(async (req, res) => {
   if (!u) return res.status(404).json({ error: "No account waiting for approval with that id." });
   await db.update(schema.users).set({ disabled: 0 }).where(eq(schema.users.id, u.id));
   const base = publicUrl(`${req.protocol}://${req.get("host")}`);
-  await sendMail(u.email, "Your account is ready", [`Hello ${u.name},`, "An administrator has approved your account. You can sign in now."], { label: "Sign in", url: `${base}/login` });
+  await sendMail(u.email, "Your account is ready", [`Hello ${u.name},`, "An administrator has approved your account. You can sign in now."], { label: "Sign in", url: `${base}/#/login` }, { badge: { text: "Account approved", tone: "success" } });
   console.log(`[admin] ${req.user!.email} approved user ${u.id}`);
   res.json({ ok: true });
 }));
@@ -161,7 +161,7 @@ publicContact.post("/public/contact", h(async (req, res) => {
   const { website: _w, ...lead } = body;
   await db.insert(schema.leads).values({ id: newId(), ...lead, createdAt: new Date() });
   const to = setting<string>("contactEmail");
-  if (to) await sendMail(to, `New enquiry from ${lead.name}`, [`${lead.name} <${lead.email}>${lead.company ? ` · ${lead.company}` : ""}${lead.phone ? ` · ${lead.phone}` : ""}`, ...(lead.interest ? [`Interested in: ${lead.interest}`] : []), lead.message || "(no message)"], { label: "Open leads", url: `${publicUrl(`${req.protocol}://${req.get("host")}`)}/#/admin/leads` });
+  if (to) await sendMail(to, `New enquiry from ${lead.name}`, [`${lead.name} <${lead.email}>${lead.company ? ` · ${lead.company}` : ""}${lead.phone ? ` · ${lead.phone}` : ""}`, ...(lead.interest ? [`Interested in: ${lead.interest}`] : []), lead.message || "(no message)"], { label: "Open leads", url: `${publicUrl(`${req.protocol}://${req.get("host")}`)}/#/admin/leads` }, { badge: { text: "New enquiry", tone: "gold" }, reason: "You receive this because you are an administrator of the portal." });
   res.json({ ok: true });
 }));
 

@@ -94,7 +94,7 @@ async function dailyDigest() {
   for (const u of users) {
     const notes = (await db.select().from(schema.notifications).where(and(eq(schema.notifications.userId, u.id), eq(schema.notifications.emailed, false)))).filter((n) => n.createdAt > since);
     if (!notes.length) continue;
-    const ok = await sendMail(u.email, `Your portal digest — ${notes.length} update${notes.length > 1 ? "s" : ""}`, [`Hello ${u.name}, here is what happened on your projects:`, ...notes.slice(0, 40).map((n) => `• ${n.message}`)], { label: "Open My Day", url: `${publicUrl()}/#/my-day` });
+    const ok = await sendMail(u.email, `Your portal digest — ${notes.length} update${notes.length > 1 ? "s" : ""}`, [`Hello ${u.name}, here is what happened on your projects:`, ...notes.slice(0, 40).map((n) => `• ${n.message}`)], { label: "Open My Day", url: `${publicUrl()}/#/my-day` }, { badge: { text: "Daily digest", tone: "info" }, heading: "Your daily digest", reason: "You receive this because you chose the daily digest in your profile." });
     if (ok) await db.update(schema.notifications).set({ emailed: true }).where(inArray(schema.notifications.id, notes.map((n) => n.id)));
   }
 }
