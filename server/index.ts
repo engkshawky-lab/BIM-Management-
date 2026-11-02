@@ -39,6 +39,7 @@ import traceability from "./routes/traceability";
 import dashboard from "./routes/dashboard";
 import learn from "./routes/learn";
 import admin from "./routes/admin";
+import adminEmail from "./routes/adminEmail";
 import automation from "./routes/automation";
 import aiwork from "./routes/aiwork";
 import fourd from "./routes/fourd";
@@ -85,7 +86,7 @@ app.get("/api/health", async (_req, res) => {
 app.use("/api", publicPlans, publicSite, clientErrors, publicContact);
 app.use("/api", maintenanceGate);
 app.use("/api", auth, account);
-app.use("/api", requireUser, requireVerified, sectionGate, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news, adminSettings, adminInsights);
+app.use("/api", requireUser, requireVerified, sectionGate, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, adminEmail, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news, adminSettings, adminInsights);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, req: Request, res: Response, _next: NextFunction) => {

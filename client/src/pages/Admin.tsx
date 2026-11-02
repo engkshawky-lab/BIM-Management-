@@ -4,6 +4,7 @@ import { api, fmtDate } from "../lib/api";
 import { PromoCodes } from "./Billing";
 import AdminPlans from "./AdminPlans";
 import AdminSettings from "./AdminSettings";
+import AdminEmail from "./AdminEmail";
 import { AiUsage, Learning, Leads, PageCheck, Pending, Sessions, Statistics, Subscriptions } from "./AdminInsights";
 import { t } from "../i18n";
 
@@ -13,7 +14,7 @@ interface Act { id: string; project: string; user: string; summary: string; link
 interface Branding { orgName: string; color: string; logo: string; footer: string }
 // grouped as in the old control panel: people, money, usage, content and site, and health
 const TABS = [
-  ["overview", "Overview"], ["stats", "Statistics"], ["users", "Users"], ["pending", "Pending"], ["sessions", "Sessions"],
+  ["overview", "Overview"], ["stats", "Statistics"], ["users", "Users"], ["pending", "Pending"], ["email", "Email users"], ["sessions", "Sessions"],
   ["plans", "Plans & access"], ["subscriptions", "Subscriptions"], ["codes", "Promo codes"], ["leads", "Leads"],
   ["ai", "AI usage"], ["learning", "Learning progress"], ["leaderboard", "Leaderboard"],
   ["settings", "Settings"], ["branding", "Branding"], ["feedback", "Feedback"], ["activity", "Activity log"], ["check", "Page check"],
@@ -21,7 +22,7 @@ const TABS = [
 // managed on their own pages
 const LINK_TABS = [["#/videos/ours", "Videos"], ["#/downloads", "Downloads"]] as const;
 const VIEWS: Record<string, () => JSX.Element> = {
-  stats: Statistics, pending: Pending, sessions: Sessions, subscriptions: Subscriptions, leads: Leads, ai: AiUsage,
+  stats: Statistics, pending: Pending, email: AdminEmail, sessions: Sessions, subscriptions: Subscriptions, leads: Leads, ai: AiUsage,
   learning: () => <Learning />, leaderboard: () => <Learning board />, check: PageCheck,
 };
 

@@ -47,6 +47,8 @@ export interface EmailBlocks {
   notice?: { text: string; tone: Tone; dir?: "rtl" | "ltr" };
   button?: { label: string; url: string };
   secondary?: { label: string; url: string };
+  /** a banner picture under the logo: an https address, a data: URL (sent as an inline attachment) or a cid: */
+  image?: { src: string; alt?: string; url?: string };
   /** why the person gets this email (footer) */
   reason?: string;
   /** the portal's public address, for the footer link */
@@ -107,6 +109,13 @@ ${list.map((step, i) => `<tr><td width="34" valign="top" style="padding:0 0 12px
 </td></tr>`;
   }
 
+  let banner = "";
+  if (m.image?.src) {
+    const img = `<img src="${esc(m.image.src)}" width="598" alt="${esc(m.image.alt ?? "")}" style="display:block;width:100%;max-width:598px;height:auto;border:0;">`;
+    banner = `
+<tr><td style="padding:0;line-height:0;font-size:0;border-bottom:1px solid ${C.border};">${m.image.url ? `<a href="${esc(m.image.url)}" style="text-decoration:none;">${img}</a>` : img}</td></tr>`;
+  }
+
   let action = "";
   if (m.button?.url) {
     const url = esc(m.button.url);
@@ -152,7 +161,7 @@ ${list.map((step, i) => `<tr><td width="34" valign="top" style="padding:0 0 12px
 <tr><td class="content-pad" align="${start}" style="padding:30px 36px 25px;text-align:${start};border-bottom:1px solid ${C.border};">
 <a href="${WEBSITE}" style="text-decoration:none;"><img src="${esc(logoSrc)}" width="180" alt="First Option" style="display:block;width:180px;max-width:100%;height:auto;border:0;"></a>
 <p dir="ltr" style="margin:17px 0 0;font-size:11px;line-height:18px;letter-spacing:1.5px;color:${C.muted};text-align:${start};">${PRODUCT_LABEL}</p>
-</td></tr>
+</td></tr>${banner}
 <tr><td class="content-pad" align="${start}" style="padding:28px 36px 0;text-align:${start};">
 ${m.badge?.text ? `<table role="presentation" cellspacing="0" cellpadding="0" border="0" bgcolor="${badgeBg}" style="background-color:${badgeBg};border-collapse:separate;border-radius:4px;"><tr><td style="padding:6px 10px;color:${badgeFg};font-size:12px;font-weight:600;line-height:18px;">${esc(m.badge.text)}</td></tr></table>` : ""}
 <h1 class="email-heading" style="margin:18px 0 12px;font-size:30px;line-height:39px;letter-spacing:${lang === "ar" ? "0" : "-0.6px"};font-weight:700;color:${C.text};">${esc(m.heading)}</h1>

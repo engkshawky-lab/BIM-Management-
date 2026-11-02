@@ -708,3 +708,24 @@ export const aiTokenUsage = mysqlTable("ai_token_usage", {
   serverToolUse: json<Record<string, number>>("server_tool_use").notNull(),
   rawUsage: json<Record<string, unknown>>("raw_usage").notNull(), createdAt: created(),
 }, (t) => [index("ai_token_usage_time").on(t.createdAt), index("ai_token_usage_user_time").on(t.userId, t.createdAt)]);
+
+/** An email an administrator sent to a group of users (Admin › Email users). Sent in the background, one by one. */
+export const emailCampaigns = mysqlTable("email_campaigns", {
+  id: id(), subject: varchar("subject", { length: 255 }).notNull(),
+  blocks: json<Record<string, unknown>>("blocks").notNull(),
+  filter: json<Record<string, unknown> | null>("filter"),
+  /** sending | paused | done | cancelled */
+  status: varchar("status", { length: 16 }).notNull(),
+  total: int("total").notNull(), delayMs: int("delay_ms").notNull(),
+  createdBy: ref("created_by").notNull(), createdAt: created(),
+  finishedAt: datetime("finished_at", { mode: "date" }),
+}, (t) => [index("email_campaigns_time").on(t.createdAt)]);
+
+export const emailCampaignRecipients = mysqlTable("email_campaign_recipients", {
+  campaignId: ref("campaign_id").notNull(), userId: ref("user_id").notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  /** pending | sent | failed | skipped */
+  status: varchar("status", { length: 10 }).notNull().default("pending"),
+  error: varchar("error", { length: 255 }).notNull().default(""),
+  sentAt: datetime("sent_at", { mode: "date" }),
+}, (t) => [primaryKey({ columns: [t.campaignId, t.userId] }), index("email_campaign_recipients_status").on(t.campaignId, t.status)]);
