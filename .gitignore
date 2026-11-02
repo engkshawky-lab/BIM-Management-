@@ -5,3 +5,4 @@ storage
 .env
 .env.local
 server/__local__/
+.local/manus-import/

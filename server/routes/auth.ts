@@ -10,6 +10,7 @@ import { setting } from "../appSettings";
 import { checkPassword, endSession, hashPassword, mustVerify, requireUser, startSession, toPublic } from "../auth";
 import { sendVerification } from "../verify";
 import { db, newId, schema } from "../db";
+import { passwordReset } from "../passwordReset";
 
 export const h = (fn: (req: Request, res: Response) => Promise<unknown>) => (req: Request, res: Response, next: NextFunction) => fn(req, res).catch((e) => {
   // AI failures carry their own status; unreadable model JSON is a bad gateway, not a server bug
@@ -101,9 +102,9 @@ r.post("/auth/login", h(async (req, res) => {
 // ---------- password reset (one-time link, valid 1 hour) ----------
 const sha = (t: string) => crypto.createHash("sha256").update(t).digest("hex");
 export async function createResetLink(userId: string, origin: string) {
-  const token = crypto.randomBytes(32).toString("hex");
-  await db.insert(schema.passwordResets).values({ id: newId(), userId, tokenHash: sha(token), expiresAt: new Date(Date.now() + 3600_000), createdAt: new Date() });
-  return `${origin}/#/reset/${token}`;
+  const reset = passwordReset(userId, origin);
+  await db.insert(schema.passwordResets).values(reset.row);
+  return reset.link;
 }
 const forgotHits = new Map<string, number[]>();
 r.post("/auth/forgot", h(async (req, res) => {
