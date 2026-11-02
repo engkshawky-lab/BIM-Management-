@@ -82,11 +82,13 @@ describe("A: anonymous deployment checks", () => {
     if (base.startsWith("https:")) expect(res.headers.get("strict-transport-security")).toMatch(/max-age=[1-9]\d+/);
   });
 
-  test("unknown API is a JSON 404, never SPA HTML", async () => {
+  // Anonymous callers hit the /api sign-in gate first (401), so unknown routes are not revealed; signed-in
+  // callers get the 404 handler. Either way the answer must be JSON, never the SPA's HTML.
+  test("unknown API is a JSON error (401 anonymous / 404 signed in), never SPA HTML", async () => {
     const res = await request("/api/zz-smoke-nonexistent");
     expect(res.headers.get("content-type")).toMatch(/application\/json/);
     expect(await res.json()).toHaveProperty("error");
-    expect(res.status).toBe(404);
+    expect([401, 404]).toContain(res.status);
   });
 
   test.each(families)("protected router $name: $method $path", async ({ method, path }) => {

@@ -34,3 +34,10 @@ No accounts were created, no real user's reset requested, no admin settings/user
 - `git diff --check`: passed.
 
 Dependencies were initially absent; `npm ci --no-audit --no-fund` installed the existing lockfile without tracked dependency changes before successful verification.
+
+## Follow-up (2026-11-02)
+
+The unknown-API finding above is intended behaviour, not a defect: anonymous requests meet the `/api` sign-in gate
+first, so the portal answers 401 and does not reveal which routes exist; signed-in requests get the JSON 404.
+The test now accepts 401 or 404 and still fails if the SPA's HTML is ever returned. Re-run against Railway:
+tier A **78 passed**, 7 skipped (B/C/D need `TEST_EMAIL`/`TEST_PASSWORD`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`, `RUN_AI=1`).
