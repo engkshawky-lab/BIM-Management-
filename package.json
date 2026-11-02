@@ -9,6 +9,7 @@
     "start": "NODE_ENV=production node dist/server/index.js",
     "check": "tsc --noEmit",
     "test": "vitest run --exclude 'server/__local__/**' --exclude 'node_modules/**'",
+    "test:live": "vitest run --config tests/live/vitest.config.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx server/migrate.ts"
   },
