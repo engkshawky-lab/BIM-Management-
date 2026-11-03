@@ -1,0 +1,138 @@
+/* Surface art from iso19650-platform client/public/fo-scan.css: laser-scan point clouds,
+   ink blooms and paint strokes, with separate dark and light images in /fo-scan.
+   Decoration only: nothing here changes layout, sits on top of content or takes input.
+   Phones and forced-colours mode drop the images. */
+
+/* ---------- image sets per theme ---------- */
+:root {
+  --pc-header: url("/fo-scan/pc-header-light.webp");
+  --ink-band: url("/fo-scan/ink-band-light.webp");
+  --paint-canvas: url("/fo-scan/paint-canvas-light.webp");
+  --pc-k1: url("/fo-scan/card-structure-light.webp"); --pc-k2: url("/fo-scan/card-bridge-light.webp");
+  --pc-k3: url("/fo-scan/card-interior-light.webp");  --pc-k4: url("/fo-scan/card-terrain-light.webp");
+  --pc-k5: url("/fo-scan/card-mep-light.webp");       --pc-k6: url("/fo-scan/card-facade-light.webp");
+  --pc-k7: url("/fo-scan/card-site-light.webp");      --pc-k8: url("/fo-scan/card-city-light.webp");
+  --ink-c1: url("/fo-scan/ink-card-teal-light.webp"); --ink-c2: url("/fo-scan/ink-card-rust-light.webp");
+  --ink-c3: url("/fo-scan/paint-card-indigo-light.webp"); --ink-c4: url("/fo-scan/paint-card-sand-light.webp");
+  --panel-scan: url("/fo-scan/panel-site-light.webp");
+  --panel-ink: url("/fo-scan/panel-ink-light.webp");
+  --panel-paint: url("/fo-scan/panel-paint-light.webp");
+  --panel-bloom-a: url("/fo-scan/panel-bloom-indigo-light.webp");
+  --panel-bloom-b: url("/fo-scan/panel-bloom-teal-light.webp");
+  --band-tint: linear-gradient(100deg, #d4e2e5 0%, #d5deeb 45%, #dddaea 75%, #e6dcd6 100%);
+  --panel-tint: linear-gradient(180deg, rgba(232,239,240,0) 0%, rgba(63,143,140,.06) 45%, rgba(62,95,157,.08) 75%, rgba(199,163,106,.08) 100%);
+  --pc-header-opacity: .62;
+}
+:root[data-theme="dark"] {
+  --pc-header: url("/fo-scan/pc-header-dark.webp");
+  --ink-band: url("/fo-scan/ink-band-dark.webp");
+  --paint-canvas: url("/fo-scan/paint-canvas-dark.webp");
+  --pc-k1: url("/fo-scan/card-structure-dark.webp"); --pc-k2: url("/fo-scan/card-bridge-dark.webp");
+  --pc-k3: url("/fo-scan/card-interior-dark.webp");  --pc-k4: url("/fo-scan/card-terrain-dark.webp");
+  --pc-k5: url("/fo-scan/card-mep-dark.webp");       --pc-k6: url("/fo-scan/card-facade-dark.webp");
+  --pc-k7: url("/fo-scan/card-site-dark.webp");      --pc-k8: url("/fo-scan/card-city-dark.webp");
+  --ink-c1: url("/fo-scan/ink-card-teal-dark.webp"); --ink-c2: url("/fo-scan/ink-card-rust-dark.webp");
+  --ink-c3: url("/fo-scan/paint-card-indigo-dark.webp"); --ink-c4: url("/fo-scan/paint-card-sand-dark.webp");
+  --panel-scan: url("/fo-scan/panel-site-dark.webp");
+  --panel-ink: url("/fo-scan/panel-ink-dark.webp");
+  --panel-paint: url("/fo-scan/panel-paint-dark.webp");
+  --panel-bloom-a: url("/fo-scan/panel-bloom-indigo-dark.webp");
+  --panel-bloom-b: url("/fo-scan/panel-bloom-teal-dark.webp");
+  --band-tint: linear-gradient(100deg, #15283a 0%, #182c42 45%, #1d2a44 75%, #23283f 100%);
+  --panel-tint: linear-gradient(180deg, rgba(20,36,48,0) 0%, rgba(63,143,140,.07) 45%, rgba(62,95,157,.10) 75%, rgba(125,90,140,.08) 100%);
+  --pc-header-opacity: .45;
+}
+
+/* ---------- page canvas: broad paint strokes in the margins, a calm centre ---------- */
+.main {
+  background:
+    radial-gradient(ellipse 40% 44% at 54% 46%, color-mix(in srgb, var(--bg) 55%, transparent) 20%, transparent 100%) fixed,
+    var(--paint-canvas) center / cover no-repeat fixed,
+    var(--bg);
+}
+
+/* ---------- side menu: colour drift, ink and paint blooms, a site scan at its foot ---------- */
+.sidebar {
+  background-color: var(--panel);
+  background-image: var(--panel-scan), var(--panel-ink), var(--panel-paint), var(--panel-bloom-a), var(--panel-bloom-b), var(--panel-tint);
+  background-repeat: no-repeat;
+  background-size: 150% auto, 140% auto, 130% auto, 150% auto, 160% auto, 100% 100%;
+  background-position: 70% bottom, right bottom, right 58%, 30% 10%, 70% 36%, 0 0;
+}
+
+/* ---------- page headings: a tinted band with marbled ink and a point-cloud scan on the right ---------- */
+.page-head, .home-head {
+  position: relative; isolation: isolate; overflow: hidden;
+  padding: 18px 22px; border-radius: 16px;
+  background: var(--ink-band) right bottom / auto 100% no-repeat, var(--band-tint);
+}
+.page-head::before, .home-head::before, .hub-hero::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  right: 0; top: 0; bottom: 0; width: min(40%, 700px);
+  background: var(--pc-header) right bottom / auto 100% no-repeat;
+  opacity: var(--pc-header-opacity);
+  -webkit-mask: linear-gradient(90deg, transparent 0, transparent 35%, #000 70%);
+  mask: linear-gradient(90deg, transparent 0, transparent 35%, #000 70%);
+}
+/* Home: the scan is the focal point of the greeting band */
+.home-head { padding: 26px 26px 34px; margin-bottom: 18px; }
+.home-head::before { width: min(64%, 1000px); opacity: calc(var(--pc-header-opacity) * 2); }
+.home-head > h1 { max-width: 60%; }
+/* hub banners keep their own colour; the scan rides on top of it, softly */
+.hub-hero { isolation: isolate; }
+.hub-hero::before { z-index: 0; mix-blend-mode: soft-light; opacity: .9; }
+.hub-hero > * { position: relative; z-index: 1; }
+@media (min-width: 761px) {
+  .page-head > h1, .page-head > p { max-width: 72%; }
+}
+
+/* ---------- cards: see-through surface, ink blooms in two corners, a faint scan at the foot ---------- */
+.main .card {
+  --pc-card: var(--pc-k1); --ink-card: var(--ink-c1); --ink-card-2: var(--ink-c3);
+  /* a surface veil keeps the detailed scan out of the text at the top of the card */
+  --card-veil: linear-gradient(180deg, var(--surface) 0, var(--surface) 60%, color-mix(in srgb, var(--surface) 40%, transparent) calc(60% + 18px), transparent calc(60% + 36px));
+  background-color: color-mix(in srgb, var(--surface) 84%, transparent);
+  background-image: var(--ink-card-2), var(--ink-card), var(--card-veil), var(--pc-card);
+  background-repeat: no-repeat;
+  background-position: right top, right bottom, 0 0, right bottom;
+  background-size: min(30%, 190px) auto, min(36%, 230px) auto, 100% 100%, min(34%, 220px) auto;
+  /* a soft surface-coloured halo clears the points behind each letter */
+  text-shadow: 0 0 2px var(--surface), 0 0 6px var(--surface), 0 0 12px var(--surface);
+}
+.main .card :is(button, input, select, textarea, .btn, .badge, .state, code, kbd, svg) { text-shadow: none; }
+.main .card:nth-child(8n+2) { --pc-card: var(--pc-k6); }
+.main .card:nth-child(8n+3) { --pc-card: var(--pc-k3); }
+.main .card:nth-child(8n+4) { --pc-card: var(--pc-k8); }
+.main .card:nth-child(8n+5) { --pc-card: var(--pc-k5); }
+.main .card:nth-child(8n+6) { --pc-card: var(--pc-k2); }
+.main .card:nth-child(8n+7) { --pc-card: var(--pc-k7); }
+.main .card:nth-child(8n+8) { --pc-card: var(--pc-k4); }
+.main .card:nth-child(4n+2) { --ink-card: var(--ink-c2); --ink-card-2: var(--ink-c4); }
+.main .card:nth-child(4n+3) { --ink-card: var(--ink-c3); --ink-card-2: var(--ink-c1); }
+.main .card:nth-child(4n+4) { --ink-card: var(--ink-c4); --ink-card-2: var(--ink-c2); }
+/* no art on cards inside cards; tables keep a solid surface so rows never show decoration */
+.main .card .card { background-image: none; background-color: color-mix(in srgb, var(--surface) 80%, transparent); }
+.main table { background-color: var(--surface); }
+
+/* ---------- smaller screens: quieter, then off ---------- */
+@media (max-width: 1100px) {
+  .page-head::before, .home-head::before, .hub-hero::before { opacity: calc(var(--pc-header-opacity) * .75); }
+}
+@media (max-width: 760px) {
+  .page-head::before, .home-head::before, .hub-hero::before { display: none; }
+  .sidebar { background-image: var(--panel-tint); background-size: 100% 100%; background-position: 0 0; }
+}
+@media (max-width: 600px) {
+  .main { background: var(--bg); }
+  .page-head, .home-head { background: var(--band-tint); }
+  .main .card { background-image: radial-gradient(90px 90px at 100% 100%, rgba(63,143,140,.14), rgba(62,95,157,.06) 55%, transparent 100%); background-position: 0 0; background-size: auto; }
+}
+@media (forced-colors: active) {
+  .main, .sidebar, .page-head, .home-head, .main .card { background-image: none; }
+  .page-head::before, .home-head::before, .hub-hero::before { display: none; }
+  .main .card { text-shadow: none; background-color: Canvas; }
+}
+@media print {
+  .main, .sidebar, .page-head, .home-head, .main .card { background: none !important; text-shadow: none !important; }
+  .page-head::before, .home-head::before, .hub-hero::before { display: none !important; }
+}
