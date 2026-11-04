@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { PageLock } from "../lib/access";
 import { t } from "../i18n";
 import { api } from "../lib/api";
 import { exportCsv } from "../lib/export";
@@ -36,7 +37,7 @@ export default function Connectors({ tab }: { tab?: string }) {
     <div className="hub connectors" style={{ "--hub": TONES.blue } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">{t(cur.eyebrow)}</div><h1>{t(cur.title)}</h1><p>{t(cur.hint)}</p></div>
       <nav className="tabs" aria-label={t("Connectors")}>
-        {TABS.map((x) => <a key={x.id} className={"tab" + (x.id === cur.id ? " on" : "")} href={`#/connectors/${x.id}`}>{t(x.label)}</a>)}
+        {TABS.map((x) => <a key={x.id} className={"tab" + (x.id === cur.id ? " on" : "")} href={`#/connectors/${x.id}`}>{t(x.label)}<PageLock route={`/connectors/${x.id}`} /></a>)}
       </nav>
       <div key={cur.id}>{cur.id === "acc" ? <AccTab /> : <SpeckleTab />}</div>
     </div>

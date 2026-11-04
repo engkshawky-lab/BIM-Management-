@@ -7,6 +7,10 @@ import { ROLE_TITLES, type StageId } from "../../../shared/data/workflow/types";
 import { generateHref } from "./AiTools";
 import { TONES } from "./HubPage";
 import DeepDiveView from "./DeepDive";
+import { LockedTab, useAccess } from "../lib/access";
+import { DEEP_DIVE_ID, tabKey } from "../../../shared/tabs";
+
+const DEEP_KEY = tabKey("w.docguides", DEEP_DIVE_ID);
 import { deepDiveFor } from "../../../shared/data/deepDives";
 
 // Document guides: what each ISO 19650 document is, who writes and approves it, what goes in each
@@ -68,6 +72,7 @@ function Guide({ g }: { g: DocGuide }) {
   const i = DOC_GUIDES.indexOf(g);
   const prev = DOC_GUIDES[i - 1], next = DOC_GUIDES[i + 1];
   const deep = deepDiveFor(g.id);
+  const { locked } = useAccess();
   const toc = [...(deep ? [["dg-deep", "Worked example & case studies"]] : []), ["dg-what", "What and why"], ["dg-who", "Who and when"], ["dg-chain", "Document chain"], ["dg-sections", "Section by section"], ["dg-how", "How to create it"], ["dg-check", "Quality checklist"], ["dg-mistakes", "Common mistakes"]];
   return (
     <div className="hub" style={{ "--hub": TONES.blue } as CSSProperties}>
@@ -87,7 +92,7 @@ function Guide({ g }: { g: DocGuide }) {
         {toc.map(([id, label]) => <button key={id} className="linklike" onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })}>{t(label)}</button>)}
       </nav>
 
-      {deep && <DeepDiveView d={deep} name={t(g.name)} />}
+      {deep && (locked(DEEP_KEY) ? <LockedTab k={DEEP_KEY} label="Deep dive (worked examples)" /> : <DeepDiveView d={deep} name={t(g.name)} />)}
 
       <div className="grid g2" id="dg-what">
         <div className="hub-tile"><b>{t("What it is")}</b><div style={{ marginTop: 4 }}>{t(g.what)}</div></div>

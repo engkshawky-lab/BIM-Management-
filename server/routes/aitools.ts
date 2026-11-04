@@ -13,6 +13,7 @@ import { complianceScore, matchTemplate, reviewChecklists, templateOutline } fro
 import { TYPE_CODES } from "../../shared/planRows";
 import { AiError, ask, parseJson } from "../claude";
 import { h, parse } from "./auth";
+import { allowKey } from "../billing";
 import { readWorkbook } from "./validation";
 
 // Standalone AI tools (not tied to a project): ask-a-part, document review, risk register,
@@ -109,6 +110,7 @@ r.post(T + "/review", upload.fields([{ name: "fileA", maxCount: 1 }, { name: "fi
     docType: z.string().max(80).default("auto"),
     textA: z.string().max(200_000).optional(), textB: z.string().max(200_000).optional(),
   }), req.body, res); if (!body) return;
+  if (!(await allowKey(req, res, `ai.review/${body.mode}`))) return;
   const f = files(req);
   const [labelA, labelB] = body.mode === "eir-bep" ? ["EIR", "BEP"] : body.mode === "bep-versions" ? ["Previous BEP", "Revised BEP"] : ["Document", ""];
   const a = await sourceBlocks(labelA, f.fileA?.[0], body.textA);

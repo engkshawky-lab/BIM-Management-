@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { useSession } from "../App";
 import { DocMarkdown } from "../components/DocMarkdown";
 import { api } from "../lib/api";
+import { LockedTab, TabLock, useAccess } from "../lib/access";
+import { REVIEW_MODES, tabKey } from "../../../shared/tabs";
 import { exportCsv } from "../lib/export";
 import { saveMarkdownDocx, type DocMeta } from "../lib/mdDocx";
 import { placeholders } from "../../../shared/mdBlocks";
@@ -213,6 +215,9 @@ export function ReviewTool() {
   const { toast } = useSession();
   const [mode, setMode] = useState<"single" | "eir-bep" | "bep-versions">("single");
   const [docType, setDocType] = useState("auto");
+  const { locked } = useAccess();
+  const keyOf = (id: string) => tabKey("ai.review", id);
+  const modeLocked = locked(keyOf(mode));
   const [fa, setFa] = useState<File | null>(null); const [ta, setTa] = useState("");
   const [fb, setFb] = useState<File | null>(null); const [tb, setTb] = useState("");
   const [busy, setBusy] = useState(false);
@@ -235,11 +240,12 @@ export function ReviewTool() {
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <div className="row">
-        <div className="seg">{([["single", "Single document review"], ["eir-bep", "EIR ↔ BEP compliance"], ["bep-versions", "BEP version compare"]] as const).map(([k, l]) => <button key={k} className={mode === k ? "on" : ""} onClick={() => { setMode(k); setResult(null); }}>{l}</button>)}</div>
+        <div className="seg">{REVIEW_MODES.map(({ id: k, label: l }) => <button key={k} className={mode === k ? "on" : ""} onClick={() => { setMode(k); setResult(null); }}>{l}<TabLock k={keyOf(k)} /></button>)}</div>
         {mode === "eir-bep" && <div className="hub-tile small" style={{ flexBasis: "100%" }}>For a requirement-by-requirement matrix with suggested BEP wording and an addendum, use the <a href="#/ai-studio/compliance">EIR ↔ BEP compliance matrix</a> in the AI studio.</div>}
         {mode === "single" && <select value={docType} onChange={(e) => setDocType(e.target.value)} style={{ width: "auto" }}>
           {REVIEW_TYPES.map((d) => <option key={d} value={d}>{d === "auto" ? "Auto-detect document type" : d}</option>)}</select>}
       </div>
+      {modeLocked ? <LockedTab k={keyOf(mode)} label={REVIEW_MODES.find((x) => x.id === mode)!.label} /> : <>
       <div className="grid g2">
         <DocInput label={labels[0]} file={fa} setFile={setFa} text={ta} setText={setTa} />
         {mode !== "single" && <DocInput label={labels[1]} file={fb} setFile={setFb} text={tb} setText={setTb} />}
@@ -249,6 +255,7 @@ export function ReviewTool() {
       {busy && <div className="hub-card gen-steps">{stages.map((s, i) => <div key={s} className={"gen-step " + (i < at ? "done" : i === at ? "busy" : "")}><span className="gen-dot">{i < at ? "✓" : i + 1}</span><span className="small">{s}</span></div>)}
         <div className="small muted">A full review usually takes 1–2 minutes.</div></div>}
       {result && <ReviewResult r={result} mode={mode} />}
+      </>}
     </div>
   );
 }

@@ -71,8 +71,8 @@ const override = z.object({
   projects: z.number().int().min(0).max(100000), members: z.number().int().min(0).max(100000), storageGb: z.number().int().min(0).max(100000), aiPerMonth: z.number().int().min(0).max(100000),
 }).partial();
 r.get("/admin/plans", requireAdmin, h(async (_req, res) => {
-  const { plans, overrides, access } = await planConfig();
-  res.json({ plans, overrides, access, billing: billingOn() });
+  const { plans, overrides, access, tabAccess } = await planConfig();
+  res.json({ plans, overrides, access, tabAccess, billing: billingOn() });
 }));
 r.put("/admin/plans", requireAdmin, h(async (req, res) => {
   const body = parse(z.object(Object.fromEntries(PLAN_IDS.map((id) => [id, override.optional()]))), req.body, res); if (!body) return;
@@ -80,15 +80,19 @@ r.put("/admin/plans", requireAdmin, h(async (req, res) => {
   res.json({ plans: (await planConfig()).plans });
 }));
 r.put("/admin/access", requireAdmin, h(async (req, res) => {
-  const body = parse(z.object({ access: z.record(z.string().max(60), z.array(z.string().max(16)).max(4)) }), req.body, res); if (!body) return;
-  await saveAccess(body.access);
-  res.json({ access: (await planConfig()).access });
+  const body = parse(z.object({
+    access: z.record(z.string().max(60), z.array(z.string().max(16)).max(4)),
+    tabAccess: z.record(z.string().max(160), z.record(z.string().max(16), z.boolean())).optional(),
+  }), req.body, res); if (!body) return;
+  await saveAccess(body.access, body.tabAccess);
+  const saved = await planConfig();
+  res.json({ access: saved.access, tabAccess: saved.tabAccess });
 }));
 
-// The signed-in user's plan and section access, for the page locks and the sidebar.
+// The signed-in user's plan and section and tab access, for the page and tab locks and the sidebar.
 r.get("/access", h(async (req, res) => {
-  const [{ access }, plan] = await Promise.all([planConfig(), currentPlan(req.user!.id)]);
-  res.json({ billing: billingOn(), plan: plan.id, admin: req.user!.role === "admin", access });
+  const [{ access, tabAccess }, plan] = await Promise.all([planConfig(), currentPlan(req.user!.id)]);
+  res.json({ billing: billingOn(), plan: plan.id, admin: req.user!.role === "admin", access, tabAccess });
 }));
 
 /** Public: plans and section access for the pricing page (no sign-in). */

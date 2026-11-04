@@ -7,20 +7,14 @@ import { PROJECT_PAGES, SECTIONS, groupsOf, hrefFor, pageByKey, type NavItem } f
 import { LEARNING_PATHS } from "../../../shared/data/learningPaths";
 import { FAQ, FIRST_DAY, FIRST_WEEK, FLOWS, ROLE_ROUTES, SECTION_GUIDE, type GuideLink } from "../../../shared/data/platformGuide";
 import { TONES } from "./HubPage";
+import { LockedTab, TabLock, useAccess } from "../lib/access";
+import { GUIDE_TABS, tabKey } from "../../../shared/tabs";
 import "./platformGuide.css";
 
 // Platform guide: what every sidebar section is for, where to start, and how the pieces connect.
 // /guide/:tab — start · sections · first-day · first-week · flows · roles · faq
 
-const TABS = [
-  { id: "start", label: "Start here" },
-  { id: "sections", label: "Every section" },
-  { id: "first-day", label: "First day" },
-  { id: "first-week", label: "First week" },
-  { id: "flows", label: "How it fits together" },
-  { id: "roles", label: "By role" },
-  { id: "faq", label: "FAQ" },
-] as const;
+const TABS = GUIDE_TABS;
 
 const DAY_KEY = "bim:guide:firstday";
 const loadTicks = (): string[] => { try { const v = localStorage.getItem(DAY_KEY); const a = v ? JSON.parse(v) : []; return Array.isArray(a) ? a : []; } catch { return []; } };
@@ -269,6 +263,9 @@ function Faq({ projectId }: { projectId?: string }) {
 export default function PlatformGuide({ tab }: { tab?: string }) {
   const cur = TABS.find((x) => x.id === tab) ?? TABS[0];
   const projectId = useProjectId();
+  const { locked } = useAccess();
+  const keyOf = (id: string) => tabKey("r.guide", id);
+  const show = locked(keyOf(cur.id)) ? null : cur.id;
   return (
     <div className="hub pg" style={{ "--hub": TONES.blue } as CSSProperties}>
       <div className="hub-hero">
@@ -278,15 +275,16 @@ export default function PlatformGuide({ tab }: { tab?: string }) {
         <div className="facts"><span>{SECTION_GUIDE.length} {t("sections")}</span><span>{FIRST_DAY.length} {t("first-day steps")}</span><span>{FLOWS.length} {t("flows")}</span><span>{FAQ.length} {t("questions")}</span></div>
       </div>
       <nav className="tabs" aria-label={t("Guide sections")}>
-        {TABS.map((x) => <a key={x.id} className={"tab" + (cur.id === x.id ? " on" : "")} href={`#/guide/${x.id}`}>{t(x.label)}</a>)}
+        {TABS.map((x) => <a key={x.id} className={"tab" + (cur.id === x.id ? " on" : "")} href={`#/guide/${x.id}`}>{t(x.label)}<TabLock k={keyOf(x.id)} /></a>)}
       </nav>
-      {cur.id === "start" && <StartHere />}
-      {cur.id === "sections" && <EverySection projectId={projectId} />}
-      {cur.id === "first-day" && <FirstDay projectId={projectId} />}
-      {cur.id === "first-week" && <FirstWeek projectId={projectId} />}
-      {cur.id === "flows" && <Flows projectId={projectId} />}
-      {cur.id === "roles" && <ByRole projectId={projectId} />}
-      {cur.id === "faq" && <Faq projectId={projectId} />}
+      {!show && <LockedTab k={keyOf(cur.id)} label={cur.label} back={cur.id !== "start" && !locked(keyOf("start")) ? { href: "#/guide/start", label: "Back to Start here" } : undefined} />}
+      {show === "start" && <StartHere />}
+      {show === "sections" && <EverySection projectId={projectId} />}
+      {show === "first-day" && <FirstDay projectId={projectId} />}
+      {show === "first-week" && <FirstWeek projectId={projectId} />}
+      {show === "flows" && <Flows projectId={projectId} />}
+      {show === "roles" && <ByRole projectId={projectId} />}
+      {show === "faq" && <Faq projectId={projectId} />}
     </div>
   );
 }

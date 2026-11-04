@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { PageLock } from "../lib/access";
 import { t } from "../i18n";
 import { TONES } from "./HubPage";
 import ClashTriage from "./tools/ClashTriage";
@@ -32,7 +33,7 @@ export default function AiStudio({ tool }: { tool?: string }) {
     <div className="hub" style={{ "--hub": TONES.purple } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">{t("AI STUDIO")}</div><h1>{t(cur.title)}</h1><p>{t(cur.hint)}</p></div>
       <nav className="tabs tabs-wrap" aria-label={t("AI studio")}>
-        {TOOLS.map((x) => <a key={x.id} className={"tab" + (x.id === cur.id ? " on" : "")} href={`#/ai-studio/${x.id}`}>{t(x.label)}</a>)}
+        {TOOLS.map((x) => <a key={x.id} className={"tab" + (x.id === cur.id ? " on" : "")} href={`#/ai-studio/${x.id}`}>{t(x.label)}<PageLock route={`/ai-studio/${x.id}`} /></a>)}
       </nav>
       <div key={cur.id}>{cur.body()}</div>
       <p className="tiny muted">{t("AI output is decision support. The accountable person reviews it before anything is issued.")}</p>

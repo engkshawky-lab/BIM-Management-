@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { LockedTab, TabLock, useAccess } from "../lib/access";
+import { DEEP_DIVE_ID, DEEP_DIVE_TABS, tabKey } from "../../../shared/tabs";
 import { t } from "../i18n";
 import type { DeepDive, DeepSection } from "../../../shared/data/deepDives/types";
 import { saveMarkdownDocx } from "../lib/mdDocx";
@@ -6,13 +8,7 @@ import { saveMarkdownDocx } from "../lib/mdDocx";
 // Deep dive for a key document (EIR, BEP, AIR): a complete worked example, variants,
 // case studies, a clause library and an assessment rubric. Shown inside its document guide.
 
-const TABS = [
-  { id: "example", label: "Full worked example" },
-  { id: "cases", label: "Case studies" },
-  { id: "variants", label: "Other project types" },
-  { id: "clauses", label: "Clause library" },
-  { id: "rubric", label: "Assessment rubric" },
-] as const;
+const TABS = DEEP_DIVE_TABS;
 type Tab = (typeof TABS)[number]["id"];
 
 const mdTable = (tb: NonNullable<DeepSection["table"]>) =>
@@ -35,6 +31,9 @@ function Table({ tb }: { tb: NonNullable<DeepSection["table"]> }) {
 
 export default function DeepDiveView({ d, name }: { d: DeepDive; name: string }) {
   const [tab, setTab] = useState<Tab>("example");
+  const { locked } = useAccess();
+  const keyOf = (id: string) => tabKey("w.docguides", DEEP_DIVE_ID, id);
+  const show: Tab | null = locked(keyOf(tab)) ? null : tab;
   const [q, setQ] = useState("");
   const [copied, setCopied] = useState("");
   const [score, setScore] = useState<Record<number, number>>({});
@@ -52,10 +51,11 @@ export default function DeepDiveView({ d, name }: { d: DeepDive; name: string })
       </div>
       <p className="small" style={{ margin: "4px 0 10px" }}>{t(p.summary)}</p>
       <nav className="tabs" aria-label={t("Deep dive")}>
-        {TABS.map((x) => <button key={x.id} className={"linklike dd-tab" + (tab === x.id ? " on" : "")} onClick={() => setTab(x.id)}>{t(x.label)}</button>)}
+        {TABS.map((x) => <button key={x.id} className={"linklike dd-tab" + (tab === x.id ? " on" : "")} onClick={() => setTab(x.id)}>{t(x.label)}<TabLock k={keyOf(x.id)} /></button>)}
       </nav>
+      {!show && <LockedTab k={keyOf(tab)} label={TABS.find((x) => x.id === tab)!.label} back={tab !== "example" && !locked(keyOf("example")) ? { onClick: () => setTab("example"), label: "Back to the worked example" } : undefined} />}
 
-      {tab === "example" && <div className="dd-doc">
+      {show === "example" && <div className="dd-doc">
         <div className="small muted">{t("A complete example on a fictional project. The note under each heading explains why it is written that way.")}</div>
         {d.example.map((s, i) => (
           <details key={i} className="clause" open={i === 0}>
@@ -66,7 +66,7 @@ export default function DeepDiveView({ d, name }: { d: DeepDive; name: string })
           </details>))}
       </div>}
 
-      {tab === "cases" && <div className="grid g2" style={{ alignItems: "start" }}>
+      {show === "cases" && <div className="grid g2" style={{ alignItems: "start" }}>
         {d.caseStudies.map((c, i) => (
           <div key={i} className={"hub-tile dd-case" + (c.good ? " good" : " bad")}>
             <div className="row spread"><b>{t(c.title)}</b><span className="badge">{t(c.good ? "What went well" : "What went wrong")}</span></div>
@@ -79,7 +79,7 @@ export default function DeepDiveView({ d, name }: { d: DeepDive; name: string })
           </div>))}
       </div>}
 
-      {tab === "variants" && <div className="grid g2" style={{ alignItems: "start" }}>
+      {show === "variants" && <div className="grid g2" style={{ alignItems: "start" }}>
         {d.variants.map((v, i) => (
           <div key={i} className="hub-tile">
             <b>{t(v.title)}</b><div className="small muted">{t(v.projectType)}</div>
@@ -88,7 +88,7 @@ export default function DeepDiveView({ d, name }: { d: DeepDive; name: string })
           </div>))}
       </div>}
 
-      {tab === "clauses" && <>
+      {show === "clauses" && <>
         <input aria-label={t("Search clauses…")} placeholder={t("Search clauses…")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 380, marginBottom: 8 }} />
         {topics.map((tp) => { const list = d.clauses.filter((c) => c.topic === tp && (!q || (c.label + " " + c.text + " " + t(c.label) + " " + t(c.text)).toLowerCase().includes(q.toLowerCase()))); return list.length ? (
           <div key={tp} style={{ marginBottom: 10 }}>
@@ -101,7 +101,7 @@ export default function DeepDiveView({ d, name }: { d: DeepDive; name: string })
           </div>) : null; })}
       </>}
 
-      {tab === "rubric" && <>
+      {show === "rubric" && <>
         <div className="small muted" style={{ marginBottom: 8 }}>{t("Score a document against each criterion (0 = poor, 4 = excellent). Weights add up to 100.")}</div>
         <div className="table-wrap"><table className="data hub-table">
           <thead><tr><th>{t("Criterion")}</th><th>{t("Weight")}</th><th>{t("Excellent")}</th><th>{t("Poor")}</th><th>{t("Your score")}</th></tr></thead>

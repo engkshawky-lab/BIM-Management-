@@ -1,0 +1,31 @@
+/* Tab locks, the upgrade panel inside a locked tab and the administrator's "preview as plan" bar.
+   Colours come from the theme tokens (light and dark) plus each plan's own colour in --plan. */
+.lock-icon { flex: none; vertical-align: -2px; }
+.tab-lock { display: inline-flex; align-items: center; margin-inline-start: 6px; color: var(--plan); }
+.tabs a.tab .tab-lock, .tabs button .tab-lock, .hub-tabs a .tab-lock, .hub-sections a .tab-lock, .seg button .tab-lock { pointer-events: none; }
+.seg button.on .tab-lock { color: inherit; }
+.hub-sections a.on .tab-lock { color: var(--on-accent); }
+
+.locked-tab {
+  display: grid; grid-template-columns: 52px 1fr; gap: 16px; margin: 12px 0 18px; padding: 28px 26px;
+  border: 1px solid color-mix(in srgb, var(--plan) 38%, var(--border)); border-radius: var(--radius);
+  background: radial-gradient(ellipse at 100% 0, color-mix(in srgb, var(--plan) 10%, transparent), transparent 65%), var(--surface);
+  color: var(--text);
+}
+.locked-tab-disc { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px;
+  background: color-mix(in srgb, var(--plan) 14%, var(--surface)); color: var(--plan); }
+.locked-tab h2 { margin: 10px 0 8px; font-size: 21px; }
+.locked-tab p { margin: 0 0 12px; max-width: 640px; color: var(--muted); }
+.locked-tab p b { color: var(--text); }
+.locked-tab .row { gap: 8px; flex-wrap: wrap; }
+.locked-tab .locked-tab-badge { color: var(--plan); border-color: color-mix(in srgb, var(--plan) 35%, var(--border)); background: color-mix(in srgb, var(--plan) 9%, var(--surface)); }
+@media (max-width: 640px) { .locked-tab { grid-template-columns: 1fr; padding: 20px 16px; } .locked-tab h2 { font-size: 19px; } }
+
+.access-preview-bar {
+  position: fixed; inset-inline: 0; bottom: 16px; z-index: 60; width: max-content; max-width: calc(100% - 24px); margin-inline: auto;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 10px 8px 14px;
+  border: 1px solid var(--border-strong); border-inline-start: 4px solid var(--plan); border-radius: 12px;
+  background: var(--panel); color: var(--text); box-shadow: 0 8px 28px rgba(0, 0, 0, .22); font-size: 13px;
+}
+.access-preview-bar > .lock-icon { color: var(--plan); }
+@media print { .access-preview-bar { display: none; } }

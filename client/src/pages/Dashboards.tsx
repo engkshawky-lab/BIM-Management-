@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { PageLock } from "../lib/access";
 import { ASSESSMENTS, CARBON_MATERIALS, COMPLEXITY, FEE_SERVICES, estimateCarbon, estimateFee, scoreAssessment } from "../../../shared/tools";
 import { useSession } from "../App";
 import { api, fmtDate, type Project } from "../lib/api";
@@ -280,7 +281,7 @@ export function Tools({ tool }: { tool?: string }) {
   return (
     <>
       <div className="page-head"><h1>Tools</h1></div>
-      <div className="tabs">{TOOLS.map((t) => <a key={t.id} className={"tab" + (cur === t.id ? " on" : "")} href={`#/tools/${t.id}`}>{t.label}</a>)}</div>
+      <div className="tabs">{TOOLS.map((t) => <a key={t.id} className={"tab" + (cur === t.id ? " on" : "")} href={`#/tools/${t.id}`}>{t.label}<PageLock route={`/tools/${t.id}`} /></a>)}</div>
       {cur === "fee" ? <FeeTool /> : cur === "carbon" ? <CarbonTool /> : <AssessmentTool key={cur} id={cur} />}
     </>
   );

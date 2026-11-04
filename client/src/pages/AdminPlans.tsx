@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useSession } from "../App";
 import { t } from "../i18n";
 import { api } from "../lib/api";
-import { PLAN_CHANGED } from "../lib/access";
-import { PROJECT_PAGES, SECTIONS, TEMPLATE_PAGES, type NavItem } from "../shell/nav";
-import { defaultPlansFor, plansFor, type AccessMap } from "../../../shared/access";
+import { PLAN_CHANGED, forgetPlans } from "../lib/access";
+import type { AccessMap, TabAccessMap } from "../../../shared/access";
+import AdminAccess from "./AdminAccess";
 import { PLAN_IDS, UNLIMITED, type Plan, type PlanId, type PlanOverride } from "../../../shared/plans";
 import "./adminPlans.css";
 
 // Admin › Plans & access: edit each plan's name, price, billing period, features and limits, and tick which
-// plans open each section of the portal. Changes apply to everyone once saved (with BILLING=on).
+// plans open each section, page and tab of the portal (AdminAccess). Changes apply to everyone once saved (with BILLING=on).
 
 const CURRENCIES = ["USD", "EUR", "GBP", "SAR", "AED", "QAR", "KWD", "BHD", "OMR", "EGP"];
 type Draft = Record<PlanId, { name: string; tagline: string; amount: string; currency: string; period: "month" | "year"; note: string; features: string; projects: number; members: number; storageGb: number; aiPerMonth: number }>;
@@ -32,47 +32,26 @@ export default function AdminPlans() {
   const { toast } = useSession();
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [access, setAccess] = useState<AccessMap>({});
-  const [saved, setSaved] = useState<AccessMap>({});
+  const [saved, setSaved] = useState<{ access: AccessMap; tabAccess: TabAccessMap } | null>(null);
   const [billing, setBilling] = useState(true);
-  const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    api<{ plans: Plan[]; access: AccessMap; billing: boolean }>("/admin/plans").then((r) => {
-      setPlans(r.plans); setDraft(toDraft(r.plans)); setAccess(r.access); setSaved(r.access); setBilling(r.billing);
+    api<{ plans: Plan[]; access: AccessMap; tabAccess?: TabAccessMap; billing: boolean }>("/admin/plans").then((r) => {
+      setPlans(r.plans); setDraft(toDraft(r.plans)); setSaved({ access: r.access, tabAccess: r.tabAccess ?? {} }); setBilling(r.billing);
     }).catch((e) => toast((e as Error).message, "error"));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const groups = useMemo(() => [
-    { title: "Projects", items: PROJECT_PAGES },
-    ...SECTIONS.map((s) => ({ title: s.label, items: s.items })),
-    { title: "Document templates", items: TEMPLATE_PAGES },
-  ].map((g) => ({ ...g, items: g.items.filter((i) => !q.trim() || (i.label + " " + (i.hint ?? "") + " " + g.title).toLowerCase().includes(q.trim().toLowerCase())) }))
-    .filter((g) => g.items.length), [q]);
-
-  if (!plans || !draft) return <p className="muted">{t("Loading…")}</p>;
+  if (!plans || !draft || !saved) return <p className="muted">{t("Loading…")}</p>;
   const setP = (id: PlanId, k: keyof Draft[PlanId], v: string | number) => setDraft({ ...draft, [id]: { ...draft[id], [k]: v } });
-  const dirtyAccess = JSON.stringify(access) !== JSON.stringify(saved);
 
   const savePlans = async () => {
     const body = fromDraft(draft);
     if (PLAN_IDS.some((id) => !body[id].name)) return toast(t("Every plan needs a name."), "error");
     setBusy(true);
-    try { const r = await api<{ plans: Plan[] }>("/admin/plans", { method: "PUT", body }); setPlans(r.plans); setDraft(toDraft(r.plans)); toast(t("Plans saved")); window.dispatchEvent(new Event(PLAN_CHANGED)); }
+    try { const r = await api<{ plans: Plan[] }>("/admin/plans", { method: "PUT", body }); setPlans(r.plans); setDraft(toDraft(r.plans)); toast(t("Plans saved")); forgetPlans(); window.dispatchEvent(new Event(PLAN_CHANGED)); }
     catch (e) { toast((e as Error).message, "error"); } finally { setBusy(false); }
   };
-  const saveAccess = async () => {
-    setBusy(true);
-    try { const r = await api<{ access: AccessMap }>("/admin/access", { method: "PUT", body: { access } }); setAccess(r.access); setSaved(r.access); toast(t("Section access saved")); window.dispatchEvent(new Event(PLAN_CHANGED)); }
-    catch (e) { toast((e as Error).message, "error"); } finally { setBusy(false); }
-  };
-  const toggle = (item: NavItem, id: PlanId) => {
-    const cur = plansFor(item.key, access);
-    const next = cur.includes(id) ? cur.filter((x) => x !== id) : PLAN_IDS.filter((x) => x === id || cur.includes(x));
-    setAccess({ ...access, [item.key]: next });
-  };
-  const resetRow = (item: NavItem) => { const { [item.key]: _, ...rest } = access; setAccess(rest); };
   const color = (id: PlanId) => plans.find((p) => p.id === id)?.color ?? "var(--accent)";
 
   return (
@@ -111,36 +90,8 @@ export default function AdminPlans() {
       <div className="row"><button type="button" className="primary" disabled={busy} onClick={savePlans}>{t("Save plans")}</button><button type="button" disabled={busy} onClick={() => setDraft(toDraft(plans))}>{t("Discard changes")}</button></div>
 
       <h2>{t("Subscription permission control")}</h2>
-      <p className="small muted">{t("Tick the plans that can open each section. Users on other plans see a lock and an upgrade prompt, and the paid AI tools refuse their requests. Administrators can always open everything.")}</p>
-      <div className="adm-legend">{plans.map((p) => <span key={p.id}><i style={{ background: p.color }} />{t(p.name)}</span>)}</div>
-      <div className="row adm-access-bar">
-        <input type="search" aria-label={t("Search sections…")} placeholder={t("Search sections…")} value={q} onChange={(e) => setQ(e.target.value)} />
-        <button type="button" className="primary" disabled={busy || !dirtyAccess} onClick={saveAccess}>{t("Save access")}</button>
-        <button type="button" disabled={busy || !Object.keys(access).length} onClick={() => { if (confirm(t("Reset every section to the default plans?"))) setAccess({}); }}>{t("Reset all to defaults")}</button>
-        {dirtyAccess && <span className="small" style={{ color: "var(--warn)" }}>{t("Unsaved changes")}</span>}
-      </div>
-      {groups.map((g) => (
-        <details key={g.title} className="adm-group" open={!!q.trim() || g.title === "Projects"}>
-          <summary>{t(g.title)} <span className="muted small">({g.items.length})</span></summary>
-          <div className="adm-rows">
-            {g.items.map((item) => {
-              const on = plansFor(item.key, access); const custom = item.key in access;
-              const none = on.length === 0;
-              return (
-                <div key={item.key} className={"adm-row" + (none ? " none" : "")} style={{ "--edge": color(on[0] ?? "expert") } as CSSProperties}>
-                  <span className="adm-row-name"><span aria-hidden="true">🔒</span> {t(item.label)}{custom && <button type="button" className="linklike tiny" onClick={() => resetRow(item)} title={t("Back to the default")}>{t("default")}</button>}</span>
-                  <span className="adm-ticks" role="group" aria-label={t(item.label)}>
-                    {PLAN_IDS.map((id) => (
-                      <label key={id} className={"adm-tick" + (on.includes(id) ? " on" : "")} style={{ "--plan": color(id) } as CSSProperties}>
-                        <input type="checkbox" checked={on.includes(id)} onChange={() => toggle(item, id)} />{t(plans.find((p) => p.id === id)!.name)}
-                      </label>))}
-                  </span>
-                  {none && <span className="tiny" style={{ color: "var(--danger)" }}>{t("No plan opens this section: only administrators can.")}</span>}
-                  {!custom && JSON.stringify(on) !== JSON.stringify(defaultPlansFor(item.key)) && <span className="tiny muted">{t("default")}</span>}
-                </div>);
-            })}
-          </div>
-        </details>))}
+      <p className="small muted">{t("Tick the plans that can open each section, page and tab. Users on other plans see a lock and an upgrade prompt, and the paid AI tools refuse their requests. Administrators can always open everything.")}</p>
+      <AdminAccess plans={plans} access={saved.access} tabAccess={saved.tabAccess} onSaved={(access, tabAccess) => setSaved({ access, tabAccess })} />
     </div>
   );
 }
