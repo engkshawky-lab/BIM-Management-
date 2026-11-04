@@ -29,6 +29,7 @@ export const DEEP_DIVE_TABS = [
 export const GUIDE_TABS = [
   { id: "start", label: "Start here" },
   { id: "sections", label: "Every section" },
+  { id: "pages", label: "Every page" },
   { id: "first-day", label: "First day" },
   { id: "first-week", label: "First week" },
   { id: "flows", label: "How it fits together" },

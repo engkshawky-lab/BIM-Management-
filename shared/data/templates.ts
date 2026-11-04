@@ -43,7 +43,7 @@ export const templates: DocTemplate[] = [
     clauseRefs: ["19650-2 §5.4.4"],
     sections: [projectInfo, sec("team", "Task team", "Identify the task team.", [text("taskTeam", "Task team"), text("manager", "Task team manager")]),
       sec("schedule", "Container schedule", "One row per information container.", [
-        table("containers", "Containers", ["Container name", "Description", "LOIN", "Duration (days)", "Dependencies", "Due date", "Milestone"], [["PRJ01-ABC-ZZ-ZZ-M3-A-0001", "Architectural model", "LOIN-03", "20", "Survey", "", "Stage 3"]]),
+        table("containers", "Containers", ["Container name", "Title", "Description", "Formats (native / exchange)", "Model reference", "LOIN", "Duration (days)", "Dependencies", "Due date", "Milestone"], [["PRJ01-ABC-ZZ-ZZ-M3-A-0001", "Architectural model", "Federated architectural model", "RVT / IFC, NWC", "", "LOIN-03", "20", "Survey", "", "Stage 3"]]),
       ])],
   },
   {
@@ -51,7 +51,7 @@ export const templates: DocTemplate[] = [
     purpose: "Aggregates all TIDPs into one plan aligned with delivery milestones.",
     clauseRefs: ["19650-2 §5.4.5"],
     sections: [projectInfo, sec("milestones", "Milestones", "Delivery milestones from the EIR.", [table("milestones", "Milestones", ["Milestone", "Date", "Purpose"])]),
-      sec("plan", "Aggregated plan", "Rows from all TIDPs.", [table("plan", "MIDP", ["Task team", "Container", "LOIN", "Due date", "Milestone", "Status"])]),
+      sec("plan", "Aggregated plan", "Rows from all TIDPs: one row per deliverable per data exchange.", [table("plan", "MIDP", ["Task team", "Container", "Title", "Description", "Formats (native / exchange)", "LOIN", "Due date", "Milestone", "Status"])]),
       sec("risks", "Risks to delivery", "Risks identified when aggregating TIDPs.", [area("risks", "Risks")])],
   },
   {

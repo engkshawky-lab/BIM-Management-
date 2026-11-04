@@ -11,6 +11,7 @@ import { LODS, LOD_MEANING, mrmFindings, type Lod, type MrmCell } from "../../..
 import { api, canEdit, type Member } from "../lib/api";
 import { planSource, refreshProjectPlan, setPlanSource } from "../lib/planStore";
 import { exportCsv, parseTabular } from "../lib/export";
+import { parseMidpWorkbook, planImport, type ImportPlan } from "../../../shared/midpWorkbook";
 import { Handover, Risks } from "./Coordination";
 import type { ProjectData } from "./Project";
 import ProjectInfoUses from "./InfoUses";
@@ -75,11 +76,14 @@ function PlanCheckSummary({ findings, projectId }: { findings: Finding[]; projec
 
 // ---------------------------------------------------------------- planner
 
-function DeliverableDialog({ initial, data, members, projectCode, onSave, onClose }: {
-  initial?: DeliveryData["deliverables"][number]; data: DeliveryData; members: Member[]; projectCode: string;
+function DeliverableDialog({ initial, seed, data, members, projectCode, onSave, onClose }: {
+  initial?: DeliveryData["deliverables"][number];
+  /** values for a new container, e.g. the same container planned at another data exchange */
+  seed?: Partial<Deliverable>; data: DeliveryData; members: Member[]; projectCode: string;
   onSave: (row: Partial<Deliverable>) => void; onClose: () => void;
 }) {
-  const [f, setF] = useState<Partial<Deliverable>>(initial ?? { taskTeamId: data.teams[0]?.id, title: "", typeCode: "M3", loin: "", milestoneId: data.milestones[0]?.id ?? null, startDate: today(), dueDate: addDays(today(), 14), status: "planned", dependsOn: [], assigneeId: null, containerName: "", notes: "" });
+  const [f, setF] = useState<Partial<Deliverable>>(initial ?? { taskTeamId: data.teams[0]?.id, title: "", typeCode: "M3", loin: "", milestoneId: data.milestones[0]?.id ?? null, startDate: today(), dueDate: addDays(today(), 14), status: "planned", dependsOn: [], assigneeId: null, containerName: "", notes: "", description: "", nativeFormat: "", modelRef: "", costCode: "", ...seed });
+  const models = [...new Set(data.deliverables.filter((d) => /^M[23]$/.test(d.typeCode) && d.containerName && d.containerName !== f.containerName).map((d) => d.containerName))];
   const set = (k: keyof Deliverable, v: unknown) => setF((x) => ({ ...x, [k]: v }));
   const team = data.teams.find((t) => t.id === f.taskTeamId);
   const suggest = () => {
@@ -91,7 +95,7 @@ function DeliverableDialog({ initial, data, members, projectCode, onSave, onClos
   const dlg = useDialog(onClose);
   return (
     <div className="modal-bg" onClick={onClose}><div className="modal wide" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-      <h2 style={{ marginTop: 0 }}>{initial ? "Edit information container" : "Add information container"}</h2>
+      <h2 style={{ marginTop: 0 }}>{initial ? "Edit information container" : seed ? "Plan this container at another data exchange" : "Add information container"}</h2>
       <div className="grid g2">
         <div><label htmlFor="delivery-task-team">Task team *</label><select id="delivery-task-team" value={f.taskTeamId} onChange={(e) => set("taskTeamId", e.target.value)}>{data.teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
         <div><label htmlFor="delivery-title-description">Title / description *</label><input id="delivery-title-description" value={f.title} onChange={(e) => set("title", e.target.value)} placeholder="e.g. Architectural model — Level 1" /></div>
@@ -108,9 +112,13 @@ function DeliverableDialog({ initial, data, members, projectCode, onSave, onClos
       <div className="dep-list">{data.deliverables.filter((d) => d.id !== initial?.id).map((d) => (
         <label key={d.id} className="check"><input type="checkbox" checked={f.dependsOn?.includes(d.id)} onChange={(e) => set("dependsOn", e.target.checked ? [...(f.dependsOn ?? []), d.id] : (f.dependsOn ?? []).filter((x) => x !== d.id))} />{d.containerName || d.title}</label>
       ))}{data.deliverables.length <= (initial ? 1 : 0) && <span className="small muted">No other containers yet.</span>}</div>
+      <label htmlFor="delivery-description">Description</label><textarea id="delivery-description" rows={2} value={f.description ?? ""} placeholder="What the deliverable contains, e.g. Federated architectural model, all levels" onChange={(e) => set("description", e.target.value)} />
       <div className="grid g3">
-        <div><label htmlFor="delivery-formats">Formats</label><input id="delivery-formats" value={(f.formats ?? []).join(", ")} placeholder="IFC, NWC, PDF, DWG, COBie" onChange={(e) => setF({ ...f, formats: e.target.value.split(",").map((x) => x.trim().toUpperCase()).filter(Boolean) })} /></div>
-        <div><label htmlFor="delivery-classification">Classification</label><input id="delivery-classification" value={f.classification ?? ""} placeholder="e.g. Uniclass Ss_25 / NRM1 2.5" onChange={(e) => setF({ ...f, classification: e.target.value })} /></div>
+        <div><label htmlFor="delivery-native-format">Native format</label><input id="delivery-native-format" value={f.nativeFormat ?? ""} placeholder="RVT, DWG, XLSX" onChange={(e) => set("nativeFormat", e.target.value.toUpperCase())} /></div>
+        <div><label htmlFor="delivery-formats">Exchange formats</label><input id="delivery-formats" value={(f.formats ?? []).join(", ")} placeholder="IFC, NWC, PDF, DWG, COBie" onChange={(e) => setF({ ...f, formats: e.target.value.split(",").map((x) => x.trim().toUpperCase()).filter(Boolean) })} /></div>
+        <div><label htmlFor="delivery-model-ref">Model reference</label><input id="delivery-model-ref" className="mono" list="delivery-models" value={f.modelRef ?? ""} placeholder="Model a drawing or schedule is cut from" onChange={(e) => set("modelRef", e.target.value.toUpperCase())} /><datalist id="delivery-models">{models.map((m) => <option key={m} value={m} />)}</datalist></div>
+        <div><label htmlFor="delivery-classification">Classification</label><input id="delivery-classification" value={f.classification ?? ""} placeholder="e.g. Uniclass PM_40_30 / Ss_25" onChange={(e) => setF({ ...f, classification: e.target.value })} /></div>
+        <div><label htmlFor="delivery-cost-code">Cost code</label><input id="delivery-cost-code" value={f.costCode ?? ""} placeholder="e.g. NRM1 2.5" onChange={(e) => set("costCode", e.target.value)} /></div>
         <div><label htmlFor="delivery-actual-delivery-date">Actual delivery date</label><input id="delivery-actual-delivery-date" type="date" value={f.actualDate ?? ""} onChange={(e) => setF({ ...f, actualDate: e.target.value })} /></div>
       </div>
       <label htmlFor="delivery-notes">Notes</label><input id="delivery-notes" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
@@ -119,7 +127,52 @@ function DeliverableDialog({ initial, data, members, projectCode, onSave, onClos
   );
 }
 
-function ImportDialog({ data, onImport, onClose }: { data: DeliveryData; onImport: (rows: object[]) => void; onClose: () => void }) {
+/** Import a filled MIDP / TIDP workbook (template layout): teams and exchanges are matched to the project's task teams
+ *  and milestones; missing ones are created first. */
+function WorkbookImport({ data, projectId, onDone }: { data: DeliveryData; projectId: string; onDone: () => void }) {
+  const { toast } = useSession();
+  const [plan, setPlan] = useState<ImportPlan | null>(null);
+  const [busy, setBusy] = useState(false);
+  const read = async (file?: File) => {
+    if (!file) return;
+    try {
+      const ExcelJS = (await import("exceljs")).default;
+      const wb = new ExcelJS.Workbook(); await wb.xlsx.load(await file.arrayBuffer());
+      const parsed = parseMidpWorkbook(wb);
+      if (!parsed.sheets.length) { toast("No MIDP / TIDP sheet found: the workbook needs a header row starting with \"Deliverable\".", "error"); return; }
+      setPlan(planImport(parsed, data.teams, data.milestones));
+    } catch (e) { toast((e as Error).message, "error"); }
+  };
+  const run = async () => {
+    if (!plan) return;
+    setBusy(true);
+    try {
+      const ids = new Map<string, string>();
+      for (const t of plan.newTeams) ids.set(t.key, (await api<{ id: string }>(`/projects/${projectId}/task-teams`, { body: { name: t.name, originatorCode: t.originatorCode } })).id);
+      for (const m of plan.newMilestones) ids.set(m.key, (await api<{ id: string }>(`/projects/${projectId}/milestones`, { body: { name: m.name, date: m.date } })).id);
+      const rows = plan.rows.map(({ teamKey, milestoneKey, ...r }) => ({ ...r, taskTeamId: ids.get(teamKey) ?? teamKey, milestoneId: milestoneKey ? ids.get(milestoneKey) ?? milestoneKey : null }));
+      for (let i = 0; i < rows.length; i += 500) await api(`/projects/${projectId}/deliverables-import`, { body: { rows: rows.slice(i, i + 500) } });
+      toast(`Imported ${rows.length} rows${plan.newTeams.length ? `, ${plan.newTeams.length} new task teams` : ""}${plan.newMilestones.length ? `, ${plan.newMilestones.length} new milestones` : ""}.`);
+      onDone();
+    } catch (e) { toast((e as Error).message, "error"); } finally { setBusy(false); }
+  };
+  return (
+    <div className="card" style={{ marginBottom: 12 }}>
+      <b>Import a MIDP / TIDP workbook (.xlsx)</b>
+      <p className="small muted">Use a workbook in the MIDP / TIDP template layout: a header row starting with "Deliverable", deliverables grouped as Models / Documents / Drawings / Others, and a column group per data exchange (owner, planned date, issued date). Each exchange becomes one row per container. TIDP sheets are read when the workbook has them, otherwise the MIDP sheet.</p>
+      <input type="file" accept=".xlsx" aria-label="MIDP / TIDP workbook" onChange={(e) => read(e.target.files?.[0])} />
+      {plan && <div className="small" style={{ marginTop: 8 }}>
+        <div><b>{plan.rows.length}</b> rows from {new Set(plan.rows.map((r) => r.containerName || r.title)).size} deliverables</div>
+        {plan.newTeams.length > 0 && <div>New task teams: {plan.newTeams.map((t) => `${t.name}${t.originatorCode ? ` (${t.originatorCode})` : ""}`).join(", ")}</div>}
+        {plan.newMilestones.length > 0 && <div>New milestones: {plan.newMilestones.map((m) => `${m.name} (${m.date})`).join(", ")}</div>}
+        {plan.warnings.map((w) => <div key={w} className="tiny" style={{ color: "var(--warn)" }}>⚠ {w}</div>)}
+        <button className="primary" style={{ marginTop: 8 }} disabled={busy || !plan.rows.length} onClick={run}>{busy ? "Importing…" : `Import ${plan.rows.length} rows`}</button>
+      </div>}
+    </div>
+  );
+}
+
+function ImportDialog({ data, projectId, onImport, onDone, onClose }: { data: DeliveryData; projectId: string; onImport: (rows: object[]) => void; onDone: () => void; onClose: () => void }) {
   const [text, setText] = useState("");
   const rows = useMemo(() => parseTabular(text).filter((r) => !/^task team$/i.test(r[0] ?? "")), [text]);
   const team = (name: string) => data.teams.find((t) => t.name.toLowerCase() === name.trim().toLowerCase() || t.originatorCode === name.trim().toUpperCase());
@@ -130,7 +183,9 @@ function ImportDialog({ data, onImport, onClose }: { data: DeliveryData; onImpor
   const dlg = useDialog(onClose);
   return (
     <div className="modal-bg" onClick={onClose}><div className="modal wide" ref={dlg} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-      <h2 style={{ marginTop: 0 }}>Import containers from Excel / CSV</h2>
+      <h2 style={{ marginTop: 0 }}>Import containers</h2>
+      <WorkbookImport data={data} projectId={projectId} onDone={onDone} />
+      <b>Or paste rows from Excel / CSV</b>
       <p className="small muted">Paste rows with columns: <b>Task team</b> (name or originator code) · <b>Container name</b> · <b>Title</b> · <b>LOIN</b> · <b>Milestone</b> (name) · <b>Start</b> · <b>Due</b>. Dates as YYYY-MM-DD or DD/MM/YYYY.</p>
       <textarea style={{ minHeight: 160 }} value={text} onChange={(e) => setText(e.target.value)} placeholder={"Architecture\tTWA-ARC-ZZ-ZZ-M3-A-0001\tArchitectural model\tLOIN-03\tStage 3\t2026-01-05\t2026-02-20"} />
       {rows.length > 0 && <p className="small">{rows.length} rows · {bad > 0 ? <span className="error">{bad} rows have an unknown task team or no title and will be skipped</span> : "all rows valid"}</p>}
@@ -199,6 +254,15 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
   const [view, setView] = useState<"table" | "gantt">("table");
   const [edit, setEdit] = useState<null | "new" | DeliveryData["deliverables"][number]>(null);
   const [importing, setImporting] = useState(false);
+  const [seed, setSeed] = useState<Partial<Deliverable> | null>(null);
+  /** the same container at the next data exchange (milestone) it is not planned for yet */
+  const nextExchange = (x: Deliverable) => {
+    const planned = new Set(d.deliverables.filter((y) => y.containerName && y.containerName === x.containerName).map((y) => y.milestoneId));
+    const cur = d.milestones.find((m) => m.id === x.milestoneId);
+    const next = d.milestones.find((m) => !planned.has(m.id) && (!cur || m.date > cur.date)) ?? d.milestones.find((m) => !planned.has(m.id));
+    const { id: _id, status: _s, actualDate: _a, fileId: _f, documentId: _d, ...rest } = x;
+    setSeed({ ...rest, status: "planned", actualDate: "", fileId: null, documentId: null, milestoneId: next?.id ?? null, dueDate: next?.date ?? x.dueDate, startDate: x.dueDate, dependsOn: [x.id] });
+  };
   const [impact, setImpact] = useState<DeliveryData["deliverables"][number] | null>(null);
   const editor = canEdit(role);
   const team = new Map(d.teams.map((t) => [t.id, t]));
@@ -229,7 +293,7 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
           <div className="seg"><button className={view === "table" ? "on" : ""} onClick={() => setView("table")}>Table</button><button className={view === "gantt" ? "on" : ""} onClick={() => setView("gantt")}>Gantt</button></div>
         </div>
         <div className="row">
-          {editor && <><button className="primary" onClick={() => setEdit("new")}>+ Container</button><button onClick={() => setImporting(true)}>Import from Excel</button>
+          {editor && <><button className="primary" onClick={() => setEdit("new")}>+ Container</button><button onClick={() => setImporting(true)}>Import (template / Excel)</button>
             <button onClick={() => generate("midp")}>📄 Generate MIDP</button>
             {teamFilter && <button onClick={() => generate("tidp", teamFilter)}>📄 Generate TIDP</button>}</>}
           <a className="btn" href={`/api/projects/${project.id}/midp.xlsx${teamFilter ? `?team=${teamFilter}` : ""}`}>⬇ Excel</a>
@@ -250,7 +314,7 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
                 const m = ms.get(x.milestoneId ?? "");
                 return (
                   <tr key={x.id} className={late ? "late" : ""}>
-                    <td><span className="mono small">{x.containerName || "—"}</span><div>{x.title}</div>{(x.formats?.length || x.classification) ? <div className="tiny muted">{[x.formats?.join(" · "), x.classification].filter(Boolean).join(" — ")}</div> : null}{x.dependsOn.length > 0 && <div className="tiny muted">after {x.dependsOn.map((id) => d.deliverables.find((y) => y.id === id)?.containerName || "?").join(", ")}</div>}</td>
+                    <td><span className="mono small">{x.containerName || "—"}</span><div>{x.title}</div>{x.description && <div className="tiny muted">{x.description}</div>}{(x.formats?.length || x.classification) ? <div className="tiny muted">{[x.formats?.join(" · "), x.classification].filter(Boolean).join(" — ")}</div> : null}{x.dependsOn.length > 0 && <div className="tiny muted">after {x.dependsOn.map((id) => d.deliverables.find((y) => y.id === id)?.containerName || "?").join(", ")}</div>}</td>
                     <td className="small">{team.get(x.taskTeamId)?.name}</td>
                     <td className="small">{x.loin}</td>
                     <td className="small">{m ? <>{m.name}<div className="tiny muted">{m.date}</div></> : "—"}</td>
@@ -260,7 +324,7 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
                     <td><select className="status-select" disabled={!editor} value={x.status} style={{ borderColor: STATUS_COLOR[x.status] }} onChange={(e) => call(`deliverables/${x.id}`, "PUT", { status: e.target.value })}>
                       {DELIVERABLE_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}</select></td>
                     <td className="small">{member.get(x.assigneeId ?? "") ?? "—"}</td>
-                    <td className="nowrap"><button className="ghost tiny" title="What if this is late?" onClick={() => setImpact(x)}>Impact</button>{editor && <><button className="ghost tiny" onClick={() => setEdit(x)}>Edit</button><button className="ghost tiny danger" onClick={() => confirm(`Delete ${x.containerName || x.title}?`) && call(`deliverables/${x.id}`, "DELETE")}>✕</button></>}</td>
+                    <td className="nowrap"><button className="ghost tiny" title="What if this is late?" onClick={() => setImpact(x)}>Impact</button>{editor && <><button className="ghost tiny" title="Plan the same container at another data exchange (milestone)" onClick={() => nextExchange(x)}>+ Exchange</button><button className="ghost tiny" onClick={() => setEdit(x)}>Edit</button><button className="ghost tiny danger" onClick={() => confirm(`Delete ${x.containerName || x.title}?`) && call(`deliverables/${x.id}`, "DELETE")}>✕</button></>}</td>
                   </tr>
                 );
               })}
@@ -272,8 +336,10 @@ function Planner({ d, project, members, role, call }: { d: DeliveryData; project
 
       {edit && <DeliverableDialog initial={edit === "new" ? undefined : edit} data={d} members={members} projectCode={project.code} onClose={() => setEdit(null)}
         onSave={async (row) => { const { id: _id, ...rest } = row as Deliverable; const r = edit === "new" ? await call("deliverables", "POST", rest, "Container added") : await call(`deliverables/${(edit as Deliverable).id}`, "PUT", rest, "Container updated"); if (r) setEdit(null); }} />}
+      {seed && <DeliverableDialog seed={seed} data={d} members={members} projectCode={project.code} onClose={() => setSeed(null)}
+        onSave={async (row) => { const r = await call("deliverables", "POST", row, "Container planned at another exchange"); if (r) setSeed(null); }} />}
       {impact && <ImpactDialog d={d} item={impact} editor={editor} projectId={project.id} call={call} onClose={() => setImpact(null)} />}
-      {importing && <ImportDialog data={d} onClose={() => setImporting(false)} onImport={async (rows) => { const r = await call("deliverables-import", "POST", { rows }, `Imported ${rows.length} containers`); if (r) setImporting(false); }} />}
+      {importing && <ImportDialog data={d} projectId={project.id} onDone={async () => { setImporting(false); await call("delivery", "GET"); }} onClose={() => setImporting(false)} onImport={async (rows) => { const r = await call("deliverables-import", "POST", { rows }, `Imported ${rows.length} containers`); if (r) setImporting(false); }} />}
     </>
   );
 }

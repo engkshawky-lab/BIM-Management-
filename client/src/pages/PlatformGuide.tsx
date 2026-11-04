@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState, type CSSProperties } from "react";
-import { t } from "../i18n";
+import { getLocale, t } from "../i18n";
 import { useSession } from "../App";
 import { api, type Project } from "../lib/api";
 import { Icon } from "../shell/icons";
@@ -127,6 +127,45 @@ function EverySection({ projectId }: { projectId?: string }) {
 }
 
 // ---------------------------------------------------------------- first day
+
+/** Every sidebar page's guide (shared/data/pageGuides): what it is for, steps, outputs and mandatory inputs. */
+function EveryPage({ projectId }: { projectId?: string }) {
+  const [mod, setMod] = useState<typeof import("../../../shared/data/pageGuides") | null>(null);
+  const [q, setQ] = useState("");
+  useEffect(() => { import("../../../shared/data/pageGuides").then(setMod); }, []);
+  if (!mod) return <p className="muted">{t("Loading…")}</p>;
+  const lang = getLocale() === "ar" ? "ar" : "en";
+  const sectionTitle = (id: string) => SECTION_GUIDE.find((x) => x.id === id)?.title ?? id;
+  const needle = q.trim().toLowerCase();
+  return (
+    <div className="pg-sections">
+      <p className="small muted">{t("What each page is for, how to use it, what it produces and what it needs. The same guide opens on any page with the Guide button at the top.")}</p>
+      <input type="search" placeholder={t("Search the page guides")} value={q} onChange={(e) => setQ(e.target.value)} style={{ maxWidth: 420 }} />
+      {SIDEBAR.map((sec) => {
+        const items = sec.items.map((p) => ({ p, g: mod.guideFor(p.key, lang) })).filter((x): x is { p: NavItem; g: NonNullable<typeof x.g> } => !!x.g)
+          .filter(({ p, g }) => !needle || [t(p.label), g.what, ...g.steps, ...g.outputs, ...g.required].join(" ").toLowerCase().includes(needle));
+        if (!items.length) return null;
+        return (
+          <section key={sec.id} className="hub-card">
+            <div className="row spread"><h2 className="pg-sec-title">{t(sectionTitle(sec.id))}</h2><span className="badge">{items.length} {t("pages")}</span></div>
+            {items.map(({ p, g }) => (
+              <details key={p.key} className="pg-page" open={!!needle && items.length <= 3}>
+                <summary><b>{t(p.label)}</b> <span className="small muted">— {g.what}</span></summary>
+                <div className="no-i18n">
+                  <ol className="small">{g.steps.map((x) => <li key={x}>{x}</li>)}</ol>
+                  <div className="small"><b>{t("Mandatory inputs")}:</b> {g.required.length ? g.required.join(" · ") : t("Nothing is required: this page is for reading or exploring.")}</div>
+                  <div className="small"><b>{t("What you get")}:</b> {g.outputs.length ? g.outputs.join(" · ") : t("Nothing is saved or produced on this page.")}</div>
+                  {!!g.tips?.length && <div className="small"><b>{t("Tips")}:</b> {g.tips.join(" · ")}</div>}
+                  {(p.scope === "global" || projectId) && <a className="btn small" style={{ marginTop: 6 }} href={"#" + hrefFor(p, projectId)}>{t("Open page")} →</a>}
+                </div>
+              </details>
+            ))}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
 
 function FirstDay({ projectId }: { projectId?: string }) {
   const [ticks, setTicks] = useState<string[]>(loadTicks);
@@ -280,6 +319,7 @@ export default function PlatformGuide({ tab }: { tab?: string }) {
       {!show && <LockedTab k={keyOf(cur.id)} label={cur.label} back={cur.id !== "start" && !locked(keyOf("start")) ? { href: "#/guide/start", label: "Back to Start here" } : undefined} />}
       {show === "start" && <StartHere />}
       {show === "sections" && <EverySection projectId={projectId} />}
+      {show === "pages" && <EveryPage projectId={projectId} />}
       {show === "first-day" && <FirstDay projectId={projectId} />}
       {show === "first-week" && <FirstWeek projectId={projectId} />}
       {show === "flows" && <Flows projectId={projectId} />}

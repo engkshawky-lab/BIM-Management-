@@ -228,6 +228,12 @@ export const deliverables = mysqlTable("deliverables", {
   formats: json<string[]>("formats"),
   classification: varchar("classification", { length: 80 }).notNull().default(""),
   actualDate: varchar("actual_date", { length: 10 }).notNull().default(""),
+  /** MIDP/TIDP template columns: longer description, native authoring format, source model for extracted
+   *  deliverables (drawings, schedules) and a cost code (e.g. NRM1). formats holds the exchange formats. */
+  description: varchar("description", { length: 1000 }).notNull().default(""),
+  nativeFormat: varchar("native_format", { length: 20 }).notNull().default(""),
+  modelRef: varchar("model_ref", { length: 120 }).notNull().default(""),
+  costCode: varchar("cost_code", { length: 40 }).notNull().default(""),
   createdAt: created(),
   updatedAt: datetime("updated_at", { mode: "date" }).notNull(),
 }, (t) => [index("deliverables_project").on(t.projectId)]);

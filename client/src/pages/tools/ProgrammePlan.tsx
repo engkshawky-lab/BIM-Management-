@@ -6,9 +6,10 @@ import { getProjectData } from "../../lib/projectStore";
 import { readPlan, updatePlanRow, type SavedPlanKind } from "../../lib/planStore";
 import { t } from "../../i18n";
 import {
-  CONTAINER_COLUMNS, DISCIPLINES, TYPE_CODES, checkContainers, containerName, numberRows,
+  CONTAINER_COLUMNS, DISCIPLINES, TYPE_CODES, checkContainers, containerName, numberRows, rowsToMidp,
   type ContainerRow, type PlanHeader, type PlanMilestone,
 } from "../../../../shared/planRows";
+import { writeMidpWorkbook } from "../../../../shared/midpWorkbook";
 import { checkNames, formatMsg } from "../../../../shared/namingCheck";
 import {
   actKey, diffProgrammes, impact, parseCsvProgramme, parseProgrammeText, type Activity, type ImpactFlag, type ImpactRow, type ProgrammeDiff,
@@ -240,14 +241,10 @@ export default function ProgrammePlan() {
     const ExcelJS = (await import("exceljs")).default;
     const wb = new ExcelJS.Workbook();
     wb.creator = "TIDP / MIDP from the programme";
-    const ws = wb.addWorksheet(kind.toUpperCase());
-    ws.columns = exportHead.map((h, i) => ({ header: h, key: String(i), width: i === 0 ? 34 : (CONTAINER_COLUMNS[i - 1]?.width ?? 24) + 2 }));
-    exportBody().forEach((r) => ws.addRow(r));
-    const head = ws.getRow(1);
-    head.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    for (let c = 1; c <= exportHead.length; c++) head.getCell(c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A5F" } };
-    ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: exportHead.length } };
-    ws.views = [{ state: "frozen", ySplit: 1 }];
+    // MIDP / TIDP template layout, then the link from each container to its programme activity
+    const { exchanges, lines } = rowsToMidp(header, numbered.map((r) => ({ ...r, taskTeam: r.taskTeam })), milestones);
+    writeMidpWorkbook(wb, { kind, exchanges, lines: lines.map((l, i) => ({ ...l, container: nameOf(numbered[i]), teamCode: numbered[i].originator || header.originator || l.teamCode })),
+      header: { projectName: header.projectName, projectCode: header.projectCode, appointingParty: header.appointingParty, leadAppointedParty: header.leadAppointedParty, preparedBy: header.preparedBy, revision: header.revision, date: new Date().toISOString().slice(0, 10) } });
     const ps = wb.addWorksheet("Programme link");
     ps.columns = [{ header: "Activity", width: 16 }, { header: "Activity name", width: 50 }, { header: "Start", width: 12 }, { header: "Finish", width: 12 }, { header: "Containers", width: 12 }];
     const per = new Map<string, number>(); numbered.forEach((r) => per.set(r.activityId, (per.get(r.activityId) ?? 0) + 1));

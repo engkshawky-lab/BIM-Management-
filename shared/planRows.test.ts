@@ -26,7 +26,7 @@ describe("delivery plan rows", () => {
       { ...base, ref: "C006", number: "0006", dependsOn: "C005" },          // cycle
     ], ms);
     const text = issues.map((x) => x.message).join("\n");
-    expect(text).toMatch(/Duplicate container name RVC-ABC-ZZ-XX-DR-A-0001/);
+    expect(text).toMatch(/Container RVC-ABC-ZZ-XX-DR-A-0001 is planned twice at M1/);
     expect(text).toMatch(/after milestone M1/);
     expect(text).toMatch(/Milestone M9 is not in the milestone list/);
     expect(text).toMatch(/Circular dependency/);
@@ -44,5 +44,19 @@ describe("delivery plan rows", () => {
   it("aggregates TIDPs into a MIDP with task teams and new refs", () => {
     const midp = aggregateTidps([{ taskTeam: "Architecture", rows: [emptyRow(0)] }, { taskTeam: "Structure", rows: [emptyRow(0), emptyRow(1)] }]);
     expect(midp.map((r) => `${r.ref} ${r.taskTeam}`)).toEqual(["C001 Architecture", "C002 Structure", "C003 Structure"]);
+  });
+
+  it("allows a container at several exchanges and converts to and from the MIDP template layout", async () => {
+    const { rowsToMidp, midpToRows } = await import("./planRows");
+    const base = { ...emptyRow(0, "A"), title: "Architectural model", type: "M3", number: "0001", loin: "LOD 300", responsible: "Lead", description: "Federated model", format: "RVT", exchange: "IFC" };
+    const ms2 = [{ code: "M1", name: "Concept", date: "2027-02-15" }, { code: "M2", name: "Detailed", date: "2027-06-15" }];
+    const rows = [{ ...base, milestone: "M1", due: "2027-02-01" }, { ...base, ref: "C002", milestone: "M2", due: "2027-06-01" }];
+    expect(checkContainers(header, rows, ms2).map((x) => x.message).join()).not.toMatch(/planned twice/);
+    const { exchanges, lines } = rowsToMidp(header, rows, ms2);
+    expect(exchanges.map((x) => [x.key, x.name])).toEqual([["M1", "M1 Concept"], ["M2", "M2 Detailed"]]);
+    expect(lines.map((l) => [l.container, l.exchange, l.planned, l.nativeFormat, l.exchangeFormats])).toEqual([["RVC-ABC-ZZ-XX-M3-A-0001", "M1", "2027-02-01", "RVT", "IFC"], ["RVC-ABC-ZZ-XX-M3-A-0001", "M2", "2027-06-01", "RVT", "IFC"]]);
+    const back = midpToRows({ sheets: ["TIDP"], warnings: [], exchanges: exchanges.map((x, i) => ({ ...x, key: `X${i}` })), lines: lines.map((l, i) => ({ ...l, exchange: `X${i}` })) });
+    expect(back.milestones.map((m) => m.code)).toEqual(["M1", "M2"]);
+    expect(back.rows.map((r) => [r.volume, r.level, r.type, r.role, r.number, r.milestone, r.due, r.description])).toEqual([["ZZ", "XX", "M3", "A", "0001", "M1", "2027-02-01", "Federated model"], ["ZZ", "XX", "M3", "A", "0001", "M2", "2027-06-01", "Federated model"]]);
   });
 });

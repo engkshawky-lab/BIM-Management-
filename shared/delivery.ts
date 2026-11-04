@@ -10,6 +10,7 @@ export interface Deliverable {
   startDate: string; dueDate: string; status: DeliverableStatus; dependsOn: string[]; assigneeId: string | null;
   fileId: string | null; documentId: string | null; notes: string;
   formats?: string[] | null; classification?: string; actualDate?: string;
+  description?: string; nativeFormat?: string; modelRef?: string; costCode?: string;
 }
 
 export type Severity = "error" | "warning" | "info";
@@ -55,7 +56,9 @@ export function analysePlan(input: { deliverables: Deliverable[]; milestones: Mi
     const label = d.containerName || d.title;
     if (!d.containerName) f.push({ severity: "warning", area: "Naming", ref: d.title, message: "Container name missing." });
     else {
-      names.set(d.containerName, (names.get(d.containerName) ?? 0) + 1);
+      // a container may be planned once per data exchange (milestone); twice at the same exchange is a duplicate
+      const k = `${d.containerName}|${d.milestoneId ?? ""}`;
+      names.set(k, (names.get(k) ?? 0) + 1);
       const errs = validateContainerName(d.containerName, projectCode);
       if (errs.length) f.push({ severity: "error", area: "Naming", ref: label, message: errs.join(" ") });
       const t = team.get(d.taskTeamId);
@@ -79,7 +82,10 @@ export function analysePlan(input: { deliverables: Deliverable[]; milestones: Mi
       if (dep.dueDate && start && dep.dueDate > start) f.push({ severity: "warning", area: "Dependencies", ref: label, message: `Needs ${dep.containerName || dep.title} (due ${dep.dueDate}) before it starts (${start}).` });
     }
   }
-  for (const [name, n] of names) if (n > 1) f.push({ severity: "error", area: "Naming", ref: name, message: `Container name used ${n} times — names must be unique.` });
+  for (const [k, n] of names) if (n > 1) {
+    const [name, msId] = k.split("|");
+    f.push({ severity: "error", area: "Naming", ref: name, message: `Container planned ${n} times at ${msId ? `milestone ${ms.get(msId)?.name ?? "?"}` : "no milestone"} — plan it once per data exchange.` });
+  }
   for (const c of findCycles(items)) f.push({ severity: "error", area: "Dependencies", message: `Circular dependency: ${c.map((id) => byId.get(id)?.containerName || byId.get(id)?.title).join(" → ")}.` });
   return f;
 }

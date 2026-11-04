@@ -7,6 +7,7 @@ import { z } from "zod";
 import { templateById } from "../../shared/data/templates";
 import { analysePlan, planStats, qualityScore, variance, type Deliverable, progressPct } from "../../shared/delivery";
 import { initialValues } from "../../shared/documents";
+import { writeMidpWorkbook, type MidpLine } from "../../shared/midpWorkbook";
 import { checkDocument, checkProjectSet } from "../../shared/quality";
 import { logActivity, requireProject } from "../access";
 import { db, newId, schema } from "../db";
@@ -114,6 +115,8 @@ crud("deliverables", schema.deliverables, z.object({
   dependsOn: z.array(z.string()).max(50).default([]), assigneeId: z.string().nullable().default(null),
   fileId: z.string().nullable().default(null), documentId: z.string().nullable().default(null), notes: z.string().max(1000).default(""),
   formats: z.array(z.string().trim().toUpperCase().max(12)).max(10).default([]), classification: z.string().trim().max(80).default(""), actualDate: date.default(""),
+  description: z.string().trim().max(1000).default(""), nativeFormat: z.string().trim().toUpperCase().max(20).default(""),
+  modelRef: z.string().trim().toUpperCase().max(120).default(""), costCode: z.string().trim().max(40).default(""),
 }), (d) => `container ${d.containerName || d.title}`, {
   validate: sameProject,
   // record the actual delivery date when a container is first shared or published
@@ -160,8 +163,11 @@ r.post(P + "/mrm-seed", requireProject("editor"), h(async (req, res) => {
 r.post(P + "/deliverables-import", requireProject("editor"), h(async (req, res) => {
   const body = parse(z.object({ rows: z.array(z.object({
     taskTeamId: z.string(), containerName: z.string().max(120).default(""), title: z.string().min(1).max(255), loin: z.string().max(40).default(""),
-    milestoneId: z.string().nullable().default(null), startDate: date.default(""), dueDate: date.default(""),
-  })).min(1).max(500) }), req.body, res); if (!body) return;
+    milestoneId: z.string().nullable().default(null), startDate: date.default(""), dueDate: date.default(""), actualDate: date.default(""),
+    typeCode: z.string().trim().toUpperCase().max(2).default(""), description: z.string().max(1000).default(""), nativeFormat: z.string().trim().toUpperCase().max(20).default(""),
+    formats: z.array(z.string().trim().toUpperCase().max(12)).max(10).default([]), modelRef: z.string().trim().toUpperCase().max(120).default(""),
+    classification: z.string().trim().max(80).default(""), costCode: z.string().trim().max(40).default(""), notes: z.string().max(1000).default(""),
+  })).min(1).max(2000) }), req.body, res); if (!body) return;
   const pid = req.params.projectId;
   for (const row of body.rows) { const err = await sameProject(pid, row); if (err) return res.status(400).json({ error: err }); }
   const now = new Date();
@@ -191,18 +197,36 @@ r.get(P + "/midp.xlsx", requireProject(), h(async (req, res) => {
     return ws;
   };
   const day = today();
-  const ws = sheet(teamId ? `TIDP ${team.get(teamId)?.name ?? ""}`.slice(0, 31) : "MIDP", [
-    { header: "Task team", key: "team", width: 20 }, { header: "Container name", key: "container", width: 34 }, { header: "Title", key: "title", width: 40 },
-    { header: "Type", key: "type", width: 6 }, { header: "Formats", key: "formats", width: 16 }, { header: "Classification", key: "cls", width: 18 },
-    { header: "LOIN", key: "loin", width: 10 }, { header: "Milestone", key: "ms", width: 18 }, { header: "Start", key: "start", width: 11 },
-    { header: "Due", key: "due", width: 11 }, { header: "Actual", key: "actual", width: 11 }, { header: "Variance (days)", key: "var", width: 10 },
-    { header: "Status", key: "status", width: 12 }, { header: "Responsible", key: "resp", width: 20 }, { header: "Depends on", key: "deps", width: 30 },
+  // template layout: document control, instructions, MIDP and one TIDP sheet per task team (or just the team's TIDP)
+  const fileIds = rows.map((d) => d.fileId).filter((x): x is string => !!x);
+  const files = new Map((fileIds.length ? await db.select({ id: schema.files.id, revision: schema.files.revision, suitability: schema.files.suitability }).from(schema.files).where(eq(schema.files.projectId, pid)) : []).map((f) => [f.id, f]));
+  const lines: MidpLine[] = rows.map((d) => {
+    const t = team.get(d.taskTeamId); const f = d.fileId ? files.get(d.fileId) : undefined;
+    return {
+      container: d.containerName, title: d.title, description: d.description ?? "", taskTeam: t?.name ?? "", teamCode: t?.originatorCode || t?.roleCode || "",
+      type: d.typeCode || d.containerName.split("-")[4] || "", nativeFormat: d.nativeFormat ?? "", exchangeFormats: (d.formats ?? []).join(", "), modelRef: d.modelRef ?? "",
+      classification: d.classification ?? "", costCode: d.costCode ?? "", revision: f?.revision ?? "", suitability: f?.suitability ?? "", loin: d.loin,
+      exchange: d.milestoneId ?? "", planned: d.dueDate, issued: d.actualDate ?? "", owner: users.get(d.assigneeId ?? "") ?? users.get(t?.leadUserId ?? "") ?? t?.name ?? "", status: d.status,
+    };
+  });
+  const usedMs = new Set(rows.map((d) => d.milestoneId));
+  writeMidpWorkbook(wb, {
+    kind: teamId ? "tidp" : "midp",
+    header: { projectName: project.name, projectCode: project.code, appointingParty: project.appointingParty, leadAppointedParty: "", preparedBy: req.user!.name, revision: "", date: day },
+    exchanges: b.milestones.filter((m) => !teamId || usedMs.has(m.id)).map((m) => ({ key: m.id, name: m.name, programmeRef: m.description, date: m.date })),
+    lines,
+  });
+  // progress tracking the template layout has no room for: status, delivery variance, overdue highlighted
+  const track = sheet("Tracking", [
+    { header: "Task team", key: "team", width: 20 }, { header: "Container name", key: "container", width: 34 }, { header: "Title", key: "title", width: 36 },
+    { header: "Milestone", key: "ms", width: 18 }, { header: "Start", key: "start", width: 11 }, { header: "Due", key: "due", width: 11 }, { header: "Actual", key: "actual", width: 11 },
+    { header: "Variance (days)", key: "var", width: 10 }, { header: "Status", key: "status", width: 12 }, { header: "Responsible", key: "resp", width: 20 }, { header: "Depends on", key: "deps", width: 30 },
   ], rows.map((d) => ({
-    team: team.get(d.taskTeamId)?.name ?? "", container: d.containerName, title: d.title, type: d.typeCode, formats: (d.formats ?? []).join(", "), cls: d.classification,
-    loin: d.loin, ms: ms.get(d.milestoneId ?? "")?.name ?? "", start: d.startDate, due: d.dueDate, actual: d.actualDate, var: variance(d) ?? "",
-    status: d.status.replace("_", " "), resp: users.get(d.assigneeId ?? "") ?? "", deps: d.dependsOn.map((x) => b.deliverables.find((y) => y.id === x)?.containerName).filter(Boolean).join(", "),
+    team: team.get(d.taskTeamId)?.name ?? "", container: d.containerName, title: d.title, ms: ms.get(d.milestoneId ?? "")?.name ?? "", start: d.startDate, due: d.dueDate,
+    actual: d.actualDate, var: variance(d) ?? "", status: d.status.replace("_", " "), resp: users.get(d.assigneeId ?? "") ?? "",
+    deps: d.dependsOn.map((x) => b.deliverables.find((y) => y.id === x)?.containerName).filter(Boolean).join(", "),
   })));
-  rows.forEach((d, i) => { if (d.dueDate && d.dueDate < day && !["shared", "published"].includes(d.status)) ws.getRow(i + 2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDE2E2" } }; });
+  rows.forEach((d, i) => { if (d.dueDate && d.dueDate < day && !["shared", "published"].includes(d.status)) track.getRow(i + 2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDE2E2" } }; });
   sheet("Milestones", [{ header: "Milestone", key: "n", width: 24 }, { header: "Date", key: "d", width: 12 }, { header: "Containers", key: "c", width: 12 }, { header: "Delivered", key: "x", width: 12 }],
     b.milestones.map((m) => { const list = rows.filter((d) => d.milestoneId === m.id); return { n: m.name, d: m.date, c: list.length, x: list.filter((d) => ["shared", "published"].includes(d.status)).length }; }));
   const st = planStats(rows, day);
@@ -245,7 +269,8 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
 
   if (body.kind === "midp") {
     values.milestones = b.milestones.map((m) => [m.name, m.date, m.description]);
-    values.plan = b.deliverables.map((d) => [team.get(d.taskTeamId)?.name ?? "", d.containerName || d.title, d.loin, d.dueDate, ms.get(d.milestoneId ?? "")?.name ?? "", d.status.replace("_", " ")]);
+    const fmts = (d: Deliverable) => [d.nativeFormat, (d.formats ?? []).join(", ")].filter(Boolean).join(" / ");
+    values.plan = b.deliverables.map((d) => [team.get(d.taskTeamId)?.name ?? "", d.containerName, d.title, d.description ?? "", fmts(d), d.loin, d.dueDate, ms.get(d.milestoneId ?? "")?.name ?? "", d.status.replace("_", " ")]);
     // risks to delivery: open register entries plus what the plan analysis finds
     const openRisks = (await db.select().from(schema.risks).where(eq(schema.risks.projectId, pid))).filter((x) => x.status !== "Closed").sort((x, y) => y.likelihood * y.impact - x.likelihood * x.impact);
     const planIssues = analysePlan({ deliverables: b.deliverables, milestones: b.milestones, teams: b.teams, projectCode: project.code, today: today() }).filter((f) => f.severity === "error");
@@ -261,7 +286,7 @@ r.post(P + "/delivery/generate", requireProject("editor"), h(async (req, res) =>
     if (tt.leadUserId) { const [lead] = await db.select({ name: schema.users.name }).from(schema.users).where(eq(schema.users.id, tt.leadUserId)); if (lead) values.manager = lead.name; }
     const byId = new Map(b.deliverables.map((d) => [d.id, d]));
     values.containers = b.deliverables.filter((d) => d.taskTeamId === tt.id).map((d) => [
-      d.containerName, d.title, d.loin, d.startDate && d.dueDate ? String(Math.max(0, Math.round((Date.parse(d.dueDate) - Date.parse(d.startDate)) / 864e5))) : "",
+      d.containerName, d.title, d.description ?? "", [d.nativeFormat, (d.formats ?? []).join(", ")].filter(Boolean).join(" / "), d.modelRef ?? "", d.loin, d.startDate && d.dueDate ? String(Math.max(0, Math.round((Date.parse(d.dueDate) - Date.parse(d.startDate)) / 864e5))) : "",
       d.dependsOn.map((x) => byId.get(x)?.containerName || byId.get(x)?.title).filter(Boolean).join(", "), d.dueDate, ms.get(d.milestoneId ?? "")?.name ?? "",
     ]);
   } else if (body.kind === "risk-register") {

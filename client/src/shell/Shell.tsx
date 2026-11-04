@@ -11,6 +11,7 @@ import { BIM_ROLES, roleById, roleKeys } from "./roles";
 import { useDialog, useDismiss } from "../components/Dialog";
 import { useAccess } from "../lib/access";
 import { Announcement, useSite } from "../lib/site";
+import { PageGuideButton, PageGuidePanel } from "../components/PageGuide";
 
 // ---------------------------------------------------------------- per-user local conveniences
 
@@ -442,6 +443,8 @@ export default function Shell({ route, children }: { route: string; children: Re
     return () => window.removeEventListener("keydown", on);
   }, []);
 
+  const [guide, setGuide] = useState(() => store.get("bim:guide-open", false));
+  const toggleGuide = () => setGuide((g) => { store.set("bim:guide-open", !g); return !g; });
   const pageItem = useMemo(() => {
     const proj = /^\/projects\/[^/]+\/(.+)$/.exec(route)?.[1];
     if (proj) return PROJECT_PAGES.find((x) => proj === x.path || (proj.startsWith(x.path + "/") && !/^documents\//.test(proj)));
@@ -462,8 +465,10 @@ export default function Shell({ route, children }: { route: string; children: Re
           <button className="icon-btn sb-show" onClick={showMenu} aria-label={t("Show sidebar")} title={t("Show sidebar")}><Icon name="panel" size={16} /></button>
           <Crumbs route={route} projects={projects} />
           <span className="pagebar-spacer" />
+          {pageItem && <PageGuideButton open={guide} onToggle={toggleGuide} />}
           {pageItem && <FavouriteToggle item={pageItem} />}
         </div>
+        {guide && pageItem && <PageGuidePanel pageKey={pageItem.key} onClose={toggleGuide} />}
         <div className="page">{children}</div>
       </main>
       {palette && <CommandPalette projects={projects} project={project} onClose={() => setPalette(false)} />}

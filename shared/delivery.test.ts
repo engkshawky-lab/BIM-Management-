@@ -35,7 +35,12 @@ describe("analysePlan", () => {
     const b = d({ id: "b", containerName: "TWA-STR-ZZ-ZZ-M3-S-0001", startDate: "2026-02-01", dependsOn: ["a"] });
     const c = d({ id: "c" });
     const msgs = analysePlan({ ...base, deliverables: [a, b, c] }).map((x) => x.message).join("|");
-    expect(msgs).toMatch(/used 2 times/); expect(msgs).toMatch(/Originator STR differs/); expect(msgs).toMatch(/before it starts/);
+    expect(msgs).toMatch(/planned 2 times at milestone/); expect(msgs).toMatch(/Originator STR differs/); expect(msgs).toMatch(/before it starts/);
+  });
+  it("allows the same container at different data exchanges (one MIDP row per exchange)", () => {
+    const later = { id: "m2", name: "Stage 4", date: "2026-06-30", description: "" };
+    const f = analysePlan({ ...base, milestones: [...base.milestones, later], deliverables: [d({ id: "a" }), d({ id: "b", milestoneId: "m2", dueDate: "2026-06-01" })] });
+    expect(f.map((x) => x.message).join("|")).not.toMatch(/planned 2 times/);
   });
   it("detects cycles", () => {
     expect(findCycles([{ id: "a", dependsOn: ["b"] }, { id: "b", dependsOn: ["a"] }]).length).toBe(1);

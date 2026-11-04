@@ -342,7 +342,7 @@ export function HubsIndex({ hubs, focus }: { hubs: Hub[]; focus?: string }) {
   return (
     <div className="hub" style={{ "--hub": TONES.blue } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">ISO 19650 · TOPIC HUBS</div><h1>Advanced topics</h1>
-        <p>Practical, in-depth guides that sit alongside the ISO 19650 parts, grouped into four themes in a suggested order. Each hub has topics, worked examples, checklists, quizzes and an AI tutor, and links to related hubs and tools. Your progress is saved in this browser.</p>
+        <p>Practical, in-depth guides that sit alongside the ISO 19650 parts, grouped into themes in a suggested order. Each hub has topics, worked examples, checklists, quizzes and an AI tutor, and links to related hubs and tools. Your progress is saved in this browser.</p>
         <div className="facts"><span>{hubs.length} hubs</span><span>{THEMES.length} themes</span><span>{hubs.reduce((a, h) => a + allTabs(h).length, 0)} topics</span></div>
         <div className="row" style={{ position: "relative", zIndex: 1, marginTop: 12, flexWrap: "wrap", gap: 8 }}>{THEMES.map((t, i) => <a key={t.id} href={`#/hubs/theme/${t.id}`} className="chip-link on-hero">{i + 1}. {t.label}</a>)}</div>
       </div>

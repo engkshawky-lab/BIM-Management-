@@ -23,7 +23,8 @@ function Quiz({ questions, mode, topic, minutes = EXAM.minutes, onDone }: { ques
   const [result, setResult] = useState<{ score: number; total: number; byTopic: Record<string, [number, number]> } | null>(null);
   const left = mode === "exam" ? Math.max(0, minutes * 60 - Math.floor((now - start) / 1000)) : null;
   useEffect(() => { if (mode !== "exam" || result) return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, [mode, result]);
-  const submit = async () => { const r = await api<typeof result>("/learn/attempts", { body: { mode, topic, answers, seconds: Math.round((Date.now() - start) / 1000) } }); setResult(r); };
+  // every question counts: unanswered ones go as -1 so they score as wrong instead of dropping out of the total
+  const submit = async () => { const all = Object.fromEntries(questions.map((q) => [q.id, answers[q.id] ?? -1])); const r = await api<typeof result>("/learn/attempts", { body: { mode, topic, answers: all, seconds: Math.round((Date.now() - start) / 1000) } }); setResult(r); };
   useEffect(() => { if (left === 0 && !result) submit(); }); // time up
   if (result) {
     const pct = result.score / result.total;

@@ -1,4 +1,5 @@
 import { findCycles } from "./delivery";
+import type { MidpExchange, MidpLine, ParsedPlan } from "./midpWorkbook";
 
 // Delivery plan tables for the standalone TIDP / MIDP / MPDT generator: row shapes, ISO 19650 container naming,
 // checks, and a starter library so a useful plan exists without any AI call.
@@ -15,6 +16,8 @@ export interface PlanMilestone { code: string; name: string; date: string }
 export interface ContainerRow {
   ref: string; taskTeam: string; title: string; volume: string; level: string; type: string; role: string; number: string;
   format: string; loin: string; milestone: string; start: string; due: string; dependsOn: string; responsible: string; suitability: string; status: string;
+  /** MIDP / TIDP template columns (optional so plans saved before they existed still load) */
+  description?: string; exchange?: string; modelRef?: string; costCode?: string; issued?: string;
 }
 /** One element or system in the MPDT, with its level of information need per stage. */
 export interface MpdtRow { element: string; classification: string; author: string; loin: Record<string, string>; notes: string }
@@ -54,8 +57,10 @@ export function checkContainers(h: PlanHeader, rows: ContainerRow[], milestones:
   const ms = new Map(milestones.map((m) => [m.code, m]));
   rows.forEach((r, i) => {
     const name = containerName(h, r);
-    if (names.has(name)) issues.push({ level: "error", row: i, message: `Duplicate container name ${name} (also row ${names.get(name)! + 1}).` });
-    names.set(name, i);
+    // the same container may be planned once per data exchange (milestone)
+    const key = `${name}|${r.milestone}`;
+    if (names.has(key)) issues.push({ level: "error", row: i, message: `Container ${name} is planned twice at ${r.milestone || "no milestone"} (also row ${names.get(key)! + 1}) — plan it once per data exchange.` });
+    names.set(key, i);
     if (!r.title.trim()) issues.push({ level: "error", row: i, message: "No title or description." });
     if (!r.due) issues.push({ level: "warning", row: i, message: "No due date." });
     if (r.start && r.due && r.start > r.due) issues.push({ level: "error", row: i, message: "Start date is after the due date." });
@@ -125,7 +130,38 @@ export function dueBucket(r: Pick<ContainerRow, "due" | "status">, today: string
 export const CONTAINER_COLUMNS: { key: keyof ContainerRow; label: string; width: number }[] = [
   { key: "ref", label: "Ref", width: 7 }, { key: "taskTeam", label: "Task team", width: 16 }, { key: "title", label: "Title / description", width: 36 },
   { key: "volume", label: "Volume", width: 8 }, { key: "level", label: "Level", width: 7 }, { key: "type", label: "Type", width: 7 }, { key: "role", label: "Role", width: 6 },
-  { key: "number", label: "Number", width: 8 }, { key: "format", label: "Format", width: 14 }, { key: "loin", label: "Level of information need", width: 18 },
+  { key: "number", label: "Number", width: 8 }, { key: "description", label: "Description", width: 30 }, { key: "format", label: "Native format", width: 12 },
+  { key: "exchange", label: "Exchange formats", width: 14 }, { key: "modelRef", label: "Model reference", width: 26 }, { key: "costCode", label: "Cost code", width: 10 },
+  { key: "loin", label: "Level of information need", width: 18 },
   { key: "milestone", label: "Milestone", width: 10 }, { key: "start", label: "Start", width: 12 }, { key: "due", label: "Due", width: 12 },
   { key: "dependsOn", label: "Depends on", width: 12 }, { key: "responsible", label: "Responsible", width: 18 }, { key: "suitability", label: "Suitability", width: 10 }, { key: "status", label: "Status", width: 12 },
 ];
+
+// ---------------------------------------------------------------- MIDP / TIDP template workbook
+
+/** Rows → lines of the MIDP / TIDP template workbook (shared/midpWorkbook.ts); exchanges are the plan's milestones. */
+export function rowsToMidp(h: PlanHeader, rows: ContainerRow[], milestones: PlanMilestone[]): { exchanges: MidpExchange[]; lines: MidpLine[] } {
+  const exchanges = milestones.filter((m) => m.code).map((m) => ({ key: m.code, name: m.name ? `${m.code} ${m.name}` : m.code, programmeRef: "", date: m.date }));
+  const lines = rows.map((r): MidpLine => ({
+    container: containerName(h, r), title: r.title, description: r.description ?? "", taskTeam: r.taskTeam || h.taskTeam, teamCode: h.originator || r.role,
+    type: r.type, nativeFormat: r.format, exchangeFormats: r.exchange ?? "", modelRef: r.modelRef ?? "", classification: "", costCode: r.costCode ?? "",
+    revision: "", suitability: r.suitability, loin: r.loin, exchange: r.milestone, planned: r.due, issued: r.issued ?? "", owner: r.responsible, status: r.status,
+  }));
+  return { exchanges, lines };
+}
+
+/** A parsed template workbook → rows and milestones for the generator (one row per container per exchange). */
+export function midpToRows(p: ParsedPlan): { rows: ContainerRow[]; milestones: PlanMilestone[] } {
+  const milestones: PlanMilestone[] = p.exchanges.map((x, i) => ({ code: `M${i + 1}`, name: x.name.slice(0, 60), date: x.date }));
+  const code = new Map(p.exchanges.map((x, i) => [x.key, `M${i + 1}`]));
+  const rows = p.lines.map((l, i): ContainerRow => {
+    const f = l.container.split("-");
+    const at = (fromEnd: number) => (f.length >= 7 ? f[f.length - fromEnd] : "");
+    return {
+      ...emptyRow(i), taskTeam: l.taskTeam, title: l.title, description: l.description, volume: at(5) || "ZZ", level: at(4) || "XX",
+      type: l.type || "XX", role: at(2) || "Z", number: at(1), format: l.nativeFormat, exchange: l.exchangeFormats, modelRef: l.modelRef, costCode: l.costCode,
+      loin: l.loin, milestone: code.get(l.exchange) ?? "", due: l.planned, issued: l.issued, responsible: l.owner, suitability: l.suitability || "S0", status: l.issued ? "Shared" : "Planned",
+    };
+  });
+  return { rows, milestones };
+}

@@ -5,9 +5,10 @@ import { api } from "../lib/api";
 import { exportCsv, parseTabular } from "../lib/export";
 import { saveMarkdownDocx } from "../lib/mdDocx";
 import {
-  CONTAINER_COLUMNS, DEFAULT_MILESTONES, DISCIPLINES, STATUSES, SUITABILITY, TYPE_CODES, aggregateTidps, checkContainers, containerName, emptyRow, numberRows, starterRows,
+  CONTAINER_COLUMNS, DEFAULT_MILESTONES, DISCIPLINES, STATUSES, SUITABILITY, TYPE_CODES, aggregateTidps, checkContainers, containerName, emptyRow, midpToRows, numberRows, rowsToMidp, starterRows,
   type ContainerRow, type MpdtRow, type PlanHeader, type PlanKind, type PlanMilestone,
 } from "../../../shared/planRows";
+import { parseMidpWorkbook, writeMidpWorkbook } from "../../../shared/midpWorkbook";
 import { TONES } from "./hubTheme";
 import { DocDataPanel, useDocData } from "../components/DocDataPanel";
 import { tr } from "../i18nDom";
@@ -44,6 +45,13 @@ const load = (k: PlanKind): State => { try { const v = localStorage.getItem(key(
 async function toExcel(kind: PlanKind, s: State, title: string) {
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
+  if (kind !== "mpdt") {
+    // MIDP / TIDP: the template layout (document control, instructions, MIDP, one TIDP sheet per task team)
+    const { exchanges, lines } = rowsToMidp(s.header, s.rows, s.milestones);
+    writeMidpWorkbook(wb, { kind, exchanges, lines, header: { projectName: s.header.projectName, projectCode: s.header.projectCode, appointingParty: s.header.appointingParty, leadAppointedParty: s.header.leadAppointedParty, preparedBy: s.header.preparedBy, revision: s.header.revision, date: new Date().toISOString().slice(0, 10) } });
+    saveAs(new Blob([await wb.xlsx.writeBuffer()], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `${s.header.projectCode || "PRJ"}-${kind.toUpperCase()}-${s.header.revision}.xlsx`);
+    return;
+  }
   const ws = wb.addWorksheet(kind.toUpperCase());
   const head = kind === "mpdt" ? ["Element / system", "Classification", "Model author", ...s.stages, "Notes"] : ["Container name", ...CONTAINER_COLUMNS.map((c) => c.label)];
   ws.addRow([title]).font = { bold: true, size: 14, color: { argb: "FF1E3A5F" } };
@@ -141,7 +149,7 @@ export default function DeliveryPlans() {
   };
   const importCsv = async (files: FileList | null) => {
     if (!files?.length) return;
-    const labels = new Map(CONTAINER_COLUMNS.map((c) => [c.label.toLowerCase(), c.key]));
+    const labels = new Map<string, keyof ContainerRow>([...CONTAINER_COLUMNS.map((c) => [c.label.toLowerCase(), c.key] as const), ["format", "format"], ["title / description", "title"]]);
     const plans: { taskTeam: string; rows: ContainerRow[] }[] = [];
     for (const f of [...files]) {
       const grid = parseTabular((await f.text()).replace(/^﻿/, ""));
@@ -154,10 +162,23 @@ export default function DeliveryPlans() {
     setS({ ...s, rows: kind === "midp" ? aggregateTidps([...(s.rows.length ? [{ taskTeam: "", rows: s.rows }] : []), ...plans]) : plans.flatMap((p) => p.rows) });
     toast(`Imported ${plans.reduce((a, p) => a + p.rows.length, 0)} rows from ${plans.length} file${plans.length > 1 ? "s" : ""}.`);
   };
+  /** Read a filled MIDP / TIDP workbook in the template layout: one row per container per data exchange. */
+  const importWorkbook = async (file?: File) => {
+    if (!file) return;
+    try {
+      const ExcelJS = (await import("exceljs")).default;
+      const wb = new ExcelJS.Workbook(); await wb.xlsx.load(await file.arrayBuffer());
+      const parsed = parseMidpWorkbook(wb);
+      if (!parsed.lines.length) { toast(parsed.sheets.length ? "The workbook has no deliverable rows yet." : "No MIDP / TIDP sheet found: the workbook needs a header row starting with \"Deliverable\".", "error"); return; }
+      const { rows, milestones } = midpToRows(parsed);
+      setS({ ...s, rows: numberRows(rows), milestones: milestones.length ? milestones : s.milestones });
+      toast(`Imported ${rows.length} rows from ${parsed.sheets.join(", ")}${parsed.warnings.length ? ` — ${parsed.warnings[0]}` : ""}.`);
+    } catch (e) { toast((e as Error).message, "error"); }
+  };
   const reset = () => { const f = fresh(); setS(f); setConfirmReset(false); toast(`${meta.label} reset to a blank plan.`); };
   const csv = () => kind === "mpdt"
     ? exportCsv(`${hdr.projectCode || "PRJ"}-MPDT`, ["Element / system", "Classification", "Model author", ...s.stages, "Notes"], s.mpdt.map((r) => [r.element, r.classification, r.author, ...s.stages.map((st) => r.loin[st] ?? ""), r.notes]))
-    : exportCsv(`${hdr.projectCode || "PRJ"}-${kind.toUpperCase()}`, ["Container name", ...CONTAINER_COLUMNS.map((c) => c.label)], s.rows.map((r) => [containerName(hdr, r), ...CONTAINER_COLUMNS.map((c) => r[c.key])]));
+    : exportCsv(`${hdr.projectCode || "PRJ"}-${kind.toUpperCase()}`, ["Container name", ...CONTAINER_COLUMNS.map((c) => c.label)], s.rows.map((r) => [containerName(hdr, r), ...CONTAINER_COLUMNS.map((c) => r[c.key] ?? "")]));
   const count = kind === "mpdt" ? s.mpdt.length : s.rows.length;
   const errors = issues.filter((x) => x.level === "error").length, warnings = issues.length - errors;
 
@@ -200,6 +221,7 @@ export default function DeliveryPlans() {
             <button onClick={starter} title="Typical deliverables for the selected disciplines — no AI, available any time">Standard starter list</button>
             <button className="primary" disabled={busy || !ready} onClick={aiRows}>{busy ? "Generating… (about a minute)" : "Generate with AI"}</button>
             {kind !== "mpdt" && <label className="small" style={{ margin: 0 }}><input type="file" accept=".csv,.txt" multiple={kind === "midp"} style={{ display: "none" }} onChange={(e) => { void importCsv(e.target.files); e.target.value = ""; }} /><span className="btn">{kind === "midp" ? "Import TIDP CSVs" : "Import CSV"}</span></label>}
+            {kind !== "mpdt" && <label className="small" style={{ margin: 0 }} title="A filled MIDP / TIDP workbook in the template layout (header row starting with Deliverable, a column group per data exchange)"><input type="file" accept=".xlsx" style={{ display: "none" }} onChange={(e) => { void importWorkbook(e.target.files?.[0]); e.target.value = ""; }} /><span className="btn">Import template (.xlsx)</span></label>}
             <button onClick={() => kind === "mpdt" ? setS({ ...s, mpdt: [...s.mpdt, { element: "", classification: "", author: "", notes: "", loin: {} }] }) : setS({ ...s, rows: numberRows([...s.rows, emptyRow(s.rows.length, DISCIPLINES[s.header.discipline]?.role)]) })}>+ Add row</button>
             {!confirmReset ? <button className="ghost danger" onClick={() => setConfirmReset(true)}>Reset</button>
               : <span className="row hub-tile" style={{ ...cv(TONES.red), padding: "4px 8px" }}><span className="small">Clear this {meta.label} and start again?</span><button className="small" style={{ background: TONES.red, color: "var(--on-accent)", borderColor: TONES.red }} onClick={reset}>Yes, reset</button><button className="ghost small" onClick={() => setConfirmReset(false)}>Cancel</button></span>}
@@ -233,7 +255,7 @@ export default function DeliveryPlans() {
                   : c.key === "suitability" ? <select className="cell-input" value={r.suitability} onChange={(e) => setRow(i, { suitability: e.target.value })}>{SUITABILITY.map((x) => <option key={x} value={x}>{x}</option>)}</select>
                   : c.key === "type" ? <select className="cell-input" value={r.type} title={TYPE_CODES[r.type]} onChange={(e) => setRow(i, { type: e.target.value })}>{Object.keys(TYPE_CODES).map((x) => <option key={x} value={x}>{x}</option>)}</select>
                   : c.key === "milestone" ? <select className="cell-input" value={r.milestone} onChange={(e) => setRow(i, { milestone: e.target.value })}><option value="">—</option>{s.milestones.map((m) => <option key={m.code} value={m.code}>{m.code}</option>)}</select>
-                  : <input className="cell-input" type={c.key === "start" || c.key === "due" ? "date" : "text"} value={r[c.key]} style={{ minWidth: c.width * 6 }} onChange={(e) => setRow(i, { [c.key]: e.target.value } as Partial<ContainerRow>)} />}</td>)}
+                  : <input className="cell-input" type={c.key === "start" || c.key === "due" ? "date" : "text"} value={r[c.key] ?? ""} style={{ minWidth: c.width * 6 }} onChange={(e) => setRow(i, { [c.key]: e.target.value } as Partial<ContainerRow>)} />}</td>)}
                 <td><button className="ghost small" onClick={() => setS({ ...s, rows: s.rows.filter((_, j) => j !== i) })}>✕</button></td>
               </tr>); })}</tbody></table></div>}
       </div>

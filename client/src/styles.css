@@ -744,3 +744,12 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .dd-case { --c: var(--ok); } .dd-case.bad { --c: var(--danger); }
 .dd-clause { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); margin-bottom: 6px; display: grid; gap: 4px; }
 .tabs.tabs-wrap { flex-wrap: wrap; overflow-x: visible; row-gap: 0; }
+
+/* "How to use this page" panel under the page bar (components/PageGuide.tsx) */
+.page-guide { margin: 8px 20px 0; padding: 12px 16px; border: 1px solid var(--border); border-inline-start: 4px solid var(--accent); border-radius: var(--radius, 10px); background: var(--surface); }
+.page-guide p { margin: 6px 0; }
+.page-guide h4 { margin: 10px 0 4px; font-size: 13px; }
+.page-guide ol, .page-guide ul { margin: 0; padding-inline-start: 20px; }
+.page-guide li { margin-block: 3px; }
+.page-guide-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
+@media (max-width: 760px) { .page-guide { margin-inline: 12px; } .page-guide-grid { grid-template-columns: 1fr; } }
