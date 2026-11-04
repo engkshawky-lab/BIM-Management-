@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { PageLock } from "../lib/access";
 import { t } from "../i18n";
 import { TONES } from "./HubPage";
 import BcfStudio from "./tools/BcfStudio";
@@ -22,7 +23,7 @@ export default function BimTools({ tool }: { tool?: string }) {
     <div className="hub" style={{ "--hub": TONES.blue } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">{t(cur.eyebrow)}</div><h1>{t(cur.title)}</h1><p>{t(cur.hint)}</p></div>
       <nav className="tabs" aria-label={t("BIM tools")}>
-        {TOOLS.map((x) => <a key={x.id} className={"tab" + (x.id === cur.id ? " on" : "")} href={`#/bim-tools/${x.id}`}>{t(x.label)}</a>)}
+        {TOOLS.map((x) => <a key={x.id} className={"tab" + (x.id === cur.id ? " on" : "")} href={`#/bim-tools/${x.id}`}>{t(x.label)}<PageLock route={`/bim-tools/${x.id}`} /></a>)}
       </nav>
       <div key={cur.id}>{cur.body()}</div>
     </div>

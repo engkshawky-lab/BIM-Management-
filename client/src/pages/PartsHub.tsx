@@ -8,6 +8,8 @@ import { templates } from "../../../shared/data/templates";
 import { t } from "../i18n";
 import { AskPartChat } from "./AiTools";
 import { TONES } from "./HubPage";
+import { LockedTab, TabLock, useAccess } from "../lib/access";
+import { PART_TABS, tabKey } from "../../../shared/tabs";
 
 // ISO 19650 learning hub. The index shows how the six parts fit together; each part has tabs:
 // overview, clauses, practical examples, questions and answers, a quiz, documents, and an AI tutor.
@@ -18,15 +20,7 @@ const LEVELS: { id: Level; label: string; hint: string }[] = [
   { id: "intermediate", label: "Intermediate", hint: "Applying it on a project" },
   { id: "expert", label: "Expert", hint: "Clause nuance, edge cases, audit" },
 ];
-const TABS = [
-  { id: "overview", label: "Overview" },
-  { id: "clauses", label: "Clauses & checklist" },
-  { id: "examples", label: "Practical examples" },
-  { id: "qa", label: "Questions & answers" },
-  { id: "quiz", label: "Quiz" },
-  { id: "documents", label: "Documents & mistakes" },
-  { id: "ask", label: "Ask AI" },
-] as const;
+const TABS = PART_TABS;
 type Tab = (typeof TABS)[number]["id"];
 
 const cv = (c: string) => ({ "--c": c }) as CSSProperties;
@@ -190,10 +184,14 @@ export default function PartsHub({ partId, tab: tabArg }: { partId?: string; tab
   const part = partId ? partDetailById(partId) : undefined;
   const [level, setLevelState] = useState<Level>(() => (part ? load<Level>(`bim:part-level:${part.id}`, "beginner") : "beginner"));
   const [checked, setChecked] = useState<number[]>(() => (part ? load<number[]>(`bim:part-check:${part.id}`, []) : []));
+  const { locked } = useAccess();
   useEffect(() => { if (part) markVisited("parts", part.id, `/parts/${part.id}`, `ISO 19650 Part ${part.number} — ${part.title}`); }, [part]);
   if (!part) return <Overview />;
 
   const tab: Tab = (TABS.find((x) => x.id === tabArg)?.id ?? "overview");
+  // each tab can be closed to some plans (Admin › Plans & access); the page itself stays open
+  const keyOf = (id: string) => tabKey(`s.19650.part${part.number}`, id);
+  const show: Tab | null = locked(keyOf(tab)) ? null : tab;
   const practice = practiceFor(part.number);
   const prevPart = partDetails19650[part.number - 2], nextPart = partDetails19650[part.number];
   const setLevel = (l: Level) => { setLevelState(l); store(`bim:part-level:${part.id}`, l); };
@@ -217,10 +215,11 @@ export default function PartsHub({ partId, tab: tabArg }: { partId?: string; tab
         {partDetails19650.map((p) => <a key={p.id} className={p.id === part.id ? "on" : ""} href={`#/parts/${p.id}/${tab}`}>Part {p.number}</a>)}
       </div>
       <nav className="tabs" aria-label="Part sections">
-        {TABS.map((x) => <a key={x.id} className={"tab" + (tab === x.id ? " on" : "")} href={`#/parts/${part.id}/${x.id}`}>{t(x.label)}{count[x.id] ? <span className="tab-count">{count[x.id]}</span> : null}</a>)}
+        {TABS.map((x) => <a key={x.id} className={"tab" + (tab === x.id ? " on" : "")} href={`#/parts/${part.id}/${x.id}`}>{t(x.label)}{count[x.id] ? <span className="tab-count">{count[x.id]}</span> : null}<TabLock k={keyOf(x.id)} /></a>)}
       </nav>
+      {!show && <LockedTab k={keyOf(tab)} label={TABS.find((x) => x.id === tab)!.label} back={tab !== "overview" && !locked(keyOf("overview")) ? { href: `#/parts/${part.id}/overview`, label: "Back to Overview" } : undefined} />}
 
-      {tab === "overview" && <>
+      {show === "overview" && <>
         {part.number <= 3 && <RevisionNotice part={part.number} />}
         <div className="grid g2">
           <div className="hub-tile"><b>In plain terms</b><div style={{ marginTop: 4 }}>{part.plainTerms}</div></div>
@@ -241,7 +240,7 @@ export default function PartsHub({ partId, tab: tabArg }: { partId?: string; tab
         </Box>
       </>}
 
-      {tab === "clauses" && <>
+      {show === "clauses" && <>
         <div className="grid g2" style={{ alignItems: "start" }}>
           <Box title="Key requirements"><ul style={{ margin: 0 }}>{part.keyRequirements.map((x, i) => <li key={i} style={{ marginBottom: 4 }}>{x}</li>)}</ul></Box>
           <Box title={`${t("Compliance checklist")} · ${checked.length}/${part.checklist.length}`}>
@@ -264,7 +263,7 @@ export default function PartsHub({ partId, tab: tabArg }: { partId?: string; tab
         </Box>
       </>}
 
-      {tab === "examples" && <>
+      {show === "examples" && <>
         <Box title={`${t("Worked example")} — ${part.workedExample.title}`}>
           <p style={{ marginTop: 0 }}>{part.workedExample.scenario}</p>
           <ol style={{ margin: "0 0 10px", paddingInlineStart: 20, display: "grid", gap: 4 }}>{part.workedExample.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
@@ -280,10 +279,10 @@ export default function PartsHub({ partId, tab: tabArg }: { partId?: string; tab
         ))}
       </>}
 
-      {tab === "qa" && <Box title={`${t("Questions & answers")} · Part ${part.number}`}><Faq items={practice.faq} /></Box>}
-      {tab === "quiz" && <Box title={`${t("Quiz")} · Part ${part.number}`}><Quiz key={part.id} partId={part.id} items={practice.quiz} /><a className="small" href="#/learn">{t("More practice: full question bank and mock exam")} →</a></Box>}
+      {show === "qa" && <Box title={`${t("Questions & answers")} · Part ${part.number}`}><Faq items={practice.faq} /></Box>}
+      {show === "quiz" && <Box title={`${t("Quiz")} · Part ${part.number}`}><Quiz key={part.id} partId={part.id} items={practice.quiz} /><a className="small" href="#/learn">{t("More practice: full question bank and mock exam")} →</a></Box>}
 
-      {tab === "documents" && <>
+      {show === "documents" && <>
         <Box title="Key documents">
           <div className="grid g2">{part.keyDocuments.map((d) => { const tp = tplFor(d.templateCode); return (
             <div key={d.name} className="hub-tile">
@@ -298,7 +297,7 @@ export default function PartsHub({ partId, tab: tabArg }: { partId?: string; tab
         </Box>
       </>}
 
-      {tab === "ask" && <Box title={`Ask AI about Part ${part.number}`}>
+      {show === "ask" && <Box title={`Ask AI about Part ${part.number}`}>
         <AskPartChat partId={part.id} partLabel={`Part ${part.number}`} suggestions={[
           `Explain Part ${part.number} to a new BIM coordinator`,
           `What evidence would an auditor ask for on Part ${part.number}?`,

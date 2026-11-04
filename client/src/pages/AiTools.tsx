@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { PageLock } from "../lib/access";
 import { useSession } from "../App";
 import { Markdown } from "../components/Markdown";
 import { api } from "../lib/api";
@@ -326,7 +327,7 @@ export default function AiTools({ tool, arg, arg2 }: { tool?: string; arg?: stri
     <div className="hub" style={{ "--hub": "var(--teal)" } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">AI TOOLS · ISO 19650</div><h1>{cur.label}</h1><p>{cur.hint}</p>
         <div className="facts"><span>Powered by Claude</span><span>Review-first: you stay accountable</span><span>Export to Word / CSV</span></div></div>
-      <div className="hub-tabs">{AI_TOOLS.map((t) => <a key={t.id} className={cur.id === t.id ? "on" : ""} href={`#/ai-tools/${t.id}`}>{t.label}</a>)}</div>
+      <div className="hub-tabs">{AI_TOOLS.map((t) => <a key={t.id} className={cur.id === t.id ? "on" : ""} href={`#/ai-tools/${t.id}`}>{t.label}<PageLock route={`/ai-tools/${t.id}`} /></a>)}</div>
       <div>{ai === null ? <div className="muted">Loading…</div>
         : cur.id === "plans" ? <DeliveryPlans />
         : cur.id === "mcp" ? <HubPage hub={hubById("mcp")!} sectionId={arg} tabId={arg2} base="#/ai-tools/mcp" embedded />

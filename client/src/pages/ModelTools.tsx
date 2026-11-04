@@ -1,6 +1,8 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { useSession } from "../App";
 import { api } from "../lib/api";
+import { LockedTab, PageLock, TabLock, useAccess } from "../lib/access";
+import { IFC_HUB_TABS, tabKey } from "../../../shared/tabs";
 import { exportCsv } from "../lib/export";
 import type { ElementRow, IfcJob, IfcJobResult } from "../lib/ifcWorker";
 import { saveMarkdownDocx } from "../lib/mdDocx";
@@ -149,6 +151,7 @@ function IfcHub() {
   const [busy, setBusy] = useState(false);
   const [r, setR] = useState<IfcJobResult | null>(null);
   const [tab, setTab] = useState("overview");
+  const { locked } = useAccess();
   const [loin, setLoin] = useState<LoinRow[]>(STARTER);
   const [ids, setIds] = useState<{ name: string; xml: string } | null>(null);
   const [reqText, setReqText] = useState("");
@@ -165,7 +168,8 @@ function IfcHub() {
     try { setAi(await api<AiCompare>("/ai/tools/model-compare", { body: { summary: modelSummary(r), requirements: reqText, fileName: file?.name ?? "model.ifc" } })); }
     catch (e) { toast((e as Error).message, "error"); } finally { setAiBusy(false); }
   };
-  const tabs = [["overview", "Building analysis"], ["elements", "Elements"], ["properties", "Property coverage"], ["requirements", "LOIN / IDS validator"], ["ai", "AI comparison with your EIR"]];
+  const keyOf = (id: string) => tabKey("m.ifc", id);
+  const show = locked(keyOf(tab)) ? null : tab;
   return (
     <div style={{ display: "grid", gap: 12 }}>
       {!r ? <Drop busy={busy} onFiles={(fs) => fs[0] && analyse(fs[0])} label="Drop an IFC file here, or click to browse" />
@@ -177,8 +181,9 @@ function IfcHub() {
           <button className="ghost" onClick={() => { setR(null); setFile(null); }}>Check another file</button>
         </div>}
       {r && <>
-        <div className="hub-tabs">{tabs.map(([id, l]) => <a key={id} className={tab === id ? "on" : ""} href="#" onClick={(e) => { e.preventDefault(); setTab(id); }}>{l}</a>)}</div>
-        {tab === "overview" && <div style={{ display: "grid", gap: 12 }}>
+        <div className="hub-tabs">{IFC_HUB_TABS.map(({ id, label }) => <a key={id} className={tab === id ? "on" : ""} href="#" onClick={(e) => { e.preventDefault(); setTab(id); }}>{label}<TabLock k={keyOf(id)} /></a>)}</div>
+        {!show && <LockedTab k={keyOf(tab)} label={IFC_HUB_TABS.find((x) => x.id === tab)?.label ?? tab} back={tab !== "overview" && !locked(keyOf("overview")) ? { onClick: () => setTab("overview"), label: "Back to Building analysis" } : undefined} />}
+        {show === "overview" && <div style={{ display: "grid", gap: 12 }}>
           <div className="grid g4">{[["Elements", r.report.elementCount.toLocaleString(), "var(--hub)"], ["Storeys", String(r.report.storeys.length), "var(--hub)"], ["Classification", r.report.classificationSystems[0] ?? "None", "var(--hub)"], ["Georeferenced", r.report.checks.find((c) => c.id === "georef")?.failed ? "No" : "Yes", "var(--hub)"]].map(([l, v, c]) => <div key={l} className="hub-stat" style={cv(c)}><div className="v no-i18n">{v}</div><div className="small">{l}</div></div>)}</div>
           <div className="grid g2" style={{ alignItems: "start" }}>
             <div className="hub-card"><div className="hub-title">Elements by class</div>{Object.entries(r.report.classCounts).sort((a, b) => b[1] - a[1]).slice(0, 14).map(([t, n], i, all) => (
@@ -189,9 +194,9 @@ function IfcHub() {
           <div className="hub-card"><div className="hub-title">ISO 19650 model checks</div><Checks r={r} /></div>
           <div className="hub-card"><div className="hub-title">Issues</div><Findings r={r} /></div>
         </div>}
-        {tab === "elements" && <div className="hub-card"><ElementBrowser r={r} /></div>}
-        {tab === "properties" && <div className="hub-card"><div className="hub-title">How often each property is filled, per class</div><PropertyCoverage elements={r.elements} /></div>}
-        {tab === "requirements" && <div className="hub-card" style={{ display: "grid", gap: 10 }}>
+        {show === "elements" && <div className="hub-card"><ElementBrowser r={r} /></div>}
+        {show === "properties" && <div className="hub-card"><div className="hub-title">How often each property is filled, per class</div><PropertyCoverage elements={r.elements} /></div>}
+        {show === "requirements" && <div className="hub-card" style={{ display: "grid", gap: 10 }}>
           <div className="small">List the properties each IFC class must carry (from your LOIN matrix), or load a buildingSMART IDS file. Use <code>Pset.Property</code>, and <code>=value</code> to require a value.</div>
           <div className="table-wrap"><table className="data hub-table"><thead><tr><th>Ref</th><th>Element</th><th>IFC class</th><th>Required properties (comma-separated)</th><th /></tr></thead>
             <tbody>{loin.map((row, i) => <tr key={i}>{(["ref", "element", "ifcClass", "alphanumeric"] as const).map((k) => <td key={k}><input className="cell-input no-i18n" value={row[k]} onChange={(e) => setLoin(loin.map((x, j) => (j === i ? { ...x, [k]: e.target.value } : x)))} /></td>)}<td><button className="ghost small" onClick={() => setLoin(loin.filter((_, j) => j !== i))}>✕</button></td></tr>)}</tbody></table></div>
@@ -203,7 +208,7 @@ function IfcHub() {
             <tbody>{r.report.requirements.map((q, i) => { const pct = q.applicable ? Math.round((q.passed / q.applicable) * 100) : 0; return <tr key={i}><td><span className="badge">{q.source}</span> {q.name}</td><td className="small no-i18n">{pretty(q.entity)}</td><td>{q.applicable}</td><td><b style={{ color: !q.applicable ? "var(--muted)" : pct === 100 ? "var(--ok)" : pct >= 60 ? "var(--warn)" : "var(--danger)" }}>{q.applicable ? `${pct}%` : "n/a"}</b></td><td className="small no-i18n">{q.failures.slice(0, 3).map((f) => `${f.name || f.guid}: ${f.missing.join(", ")}`).join(" · ") || "—"}</td></tr>; })}</tbody></table></div>}
           {r.unsupportedIds > 0 && <div className="small muted">{r.unsupportedIds} IDS facets (classification, material or part-of) are not checked yet.</div>}
         </div>}
-        {tab === "ai" && <div className="hub-card" style={{ display: "grid", gap: 10 }}>
+        {show === "ai" && <div className="hub-card" style={{ display: "grid", gap: 10 }}>
           <div className="small">Paste the information requirements for this model (EIR extract, LOIN table, client data requirements). AI compares them with a summary of the model: classes, property fill rates and checks. The model file itself is not sent.</div>
           <textarea value={reqText} onChange={(e) => setReqText(e.target.value)} placeholder="e.g. All doors shall carry FireRating and AcousticRating. Spaces shall be classified with Uniclass SL codes. COBie manufacturer and model number for all maintainable equipment…" style={{ minHeight: 120 }} />
           <div className="row"><button className="primary" disabled={aiBusy || reqText.trim().length < 20} onClick={compare}>{aiBusy ? "Comparing…" : "Compare with AI"}</button><span className="small muted">Takes about a minute.</span></div>
@@ -283,7 +288,7 @@ export default function ModelTools({ tool }: { tool?: string }) {
     <div className="hub" style={{ "--hub": TONES.teal } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">TOOLS · BIM MODELS</div><h1>{cur.label}</h1><p>{cur.hint}</p>
         <div className="facts">{cur.id === "revit" ? <><span>Revit 2017–2027</span><span>Read-only in Revit</span><span>Element IDs to select</span></> : <><span>IFC 2x3 · 4 · 4.3</span><span>Checked in your browser</span><span>Word and CSV reports</span></>}</div></div>
-      <div className="hub-tabs">{MODEL_TOOLS.map((t) => <a key={t.id} className={cur.id === t.id ? "on" : ""} href={`#/model-tools/${t.id}`}>{t.label}</a>)}</div>
+      <div className="hub-tabs">{MODEL_TOOLS.map((t) => <a key={t.id} className={cur.id === t.id ? "on" : ""} href={`#/model-tools/${t.id}`}>{t.label}<PageLock route={`/model-tools/${t.id}`} /></a>)}</div>
       {cur.id === "ifc" ? <IfcHub /> : cur.id === "revit" ? <RevitCheck /> : <QaChecker />}
     </div>
   );

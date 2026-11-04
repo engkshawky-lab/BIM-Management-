@@ -1,4 +1,7 @@
 import { lazy, Suspense, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { LockedTab, TabLock, useAccess } from "../lib/access";
+import { ALL_PAGES } from "../shell/nav";
+import { hubTabKey } from "../../../shared/tabs";
 import type { Hub, HubBlock, ProcessStep } from "../../../shared/data/hubs/types";
 import { getChecks, lastVisited, markVisited, quizBest, quizzesFor, recordQuiz, setChecks, visitedTabs } from "../lib/progress";
 import { AskPartChat, generateHref } from "./AiTools";
@@ -232,6 +235,11 @@ export default function HubPage({ hub, sectionId, tabId, base = `#/hubs/${hub.id
   const section = hub.sections.find((s) => s.id === sectionId) ?? hub.sections[0];
   const tab = section.tabs.find((t) => t.id === tabId) ?? section.tabs[0];
   const order = allTabs(hub);
+  // sections and tabs can be closed to some plans (Admin › Plans & access), keyed under the hub's sidebar page
+  const { locked } = useAccess();
+  const pageKey = ALL_PAGES.find((p) => p.path === `/hubs/${hub.id}`)?.key;
+  const keyOf = (sectionId: string, tabId?: string) => (pageKey ? hubTabKey(pageKey, hub.sections.length, sectionId, tabId) : "");
+  const tabLocked = !!pageKey && locked(keyOf(section.id, tab.id));
   const pos = order.findIndex((x) => x.s.id === section.id && x.t.id === tab.id);
   const prev = order[pos - 1], next = order[pos + 1];
   const [visited, setVisited] = useState(() => visitedTabs(hub.id));
@@ -258,10 +266,11 @@ export default function HubPage({ hub, sectionId, tabId, base = `#/hubs/${hub.id
       </div>}
       <HubSearch hub={hub} base={base} />
       {hub.sections.length > 1 && <div className="hub-sections">{hub.sections.map((s, i) => { const seen = s.tabs.filter((t) => visited.has(`${s.id}/${t.id}`)).length; return (
-        <a key={s.id} href={`${base}/${s.id}`} className={s.id === section.id ? "on" : ""} style={cv(cycle(i))}>{s.label}<small style={{ opacity: .75, fontWeight: 500 }}>{seen}/{s.tabs.length}</small></a>); })}</div>}
+        <a key={s.id} href={`${base}/${s.id}`} className={s.id === section.id ? "on" : ""} style={cv(cycle(i))}>{s.label}{pageKey && <TabLock k={keyOf(s.id)} />}<small style={{ opacity: .75, fontWeight: 500 }}>{seen}/{s.tabs.length}</small></a>); })}</div>}
       <div className="hub-tabs" style={{ position: "sticky", top: 0, zIndex: 5 }}>{section.tabs.map((t) => (
-        <a key={t.id} className={t.id === tab.id ? "on" : ""} href={`${base}/${section.id}/${t.id}`}>{visited.has(`${section.id}/${t.id}`) && t.id !== tab.id && <span style={{ color: "var(--ok)", marginInlineEnd: 4 }}>✓</span>}{t.label}</a>))}</div>
-      {tab.blocks.map((b, i) => <Block key={`${section.id}-${tab.id}-${i}`} b={b} hub={hub} i={i} k={`${hub.id}/${section.id}/${tab.id}/${i}`} />)}
+        <a key={t.id} className={t.id === tab.id ? "on" : ""} href={`${base}/${section.id}/${t.id}`}>{visited.has(`${section.id}/${t.id}`) && t.id !== tab.id && <span style={{ color: "var(--ok)", marginInlineEnd: 4 }}>✓</span>}{t.label}{pageKey && <TabLock k={keyOf(section.id, t.id)} />}</a>))}</div>
+      {tabLocked ? <LockedTab k={keyOf(section.id, tab.id)} label={tab.label} />
+        : tab.blocks.map((b, i) => <Block key={`${section.id}-${tab.id}-${i}`} b={b} hub={hub} i={i} k={`${hub.id}/${section.id}/${tab.id}/${i}`} />)}
       <div className="row spread" style={{ marginTop: 6 }}>
         {prev ? <a href={goTab(prev)} className="hub-tile" style={{ ...cv("var(--hub)"), color: "inherit", flex: "1 1 220px" }}><span className="small muted">← Previous</span><div><b>{prev.t.label}</b></div></a> : <span />}
         {next ? <a href={goTab(next)} className="hub-tile" style={{ ...cv("var(--hub)"), color: "inherit", flex: "1 1 220px", textAlign: "end" }}><span className="small muted">Next →</span><div><b>{next.s.id !== section.id ? `${next.s.label} › ` : ""}{next.t.label}</b></div></a>

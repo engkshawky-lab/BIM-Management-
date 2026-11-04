@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { PageLock } from "../lib/access";
 import { t } from "../i18n";
 import { DOC_FLOWS } from "../../../shared/data/workflow/docflow";
 import { WF_DUTIES } from "../../../shared/data/workflow/duties";
@@ -193,7 +194,7 @@ export default function Workflow({ tab, arg }: { tab?: string; arg?: string }) {
     <div className="hub" style={{ "--hub": TONES.blue } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">ISO 19650 · {t("WORKFLOW & ROLES")}</div><h1>{t(cur.label)}</h1><p>{t(cur.hint)}</p></div>
       <nav className="tabs" aria-label={t("Workflow sections")}>
-        {TABS.map((x) => <a key={x.id} className={"tab" + (cur.id === x.id ? " on" : "")} href={`#/workflow/${x.id}`}>{t(x.label)}</a>)}
+        {TABS.map((x) => <a key={x.id} className={"tab" + (cur.id === x.id ? " on" : "")} href={`#/workflow/${x.id}`}>{t(x.label)}<PageLock route={`/workflow/${x.id}`} /></a>)}
       </nav>
       {cur.id === "project" && <ProjectWorkflow stageId={arg} />}
       {cur.id === "table" && <DocTable />}

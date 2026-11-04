@@ -1,6 +1,7 @@
-// Section access by plan: which plans can open each page of the portal. Keys are the sidebar keys in
-// client/src/shell/nav.ts. Administrators can tick any combination of plans per section (Admin › Plans & access);
-// these defaults apply until they do. Access is enforced only with BILLING=on, and administrators can open everything.
+// Section access by plan: which plans can open each page of the portal, and each tab inside a page. Keys are the
+// sidebar keys in client/src/shell/nav.ts (tabs: shared/tabs.ts). Administrators can tick any combination of plans
+// per section (Admin › Plans & access); these defaults apply until they do. Access is enforced only with
+// BILLING=on, and administrators can open everything.
 import { PLAN_IDS, normalizePlanId, type PlanId } from "./plans";
 
 export type AccessMap = Record<string, PlanId[]>;
@@ -60,6 +61,59 @@ export function cleanAccess(map: Record<string, string[]>): AccessMap {
     out[k] = PLAN_IDS.filter((p) => v.includes(p));
   }
   return out;
+}
+
+// ---------- tabs inside pages ----------
+// A tab (key "page/tab/…", see shared/tabs.ts) follows its parent: a plan that cannot open the page, or a parent tab,
+// cannot open the tab either. On top of that the administrator can close a tab to single plans; only those
+// "closed" marks are stored, so a plan added to the page later reaches its tabs unless a tab was closed to it.
+
+/** Per plan: false closes the tab to that plan. Plans left out follow the parent. */
+export type TabRule = Partial<Record<PlanId, boolean>>;
+export type TabAccessMap = Record<string, TabRule>;
+
+export const isTabKey = (key: string) => key.includes("/");
+export const pageOfKey = (key: string) => key.split("/")[0]!;
+/** A tab key's own key and its parent tab keys, outermost first: "p/a/b" → ["p/a", "p/a/b"]. */
+export const tabChain = (key: string) => { const parts = key.split("/"); return parts.slice(1).map((_, i) => parts.slice(0, i + 2).join("/")); };
+
+/** Where a plan is stopped on the way to a page or tab: the page or tab key that closes it, or null when it opens. */
+export function blockedAt(key: string, plan: string, overrides?: AccessMap | null, tabs?: TabAccessMap | null): string | null {
+  const p = normalizePlanId(plan);
+  const page = pageOfKey(key);
+  if (!plansFor(page, overrides).includes(p)) return page;
+  return tabChain(key).find((k) => tabs?.[k]?.[p] === false) ?? null;
+}
+
+/** Can a user on this plan open the page or tab? */
+export const canOpenKey = (key: string, plan: string, overrides?: AccessMap | null, tabs?: TabAccessMap | null) => blockedAt(key, plan, overrides, tabs) === null;
+
+/** The cheapest plan that opens a page or tab, for "Upgrade to …" prompts; null when no plan does. */
+export const cheapestForKey = (key: string, overrides?: AccessMap | null, tabs?: TabAccessMap | null): PlanId | null =>
+  PLAN_IDS.find((p) => canOpenKey(key, p, overrides, tabs)) ?? null;
+
+/** Keep only valid tab keys and "closed" marks for known plans. */
+export function cleanTabAccess(map: unknown): TabAccessMap {
+  const out: TabAccessMap = {};
+  if (!map || typeof map !== "object") return out;
+  for (const [k, v] of Object.entries(map as Record<string, unknown>)) {
+    if (k.length > 160 || !/^[a-z0-9.-]{2,60}(\/[a-z0-9-]{1,60}){1,4}$/i.test(k) || !v || typeof v !== "object") continue;
+    const rule: TabRule = {};
+    for (const p of PLAN_IDS) if ((v as Record<string, unknown>)[p] === false) rule[p] = false;
+    if (Object.keys(rule).length) out[k] = rule;
+  }
+  return out;
+}
+
+/** The tab behind an API call, for calls whose tab is in the request (the page is checked by sectionForApi). */
+export function tabForApi(path: string, body: unknown): string | null {
+  const b = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
+  if (path === "/ai/tools/ask-part") {
+    const n = /^19650-([1-6])$/.exec(String(b.partId ?? ""))?.[1];
+    return n ? `s.19650.part${n}/ask` : null;
+  }
+  if (path === "/ai/tools/model-compare") return "m.ifc/ai";
+  return null;
 }
 
 // Server-side checks for the API calls behind paid sections (the page lock alone would only hide the screen).

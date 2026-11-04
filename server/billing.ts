@@ -1,6 +1,6 @@
 import { and, count, eq, inArray, sql } from "drizzle-orm";
 import type { NextFunction, Request, Response } from "express";
-import { canOpen, cheapestFor, sectionForApi } from "../shared/access";
+import { canOpenKey, cheapestForKey, sectionForApi, tabForApi } from "../shared/access";
 import { planFrom, type Plan } from "../shared/plans";
 import { db, schema } from "./db";
 import { planConfig } from "./planConfig";
@@ -73,15 +73,24 @@ export async function aiQuota(req: Request, res: Response, next: NextFunction) {
   } catch (e) { next(e); }
 }
 
-/** With billing on, API calls behind a paid section need a plan that opens it (administrators are exempt). */
+/** With billing on, may this user use the page or tab behind an API call? Sends a 402 and returns false when not.
+ *  Administrators are exempt. Route handlers whose tab is only known after parsing (multipart forms) call this. */
+export async function allowKey(req: Request, res: Response, key: string): Promise<boolean> {
+  if (!billingOn() || !req.user || req.user.role === "admin") return true;
+  const [{ access, tabAccess, plans }, plan] = await Promise.all([planConfig(), currentPlan(req.user.id)]);
+  if (canOpenKey(key, plan.id, access, tabAccess)) return true;
+  const need = plans.find((p) => p.id === cheapestForKey(key, access, tabAccess));
+  res.status(402).json({ error: need ? `This is part of the ${need.name} plan. Upgrade under Plan & billing to use it.` : "This is not included in any plan. Ask your administrator." });
+  return false;
+}
+
+/** With billing on, API calls behind a paid section or tab need a plan that opens it (administrators are exempt). */
 export async function sectionGate(req: Request, res: Response, next: NextFunction) {
   if (!billingOn() || !req.user || req.user.role === "admin" || req.method === "GET") return next();
-  const key = sectionForApi(req.path);
-  if (!key) return next();
+  const keys = [sectionForApi(req.path), tabForApi(req.path, req.body)].filter((k): k is string => !!k);
+  if (!keys.length) return next();
   try {
-    const [{ access, plans }, plan] = await Promise.all([planConfig(), currentPlan(req.user.id)]);
-    if (canOpen(key, plan.id, access)) return next();
-    const need = plans.find((p) => p.id === cheapestFor(key, access));
-    res.status(402).json({ error: `This tool is part of the ${need?.name ?? "a paid"} plan. Upgrade under Plan & billing to use it.` });
+    for (const key of keys) if (!(await allowKey(req, res, key))) return;
+    next();
   } catch (e) { next(e); }
 }
