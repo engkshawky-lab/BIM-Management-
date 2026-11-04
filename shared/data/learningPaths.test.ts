@@ -3,6 +3,8 @@ import { ALL_PAGES } from "../../client/src/shell/nav";
 import { DOC_GUIDES } from "./docGuides";
 import { hubs } from "./hubs";
 import { LEARNING_PATHS } from "./learningPaths";
+import { PATH_VIDEOS, pathVideoCount, stepVideos } from "./pathVideos";
+import { VIDEOS } from "./videos";
 import { partDetails19650 } from "./parts19650Detail";
 import { DOC_FLOWS } from "./workflow/docflow";
 import { ROLE_IDS, STAGE_IDS } from "./workflow/types";
@@ -48,5 +50,30 @@ describe("learning paths", () => {
     expect(exists("/doc-guides/nope")).toBe(false);
     expect(exists("/workflow/roles/nobody")).toBe(false);
     expect(exists("/no-such-page")).toBe(false);
+  });
+
+  describe("step videos", () => {
+    it("link only to existing paths, step titles and library videos", () => {
+      const ids = new Set(VIDEOS.map((v) => v.id));
+      for (const [pathId, steps] of Object.entries(PATH_VIDEOS)) {
+        const p = LEARNING_PATHS.find((x) => x.id === pathId);
+        expect(p, pathId).toBeDefined();
+        for (const [title, vids] of Object.entries(steps)) {
+          expect(p!.steps.some((s) => s.title === title), `${pathId}: "${title}"`).toBe(true);
+          expect(vids.length, `${pathId}: "${title}"`).toBeGreaterThan(0);
+          expect(new Set(vids).size, `${pathId}: "${title}" has duplicates`).toBe(vids.length);
+          for (const v of vids) expect(ids.has(v), `${pathId}: "${title}" → ${v}`).toBe(true);
+        }
+      }
+    });
+    it("step titles are unique within a path, so videos attach to one step", () => {
+      for (const p of LEARNING_PATHS) expect(new Set(p.steps.map((s) => s.title)).size, p.id).toBe(p.steps.length);
+    });
+    it("every path has videos and the interface language comes first", () => {
+      for (const p of LEARNING_PATHS) expect(pathVideoCount(p), p.id).toBeGreaterThan(2);
+      expect(stepVideos("modeller", "ISO 19650 in plain terms", "ar")[0].lang).toBe("ar");
+      expect(stepVideos("modeller", "ISO 19650 in plain terms", "en")[0].lang).toBe("en");
+      expect(stepVideos("modeller", "No such step")).toEqual([]);
+    });
   });
 });

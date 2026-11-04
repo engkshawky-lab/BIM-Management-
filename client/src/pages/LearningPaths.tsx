@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from "react";
-import { t } from "../i18n";
+import { getLocale, t } from "../i18n";
 import { LEARNING_PATHS, pathById, pathMinutes, type LearningPath, type StepKind } from "../../../shared/data/learningPaths";
+import { pathVideoCount, stepVideos } from "../../../shared/data/pathVideos";
 import { TONES } from "./HubPage";
 import "./learningPaths.css";
 
@@ -25,6 +26,48 @@ function Progress({ done, total }: { done: number; total: number }) {
   );
 }
 
+/** Related videos for a step: thumbnails that play inline (privacy-enhanced YouTube player) when clicked. */
+function StepVideos({ pathId, title }: { pathId: string; title: string }) {
+  const lang = getLocale() === "ar" ? "ar" : "en";
+  const videos = stepVideos(pathId, title, lang);
+  const [playing, setPlaying] = useState<string | null>(null);
+  if (!videos.length) return null;
+  const current = videos.find((v) => v.id === playing);
+  return (
+    <div className="lp-videos">
+      <div className="tiny muted lp-videos-label">▶ {t("Related videos")} ({videos.length})</div>
+      {current && (
+        <div className="lp-player">
+          <div className="lp-frame">
+            <iframe src={`https://www.youtube-nocookie.com/embed/${current.id}?autoplay=1&rel=0`} title={current.title}
+              allow="accelerometer; autoplay; encrypted-media; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+          </div>
+          <div className="row spread lp-player-bar">
+            <span className="small"><b className="no-i18n">{current.title}</b> <span className="muted">· {current.channel}</span></span>
+            <span className="row" style={{ gap: 8 }}>
+              <a className="small" href={`https://www.youtube.com/watch?v=${current.id}`} target="_blank" rel="noreferrer">{t("Open on YouTube")} ↗</a>
+              <button className="ghost small" onClick={() => setPlaying(null)}>{t("Close video")}</button>
+            </span>
+          </div>
+        </div>
+      )}
+      <div className="lp-thumbs">
+        {videos.map((v) => (
+          <button key={v.id} className={"lp-thumb" + (v.id === playing ? " on" : "")} onClick={() => setPlaying(v.id === playing ? null : v.id)}
+            title={lang === "ar" ? v.summaryAr : v.summary} aria-pressed={v.id === playing}>
+            <span className="lp-thumb-img"><img src={`https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`} alt="" loading="lazy" width={320} height={180} /><span className="lp-play" aria-hidden="true">▶</span></span>
+            <span className="lp-thumb-text">
+              <b className="no-i18n" dir="auto">{v.title}</b>
+              <span className="tiny muted no-i18n" dir="auto">{v.channel}</span>
+              <span className="lp-thumb-tags"><span className="badge">{t(v.level)}</span>{v.lang !== lang && <span className="badge">{v.lang === "ar" ? "عربي" : "English"}</span>}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Index() {
   const total = LEARNING_PATHS.reduce((a, p) => a + p.steps.length, 0);
   return (
@@ -39,7 +82,7 @@ function Index() {
             <div className="hub-title">{t(p.role)}</div>
             <b className="lp-card-title">{t(p.title)}</b>
             <p className="small muted">{t(p.summary)}</p>
-            <div className="lp-meta"><span className="badge">{p.weeks} {t("weeks")}</span><span className="badge">{p.steps.length} {t("steps")}</span><span className="badge">{hours(pathMinutes(p))}</span></div>
+            <div className="lp-meta"><span className="badge">{p.weeks} {t("weeks")}</span><span className="badge">{p.steps.length} {t("steps")}</span><span className="badge">{hours(pathMinutes(p))}</span>{pathVideoCount(p) > 0 && <span className="badge">▶ {pathVideoCount(p)} {t("videos")}</span>}</div>
             <Progress done={done} total={p.steps.length} />
           </a>); })}
       </div>
@@ -57,7 +100,7 @@ function PathView({ p }: { p: LearningPath }) {
   return (
     <div className="hub" style={{ "--hub": tone(p) } as CSSProperties}>
       <div className="hub-hero"><div className="eyebrow">{t("LEARNING PATH")} · {t(p.role)}</div><h1>{t(p.title)}</h1><p>{t(p.summary)}</p>
-        <div className="facts"><span>{p.weeks} {t("weeks")}</span><span>{p.steps.length} {t("steps")}</span><span>{hours(pathMinutes(p))}</span></div>
+        <div className="facts"><span>{p.weeks} {t("weeks")}</span><span>{p.steps.length} {t("steps")}</span><span>{hours(pathMinutes(p))}</span>{pathVideoCount(p) > 0 && <span>▶ {pathVideoCount(p)} {t("videos")}</span>}</div>
       </div>
       <div className="row spread lp-top">
         <a className="small" href="#/learning-paths">← {t("All learning paths")}</a>
@@ -74,6 +117,7 @@ function PathView({ p }: { p: LearningPath }) {
             <div className="lp-body">
               <div className="lp-head"><b>{t(s.title)}</b><span className={`lp-kind k-${s.kind}`}>{t(KIND_LABEL[s.kind])}</span><span className="tiny muted">{s.minutes} min</span></div>
               <p className="small muted">{t(s.why)}</p>
+              <StepVideos pathId={p.id} title={s.title} />
               <div className="row" style={{ gap: 10 }}>
                 <a className="btn small" href={"#" + s.href}>{t("Open")} →</a>
                 <label className="lp-tick small"><input type="checkbox" checked={on} onChange={() => toggle(i)} /> {t("Mark as done")}</label>
