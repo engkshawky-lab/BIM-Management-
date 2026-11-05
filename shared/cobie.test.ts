@@ -41,3 +41,14 @@ describe("validateCobie", () => {
     expect(r.sheets.find((x) => x.name === "Space")!.errors).toBe(2);
   });
 });
+
+describe("COBie compound keys", () => {
+  it("allows one Zone / System row per member, but flags a repeated pair", async () => {
+    const { validateCobie } = await import("./cobie");
+    const base = { CreatedBy: "a@b.c", CreatedOn: "2026-01-01T00:00:00", Category: "Zone: x" };
+    const r = validateCobie({ Zone: [{ Name: "Z1", SpaceNames: "S1", ...base }, { Name: "Z1", SpaceNames: "S2", ...base }] } as never);
+    expect(JSON.stringify(r)).not.toMatch(/must be unique/);
+    const d = validateCobie({ Zone: [{ Name: "Z1", SpaceNames: "S1", ...base }, { Name: "Z1", SpaceNames: "S1", ...base }] } as never);
+    expect(JSON.stringify(d)).toMatch(/Name \+ Category \+ SpaceNames must be unique/);
+  });
+});

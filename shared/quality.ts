@@ -3,7 +3,7 @@ import type { Finding } from "./delivery";
 import { validateContainerName } from "./naming";
 
 type Values = Record<string, unknown>;
-const PLACEHOLDER = /\b(TBC|TBD|XXX|lorem ipsum|insert here)\b|\[\s*[^\]]{0,30}\s*\]/i;
+const PLACEHOLDER = /\b(TBC|TBD|XXX|XYZ|lorem ipsum|insert here|to be added)\b|\[\s*[^\]]{0,30}\s*\]|Error! Reference source not found|>[a-z][^<>]{0,40}</i;
 const rowsOf = (v: unknown) => (Array.isArray(v) ? (v as string[][]).filter((r) => Array.isArray(r) && r.some((c) => String(c).trim())) : []);
 
 // Template-specific rules that encode what ISO 19650-2 / ISO/IEC 42001 expect each document to contain.
@@ -16,15 +16,29 @@ const RULES: Record<string, (v: Values) => Finding[]> = {
     ...(!String(v.acceptanceCriteria ?? "").trim() ? [{ severity: "error" as const, area: "Content", message: "Acceptance criteria are missing — the appointing party cannot accept deliverables without them.", clause: "19650-2 5.2.1 c" }] : []),
   ],
   "bep-pre": (v) => [
-    ...(rowsOf(v.team).length === 0 ? [{ severity: "error" as const, area: "Content", message: "Proposed delivery team is empty.", clause: "19650-2 5.3.2" }] : []),
+    ...(rowsOf(v.parties).filter((r) => String(r[1] ?? "").trim()).length === 0 ? [{ severity: "error" as const, area: "Content", message: "Proposed delivery team is empty: name the organization for each party.", clause: "19650-2 5.3.2" }] : []),
     ...(!String(v.federation ?? "").trim() ? [{ severity: "error" as const, area: "Content", message: "Proposed federation strategy is missing.", clause: "19650-2 5.3.2" }] : []),
-    ...(rowsOf(v.hlrm).length === 0 ? [{ severity: "warning" as const, area: "Content", message: "High-level responsibility matrix is empty." }] : []),
+    ...(rowsOf(v.roles).filter((r) => String(r[2] ?? "").trim() || String(r[3] ?? "").trim()).length === 0 ? [{ severity: "warning" as const, area: "Content", message: "Proposed information management roles are not assigned to any organization." }] : []),
+    ...(!String(v.raciRef ?? "").trim() ? [{ severity: "warning" as const, area: "Content", message: "High-level responsibility matrix is not referenced.", clause: "19650-2 5.3.2" }] : []),
   ],
   "bep-post": (v) => [
-    ...(rowsOf(v.people).some((r) => !r[1]) ? [{ severity: "error" as const, area: "Content", message: "Information management roles must name individuals after appointment.", clause: "19650-2 5.4.1" }] : []),
+    ...(rowsOf(v.roles).some((r) => !String(r[1] ?? "").trim()) ? [{ severity: "error" as const, area: "Content", message: "Information management roles must name individuals after appointment.", clause: "19650-2 5.4.1" }] : []),
     ...(rowsOf(v.breakdown).length === 0 ? [{ severity: "warning" as const, area: "Content", message: "Container breakdown structure is empty." }] : []),
     ...(!String(v.midpRef ?? "").trim() ? [{ severity: "warning" as const, area: "Consistency", message: "BEP does not reference the MIDP." }] : []),
+    ...(!String(v.coordinates ?? "").trim() ? [{ severity: "warning" as const, area: "Content", message: "Shared coordinates / origin are not defined.", clause: "19650-2 5.4.1" }] : []),
   ],
+  capability: (v) => {
+    const scores = rowsOf(v.imScores);
+    const f: Finding[] = [];
+    const blankScore = scores.filter((r) => !String(r[1] ?? "").trim());
+    if (blankScore.length) f.push({ severity: "warning", area: "Content", message: `${blankScore.length} capability criteria have no score.`, clause: "19650-2 5.3.3" });
+    const low = scores.filter((r) => Number(r[1]) <= 2 && String(r[1] ?? "").trim());
+    if (low.length && !String(v.gaps ?? "").trim()) f.push({ severity: "warning", area: "Content", message: `${low.length} criteria score 2 or less but no mobilisation actions are given.`, clause: "19650-2 5.3.4" });
+    if (scores.some((r) => String(r[1] ?? "").trim() && !String(r[2] ?? "").trim())) f.push({ severity: "warning", area: "Content", message: "Some scores have no evidence." });
+    if (rowsOf(v.people).length === 0) f.push({ severity: "error", area: "Content", message: "No resources are listed: capacity cannot be assessed.", clause: "19650-2 5.3.4" });
+    if (!String(v.result ?? "").trim()) f.push({ severity: "warning", area: "Content", message: "The assessment has no result." });
+    return f;
+  },
   midp: (v) => [
     ...(rowsOf(v.plan).length === 0 ? [{ severity: "error" as const, area: "Content", message: "MIDP has no containers. Use the delivery planner to generate it.", clause: "19650-2 5.4.5" }] : []),
   ],

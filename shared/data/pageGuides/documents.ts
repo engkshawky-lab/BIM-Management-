@@ -368,11 +368,11 @@ export const GUIDES_DOCUMENTS: PageGuide[] = [
   },
   {
     key: "r.standards",
-    what: "Stores each client's information requirements, imported once from their EIR appendix workbooks: COBie schema and picklists, required fields by stage, the classification dictionary and the asset tag format. Only the extracted rules are stored, not the files.",
+    what: "Stores each client's information requirements, imported once from their EIR appendix workbooks: COBie schema and picklists, required fields by stage, the asset attribute dictionary with the stages (and parties) each attribute is due at, the classification dictionary and the asset tag format. Only the extracted rules are stored, not the files.",
     steps: [
       "Under “New standard”, type a name and the client, then click “Create”.",
       "On the standard's page, drop .xlsx appendix workbooks or click “⬆ Import workbooks”; a message lists the tables found in each file.",
-      "Review “Required COBie fields by stage”, the “Picklists” and the “COBie rules” for each sheet.",
+      "Review “Required by stage” (COBie fields · asset attributes), the “Picklists”, the “COBie rules” for each sheet and the “Asset attribute dictionary”.",
       "Set the “Asset tag format”: separator, COBie field and parts with length, characters and approved codes (“+ Add part”), then click “Save tag format”.",
       "Search the “Classification dictionary” by equipment, code, Uniclass or IFC; “Delete standard” removes the standard and detaches the projects using it.",
     ],
@@ -386,13 +386,15 @@ export const GUIDES_DOCUMENTS: PageGuide[] = [
     ],
     tips: [
       "Import up to 20 workbooks at a time; the files themselves are not kept.",
+      "Equipment codes are checked per system: a tag pairing an equipment code with a system it is not listed under is rejected.",
+      "COBie validation at a stage reports every required attribute missing from its mapped column or from the Attribute sheet (by parameter name).",
     ],
     ar: {
-      what: "يخزّن متطلبات المعلومات لكل عميل، مستوردة مرة واحدة من مصنفات ملاحق EIR الخاصة به: مخطط COBie وقوائم الاختيار، والحقول المطلوبة حسب المرحلة، وقاموس التصنيف، وصيغة وسم الأصل. تُخزَّن القواعد المستخرجة فقط وليس الملفات.",
+      what: "يخزّن متطلبات المعلومات لكل عميل، مستوردة مرة واحدة من مصنفات ملاحق EIR الخاصة به: مخطط COBie وقوائم الاختيار، والحقول المطلوبة حسب المرحلة، وقاموس سمات الأصول مع المراحل (والأطراف) المطلوبة لكل سمة، وقاموس التصنيف، وصيغة وسم الأصل. تُخزَّن القواعد المستخرجة فقط وليس الملفات.",
       steps: [
         "ضمن «معيار جديد»، اكتب اسمًا والعميل، ثم انقر «إنشاء».",
         "في صفحة المعيار، أفلت مصنفات الملاحق ‎.xlsx أو انقر «⬆ استيراد المصنفات»؛ وتعرض رسالة الجداول التي وُجدت في كل ملف.",
-        "راجع «حقول COBie المطلوبة حسب المرحلة» و«قوائم الاختيار» و«قواعد COBie» لكل ورقة.",
+        "راجع «المطلوب حسب المرحلة» (حقول COBie · سمات الأصول) و«قوائم الاختيار» و«قواعد COBie» لكل ورقة و«قاموس سمات الأصول».",
         "اضبط «صيغة وسم الأصل»: الفاصل وحقل COBie والأجزاء مع الطول والأحرف والرموز المعتمدة («+ إضافة جزء»)، ثم انقر «حفظ تنسيق الوسم».",
         "ابحث في «قاموس التصنيف» حسب المعدّة أو الرمز أو Uniclass أو IFC؛ ويحذف «حذف المعيار» المعيار ويفصل المشاريع التي تستخدمه.",
       ],
@@ -406,6 +408,8 @@ export const GUIDES_DOCUMENTS: PageGuide[] = [
       ],
       tips: [
         "استورد حتى 20 مصنفًا في المرة الواحدة؛ ولا يُحتفظ بالملفات نفسها.",
+        "تُفحص رموز المعدات لكل نظام: يُرفض الوسم الذي يقرن رمز معدة بنظام غير مدرجة تحته.",
+        "يُبلغ فحص COBie في مرحلة ما عن كل سمة مطلوبة غائبة عن عمودها المرتبط أو عن ورقة Attribute (باسم المعامل).",
       ],
     },
   },

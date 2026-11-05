@@ -30,18 +30,51 @@ export interface TagPart {
 
 export interface TagFormat { separator: string; parts: TagPart[]; cobieField: string }
 
-export interface ClassificationEntry { system: string; systemCode: string; equipment: string; equipmentCode: string; uniclassSs?: string; uniclassPr?: string; ifcEntity?: string }
+export interface ClassificationEntry {
+  system: string; systemCode: string; equipment: string; equipmentCode: string;
+  uniclassSs?: string; uniclassPr?: string; ifcEntity?: string; masterFormat?: string;
+  /** per-category delivery flags from the dictionary (asset register, physical tag, COBie export …) */
+  flags?: Record<string, boolean>;
+}
+
+/** One attribute of a client's asset information dictionary and the stages it is required at. */
+export interface AttributeRule {
+  code: string;
+  group: string;
+  name: string;
+  description?: string;
+  format?: string;
+  dataType?: string;
+  unit?: string;
+  /** Type or Instance property */
+  level?: string;
+  /** authoring parameter name (e.g. a prefixed shared parameter) */
+  parameterName?: string;
+  /** where it goes in COBie: "Sheet.Field", or the Attribute sheet when not a standard column */
+  cobieMapping?: string;
+  example?: string;
+  /** stage name -> required */
+  required: Record<string, boolean>;
+  /** stage name -> responsible party, when the matrix names one instead of Yes/No */
+  responsible?: Record<string, string>;
+}
 
 export interface ClientStandardData {
   stages: string[];
   cobie: CobieRule[];
   picklists: Record<string, string[]>;
   classification: ClassificationEntry[];
+  /** asset information dictionary (optional: standards saved before it existed have none) */
+  attributes?: AttributeRule[];
   tag: TagFormat | null;
   sources: { file: string; imported: string[]; importedAt: string }[];
 }
 
-export const emptyStandard = (): ClientStandardData => ({ stages: [], cobie: [], picklists: {}, classification: [], tag: null, sources: [] });
+export const emptyStandard = (): ClientStandardData => ({ stages: [], cobie: [], picklists: {}, classification: [], attributes: [], tag: null, sources: [] });
+
+/** Stage names compare without case, punctuation or a leading "100%". */
+export const stageKey = (s: string) => s.toLowerCase().replace(/^\s*\d+\s*%\s*/, "").replace(/[^a-z0-9]/g, "");
+export const requiredAt = (req: Record<string, boolean>, stage: string) => Object.entries(req).some(([k, v]) => v && stageKey(k) === stageKey(stage));
 
 /** A generic tag structure (location + equipment). Clients override lengths and code lists. */
 export const DEFAULT_TAG_FORMAT: TagFormat = {
@@ -67,31 +100,41 @@ const CHARSET: Record<TagPart["charset"], RegExp> = { alnum: /^[A-Z0-9]+$/, alph
 const lenOk = (s: string, l: TagPart["length"]) => (Array.isArray(l) ? s.length >= l[0] && s.length <= l[1] : s.length === l);
 const lenText = (l: TagPart["length"]) => (Array.isArray(l) ? `${l[0]}–${l[1]}` : `${l}`);
 
-/** Validate a full tag (all parts) or only the parts of one group. Returns problems; empty = valid. */
-export function validateTag(tag: string, fmt: TagFormat, group?: TagPart["group"]): string[] {
+/** Validate a full tag (all parts) or only the parts of one group. Returns problems; empty = valid.
+ *  With a classification dictionary, the equipment code must be one listed for that system. */
+export function validateTag(tag: string, fmt: TagFormat, group?: TagPart["group"], classification?: ClassificationEntry[]): string[] {
   const parts = fmt.parts.filter((p) => !group || p.group === group);
   const values = tag.trim().toUpperCase().split(fmt.separator);
   if (values.length !== parts.length) return [`Expected ${parts.length} parts separated by "${fmt.separator}", found ${values.length}.`];
   const errs: string[] = [];
   parts.forEach((p, i) => {
     const v = values[i];
+    // an approved code is valid as listed, even when the client's own list breaks the nominal length
+    if (p.codes?.length && p.codes.includes(v)) return;
     if (!lenOk(v, p.length)) errs.push(`${p.label} "${v}" must be ${lenText(p.length)} characters.`);
     else if (!CHARSET[p.charset].test(v)) errs.push(`${p.label} "${v}" may only contain ${p.charset === "digits" ? "digits" : p.charset === "alpha" ? "letters" : "letters and digits"}.`);
-    else if (p.codes?.length && !p.codes.includes(v)) errs.push(`${p.label} "${v}" is not in the approved code list.`);
+    else if (p.codes?.length) errs.push(`${p.label} "${v}" is not in the approved code list.`);
   });
+  const si = parts.findIndex((p) => p.id === "system"), ei = parts.findIndex((p) => p.id === "equipment");
+  if (!errs.length && classification?.length && si >= 0 && ei >= 0) {
+    const sys = values[si], eq = values[ei];
+    const listed = classification.filter((c) => c.equipmentCode.toUpperCase() === eq && c.systemCode);
+    if (listed.length && !listed.some((c) => c.systemCode.toUpperCase() === sys))
+      errs.push(`Equipment "${eq}" is not listed under system "${sys}" (listed under ${[...new Set(listed.map((c) => c.systemCode))].slice(0, 4).join(", ")}).`);
+  }
   return errs;
 }
 
 /** Accept either the full tag or the equipment part alone (projects often keep the location tag separately). */
-export function validateTagAuto(tag: string, fmt: TagFormat): string[] {
+export function validateTagAuto(tag: string, fmt: TagFormat, classification?: ClassificationEntry[]): string[] {
   const n = tag.trim().split(fmt.separator).length;
   const eqParts = fmt.parts.filter((p) => p.group === "equipment").length;
-  return n === eqParts ? validateTag(tag, fmt, "equipment") : validateTag(tag, fmt);
+  return n === eqParts ? validateTag(tag, fmt, "equipment", classification) : validateTag(tag, fmt, undefined, classification);
 }
 
 /** Drop picklist entries that are guidance text rather than codes; a list left empty is not enforced. */
 export function cleanPicklist(values: string[]): string[] {
-  return values.filter((v) => v.length <= 60 && !/^(refer|this value|shall|should|values? to be|tbc|tbd)\b/i.test(v.trim()) && !/^[A-Z]{2,5}_[A-Z]\d_/.test(v.trim()));
+  return values.filter((v) => v.length <= 60 && !/^(refer|this value|shall|should|values? to be|tbc|tbd|example|e\.g\.|concatenat)/i.test(v.trim()) && !/^[A-Z]{2,5}_[A-Z]\d_/.test(v.trim()));
 }
 
 export const buildTag = (fmt: TagFormat, values: Record<string, string>) => fmt.parts.map((p) => (values[p.id] ?? "").toUpperCase()).join(fmt.separator);
@@ -123,7 +166,7 @@ export function validateCobieAgainstStandard(sheets: Sheets, std: ClientStandard
 
   for (const rule of std.cobie) {
     const data = rows(rule.sheet);
-    const required = !!rule.required[stage];
+    const required = requiredAt(rule.required, stage);
     if (!byName.has(rule.sheet.toLowerCase())) continue; // missing sheets are reported by the base check
     const hasColumn = data.length > 0 && rule.field in data[0];
     if (!hasColumn) { if (required && data.length) add("error", rule.sheet, `Column "${rule.field}" is required at ${stage} but missing`, rule.sheet); continue; }
@@ -160,7 +203,7 @@ export function validateCobieAgainstStandard(sheets: Sheets, std: ClientStandard
     for (const c of rows("Component")) {
       const v = c[field];
       if (blank(v) || isNA(v)) { add("warning", "Asset tags", `Component has no ${field}`, c.Name || "?"); continue; }
-      const errs = validateTagAuto(v, std.tag);
+      const errs = validateTagAuto(v, std.tag, std.classification);
       if (errs.length) add("error", "Asset tags", `${field} does not follow the asset tag format`, `${c.Name}: ${v} (${errs[0]})`);
     }
   }
@@ -182,6 +225,31 @@ export function validateCobieAgainstStandard(sheets: Sheets, std: ClientStandard
     }
   }
 
+  // asset information dictionary: attributes due at this stage must be delivered
+  const attrs = (std.attributes ?? []).filter((a) => requiredAt(a.required, stage));
+  if (attrs.length) {
+    const covered = new Set(std.cobie.map((r) => `${r.sheet}.${r.field}`.toLowerCase()));
+    const attrRows = rows("Attribute");
+    const names = new Map<string, Record<string, string>[]>();
+    for (const r of attrRows) { const k = (r.Name ?? "").trim().toLowerCase(); if (k) names.set(k, [...(names.get(k) ?? []), r]); }
+    for (const a of attrs) {
+      const m = /^(?:cobie\.)?([A-Za-z]+)\.([A-Za-z]+)$/i.exec((a.cobieMapping ?? "").trim());
+      const label = a.parameterName || a.name;
+      if (m && m[1].toLowerCase() !== "attribute") {
+        const [sheet, field] = [m[1], m[2]];
+        if (covered.has(`${sheet}.${field}`.toLowerCase()) || !byName.has(sheet.toLowerCase())) continue;
+        const data = rows(sheet);
+        if (data.length && !(field in data[0])) { add("error", "Required attributes", `Column ${sheet}.${field} is required at ${stage} but missing`, label); continue; }
+        const empty = data.filter((r) => blank(r[field])).length;
+        if (empty) add("error", "Required attributes", `${sheet}.${field} is blank but required at ${stage}`, `${label} (${empty} rows)`);
+        continue;
+      }
+      const found = names.get(label.toLowerCase()) ?? names.get(a.name.toLowerCase());
+      if (!found?.length) add("error", "Required attributes", `Required attribute missing from the COBie Attribute sheet at ${stage}`, label);
+      else if (found.every((r) => blank(r.Value) || /^(tbc|tbd|n\/?a)$/i.test((r.Value ?? "").trim()))) add("warning", "Required attributes", `Required attribute has no value (blank, TBC or n/a)`, label);
+    }
+  }
+
   return [...bucket.values()].map((b) => ({
     severity: b.severity, area: b.area,
     message: `${b.message} — ${b.refs.length} row${b.refs.length > 1 ? "s" : ""}.`,
@@ -191,4 +259,4 @@ export function validateCobieAgainstStandard(sheets: Sheets, std: ClientStandard
 }
 
 /** Summary used by the UI: how many columns are required at each stage. */
-export const requiredCounts = (std: ClientStandardData) => std.stages.map((s) => ({ stage: s, required: std.cobie.filter((r) => r.required[s]).length }));
+export const requiredCounts = (std: ClientStandardData) => std.stages.map((s) => ({ stage: s, required: std.cobie.filter((r) => requiredAt(r.required, s)).length, attributes: (std.attributes ?? []).filter((a) => requiredAt(a.required, s)).length }));

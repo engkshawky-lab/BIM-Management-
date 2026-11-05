@@ -12,9 +12,10 @@ export default function AssetTags({ data }: { data: ProjectData }) {
   useEffect(() => { api<{ standard: { name: string; data: ClientStandardData } | null }>(`/projects/${data.project.id}/standard`).then((r) => setStd(r.standard)); }, [data.project.id]);
   const fmt: TagFormat = std?.data.tag ?? DEFAULT_TAG_FORMAT;
   const tag = buildTag(fmt, values);
-  const errors = Object.keys(values).length ? validateTagAuto(tag, fmt) : [];
-  const eq = std?.data.classification.find((c) => c.equipmentCode === (values.equipment ?? "").toUpperCase());
-  const checked = useMemo(() => bulk.split(/\r?\n/).map((s) => s.trim()).filter(Boolean).slice(0, 5000).map((t) => ({ tag: t, errors: validateTagAuto(t, fmt) })), [bulk, fmt]);
+  const cls = std?.data.classification;
+  const errors = Object.keys(values).length ? validateTagAuto(tag, fmt, cls) : [];
+  const eq = cls?.find((c) => c.equipmentCode === (values.equipment ?? "").toUpperCase() && (!values.system || !c.systemCode || c.systemCode === values.system.toUpperCase())) ?? cls?.find((c) => c.equipmentCode === (values.equipment ?? "").toUpperCase());
+  const checked = useMemo(() => bulk.split(/\r?\n/).map((s) => s.trim()).filter(Boolean).slice(0, 5000).map((t) => ({ tag: t, errors: validateTagAuto(t, fmt, cls) })), [bulk, fmt, cls]);
   if (std === undefined) return <p className="muted">Loading…</p>;
 
   return (

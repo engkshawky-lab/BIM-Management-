@@ -30,7 +30,7 @@ async function loadStandard(id: string, userId: string, mustOwn = false) {
 
 const summary = (s: typeof schema.clientStandards.$inferSelect) => {
   const d = s.data as ClientStandardData;
-  return { id: s.id, name: s.name, client: s.client, ownerId: s.ownerId, updatedAt: s.updatedAt, stages: d.stages, rules: d.cobie.length, picklists: Object.keys(d.picklists).length, classification: d.classification.length, hasTag: !!d.tag, sources: d.sources };
+  return { id: s.id, name: s.name, client: s.client, ownerId: s.ownerId, updatedAt: s.updatedAt, stages: d.stages, rules: d.cobie.length, attributes: (d.attributes ?? []).length, picklists: Object.keys(d.picklists).length, classification: d.classification.length, hasTag: !!d.tag, sources: d.sources };
 };
 
 r.get("/standards", h(async (req, res) => {

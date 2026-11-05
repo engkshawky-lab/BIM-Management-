@@ -30,6 +30,8 @@ export interface CobieReport {
   score: number;
 }
 
+const COMPOUND_KEYS: Record<string, string[]> = { Zone: ["Name", "Category", "SpaceNames"], System: ["Name", "Category", "ComponentNames"] };
+
 export function validateCobie(sheets: Sheets): CobieReport {
   const f: Finding[] = [];
   // Sheet names in the workbook may differ in case; normalise.
@@ -68,10 +70,11 @@ export function validateCobie(sheets: Sheets): CobieReport {
       for (const col of spec.mandatory) if (headers.has(col) && blank(row[col])) rowIssue(name, "error", `Mandatory "${col}" is empty`, ref);
       if (spec.category && headers.has("Category") && !blank(row.Category) && !isNA(row.Category) && !row.Category.includes(":")) rowIssue(name, "warning", `Category should be "code: title" from the classification system (e.g. Uniclass)`, ref);
       if (headers.has("CreatedOn") && !blank(row.CreatedOn) && Number.isNaN(Date.parse(row.CreatedOn))) rowIssue(name, "warning", `CreatedOn is not a valid date`, ref);
-      const k = (row[key] ?? "").trim().toLowerCase();
+      // COBie 2.4 compound keys: one row per zone-space / system-component pair is valid
+      const k = (row[key] ?? "").trim() ? (COMPOUND_KEYS[name] ?? [key]).map((c) => (row[c] ?? "").trim().toLowerCase()).join("|") : "";
       if (k) seen.set(k, (seen.get(k) ?? 0) + 1);
     });
-    for (const [k, n] of seen) if (n > 1) rowIssue(name, "error", `${key} must be unique (duplicated ${n}×)`, k);
+    for (const [k, n] of seen) if (n > 1) rowIssue(name, "error", `${(COMPOUND_KEYS[name] ?? [key]).join(" + ")} must be unique (duplicated ${n}×)`, k.split("|").filter(Boolean).join(" / "));
   }
 
   // cross-sheet references

@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { DEFAULT_TAG_FORMAT, type ClassificationEntry, type ClientStandardData, type CobieRule } from "../shared/standards";
+import { DEFAULT_TAG_FORMAT, stageKey, type AttributeRule, type ClassificationEntry, type ClientStandardData, type CobieRule } from "../shared/standards";
 
 // Reads a client's EIR appendix workbooks and extracts their rules. Sheets are recognised
 // by their header rows (not by name), so differently titled workbooks still import.
@@ -18,7 +18,7 @@ const text = (v: ExcelJS.CellValue): string => {
 };
 const norm = (s: string | undefined) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
-function rowsOf(ws: ExcelJS.Worksheet, max = 5000) {
+function rowsOf(ws: ExcelJS.Worksheet, max = 50000) {
   const out: string[][] = [];
   const n = Math.min(ws.rowCount, max);
   for (let i = 1; i <= n; i++) {
@@ -39,7 +39,7 @@ function importSchema(rows: string[][], into: Map<string, CobieRule>) {
   const [cs, cn, cf, ca, cm] = [col(hd, "COBie Sheet"), col(hd, "COBie Name"), col(hd, "Foreign Key"), col(hd, "Allowed Values"), hd.findIndex((c) => /max/i.test(c) && /length/i.test(c))];
   for (const r of rows.slice(h + 1)) {
     const sheet = r[cs], field = r[cn];
-    if (!sheet || !field || norm(sheet) === "cobiesheet") continue;
+    if (!sheet || !field || norm(sheet) === norm(hd[cs]) || norm(field) === norm(hd[cn])) continue;
     const key = `${sheet}.${field}`;
     const rule = into.get(key) ?? { sheet, field, required: {} };
     const fk = r[cf];
@@ -60,10 +60,10 @@ function importStageMatrix(rows: string[][], into: Map<string, CobieRule>, stage
   const [cs, cn] = [col(hd, "COBie Sheet"), col(hd, "COBie Name")];
   const stageCols = hd.map((c, i) => ({ c, i })).filter(({ c, i }) => i > cn && c && !/remark|note|comment/i.test(c));
   if (!stageCols.length) return false;
-  for (const { c } of stageCols) if (!stages.includes(c)) stages.push(c);
+  for (const { c } of stageCols) if (!stages.some((x) => stageKey(x) === stageKey(c))) stages.push(c);
   for (const r of rows.slice(h + 1)) {
     const sheet = r[cs], field = r[cn];
-    if (!sheet || !field || /^(yes|no|required)$/i.test(r[stageCols[0].i] ?? "") === false) continue;
+    if (!sheet || !field || norm(sheet) === norm(hd[cs]) || norm(field) === norm(hd[cn]) || /^(yes|no|required)$/i.test(r[stageCols[0].i] ?? "") === false) continue;
     const key = `${sheet}.${field}`;
     const rule = into.get(key) ?? { sheet, field, required: {} };
     for (const { c, i } of stageCols) rule.required[c] = /^y/i.test(r[i] ?? "");
@@ -85,80 +85,180 @@ function importPicklists(rows: string[][], into: Record<string, string[]>) {
   return true;
 }
 
-/** "System Category | System Code | Equipment Category | Equipment Category Code | … Uniclass … | IFC Entity" */
-function importClassification(rows: string[][], into: ClassificationEntry[]) {
-  const h = findHeader(rows, ["System Code", "Equipment Category Code"]);
+const PLACEHOLDER_CODE = /^(to be added|tbc|tbd|n\/?a|-|x+)$/i;
+const isCode = (v: string | undefined) => !!v && /^[A-Z0-9]{2,8}$/.test(v.trim()) && !PLACEHOLDER_CODE.test(v.trim());
+const yes = (v: string | undefined) => /^(y|yes|true|x|✓|required)$/i.test((v ?? "").trim());
+
+/** System / equipment (component) code dictionaries. Headers are matched loosely: "System Code", "System Category Code",
+ *  "SYSTEM CODE - E02", "Equipment Category Code", "Component Code" … Optional Uniclass, IFC, MasterFormat and
+ *  per-category Yes/No flag columns. Repeated header rows, group headings and placeholders ("to be added") are skipped.
+ *  When the system column is only a separate list (far fewer rows than the component column), components are kept
+ *  without a system and the systems are returned on their own. */
+function importClassification(rows: string[][], into: ClassificationEntry[], systems: Set<string>) {
+  const sysCodeRe = /^system( category)? code\b/i, eqCodeRe = /^(equipment( category)?|component|asset( type)?) code\b/i;
+  const h = rows.slice(0, 30).findIndex((r) => r.some((c) => sysCodeRe.test(c)) && r.some((c) => eqCodeRe.test(c)));
   if (h < 0) return false;
   const hd = rows[h];
   const find = (re: RegExp) => hd.findIndex((c) => re.test(c));
-  const c = { sys: find(/^system category$/i), sysCode: find(/^system code$/i), eq: find(/^equipment category$/i), eqCode: find(/^equipment category code$/i),
-    ss: find(/uniclass.*systems.*code/i), pr: find(/uniclass.*products.*code/i), ifc: find(/ifc entity/i) };
-  // placeholder cells ("to be added", "TBC", "-") are not codes
-  const val = (i: number) => { const v = i >= 0 ? r0[i] ?? "" : ""; return v && !/^(to be added|tbc|tbd|n\/?a|-)$/i.test(v.trim()) ? v : undefined; };
-  let r0: string[] = [];
-  for (const r of rows.slice(h + 1)) {
-    r0 = r;
-    if (!r[c.sysCode] || !r[c.eqCode]) continue;
-    into.push({ system: r[c.sys] ?? "", systemCode: r[c.sysCode], equipment: r[c.eq] ?? "", equipmentCode: r[c.eqCode],
-      uniclassSs: val(c.ss), uniclassPr: val(c.pr), ifcEntity: val(c.ifc) });
+  const c = {
+    sysCode: find(sysCodeRe), eqCode: find(eqCodeRe),
+    sys: hd.findIndex((x) => /^system\b/i.test(x) && !/code/i.test(x)), eq: hd.findIndex((x) => /^(equipment|component|asset type)\b/i.test(x) && !/code/i.test(x)),
+    ss: find(/uniclass.*(systems|ss).*code|^uniclass ss/i), pr: find(/uniclass.*(products|pr).*code|^uniclass pr/i), ifc: find(/ifc (entity|class)/i), mf: find(/masterformat/i),
+  };
+  const flagCols = hd.map((x, i) => ({ x, i })).filter(({ x, i }) => i > Math.max(c.sysCode, c.eqCode) && /appears in|required|entry|export|tag/i.test(x) && !/code|name|description|unique|full|part [a-z]/i.test(x));
+  const val = (r: string[], i: number) => { const v = i >= 0 ? (r[i] ?? "").trim() : ""; return v && !PLACEHOLDER_CODE.test(v) ? v : undefined; };
+  const body = rows.slice(h + 1);
+  const withEq = body.filter((r) => isCode(r[c.eqCode]));
+  const linked = withEq.filter((r) => isCode(r[c.sysCode])).length >= withEq.length * 0.5;
+  let n = 0;
+  for (const r of body) {
+    const sysCode = (r[c.sysCode] ?? "").trim().toUpperCase(), eqCode = (r[c.eqCode] ?? "").trim().toUpperCase();
+    if (isCode(sysCode)) systems.add(sysCode);
+    if (!isCode(eqCode)) continue;
+    if (linked && !isCode(sysCode)) continue;
+    const flags = Object.fromEntries(flagCols.filter(({ i }) => r[i]).map(({ x, i }) => [x.replace(/\s+/g, " ").trim(), yes(r[i])]));
+    into.push({ system: linked ? r[c.sys] ?? "" : "", systemCode: linked ? sysCode : "", equipment: r[c.eq] ?? "", equipmentCode: eqCode,
+      uniclassSs: val(r, c.ss), uniclassPr: val(r, c.pr), ifcEntity: val(r, c.ifc), masterFormat: val(r, c.mf), ...(Object.keys(flags).length ? { flags } : {}) });
+    n++;
   }
-  return true;
+  return n > 0 || (systems.size > 0 && withEq.length === 0);
 }
 
-/** Asset tag codification picklists: "System Category Description | System Category Code | Equipment Category Description | Equipment Category Code"
- *  and/or "Level/Floor Code | Level/Floor Description". Codes found feed the tag format directly. */
-function importTagCodes(rows: string[][], into: ClassificationEntry[], levels: Set<string>) {
-  const isCode = (v: string | undefined) => !!v && /^[A-Z0-9]{1,6}$/.test(v.trim());
+/** Level / floor code lists: "Level/Floor Code | Level/Floor Description". Values like "AG_Above ground" give "AG". */
+function importLevelCodes(rows: string[][], levels: Set<string>) {
+  const hl = rows.slice(0, 30).findIndex((r) => r.some((c) => /^(level|floor|level\/floor) code$/i.test(c)));
+  if (hl < 0) return false;
+  const lc = rows[hl].findIndex((c) => /^(level|floor|level\/floor) code$/i.test(c));
   let hit = false;
-  const he = findHeader(rows, ["System Category Description", "System Category Code", "Equipment Category Description", "Equipment Category Code"], 12);
-  if (he >= 0) {
-    const hd = rows[he];
-    const c = { sys: col(hd, "System Category Description"), sysCode: col(hd, "System Category Code"), eq: col(hd, "Equipment Category Description"), eqCode: col(hd, "Equipment Category Code") };
-    for (const r of rows.slice(he + 1)) if (isCode(r[c.sysCode]) && isCode(r[c.eqCode]) && !/^\d+$/.test(r[c.eqCode])) {
-      into.push({ system: r[c.sys] ?? "", systemCode: r[c.sysCode].trim(), equipment: r[c.eq] ?? "", equipmentCode: r[c.eqCode].trim() }); hit = true;
-    }
-  }
-  const hl = findHeader(rows, ["Level/Floor Code", "Level/Floor Description"], 12);
-  if (hl >= 0) {
-    const lc = col(rows[hl], "Level/Floor Code");
-    for (const r of rows.slice(hl + 1)) if (isCode(r[lc]) && r[lc].trim().length <= 3) { levels.add(r[lc].trim()); hit = true; }
+  for (const r of rows.slice(hl + 1)) {
+    const code = (r[lc] ?? "").split(/[_:]/)[0].trim().toUpperCase();
+    if (/^[A-Z0-9]{1,3}$/.test(code)) { levels.add(code); hit = true; }
   }
   return hit;
+}
+
+const CODE_HDR = /^(s\/?n|code|ref(erence)?|id|no\.?|#)$/i;
+
+/** Asset information dictionary: "Code/S-N | Attribute | Description | Format | Type | Unit | Parameter Name | COBie Mapping …".
+ *  Rows with only a heading (no attribute) start a new group. */
+function importAttributeDictionary(rows: string[][], into: Map<string, AttributeRule>) {
+  const h = rows.slice(0, 30).findIndex((r) => r.some((c) => norm(c) === "attribute") && r.some((c) => /parameter name/i.test(c)) && r.some((c) => /^(format|cobie mapping)$/i.test(c)));
+  if (h < 0) return false;
+  const hd = rows[h];
+  const find = (re: RegExp) => hd.findIndex((c) => re.test(c.trim()));
+  const c = { code: find(CODE_HDR), name: find(/^attribute$/i), desc: find(/^description$/i), format: find(/^format$/i), type: find(/^(type|data type)$/i), unit: find(/^units?$/i),
+    level: find(/^parameter \(?type\/instance|^(type|instance)\s*\/\s*(type|instance)|^parameter$/i), param: find(/^parameter name$/i), map: find(/^cobie mapping$/i), sheet: find(/^cobie sheet$/i), ex: find(/^example/i) };
+  let group = "";
+  let n = 0;
+  for (const r of rows.slice(h + 1)) {
+    const name = (r[c.name] ?? "").trim(), code = c.code >= 0 ? (r[c.code] ?? "").trim() : "";
+    // merged heading cells repeat the same text across the row
+    const others = r.filter((x, i) => i !== c.name && i !== c.code && x?.trim() && x.trim() !== name && x.trim() !== "0").length;
+    if (!name || (c.code >= 0 && !code && !others)) { const g = name || r.find((x) => x?.trim()); if (g && g.length < 80) group = g.trim(); continue; }
+    if (norm(name) === "attribute") continue;
+    const get = (i: number) => (i >= 0 && r[i]?.trim() && r[i].trim() !== "-" ? r[i].trim() : undefined);
+    let map = get(c.map);
+    if (map && /^attribute\.name$/i.test(map)) map = "Attribute";
+    if (!map && get(c.sheet) && /^attribute$/i.test(get(c.sheet)!)) map = "Attribute";
+    const key = `${code}|${norm(name)}`;
+    const cur = into.get(key);
+    into.set(key, { ...(cur ?? { required: {} }), code, group: group || cur?.group || "", name, description: get(c.desc), format: get(c.format), dataType: get(c.type), unit: get(c.unit),
+      level: get(c.level), parameterName: get(c.param), cobieMapping: map, example: get(c.ex) } as AttributeRule);
+    n++;
+  }
+  return n > 0;
+}
+
+/** Attribute requirements by stage: "Code | Attribute | (Parameter Name) | <stage> | <stage> …" with Yes/No cells, or
+ *  stage column pairs "Responsibility | Location" under stage headings (a party code in the cell means required). */
+function importAttributeMatrix(rows: string[][], into: Map<string, AttributeRule>, stages: string[]) {
+  const h = rows.slice(0, 30).findIndex((r) => r.some((c) => norm(c) === "attribute") && r.some((c) => CODE_HDR.test(c.trim()))
+    && !r.some((c) => /^(format|cobie mapping|description)$/i.test(c.trim())));
+  if (h < 0) return false;
+  const hd = rows[h];
+  const cCode = hd.findIndex((c) => CODE_HDR.test(c.trim())), cName = hd.findIndex((c) => norm(c) === "attribute"), cParam = hd.findIndex((c) => /parameter name/i.test(c));
+  const first = Math.max(cCode, cName, cParam) + 1;
+  const above = (i: number) => rows.slice(Math.max(0, h - 3), h).map((r) => (r[i] ?? "").trim()).filter(Boolean);
+  // a stage heading spread over two cells ("STAGE 3:" | "SPATIAL COORDINATION", "PROGRAMME REF:" | "100% SCHEMATIC")
+  const headingFor = (i: number) => {
+    const lines = rows.slice(Math.max(0, h - 3), h).map((r) => { const a = (r[i] ?? "").trim(), b = (r[i + 1] ?? "").trim(); return /:$/.test(a) ? `${a} ${b}`.trim() : a; }).filter(Boolean);
+    const ref = lines.find((l) => /^programme ref/i.test(l))?.replace(/^programme ref:?\s*/i, "");
+    return ref || lines.find((l) => /stage/i.test(l)) || lines[0] || "";
+  };
+  const cols: { i: number; stage: string; party: boolean }[] = [];
+  for (let i = first; i < hd.length; i++) {
+    const label = (hd[i] ?? "").trim();
+    if (/^(location|container)\d*$/i.test(label) || /remark|note|comment/i.test(label)) continue;
+    if (/^(responsib|party|role|by)/i.test(label)) { const st = headingFor(i); if (st) cols.push({ i, stage: st, party: true }); continue; }
+    if (label && !/^required$/i.test(label)) cols.push({ i, stage: label, party: false });
+    else if (!label && above(i).length) cols.push({ i, stage: above(i).join(" "), party: false });
+  }
+  if (!cols.length) return false;
+  let n = 0;
+  for (const r of rows.slice(h + 1)) {
+    const name = (r[cName] ?? "").trim(), code = (r[cCode] ?? "").trim();
+    if (!name || norm(name) === "attribute") continue;
+    const cells = cols.map((x) => (r[x.i] ?? "").trim());
+    if (!code && into.size && ![...into.keys()].some((k) => k.endsWith(`|${norm(name)}`))) continue;
+    if (!cells.some(Boolean)) continue;
+    const keys = [...into.keys()];
+    const byCode = code ? keys.filter((k) => k.startsWith(`${code}|`)) : [];
+    const key = keys.find((k) => k === `${code}|${norm(name)}`) ?? (byCode.length === 1 ? byCode[0] : undefined) ?? keys.find((k) => k.endsWith(`|${norm(name)}`)) ?? `${code}|${norm(name)}`;
+    const rule = into.get(key) ?? { code, group: "", name, parameterName: cParam >= 0 ? r[cParam] || undefined : undefined, required: {} };
+    cols.forEach((x, j) => {
+      const v = cells[j];
+      const req = x.party ? !!v && !/^(-|n\/?a|no|none)$/i.test(v) : yes(v);
+      rule.required[x.stage] = req;
+      if (x.party && req) (rule.responsible ??= {})[x.stage] = v;
+    });
+    into.set(key, rule); n++;
+  }
+  if (n) for (const x of cols) if (!stages.some((s) => stageKey(s) === stageKey(x.stage))) stages.push(x.stage);
+  return n > 0;
 }
 
 export async function importWorkbook(file: string, name: string, std: ClientStandardData): Promise<string[]> {
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(file);
   const rules = new Map(std.cobie.map((r) => [`${r.sheet}.${r.field}`, r]));
+  const attrs = new Map((std.attributes ?? []).map((a) => [`${a.code}|${norm(a.name)}`, a]));
   const found: string[] = [];
   const classification: ClassificationEntry[] = [];
+  const systems = new Set<string>();
   const levels = new Set<string>();
+  const matrices: { rows: string[][]; sheet: string }[] = [];
   for (const ws of wb.worksheets) {
     const rows = rowsOf(ws);
     if (importSchema(rows, rules)) found.push(`COBie schema (${ws.name})`);
     else if (importStageMatrix(rows, rules, std.stages)) found.push(`Stage requirements (${ws.name})`);
+    else if (importAttributeDictionary(rows, attrs)) found.push(`Attribute dictionary (${ws.name})`);
     else if (!/aux|wip|temp/i.test(ws.name) && importPicklists(rows, std.picklists)) found.push(`Picklists (${ws.name})`);
-    else if (importClassification(rows, classification)) found.push(`Classification dictionary (${ws.name})`);
-    else if (importTagCodes(rows, classification, levels)) found.push(`Asset tag codes (${ws.name})`);
+    else if (importClassification(rows, classification, systems)) { found.push(`Classification dictionary (${ws.name})`); importLevelCodes(rows, levels); }
+    else if (importLevelCodes(rows, levels)) found.push(`Level codes (${ws.name})`);
+    else matrices.push({ rows, sheet: ws.name });
   }
+  // stage matrices last, so they attach to a dictionary in the same workbook whatever the sheet order
+  for (const m of matrices) if (importAttributeMatrix(m.rows, attrs, std.stages)) found.push(`Attribute requirements by stage (${m.sheet})`);
   std.cobie = [...rules.values()];
+  std.attributes = [...attrs.values()];
   if (levels.size) {
     std.tag ??= structuredClone(DEFAULT_TAG_FORMAT);
     const p = std.tag.parts.find((x) => x.id === "level");
     if (p) p.codes = [...new Set([...(p.codes ?? []), ...levels])].sort();
   }
-  if (classification.length) {
-    // one entry per equipment code, preferring the most complete row across sheets
-    const merged = new Map(std.classification.map((c) => [c.equipmentCode, c]));
+  if (classification.length || systems.size) {
+    // one entry per system + equipment pair (equipment codes repeat across systems), keeping the most complete row
+    const k = (c: ClassificationEntry) => `${c.systemCode.toUpperCase()}|${c.equipmentCode.toUpperCase()}`;
+    const merged = new Map(std.classification.map((c) => [k(c), c]));
     for (const c of classification) {
-      const cur = merged.get(c.equipmentCode);
-      merged.set(c.equipmentCode, cur ? { ...c, ...Object.fromEntries(Object.entries(cur).filter(([, v]) => v)) } as ClassificationEntry : c);
+      const cur = merged.get(k(c));
+      merged.set(k(c), cur ? { ...c, ...Object.fromEntries(Object.entries(cur).filter(([, v]) => v)) } as ClassificationEntry : c);
     }
     std.classification = [...merged.values()];
     // approved system / equipment codes feed the asset tag format
     const tag = std.tag ?? structuredClone(DEFAULT_TAG_FORMAT);
-    const codes = (id: string, pick: (c: ClassificationEntry) => string) => { const p = tag.parts.find((x) => x.id === id); if (p) p.codes = [...new Set(std.classification.map(pick).map((s) => s.toUpperCase()))].sort(); };
-    codes("system", (c) => c.systemCode); codes("equipment", (c) => c.equipmentCode);
+    const codes = (id: string, list: string[]) => { const p = tag.parts.find((x) => x.id === id); if (p && list.length) p.codes = [...new Set([...(p.codes ?? []), ...list.filter(Boolean).map((s) => s.toUpperCase())])].sort(); };
+    codes("system", [...std.classification.map((c) => c.systemCode), ...systems]); codes("equipment", std.classification.map((c) => c.equipmentCode));
     std.tag = tag;
   }
   if (found.length) std.sources.push({ file: name, imported: found, importedAt: new Date().toISOString() });

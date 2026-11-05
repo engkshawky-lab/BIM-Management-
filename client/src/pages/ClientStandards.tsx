@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { navigate, useSession } from "../App";
-import { DEFAULT_TAG_FORMAT, requiredCounts, type ClientStandardData, type TagFormat, type TagPart } from "../../../shared/standards";
+import { DEFAULT_TAG_FORMAT, requiredAt, requiredCounts, type ClientStandardData, type TagFormat, type TagPart } from "../../../shared/standards";
 import { api, fmtDate } from "../lib/api";
 import { Icon } from "../shell/icons";
 
-interface Summary { id: string; name: string; client: string; ownerId: string; updatedAt: string; stages: string[]; rules: number; picklists: number; classification: number; hasTag: boolean; sources: ClientStandardData["sources"] }
+interface Summary { id: string; name: string; client: string; ownerId: string; updatedAt: string; stages: string[]; rules: number; picklists: number; classification: number; attributes?: number; hasTag: boolean; sources: ClientStandardData["sources"] }
 interface Detail extends Summary { data: ClientStandardData; canEdit: boolean }
 
 function List() {
@@ -30,7 +30,7 @@ function List() {
           <a key={s.id} className="card project-card" href={`#/standards/${s.id}`}>
             <h3 style={{ marginTop: 0 }}>{s.name}</h3>
             <p className="small muted">{s.client || "—"} · updated {fmtDate(s.updatedAt)}</p>
-            <div className="row small muted">{s.stages.length} stages · {s.rules} COBie rules · {s.picklists} picklists · {s.classification} classes{s.hasTag && " · tag format"}</div>
+            <div className="row small muted">{s.stages.length} stages · {s.rules} COBie rules · {s.picklists} picklists · {s.classification} classes{s.attributes ? ` · ${s.attributes} attributes` : ""}{s.hasTag && " · tag format"}</div>
           </a>
         ))}</div>
       )}
@@ -79,6 +79,7 @@ function Detail({ id }: { id: string }) {
   const [pick, setPick] = useState("");
   const [cls, setCls] = useState("");
   const [sheet, setSheet] = useState("");
+  const [attrQ, setAttrQ] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const load = useCallback(() => api<{ standard: Detail }>(`/standards/${id}`).then((r) => setS(r.standard)).catch((e) => toast(e.message, "error")), [id, toast]);
   useEffect(() => { load(); }, [load]);
@@ -106,12 +107,12 @@ function Detail({ id }: { id: string }) {
       <div className="page-head">
         <div className="crumbs"><a href="#/standards">Client standards</a><span>›</span><b>{s.name}</b></div>
         <h1>{s.name}</h1>
-        <p className="muted">{s.client || "No client set"} · {d.stages.length} stages · {d.cobie.length} COBie rules · {lists.length} picklists · {d.classification.length} classification entries</p>
+        <p className="muted">{s.client || "No client set"} · {d.stages.length} stages · {d.cobie.length} COBie rules · {lists.length} picklists · {d.classification.length} classification entries · {(d.attributes ?? []).length} attributes</p>
       </div>
 
       {s.canEdit && <div className="card dropzone" style={{ marginBottom: 14 }} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files.length) importFiles(e.dataTransfer.files); }}>
         <div className="row spread">
-          <div><b>Import appendix workbooks</b><div className="small muted">Drop .xlsx files: COBie schema & picklists, stage responsibility matrix, classification dictionary. Tables are recognised by their headers; files are not kept.</div></div>
+          <div><b>Import appendix workbooks</b><div className="small muted">Drop .xlsx files: COBie schema & picklists, stage responsibility matrix, asset attribute dictionary and its stage matrix, classification / system and component codes, level codes. Tables are recognised by their headers; files are not kept.</div></div>
           <button className="primary" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Importing…" : "⬆ Import workbooks"}</button>
           <input ref={input} type="file" accept=".xlsx" multiple hidden onChange={(e) => { if (e.target.files?.length) importFiles(e.target.files); e.target.value = ""; }} />
         </div>
@@ -120,10 +121,14 @@ function Detail({ id }: { id: string }) {
 
       <div className="grid g2">
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Required COBie fields by stage</h3>
-          {counts.length ? counts.map((c) => (
-            <div key={c.stage} className="bar-row"><span className="small">{c.stage}</span><span className="bar"><span style={{ width: `${(c.required / Math.max(1, d.cobie.length)) * 100}%` }} /></span><b className="small">{c.required}</b></div>
-          )) : <p className="muted small">Import the stage responsibility matrix to see this.</p>}
+          <h3 style={{ marginTop: 0 }}>Required by stage</h3>
+          {counts.length ? <>
+            <div className="small muted">COBie fields{(d.attributes ?? []).length > 0 && " · asset attributes"}</div>
+            {counts.map((c) => (
+              <div key={c.stage} className="bar-row"><span className="small">{c.stage}</span>
+                <span className="bar"><span style={{ width: `${(Math.max(c.required / Math.max(1, d.cobie.length), c.attributes / Math.max(1, (d.attributes ?? []).length))) * 100}%` }} /></span>
+                <b className="small">{d.cobie.length ? c.required : "–"}{(d.attributes ?? []).length > 0 && ` · ${c.attributes}`}</b></div>
+            ))}</> : <p className="muted small">Import the stage responsibility matrix to see this.</p>}
         </div>
         <div className="card">
           <div className="row spread"><h3 style={{ margin: 0 }}>Picklists</h3>
@@ -140,8 +145,22 @@ function Detail({ id }: { id: string }) {
           <thead><tr><th>Field</th><th>Reference / picklist</th><th>Allowed</th><th>Max</th>{d.stages.map((st) => <th key={st} className="center-cell tiny">{st}</th>)}</tr></thead>
           <tbody>{d.cobie.filter((r) => r.sheet === curSheet).map((r) => (
             <tr key={r.field}><td><b>{r.field}</b></td><td className="small">{r.foreignKey ?? "—"}</td><td className="small">{r.allowed ?? ""}</td><td className="small">{r.maxLength ?? ""}</td>
-              {d.stages.map((st) => <td key={st} className="center-cell">{r.required[st] ? "●" : <span className="muted">·</span>}</td>)}</tr>
+              {d.stages.map((st) => <td key={st} className="center-cell">{requiredAt(r.required, st) ? "●" : <span className="muted">·</span>}</td>)}</tr>
           ))}</tbody>
+        </table></div>
+      </div>}
+
+      {(d.attributes ?? []).length > 0 && <div className="card" style={{ marginTop: 14 }}>
+        <div className="row spread"><h3 style={{ margin: 0 }}>Asset attribute dictionary</h3>
+          <label className="search-box" style={{ margin: 0 }}><Icon name="search" size={15} /><input placeholder="Search attributes, parameters, COBie mapping…" value={attrQ} onChange={(e) => setAttrQ(e.target.value)} /></label></div>
+        <p className="small muted">Checked in COBie validation: attributes due at the chosen stage must be in their mapped COBie column, or on the Attribute sheet under their parameter name. A party code means that party is responsible at that stage.</p>
+        <div className="table-wrap" style={{ maxHeight: 420, overflow: "auto" }}><table className="data">
+          <thead><tr><th>Code</th><th>Attribute</th><th>Parameter</th><th>COBie</th><th>Format</th>{d.stages.map((st) => <th key={st} className="center-cell tiny">{st}</th>)}</tr></thead>
+          <tbody>{(d.attributes ?? []).filter((a) => !attrQ || `${a.code} ${a.group} ${a.name} ${a.parameterName ?? ""} ${a.cobieMapping ?? ""}`.toLowerCase().includes(attrQ.toLowerCase())).slice(0, 300).map((a, i, arr) => <Fragment key={a.code + a.name}>
+            {(i === 0 || arr[i - 1].group !== a.group) && a.group && <tr><td colSpan={5 + d.stages.length} className="small"><b>{a.group}</b></td></tr>}
+            <tr><td className="small mono">{a.code}</td><td className="small" title={a.description}>{a.name}{a.level && <span className="muted"> · {a.level}</span>}</td><td className="small mono">{a.parameterName ?? "—"}</td><td className="small">{a.cobieMapping ?? "—"}</td><td className="small">{[a.format, a.unit && a.unit !== "-" ? a.unit : ""].filter(Boolean).join(" ")}</td>
+              {d.stages.map((st) => { const party = Object.entries(a.responsible ?? {}).find(([k]) => k === st)?.[1]; return <td key={st} className="center-cell tiny">{requiredAt(a.required, st) ? party ?? "●" : <span className="muted">·</span>}</td>; })}</tr>
+          </Fragment>)}</tbody>
         </table></div>
       </div>}
 
@@ -155,7 +174,7 @@ function Detail({ id }: { id: string }) {
             <label className="search-box" style={{ margin: "0 0 8px" }}><Icon name="search" size={15} /><input placeholder="Search equipment, codes, Uniclass, IFC…" value={cls} onChange={(e) => setCls(e.target.value)} /></label>
             <div className="table-wrap" style={{ maxHeight: 380, overflow: "auto" }}><table className="data">
               <thead><tr><th>System</th><th>Equipment</th><th>Uniclass Pr</th><th>IFC</th></tr></thead>
-              <tbody>{clsHits.map((c) => <tr key={c.equipmentCode}><td className="small"><b>{c.systemCode}</b> {c.system}</td><td className="small"><b>{c.equipmentCode}</b> {c.equipment}</td><td className="small mono">{c.uniclassPr ?? "—"}</td><td className="small mono">{c.ifcEntity ?? "—"}</td></tr>)}</tbody>
+              <tbody>{clsHits.map((c) => <tr key={c.systemCode + "|" + c.equipmentCode}><td className="small"><b>{c.systemCode}</b> {c.system}</td><td className="small"><b>{c.equipmentCode}</b> {c.equipment}</td><td className="small mono">{c.uniclassPr ?? "—"}</td><td className="small mono">{c.ifcEntity ?? "—"}</td></tr>)}</tbody>
             </table></div>
           </> : <p className="muted small">Import the classification / asset mapping workbook.</p>}
         </div>
