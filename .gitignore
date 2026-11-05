@@ -6,3 +6,4 @@ storage
 .env.local
 server/__local__/
 .local/
+docs/books/*.html
