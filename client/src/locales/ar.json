@@ -25193,5 +25193,10 @@
 "Asset attribute dictionary": "قاموس سمات الأصول",
 "Search attributes, parameters, COBie mapping…": "ابحث في السمات والمعاملات وربط COBie…",
 "Checked in COBie validation: attributes due at the chosen stage must be in their mapped COBie column, or on the Attribute sheet under their parameter name. A party code means that party is responsible at that stage.": "يُتحقق منها في فحص COBie: السمات المطلوبة في المرحلة المختارة يجب أن تكون في عمود COBie المرتبط بها، أو في ورقة Attribute باسم المعامل. رمز الطرف يعني أن هذا الطرف مسؤول في تلك المرحلة.",
-"Drop .xlsx files: COBie schema & picklists, stage responsibility matrix, asset attribute dictionary and its stage matrix, classification / system and component codes, level codes. Tables are recognised by their headers; files are not kept.": "أسقط ملفات ‎.xlsx‎: مخطط COBie والقوائم، مصفوفة المسؤولية حسب المرحلة، قاموس سمات الأصول ومصفوفة مراحله، التصنيف ورموز الأنظمة والمكونات، رموز المستويات. يتم التعرف على الجداول من عناوينها؛ ولا تُحفظ الملفات."
+"Drop .xlsx files: COBie schema & picklists, stage responsibility matrix, asset attribute dictionary and its stage matrix, classification / system and component codes, level codes. Tables are recognised by their headers; files are not kept.": "أسقط ملفات ‎.xlsx‎: مخطط COBie والقوائم، مصفوفة المسؤولية حسب المرحلة، قاموس سمات الأصول ومصفوفة مراحله، التصنيف ورموز الأنظمة والمكونات، رموز المستويات. يتم التعرف على الجداول من عناوينها؛ ولا تُحفظ الملفات.",
+"⚠ These documents are not related to each other": "⚠ هذان المستندان غير مرتبطين ببعضهما",
+"⚠ Wrong document": "⚠ مستند غير صحيح",
+"Check the documents": "تحقّق من المستندين",
+"Documents not related": "المستندان غير مرتبطين",
+"Wrong document": "مستند غير صحيح"
 }

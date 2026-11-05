@@ -11,6 +11,7 @@ import { suitabilityCodes } from "../../shared/data/iso19650";
 import { hubById, hubDigest } from "../../shared/data/hubs";
 import { complianceScore, matchTemplate, reviewChecklists, templateOutline } from "../../shared/aiDocs";
 import { TYPE_CODES } from "../../shared/planRows";
+import { MATCH_RULES, judgeRelation, matchSchema, sanitiseMatch } from "../../shared/docMatch";
 import { AiError, ask, parseJson } from "../claude";
 import { h, parse } from "./auth";
 import { allowKey } from "../billing";
@@ -127,12 +128,12 @@ Then list findings for problems the checklist does not capture: unclear responsi
       : "Compare the two BEP versions: what changed, what was added or removed, and whether changes weaken commitments made to the appointing party. Build \"coverage\" with one row per significant change (status \"changed\"), or \"missing\" where a commitment was removed.";
   const system = `${EXPERT}
 You review information-management documents as decision support for an accountable reviewer; you do not approve or certify them. Be specific: cite the section of the reviewed document, quote short evidence (under 25 words) and give a concrete fix.
-${body.mode === "single" ? `Checklists of what each document type must contain (from the portal's ISO 19650 templates):\n${reviewChecklists()}\n` : ""}${JSON_ONLY}
-Schema: {"docType": string (short, e.g. "Exchange Information Requirements (EIR)"), "summary": string (4–6 sentences: overall state, biggest gaps, what to do first), "strengths": string[] (at most 6),
+${body.mode === "single" ? `Checklists of what each document type must contain (from the portal's ISO 19650 templates):\n${reviewChecklists()}\n` : `${MATCH_RULES}\n`}${JSON_ONLY}
+Schema: {${body.mode === "single" ? "" : `${matchSchema(labelA, labelB)}, `}"docType": string (short, e.g. "Exchange Information Requirements (EIR)"), "summary": string (4–6 sentences: overall state, biggest gaps, what to do first), "strengths": string[] (at most 6),
 "coverage": [{"item": string, "status": "met" | "partial" | "missing" | "changed", "evidence": string, "action": string}],
 "findings": [{"severity": "critical" | "major" | "minor", "section": string (where in the reviewed document), "clause": string, "issue": string, "evidence": string, "recommendation": string}]}
 critical = would block issue or breach an appointment obligation; major = must be fixed before issue; minor = improvement. Give at most 20 findings, most severe first.
-Keep it tight: evidence under 20 words, actions and recommendations under 30 words, at most 40 coverage rows. Write "summary" first and "findings" last.`;
+Keep it tight: evidence under 20 words, actions and recommendations under 30 words, at most 40 coverage rows. Write ${body.mode === "single" ? `"summary" first` : `"match" first, then "summary"`} and "findings" last.`;
   // long documents need room: the model reasons before answering and both count towards the limit
   const { text } = await ask({ system, messages: [{ role: "user", content: [...a, ...b, { type: "text", text: task }] as never }], maxTokens: 32000 });
   let out: Record<string, unknown>;
@@ -144,9 +145,12 @@ Keep it tight: evidence under 20 words, actions and recommendations under 30 wor
   const coverage = (Array.isArray(out.coverage) ? out.coverage : []).slice(0, 80).map((x: Record<string, unknown>) => ({
     item: str(x.item, 600), status: ["met", "partial", "missing", "changed"].includes(String(x.status)) ? String(x.status) : "partial", evidence: str(x.evidence, 400), action: str(x.action, 600),
   }));
-  const { score, verdict, coveragePct } = complianceScore(coverage, findings);
+  const scored = complianceScore(coverage, findings);
+  const { score, coveragePct } = scored;
+  const relation = body.mode === "single" ? undefined : judgeRelation(sanitiseMatch(out.match), [labelA, labelB]);
+  const verdict = relation?.status === "unrelated" ? "Documents not related" : relation?.status === "wrong-type" ? "Wrong document" : scored.verdict;
   const missing = coverage.filter((c) => c.status === "missing").map((c) => c.item);
-  res.json({ docType: str(out.docType, 80) || target?.title || "", score, verdict, coveragePct, summary: str(out.summary, 3000), strengths: strs(out.strengths), findings, missing, coverage });
+  res.json({ docType: str(out.docType, 80) || target?.title || "", score, verdict, relation, coveragePct, summary: str(out.summary, 3000), strengths: strs(out.strengths), findings, missing, coverage });
 }));
 
 // ---------------------------------------------------------------- Risk register

@@ -1,4 +1,6 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
+import { RelationBanner, relationBlocks } from "../../components/RelationBanner";
+import type { Relation } from "../../../../shared/docMatch";
 import { saveAs } from "file-saver";
 import { api } from "../../lib/api";
 import { csvText } from "../../lib/export";
@@ -15,7 +17,7 @@ import "./compliance.css";
 
 interface MatrixResult {
   projectName: string; strictness: Strictness; summary: string; score: number; verdict: string;
-  requirements: MatrixRow[]; conflicts: MatrixConflict[]; truncated?: boolean;
+  requirements: MatrixRow[]; conflicts: MatrixConflict[]; truncated?: boolean; relation?: Relation;
 }
 type Strictness = "lenient" | "normal" | "strict";
 type SortKey = "id" | "status" | "priority" | "category";
@@ -83,7 +85,8 @@ async function exportXlsx(res: MatrixResult, rows: MatrixRow[], accepted: Set<st
   sum.columns = [{ header: "Item", width: 30 }, { header: "Value", width: 90 }];
   const add = (k: string, v: string | number) => sum.addRow([k, v]);
   add("Project", res.projectName || "—"); add("Strictness", res.strictness);
-  add("Compliance score", `${s.score}/100`); add("Verdict", verdictLabel(s.score));
+  if (res.relation && res.relation.status !== "related") add("Document match", res.relation.message);
+  add("Compliance score", `${s.score}/100`); add("Verdict", relationBlocks(res.relation) ? res.verdict : verdictLabel(s.score));
   for (const st of MATRIX_STATUSES) add(`Requirements ${st}`, s.byStatus[st]);
   add("Summary", res.summary);
   add("Note", "AI-assisted analysis. It must be reviewed and accepted by the accountable person before use; it does not approve or certify either document.");
@@ -214,11 +217,12 @@ export default function ComplianceMatrix() {
         <div className="small muted">{t("A full matrix usually takes 1–3 minutes.")}</div></div>}
 
       {result && !busy && <>
+        <RelationBanner relation={result.relation} />
         <div className="cm-summary">
           <div className="hub-card cm-scorecard">
             <Gauge score={stats.score} />
             <div>
-              <div className="cm-verdict">{t(verdictLabel(stats.score))}</div>
+              <div className="cm-verdict">{relationBlocks(result.relation) ? t(result.verdict) : t(verdictLabel(stats.score))}</div>
               <div className="small muted">{rows.length} {t("EIR requirements")}{result.projectName ? ` · ${result.projectName}` : ""} · {t(STRICT_LABEL[result.strictness])}</div>
               <div className="cm-counts">{MATRIX_STATUSES.map((s) => (
                 <button key={s} className={"cm-count cm-" + s + (fStatus === s ? " on" : "")} onClick={() => setFStatus(fStatus === s ? "" : s)} aria-pressed={fStatus === s}>

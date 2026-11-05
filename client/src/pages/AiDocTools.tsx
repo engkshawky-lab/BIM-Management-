@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { RelationBanner } from "../components/RelationBanner";
+import type { Relation } from "../../../shared/docMatch";
 import { useSession } from "../App";
 import { DocMarkdown } from "../components/DocMarkdown";
 import { api } from "../lib/api";
@@ -16,7 +18,7 @@ import { ProjectDataGate, useGenerationReady } from "./ProjectData";
 // AI document generator (outline → section-by-section drafting) and AI document review (compliance matrix).
 
 const Field = ({ label, children }: { label: string; children: ReactNode }) => <label className="small" style={{ display: "grid", gap: 4, fontWeight: 400, margin: 0 }}><span className="muted">{label}</span>{children}</label>;
-const tone = (s: string) => (["critical", "missing", "Not fit for purpose"].includes(s) ? "var(--danger)" : ["major", "partial", "Major revisions", "changed"].includes(s) ? "var(--warn)" : ["minor", "Minor revisions"].includes(s) ? "var(--accent)" : "var(--ok)");
+const tone = (s: string) => (["critical", "missing", "Not fit for purpose", "Documents not related", "Wrong document"].includes(s) ? "var(--danger)" : ["major", "partial", "Major revisions", "changed"].includes(s) ? "var(--warn)" : ["minor", "Minor revisions"].includes(s) ? "var(--accent)" : "var(--ok)");
 const Pill = ({ text }: { text: string }) => <span className="badge" style={{ color: tone(text), borderColor: tone(text), background: "transparent", textTransform: "capitalize" }}>{text}</span>;
 const slug = (s: string) => s.replace(/[^\w-]+/g, "-").replace(/-+/g, "-").slice(0, 60);
 const load = <T,>(k: string): T | null => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) as T : null; } catch { return null; } };
@@ -196,7 +198,7 @@ export function GenerateTool({ initial = "" }: { initial?: string }) {
 
 interface Finding { severity: string; section: string; clause: string; issue: string; evidence: string; recommendation: string }
 interface Coverage { item: string; status: string; evidence: string; action: string }
-interface Review { docType: string; score: number; verdict: string; coveragePct: number; summary: string; strengths: string[]; missing: string[]; findings: Finding[]; coverage: Coverage[] }
+interface Review { relation?: Relation; docType: string; score: number; verdict: string; coveragePct: number; summary: string; strengths: string[]; missing: string[]; findings: Finding[]; coverage: Coverage[] }
 
 function DocInput({ label, file, setFile, text, setText }: { label: string; file: File | null; setFile: (f: File | null) => void; text: string; setText: (t: string) => void }) {
   return (
@@ -265,6 +267,7 @@ function reportMarkdown(r: Review, mode: string) {
   return [
     `# Document review report`,
     `**Document type:** ${r.docType || "—"}  `, ``,
+    ...(r.relation && r.relation.status !== "related" ? [`> **Document match:** ${r.relation.message}`, ``] : []),
     `| Score | Verdict | Requirement coverage | Critical | Major | Minor |`, `|---|---|---|---|---|---|`,
     `| ${r.score}/100 | ${r.verdict} | ${r.coveragePct}% | ${r.findings.filter((f) => f.severity === "critical").length} | ${r.findings.filter((f) => f.severity === "major").length} | ${r.findings.filter((f) => f.severity === "minor").length} |`, ``,
     `## 1 Summary`, r.summary, ``,
@@ -288,6 +291,7 @@ function ReviewResult({ r, mode }: { r: Review; mode: string }) {
   const total = Math.max(1, r.coverage.length);
   return (
     <div style={{ display: "grid", gap: 12 }}>
+      <RelationBanner relation={r.relation} />
       <div className="hub-card row" style={{ gap: 20, alignItems: "center" }}>
         <div style={{ width: 96, height: 96, borderRadius: "50%", background: `conic-gradient(${ring} ${r.score * 3.6}deg, var(--surface-2) 0)`, display: "grid", placeItems: "center", flexShrink: 0 }}>
           <div style={{ width: 74, height: 74, borderRadius: "50%", background: "var(--surface)", display: "grid", placeItems: "center", textAlign: "center" }}><div><b style={{ fontSize: 24, color: ring }}>{r.score}</b><div className="tiny muted">of 100</div></div></div>
