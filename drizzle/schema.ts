@@ -23,6 +23,8 @@ export const users = mysqlTable("users", {
   role: varchar("role", { length: 16 }).notNull().default("user"),
   bimRole: varchar("bim_role", { length: 32 }),
   favourites: json<string[] | null>("favourites"),
+  /** chosen theme colour (shared/palette.ts); null = the default palette */
+  appearance: json<{ color: string; tint: boolean } | null>("appearance"),
   createdAt: created(),
   lastLoginAt: datetime("last_login_at", { mode: "date" }),
   disabled: int("disabled").notNull().default(0),

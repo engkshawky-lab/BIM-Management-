@@ -753,3 +753,9 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .page-guide li { margin-block: 3px; }
 .page-guide-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
 @media (max-width: 760px) { .page-guide { margin-inline: 12px; } .page-guide-grid { grid-template-columns: 1fr; } }
+
+/* Theme colour picker (components/Appearance.tsx) */
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+.swatch { inline-size: 40px; block-size: 40px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-strong); color: #fff; font-weight: 700; padding: 0; cursor: pointer; }
+.swatch.on { box-shadow: 0 0 0 3px var(--text); }
+.menu-swatch { inline-size: 16px; block-size: 16px; border-radius: 50%; background: var(--accent); display: inline-block; flex: none; }

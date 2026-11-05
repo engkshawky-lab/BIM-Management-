@@ -19,4 +19,12 @@
     if (event.key === "bim:theme" || event.key === null) apply();
   });
   apply();
+  // the user's theme colour (client/src/lib/appearance.ts caches the generated stylesheet)
+  try {
+    const css = localStorage.getItem("bim:palette-css");
+    if (css && /^:root:root\{[^<]*$/.test(css)) {
+      const style = document.createElement("style"); style.id = "bim-palette"; style.textContent = css;
+      document.head.appendChild(style);
+    }
+  } catch { /* storage unavailable: default colours */ }
 })();

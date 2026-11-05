@@ -12,6 +12,8 @@ import { useDialog, useDismiss } from "../components/Dialog";
 import { useAccess } from "../lib/access";
 import { Announcement, useSite } from "../lib/site";
 import { PageGuideButton, PageGuidePanel } from "../components/PageGuide";
+import { AppearanceDialog } from "../components/Appearance";
+import { applyAppearance } from "../lib/appearance";
 
 // ---------------------------------------------------------------- per-user local conveniences
 
@@ -30,7 +32,7 @@ export function clearUserStorage() {
       for (let i = 0; i < area.length; i++) { const k = area.key(i); if (k && k.startsWith("bim:") && !KEEP_ON_SIGN_OUT.has(k)) keys.push(k); }
       keys.forEach((k) => area.removeItem(k));
     } catch { /* storage unavailable */ }
-  }
+  }  document.getElementById("bim-palette")?.remove();
 }
 
 export interface RecentEntry { path: string; label: string; ts: number }
@@ -130,7 +132,7 @@ function Inbox() {
   );
 }
 
-function UserMenu({ onRole, theme, setTheme, onHide }: { onRole: () => void; theme: Theme; setTheme: (t: Theme) => void; onHide: () => void }) {
+function UserMenu({ onRole, onColours, theme, setTheme, onHide }: { onRole: () => void; onColours: () => void; theme: Theme; setTheme: (t: Theme) => void; onHide: () => void }) {
   const { user, setUser } = useSession();
   const { site } = useSite();
   const [open, setOpen] = useState(false);
@@ -152,14 +154,15 @@ function UserMenu({ onRole, theme, setTheme, onHide }: { onRole: () => void; the
         {user.role === "admin" && <a href="#/admin"><Icon name="settings" size={16} />{t("Admin console")}</a>}
         <button onClick={onRole}><Icon name="target" size={16} />{t("Set my role")}</button>
         <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}><Icon name={theme === "dark" ? "sun" : "moon"} size={16} />{t(theme === "dark" ? "Light theme" : "Dark theme")}</button>
+        <button onClick={onColours}><span className="menu-swatch" aria-hidden="true" />{t("Theme colour")}</button>
         <button onClick={async () => { await api("/auth/logout", { body: {} }).catch(() => undefined); clearUserStorage(); setUser(null); navigate("/"); }}><Icon name="logout" size={16} />{t("Sign out")}</button>
       </div>}
     </div>
   );
 }
 
-function Sidebar({ route, projects, project, onAsk, onRole, onHide, theme, setTheme }: {
-  route: string; projects: Project[]; project?: Project; onAsk: () => void; onRole: () => void; onHide: () => void; theme: Theme; setTheme: (t: Theme) => void;
+function Sidebar({ route, projects, project, onAsk, onRole, onColours, onHide, theme, setTheme }: {
+  route: string; projects: Project[]; project?: Project; onAsk: () => void; onRole: () => void; onColours: () => void; onHide: () => void; theme: Theme; setTheme: (t: Theme) => void;
 }) {
   const { user } = useSession();
   const favs = new Set(user.favourites ?? []);
@@ -196,7 +199,7 @@ function Sidebar({ route, projects, project, onAsk, onRole, onHide, theme, setTh
 
   return (
     <aside className="sidebar no-print" aria-label="Main menu">
-      <UserMenu onRole={onRole} theme={theme} setTheme={setTheme} onHide={onHide} />
+      <UserMenu onRole={onRole} onColours={onColours} theme={theme} setTheme={setTheme} onHide={onHide} />
       <div className="sb-top">
         <label className="sb-search"><Icon name="search" size={15} /><input placeholder={t("Search sections…")} value={q} onChange={(e) => setQ(e.target.value)} />
           {q && <button className="icon-btn" onClick={() => setQ("")} aria-label={t("Clear")}><Icon name="close" size={13} /></button>}</label>
@@ -415,6 +418,10 @@ export default function Shell({ route, children }: { route: string; children: Re
   const [ask, setAsk] = useState(false);
   const [rolePicker, setRolePicker] = useState(false);
   const [theme, setTheme] = useTheme();
+  const [colours, setColours] = useState(false);
+  // the account's theme colour wins over this browser's cached copy (e.g. chosen on another device)
+  const appearance = JSON.stringify(user.appearance ?? null);
+  useEffect(() => { applyAppearance(JSON.parse(appearance)); }, [appearance]);
   useEffect(() => store.set(`bim:sidebar:${user.id}`, sidebar), [sidebar, user.id]);
 
   const loadProjects = useCallback(() => api<{ projects: Project[] }>("/projects").then((r) => setProjects(r.projects)).catch(() => undefined), []);
@@ -456,7 +463,7 @@ export default function Shell({ route, children }: { route: string; children: Re
   return (
     <div className={"shell" + (sidebar ? "" : " sb-hidden") + (drawer ? " sb-drawer" : "")}>
       <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); main.current?.focus(); }}>Skip to main content</a>
-      <Sidebar route={route} projects={projects} project={project} theme={theme} setTheme={setTheme}
+      <Sidebar route={route} projects={projects} project={project} theme={theme} setTheme={setTheme} onColours={() => setColours(true)}
         onAsk={() => setAsk(true)} onRole={() => setRolePicker(true)} onHide={() => (narrow() ? setDrawer(false) : setSidebar(false))} />
       {drawer && <div className="sb-backdrop" onClick={() => setDrawer(false)} />}
       <main className="main" id="main" tabIndex={-1} ref={main}>
@@ -473,6 +480,7 @@ export default function Shell({ route, children }: { route: string; children: Re
       </main>
       {palette && <CommandPalette projects={projects} project={project} onClose={() => setPalette(false)} />}
       {ask && <AskAi route={route} onClose={() => setAsk(false)} />}
+      {colours && <AppearanceDialog onClose={() => setColours(false)} />}
       {rolePicker && <RolePicker onClose={() => { setRolePicker(false); store.set(`bim:role-skipped:${user.id}`, true); }} />}
     </div>
   );
