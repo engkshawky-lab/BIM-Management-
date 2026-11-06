@@ -458,6 +458,9 @@ export default function Shell({ route, children }: { route: string; children: Re
     return ALL_PAGES.find((x) => x.scope === "global" && route === x.path) ?? locate(route).item;
   }, [route]);
 
+  // the page key lets a user's header-banner colour apply to this page only (shared/palette.ts bannerCss)
+  useEffect(() => { document.documentElement.dataset.page = pageItem?.key ?? ""; }, [pageItem]);
+
   const showMenu = () => (narrow() ? setDrawer(true) : setSidebar(true));
 
   return (
@@ -481,7 +484,7 @@ export default function Shell({ route, children }: { route: string; children: Re
       </main>
       {palette && <CommandPalette projects={projects} project={project} onClose={() => setPalette(false)} />}
       {ask && <AskAi route={route} onClose={() => setAsk(false)} />}
-      {colours && <AppearanceDialog onClose={() => setColours(false)} />}
+      {colours && <AppearanceDialog page={pageItem ? { key: pageItem.key, label: pageItem.label } : undefined} onClose={() => setColours(false)} />}
       {rolePicker && <RolePicker onClose={() => { setRolePicker(false); store.set(`bim:role-skipped:${user.id}`, true); }} />}
     </div>
   );

@@ -8,6 +8,10 @@ export interface Appearance {
   tint: boolean;
   /** page background colour; replaces the tint when set */
   page?: string | null;
+  /** colour of every page's header banner (null = each page keeps its own colour) */
+  banner?: string | null;
+  /** header banner colour for individual pages, keyed by page key; wins over `banner` */
+  banners?: Record<string, string>;
 }
 export const DEFAULT_APPEARANCE: Appearance = { color: "#3e5f9d", tint: false, page: null };
 
@@ -126,8 +130,38 @@ export function paletteVars(a: Appearance): { light: Record<string, string>; dar
 
 /** A stylesheet overriding the theme tokens; doubled :root beats the base palette regardless of load order. */
 export function paletteCss(a: Appearance): string {
-  if (a.color.toLowerCase() === DEFAULT_APPEARANCE.color && !a.tint && !(a.page && isHex(a.page))) return "";
+  const custom = a.color.toLowerCase() !== DEFAULT_APPEARANCE.color || a.tint || !!(a.page && isHex(a.page));
+  const banners = bannerCss(a);
+  if (!custom) return banners;
   const v = paletteVars(a);
   const block = (sel: string, vars: Record<string, string>) => `${sel}{${Object.entries(vars).map(([k, x]) => `${k}:${x}`).join(";")}}`;
-  return block(":root:root", v.light) + block(':root:root[data-theme="dark"]', v.dark);
+  return block(":root:root", v.light) + block(':root:root[data-theme="dark"]', v.dark) + banners;
+}
+
+const DARK_INK = "#16212b";
+/** Text colour for a banner: whichever of white and near-black reads better on it. */
+export const bannerText = (c: string) => (contrast("#ffffff", c) >= contrast(DARK_INK, c) ? "#ffffff" : DARK_INK);
+/** The banner colour actually used: mid tones are nudged lighter or darker until the text reads at 4.5:1. */
+export function bannerColours(c: string): { bg: string; text: string } {
+  const text = bannerText(c);
+  const bg = reach(c, text === "#ffffff" ? "#000000" : "#ffffff", [text], 4.5);
+  return { bg, text };
+}
+const PAGE_KEY = /^[\w.\-/:]{1,80}$/;
+
+/** Header banner rules: one colour for every page, and per-page overrides (selected by html[data-page]). */
+export function bannerCss(a: Appearance): string {
+  // the page's own colour (--hub: titles, tabs, table headers) follows the banner, adjusted to read on the surfaces
+  const rule = (scope: string, dark: string, chosen: string) => {
+    const { bg: c, text: t } = bannerColours(chosen), soft = t === "#ffffff" ? "rgba(255,255,255,.18)" : "rgba(0,0,0,.08)", line = t === "#ffffff" ? "rgba(255,255,255,.3)" : "rgba(0,0,0,.18)";
+    const hubLight = reach(chosen, "#000000", [LIGHT.surface, LIGHT.bg], 4.5), hubDark = reach(chosen, "#ffffff", [DARK.surface, DARK.bg], 4.5);
+    return `${scope} .hub{--hub:${hubLight} !important}${dark} .hub{--hub:${hubDark} !important}` +
+      `${scope} .hub-hero{background:${c};color:${t}}${scope} .hub-hero h1,${scope} .hub-hero .eyebrow,${scope} .hub-hero p{color:${t}}` +
+      `${scope} .hub-hero .facts span{background:${soft};border-color:${line};color:${t}}` +
+      `${scope} :is(.page-head,.home-head){background:linear-gradient(100deg,${c},${mix(c, t === "#ffffff" ? "#000000" : "#ffffff", 0.12)});color:${t}}` +
+      `${scope} :is(.page-head,.home-head) :is(h1,h2,p,span,small,.muted,.eyebrow,.crumbs,.crumbs a,.crumbs b){color:${t}}`;
+  };
+  let css = a.banner && isHex(a.banner) ? rule(":root:root", ':root:root[data-theme="dark"]', a.banner.toLowerCase()) : "";
+  for (const [k, c] of Object.entries(a.banners ?? {})) if (PAGE_KEY.test(k) && isHex(c)) css += rule(`:root:root[data-page="${k}"]`, `:root:root[data-theme="dark"][data-page="${k}"]`, c.toLowerCase());
+  return css;
 }

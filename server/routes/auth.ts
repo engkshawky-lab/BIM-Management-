@@ -151,7 +151,9 @@ r.put("/profile", requireUser, h(async (req, res) => {
     emailPref: z.enum(["instant", "digest", "off"]),
     locale: z.enum(["en", "ar"]),
     appearance: z.object({ color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "use a #RRGGBB colour").transform((c) => c.toLowerCase()), tint: z.boolean(),
-      page: z.string().regex(/^#[0-9a-fA-F]{6}$/, "use a #RRGGBB colour").transform((c) => c.toLowerCase()).nullable().optional() }).nullable(),
+      page: z.string().regex(/^#[0-9a-fA-F]{6}$/, "use a #RRGGBB colour").transform((c) => c.toLowerCase()).nullable().optional(),
+      banner: z.string().regex(/^#[0-9a-fA-F]{6}$/, "use a #RRGGBB colour").transform((c) => c.toLowerCase()).nullable().optional(),
+      banners: z.record(z.string().regex(/^[\w.\-/:]{1,80}$/), z.string().regex(/^#[0-9a-fA-F]{6}$/).transform((c) => c.toLowerCase())).refine((o) => Object.keys(o).length <= 300, "too many pages").optional() }).nullable(),
   }).partial(), req.body, res); if (!body) return;
   if (!Object.keys(body).length) return res.status(400).json({ error: "Nothing to change." });
   await db.update(schema.users).set(body).where(eq(schema.users.id, req.user!.id));

@@ -40,3 +40,18 @@ describe("page colour", () => {
     expect(paletteCss({ color: "#3e5f9d", tint: false, page: null })).toBe("");
   });
 });
+
+describe("header banner colour", () => {
+  it("colours every banner, or one page's, with readable text", async () => {
+    const { bannerCss, bannerText, bannerColours } = await import("./palette");
+    expect(bannerText("#1f2f55")).toBe("#ffffff");
+    expect(bannerText("#c3b5f2")).toBe("#16212b");
+    for (const c of ["#ffff00", "#c3b5f2", "#1f2f55", "#7f7f7f", "#ff0000", "#3e5f9d"]) { const b = bannerColours(c); expect(contrast(b.text, b.bg), c).toBeGreaterThanOrEqual(4.5); }
+    const all = bannerCss({ color: "#3e5f9d", tint: false, banner: "#1f2f55" });
+    expect(all).toContain(":root:root .hub-hero{background:#1f2f55;color:#ffffff}");
+    const one = bannerCss({ color: "#3e5f9d", tint: false, banners: { "s.hub.implementation": "#c3b5f2", 'bad"]{x}': "#000000" } });
+    expect(one).toContain(':root:root[data-page="s.hub.implementation"] .hub-hero{background:#c3b5f2;color:#16212b}');
+    expect(one).not.toContain("bad");
+    expect(paletteCss({ color: "#3e5f9d", tint: false, banner: "#1f2f55" })).toBe(all);
+  });
+});

@@ -23,7 +23,7 @@ export async function api<T = unknown>(path: string, opts: { method?: string; bo
 
 export interface User {
   id: string; email: string; name: string; organization: string; jobTitle: string; phone: string; bio: string | null;
-  role: string; bimRole: string | null; favourites: string[] | null; appearance?: { color: string; tint: boolean; page?: string | null } | null; emailPref?: string; locale?: string; createdAt: string; lastLoginAt: string | null;
+  role: string; bimRole: string | null; favourites: string[] | null; appearance?: { color: string; tint: boolean; page?: string | null; banner?: string | null; banners?: Record<string, string> } | null; emailPref?: string; locale?: string; createdAt: string; lastLoginAt: string | null;
   emailVerifiedAt?: string | null; mustVerify?: boolean;
 }
 

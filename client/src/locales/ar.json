@@ -25275,5 +25275,19 @@
 "Blush": "وردي فاتح",
 "Cool grey": "رمادي بارد",
 "Sage": "أخضر مريمي",
-"Peach": "خوخي"
+"Peach": "خوخي",
+"Header banner colour": "لون شريط العنوان",
+"The coloured band at the top of a page with its title. Text on it turns white or dark automatically.": "الشريط الملوّن أعلى الصفحة الذي يحمل عنوانها. يتحول النص عليه إلى الأبيض أو الداكن تلقائيًا.",
+"Apply to": "التطبيق على",
+"All pages": "كل الصفحات",
+"This page only": "هذه الصفحة فقط",
+"Open the colours from a page to colour that page only": "افتح الألوان من صفحة لتلوين تلك الصفحة فقط",
+"Same as all pages": "مثل كل الصفحات",
+"Each page's own colour": "اللون الخاص بكل صفحة",
+"Custom banner colour": "لون شريط مخصص",
+"Pages with their own banner colour": "صفحات لها لون شريط خاص",
+"Clear page colours": "مسح ألوان الصفحات",
+"Lilac": "ليلكي",
+"Navy": "كحلي",
+"Charcoal": "فحمي"
 }

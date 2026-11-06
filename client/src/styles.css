@@ -766,3 +766,4 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .appearance-section { margin-top: 14px; }
 .appearance-section h3 { font-size: 14px; margin: 0 0 4px; }
 @media (max-width: 700px) { .colour-btn .colour-label { display: none; } }
+.swatch.banner-default { background: conic-gradient(var(--accent) 0 25%, var(--ok) 0 50%, var(--purple) 0 75%, var(--warn) 0); color: #fff; }

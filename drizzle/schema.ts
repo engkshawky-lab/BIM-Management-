@@ -24,7 +24,7 @@ export const users = mysqlTable("users", {
   bimRole: varchar("bim_role", { length: 32 }),
   favourites: json<string[] | null>("favourites"),
   /** chosen theme colour (shared/palette.ts); null = the default palette */
-  appearance: json<{ color: string; tint: boolean; page?: string | null } | null>("appearance"),
+  appearance: json<{ color: string; tint: boolean; page?: string | null; banner?: string | null; banners?: Record<string, string> } | null>("appearance"),
   createdAt: created(),
   lastLoginAt: datetime("last_login_at", { mode: "date" }),
   disabled: int("disabled").notNull().default(0),
