@@ -1,4 +1,5 @@
 import type { Hub } from "./types";
+import { CLAUDE_CHATGPT_SECTION } from "./aiConnectSteps";
 
 // Connect AI to Revit, AutoCAD, Navisworks & Civil 3D: practical routes for using Claude (Claude Desktop, Claude Code)
 // and ChatGPT (web, desktop app, Codex) with Autodesk desktop software.
@@ -210,6 +211,8 @@ export const aiConnectHub: Hub = {
         },
       ],
     },
+    // ======================================================================== Claude & ChatGPT step by step
+    CLAUDE_CHATGPT_SECTION,
     // ======================================================================== 2. Revit
     {
       id: "revit",

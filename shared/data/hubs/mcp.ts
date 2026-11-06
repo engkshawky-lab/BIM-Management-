@@ -189,6 +189,46 @@ export const mcpHub: Hub = {
         },
         // ------------------------------------------------------------------ BIM-related servers
         {
+          id: "chatgpt",
+          label: "Connect in ChatGPT",
+          blocks: [
+            {
+              kind: "table",
+              title: "ChatGPT products and MCP",
+              columns: ["Product", "Local (stdio) servers", "Remote (HTTPS) servers", "Where you add them"],
+              rows: [
+                ["ChatGPT on the web", "No", "Yes, on eligible plans", "Custom MCP server from Plugins or the connectors settings, with a public HTTPS address"],
+                ["ChatGPT desktop app", "Where offered for your plan", "Yes", "Settings > MCP servers > Add server (STDIO or Streamable HTTP)"],
+                ["Codex CLI / IDE extension", "Yes", "Yes", "codex mcp add <name> -- <command>, or [mcp_servers.<name>] in ~/.codex/config.toml"],
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Add a local server to Codex",
+              steps: [
+                { title: "Register it", body: "codex mcp add revit -- \"C:\\Program Files\\…\\Server.exe\" (use the server's documented command)." },
+                { title: "Or edit the file", body: "In ~/.codex/config.toml add a [mcp_servers.revit] table with command = \"…\" and args = []. The CLI and the VS Code extension share this file." },
+                { title: "Check", body: "Start Codex and run /mcp to see the server and its tools; approvals follow Codex's approval mode." },
+              ],
+            },
+            {
+              kind: "steps",
+              title: "Add a remote server to ChatGPT on the web",
+              steps: [
+                { title: "Have an HTTPS address", body: "The server must be reachable over HTTPS with sign-in (OAuth or a token). A server on your PC needs an approved tunnel first." },
+                { title: "Add it", body: "Add a custom MCP server in ChatGPT with its name and address; an administrator may have to allow custom servers for Business and Enterprise workspaces." },
+                { title: "Use it", body: "Turn it on for the conversation and start with read-only questions. Each user signs in with their own account." },
+              ],
+            },
+            {
+              kind: "callout",
+              title: "Step-by-step guides for Revit and AutoCAD",
+              body: "The hub 'Connect AI to Revit, AutoCAD, Navisworks & Civil 3D' has a 'Claude & ChatGPT step by step' section with exact entries for Claude Desktop, Claude Code, the ChatGPT desktop app and Codex, a troubleshooting table and log locations.",
+              tone: "info",
+            },
+          ],
+        },
+        {
           id: "bim-servers",
           label: "BIM-related MCP servers",
           blocks: [
