@@ -48,6 +48,7 @@ import billing, { publicPlans } from "./routes/billing";
 import { adminSettings, maintenanceGate, publicSite } from "./routes/siteSettings";
 import { loadAppSettings } from "./appSettings";
 import { aiQuota, sectionGate } from "./billing";
+import certificates, { publicCertificates } from "./routes/certificates";
 import { paymentsRouter, stripeWebhook } from "./payments";
 import { startScheduler } from "./agents";
 import standards from "./routes/standards";
@@ -83,10 +84,10 @@ app.get("/api/health", async (_req, res) => {
   try { await db.execute(sql`select 1`); res.json({ ok: true }); }
   catch { res.status(503).json({ ok: false, error: "Database unavailable." }); }
 });
-app.use("/api", publicPlans, publicSite, clientErrors, publicContact);
+app.use("/api", publicPlans, publicSite, clientErrors, publicContact, publicCertificates);
 app.use("/api", maintenanceGate);
 app.use("/api", auth, account);
-app.use("/api", requireUser, requireVerified, sectionGate, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, adminEmail, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, news, adminSettings, adminInsights);
+app.use("/api", requireUser, requireVerified, sectionGate, aiQuota, billing, paymentsRouter, projects, files, documents, delivery, validation, coordination, registers, reviews, meetings, traceability, dashboard, learn, admin, adminEmail, automation, aiwork, fourd, talent, standards, ai, aitools, toolsIds, toolsComms, toolsCompliance, toolsModelQa, toolsClash, toolsAgent, toolsProgramme, toolsEirWriter, toolsBepWriter, toolsSheetQa, toolsAudit, connectors, library, companyVideos, certificates, news, adminSettings, adminInsights);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));
 
 app.use((err: Error & { code?: string }, req: Request, res: Response, _next: NextFunction) => {

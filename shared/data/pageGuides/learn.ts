@@ -129,13 +129,19 @@ export const GUIDES_LEARN: PageGuide[] = [
     [
       ["Pick a path card; each shows its weeks, number of steps, total time, related videos and your progress.", "اختر بطاقة مسار؛ تعرض كل بطاقة عدد الأسابيع والخطوات والوقت الإجمالي والفيديوهات ذات الصلة وتقدّمك."],
       ["Read each step's purpose, its type (Read, Practise, Tool or Quiz) and its estimated minutes.", "اقرأ الغرض من كل خطوة ونوعها («قراءة» أو «تدرّب» أو «الأداة» أو «اختبار») والدقائق المقدّرة لها."],
-      ["Click Open → to go to the page for that step; click a video thumbnail to play a related video on the page.", "انقر «فتح →» للانتقال إلى صفحة تلك الخطوة؛ وانقر على صورة مصغّرة لتشغيل فيديو ذي صلة داخل الصفحة."],
+      ["Click Read the written lesson → (or Open →) to read the step's written explanation; click a video thumbnail to play it on the page. Videos marked Our video come from your organisation's Our videos page.", "انقر «اقرأ الشرح المكتوب →» (أو «فتح →») لقراءة الشرح المكتوب للخطوة؛ وانقر على صورة مصغّرة لتشغيل الفيديو داخل الصفحة. الفيديوهات الموسومة «فيديو من فريقنا» مأخوذة من صفحة «فيديوهاتنا» الخاصة بمؤسستك."],
       ["Tick Mark as done when you finish a step; the Continue button jumps to the next unfinished step.", "ضع علامة على «وضع علامة كمنجز» عند إنهاء خطوة؛ وينقلك زر «متابعة» إلى الخطوة التالية غير المنجزة."],
       ["Click Reset progress to clear the path and start again.", "انقر «إعادة ضبط التقدم» لمسح المسار والبدء من جديد."],
+      ["When every step is done, click Start the final exam: answer the questions before the timer ends, then click Submit exam.", "عند إنجاز كل الخطوات، انقر «ابدأ الامتحان النهائي»: أجب عن الأسئلة قبل انتهاء المؤقت، ثم انقر «تسليم الامتحان»."],
+      ["With 75% or more, click Open my certificate to print it or save it as PDF, and share its verification link.", "إذا حصلت على 75% أو أكثر، انقر «افتح شهادتي» لطباعتها أو حفظها PDF، وشارك رابط التحقق منها."],
     ],
-    [["Step progress for each path saved in this browser", "تقدّم الخطوات لكل مسار محفوظ في هذا المتصفح"]], [],
+    [["Step progress for each path saved in this browser", "تقدّم الخطوات لكل مسار محفوظ في هذا المتصفح"],
+      ["Exam score with a review of every answer", "نتيجة الامتحان مع مراجعة كل إجابة"],
+      ["A signed certificate with a public verification link (score 75% or more)", "شهادة موقّعة برابط تحقق عام (عند 75% أو أكثر)"]],
+    [["All steps marked as done before the final exam", "إنجاز كل الخطوات قبل الامتحان النهائي"]],
     [
-      ["When every step is done, the page points you to the mock exams on the Learn page.", "عند إنجاز جميع الخطوات، توجّهك الصفحة إلى الاختبارات التجريبية في صفحة التعلّم."],
+      ["Each exam draws random questions on the path's topics; you have 3 attempts in any 24 hours, and unanswered questions count as wrong.", "يختار كل امتحان أسئلة عشوائية من موضوعات المسار؛ ولديك 3 محاولات خلال أي 24 ساعة، وتُحتسب الأسئلة غير المجابة خاطئة."],
+      ["Autodesk certificates are issued only by Autodesk or an Autodesk Authorized Training Center; the result page links to their certification.", "تصدر شهادات Autodesk فقط من Autodesk أو مركز تدريب معتمد منها؛ وتربطك صفحة النتيجة بصفحة شهاداتهم."],
       ["Progress is kept per browser, so it does not follow you to another device.", "يُحفظ التقدم لكل متصفح على حدة، فلا ينتقل معك إلى جهاز آخر."],
     ]),
 
@@ -163,6 +169,7 @@ export const GUIDES_LEARN: PageGuide[] = [
       ["Click a video card to play it; each play adds to its view count.", "انقر على بطاقة فيديو لتشغيله؛ وتُضاف كل مرة تشغيل إلى عدد مشاهداته."],
       ["Administrators: click + Add a video, then choose Upload a file or YouTube or Vimeo link.", "للمسؤولين: انقر «+ إضافة فيديو»، ثم اختر «رفع ملف» أو «رابط YouTube أو Vimeo»."],
       ["Fill in Title, Description, Topic and Language, then click Add video; a progress bar shows the upload.", "املأ «العنوان» و«الوصف» و«الموضوع» و«اللغة»، ثم انقر «أضف الفيديو»؛ ويعرض شريط تقدّم حالة الرفع."],
+      ["Administrators: under Show in learning paths, tick the roles and steps where the video should appear (or click Suggest from topic and title).", "للمسؤولين: ضمن «العرض في مسارات التعلم»، حدد الأدوار والخطوات التي يظهر فيها الفيديو (أو انقر «اقتراح حسب الموضوع والعنوان»)."],
       ["Administrators: click Edit or Delete on a card to change a video's details or remove it.", "للمسؤولين: انقر «تعديل» أو «حذف» على البطاقة لتغيير تفاصيل الفيديو أو إزالته."],
     ],
     [["Added videos, listed for everyone signed in (administrators only)", "الفيديوهات المضافة، وتظهر لكل المستخدمين المسجّلين (للمسؤولين فقط)"]],
@@ -173,6 +180,7 @@ export const GUIDES_LEARN: PageGuide[] = [
     [
       ["MP4 (H.264) plays in every browser.", "صيغة MP4 (H.264) تعمل في جميع المتصفحات."],
       ["Only upload videos you have the right to share.", "لا ترفع إلا الفيديوهات التي يحق لك مشاركتها."],
+      ["A video with no learning-path steps ticked is placed automatically in the steps that match its topic.", "الفيديو الذي لم تُحدد له خطوات يوضع تلقائيًا في الخطوات المطابقة لموضوعه."],
     ]),
 
   g("s.adoption",

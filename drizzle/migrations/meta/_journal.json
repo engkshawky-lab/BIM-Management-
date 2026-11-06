@@ -218,6 +218,13 @@
       "when": 1793877578337,
       "tag": "0030_user_appearance",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1793960000000,
+      "tag": "0031_path_exams_certificates",
+      "breakpoints": true
     }
   ]
 }

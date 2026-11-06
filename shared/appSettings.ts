@@ -13,7 +13,7 @@ export interface SettingDef {
   public?: boolean;
 }
 
-export const SETTING_GROUPS = ["General", "Sign-up & access", "Announcement", "Plans & billing", "AI", "Uploads", "Email & schedules", "Logging"] as const;
+export const SETTING_GROUPS = ["General", "Sign-up & access", "Announcement", "Plans & billing", "AI", "Uploads", "Certificates", "Email & schedules", "Logging"] as const;
 export type SettingGroup = (typeof SETTING_GROUPS)[number];
 
 const onOff = (v: string) => v === "on" || v === "true" || v === "1";
@@ -57,6 +57,10 @@ export const SETTINGS: SettingDef[] = [
   { key: "maxUploadMb", group: "Uploads", label: "Largest project file (MB)", help: "For project files and the downloads library. A reverse proxy needs the same limit.", type: "number", default: 250, min: 1, max: 10240, env: "MAX_UPLOAD_MB", fromEnv: num },
   { key: "videoMaxMb", group: "Uploads", label: "Largest video (MB)", help: "For Our videos.", type: "number", default: 2048, min: 1, max: 20480, env: "VIDEO_MAX_MB", fromEnv: num },
   // Email & schedules
+  { key: "certIssuer", group: "Certificates", label: "Issued by", help: "Organisation named on learning-path certificates. Empty = the company name.", type: "text", default: "" },
+  { key: "certSignatoryName", group: "Certificates", label: "Signatory name", help: "The person who signs the certificates, e.g. the training director. Upload the signature image below the settings.", type: "text", default: "" },
+  { key: "certSignatoryTitle", group: "Certificates", label: "Signatory title", help: "Shown under the signature, e.g. CEO or Head of BIM training.", type: "text", default: "" },
+  { key: "certAutodeskUrl", group: "Certificates", label: "Autodesk certification link", help: "Where people who pass are sent to earn an Autodesk certificate (issued only by Autodesk or an Autodesk Authorized Training Center), e.g. your ATC course page.", type: "url", default: "https://www.autodesk.com/certification" },
   { key: "scheduler", group: "Email & schedules", label: "Background jobs", help: "Daily quality snapshots, the email digest and scheduled automations.", type: "bool", default: true, env: "SCHEDULER", fromEnv: (v) => v !== "off" },
   { key: "digestHourUtc", group: "Email & schedules", label: "Daily digest hour (UTC)", help: "When the daily email digest is sent, 0–23.", type: "number", default: 6, min: 0, max: 23, env: "DIGEST_HOUR_UTC", fromEnv: num },
   // Logging

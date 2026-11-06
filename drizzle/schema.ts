@@ -701,9 +701,42 @@ export const companyVideos = mysqlTable("company_videos", {
   size: bigint("size", { mode: "number" }).notNull().default(0),
   storageKey: varchar("storage_key", { length: 255 }).notNull().default(""),
   views: int("views").notNull().default(0),
+  /** where the video appears in the learning paths: a path, optionally one of its steps (empty = the path's overview) */
+  placements: json<{ pathId: string; step: string }[]>("placements"),
   uploadedBy: ref("uploaded_by").notNull(),
   createdAt: created(),
 }, (t) => [index("company_videos_topic").on(t.topic)]);
+
+/** A learning-path final exam: the questions are drawn and kept on the server, so the score can be trusted. */
+export const pathExams = mysqlTable("path_exams", {
+  id: id(),
+  userId: ref("user_id").notNull(),
+  pathId: varchar("path_id", { length: 40 }).notNull(),
+  questionIds: json<string[]>("question_ids").notNull(),
+  startedAt: datetime("started_at", { mode: "date" }).notNull(),
+  expiresAt: datetime("expires_at", { mode: "date" }).notNull(),
+  submittedAt: datetime("submitted_at", { mode: "date" }),
+  score: int("score").notNull().default(0),
+  total: int("total").notNull().default(0),
+  pct: int("pct").notNull().default(0),
+  passed: boolean("passed").notNull().default(false),
+}, (t) => [index("path_exams_user").on(t.userId, t.pathId)]);
+
+/** Certificate issued for passing a learning-path exam; anyone can verify it by its code. */
+export const certificates = mysqlTable("certificates", {
+  id: id(),
+  code: varchar("code", { length: 20 }).notNull(),
+  userId: ref("user_id").notNull(),
+  examId: ref("exam_id").notNull(),
+  name: varchar("name", { length: 160 }).notNull(),
+  pathId: varchar("path_id", { length: 40 }).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  pct: int("pct").notNull(),
+  issuer: varchar("issuer", { length: 160 }).notNull(),
+  signatoryName: varchar("signatory_name", { length: 160 }).notNull().default(""),
+  signatoryTitle: varchar("signatory_title", { length: 160 }).notNull().default(""),
+  issuedAt: datetime("issued_at", { mode: "date" }).notNull(),
+}, (t) => [uniqueIndex("certificates_code").on(t.code), index("certificates_user").on(t.userId)]);
 
 /** One row per completed Claude API response, including pause-turn continuations. Independent of quotas. */
 export const aiTokenUsage = mysqlTable("ai_token_usage", {

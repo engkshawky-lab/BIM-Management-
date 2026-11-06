@@ -3,7 +3,8 @@ import { useDialog } from "../components/Dialog";
 import { useSession } from "../App";
 import { t } from "../i18n";
 import { api } from "../lib/api";
-import { COMPANY_VIDEO_TOPICS, VIDEO_FILE_ACCEPT, embedFor, type CompanyVideo } from "../../../shared/companyVideos";
+import { COMPANY_VIDEO_TOPICS, VIDEO_FILE_ACCEPT, embedFor, suggestPlacements, type CompanyVideo, type VideoPlacement } from "../../../shared/companyVideos";
+import { LEARNING_PATHS } from "../../../shared/data/learningPaths";
 import { TONES } from "./HubPage";
 import "./videos.css";
 
@@ -121,17 +122,19 @@ function VideoForm({ video, onDone }: { video: CompanyVideo | null; onDone: (sav
   const [file, setFile] = useState<File | null>(null);
   const [link, setLink] = useState("");
   const [f, setF] = useState(video ? { title: video.title, description: video.description, topic: video.topic, lang: video.lang } : blank);
+  const [placements, setPlacements] = useState<VideoPlacement[]>(video?.placements ?? []);
   const [progress, setProgress] = useState<number | null>(null);
   const set = (k: keyof typeof blank) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
 
   const save = async () => {
     if (video) {
-      try { await api(`/company-videos/${video.id}`, { method: "PUT", body: f }); toast(t("Video updated")); onDone(true); } catch (e) { toast((e as Error).message, "error"); }
+      try { await api(`/company-videos/${video.id}`, { method: "PUT", body: { ...f, placements } }); toast(t("Video updated")); onDone(true); } catch (e) { toast((e as Error).message, "error"); }
       return;
     }
     const form = new FormData();
     const title = f.title.trim() || (file ? file.name.replace(/\.[^.]+$/, "") : "");
     Object.entries({ ...f, title }).forEach(([k, v]) => form.set(k, v));
+    form.set("placements", JSON.stringify(placements));
     if (mode === "file" && file) form.set("file", file); else form.set("link", link);
     // XMLHttpRequest rather than fetch, for upload progress on large files
     setProgress(0);
@@ -166,6 +169,7 @@ function VideoForm({ video, onDone }: { video: CompanyVideo | null; onDone: (sav
         <div><label htmlFor="ourvideos-topic">{t("Topic")}</label><select id="ourvideos-topic" value={f.topic} onChange={set("topic")}>{COMPANY_VIDEO_TOPICS.map((tp) => <option key={tp} value={tp}>{t(tp)}</option>)}</select></div>
         <div><label htmlFor="ourvideos-language">{t("Language")}</label><select id="ourvideos-language" value={f.lang} onChange={set("lang")}><option value="en">{t("English")}</option><option value="ar">{t("Arabic")}</option></select></div>
       </div>
+      <PlacementPicker value={placements} onChange={setPlacements} topic={f.topic} title={f.title + " " + f.description} />
       {progress !== null && <div className="vid-progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><span style={{ width: progress + "%" }} />{progress}%</div>}
       <div className="row">
         <button type="button" className="primary" disabled={!ready || progress !== null} onClick={save}>{progress !== null ? t("Uploading…") : video ? t("Save") : t("Add video")}</button>
@@ -173,6 +177,27 @@ function VideoForm({ video, onDone }: { video: CompanyVideo | null; onDone: (sav
       </div>
       {!video && <p className="small muted">{t("Only upload videos you have the right to share. MP4 (H.264) plays in every browser.")}</p>}
     </div>
+  );
+}
+
+/** Where the video appears in the learning paths: a path's overview and/or particular steps. */
+function PlacementPicker({ value, onChange, topic, title }: { value: VideoPlacement[]; onChange: (v: VideoPlacement[]) => void; topic: string; title: string }) {
+  const has = (pathId: string, step: string) => value.some((p) => p.pathId === pathId && p.step === step);
+  const flip = (pathId: string, step: string) => onChange(has(pathId, step) ? value.filter((p) => !(p.pathId === pathId && p.step === step)) : [...value, { pathId, step }]);
+  const suggest = () => { const s = suggestPlacements(topic, title); onChange([...value, ...s.filter((x) => !has(x.pathId, x.step))]); };
+  return (
+    <fieldset className="vid-placements">
+      <legend>{t("Show in learning paths")} {value.length > 0 && <span className="badge">{value.length}</span>}</legend>
+      <p className="small muted">{t("Tick the roles and steps this video belongs to. It appears beside the step's written explanation; “Path overview” shows it at the top of the path. If you tick nothing, it is placed automatically from its topic.")}</p>
+      <button type="button" className="small" onClick={suggest}>✦ {t("Suggest from topic and title")}</button>
+      {LEARNING_PATHS.map((lp) => { const n = value.filter((p) => p.pathId === lp.id).length; return (
+        <details key={lp.id} open={n > 0}>
+          <summary><b>{t(lp.role)}</b> <span className="small muted">· {t(lp.title)}</span> {n > 0 && <span className="badge">{n}</span>}</summary>
+          <label className="row small vid-place"><input type="checkbox" checked={has(lp.id, "")} onChange={() => flip(lp.id, "")} /> <i>{t("Path overview")}</i></label>
+          {lp.steps.map((st, i) => (
+            <label key={st.title} className="row small vid-place"><input type="checkbox" checked={has(lp.id, st.title)} onChange={() => flip(lp.id, st.title)} /> {i + 1}. {t(st.title)}</label>))}
+        </details>); })}
+    </fieldset>
   );
 }
 

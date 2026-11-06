@@ -1,0 +1,33 @@
+.cert-page { padding: 16px; background: var(--bg); min-height: 100vh; }
+.cert-bar { max-width: 1000px; margin: 0 auto 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cert-ok { color: var(--ok, #2e7d4f); font-weight: 600; }
+.cert-sheet { max-width: 1000px; margin: 0 auto; aspect-ratio: 297 / 210; background: #fffdf8; color: #1d2a36; padding: 18px;
+  border-radius: 6px; box-shadow: 0 6px 30px rgba(0, 0, 0, .15); font-family: Georgia, "Times New Roman", serif; }
+.cert-inner { height: 100%; border: 3px double #2f4f8a; outline: 1px solid #b89b4f; outline-offset: -10px; padding: 4% 6%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.cert-issuer { font-family: "Segoe UI", Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase; font-size: clamp(10px, 1.4vw, 14px); color: #2f4f8a; font-weight: 700; }
+.cert-kicker { font-size: clamp(22px, 3.8vw, 44px); color: #2f4f8a; margin-top: 2%; }
+.cert-kicker-ar { font-size: clamp(13px, 1.7vw, 20px); color: #8a6a12; margin-top: .3%; }
+.cert-line { margin: 1.4% 0 .4%; font-size: clamp(11px, 1.5vw, 17px); font-style: italic; color: #4a5a6a; }
+.cert-name { font-size: clamp(22px, 3.6vw, 42px); font-weight: 700; border-bottom: 1px solid #b89b4f; padding: 0 4% 1%; min-width: 50%; }
+.cert-title { font-size: clamp(15px, 2.2vw, 26px); font-weight: 600; color: #1d2a36; }
+.cert-foot { margin-top: auto; width: 100%; display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 4%; align-items: end; font-family: "Segoe UI", Arial, sans-serif; font-size: clamp(9px, 1.15vw, 13px); }
+.cert-foot > div { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.cert-foot span { color: #5b6b78; }
+.cert-sign img { max-height: 70px; max-width: 220px; object-fit: contain; }
+.cert-sign-blank { height: 50px; }
+.cert-sign-line { width: 80%; border-top: 1px solid #1d2a36; margin-bottom: 2px; }
+.cert-code b { font-family: ui-monospace, Consolas, monospace; letter-spacing: .06em; }
+.cert-code span { font-size: .85em; word-break: break-all; }
+.cert-std { margin-top: 2%; font-family: "Segoe UI", Arial, sans-serif; font-size: clamp(8px, 1vw, 11px); color: #7a8794; letter-spacing: .08em; text-transform: uppercase; }
+.cert-autodesk { border-left: 3px solid #0696d7; }
+.cert-admin { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 10px; }
+.cert-admin h3 { font-size: 14px; margin: 8px 0; }
+.cert-sig-preview { width: 240px; height: 80px; border: 1px dashed var(--border-strong); border-radius: 6px; display: grid; place-items: center; background: #fff; }
+.cert-sig-preview img { max-width: 230px; max-height: 74px; object-fit: contain; }
+@media print {
+  @page { size: A4 landscape; margin: 0; }
+  body * { visibility: hidden; }
+  .cert-sheet, .cert-sheet * { visibility: visible; }
+  .cert-sheet { position: fixed; inset: 0; max-width: none; width: 297mm; height: 210mm; box-shadow: none; border-radius: 0; padding: 8mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print { display: none !important; }
+}

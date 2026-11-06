@@ -48,6 +48,7 @@ const Glossary = lazy(() => import("./pages/Glossary"));
 const Videos = lazy(() => import("./pages/Videos"));
 const OurVideos = lazy(() => import("./pages/OurVideos"));
 const LearningPaths = lazy(() => import("./pages/LearningPaths"));
+const CertificatePage = lazy(() => import("./pages/Certificate"));
 const HubRoute = lazy(() => import("./pages/HubRoute"));
 const Legal = lazy(() => import("./pages/Legal"));
 const Landing = lazy(() => import("./pages/public/Public").then((m) => ({ default: m.Landing })));
@@ -131,6 +132,9 @@ export default function App() {
   const locale = ((user?.locale ?? stored ?? site.defaultLocale) === "ar" ? "ar" : "en") as Locale;
   setLocale(locale);
   if (user === undefined) return <div className="center muted">Loading…</div>;
+  // certificates can be checked by anyone with the link, signed in or not
+  const certCode = /^\/certificate\/([A-Za-z0-9-]{6,20})$/.exec(route)?.[1];
+  if (certCode) return <Suspense fallback={<div className="center muted">Loading…</div>}><CertificatePage code={certCode} /></Suspense>;
   const reset = /^\/reset\/([0-9a-f]{64})$/.exec(route)?.[1];
   if (reset) return <ResetPassword token={reset} />;
   const reload = () => api<{ user: User | null }>("/auth/me").then((r) => setUser(r.user)).catch(() => undefined);

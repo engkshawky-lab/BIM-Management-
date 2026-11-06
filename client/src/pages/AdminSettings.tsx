@@ -6,6 +6,7 @@ import { SITE_CHANGED } from "../lib/site";
 import { PLAN_CHANGED } from "../lib/access";
 import { ACCOUNT_PAGES, PROJECT_PAGES, SECTIONS, TEMPLATE_PAGES } from "../shell/nav";
 import { SETTINGS, SETTING_GROUPS, type SettingDef, type SettingValue, type SettingsMap } from "../../../shared/appSettings";
+import { CertificateAdmin } from "./Certificate";
 import "./adminPlans.css";
 
 // Admin › Settings: every portal setting that can change while the portal runs, grouped as in shared/appSettings.ts,
@@ -75,6 +76,7 @@ export default function AdminSettings() {
         <section key={g} className="card adm-set-group">
           <h2>{t(g)}</h2>
           {SETTINGS.filter((s) => s.group === g).map((s) => <Field key={s.key} s={s} value={form[s.key]!} src={source(s)} onChange={(v) => setForm({ ...form, [s.key]: v })} onReset={() => save({ [s.key]: null })} />)}
+          {g === "Certificates" && <CertificateAdmin />}
         </section>))}
 
       <section className="card adm-set-group">

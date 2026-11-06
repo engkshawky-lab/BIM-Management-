@@ -7,6 +7,7 @@ import { COMPANY_VIDEO_TOPICS, VIDEO_FILE_TYPES, VIDEO_LANGS, parseVideoLink } f
 import { db, newId, schema } from "../db";
 import { UPLOAD_DIR, diskUpload } from "../storage";
 import { setting } from "../appSettings";
+import { pathById } from "../../shared/data/learningPaths";
 import { h, parse } from "./auth";
 
 // Our videos: administrators upload the organisation's own training videos (or add a YouTube / Vimeo link);
@@ -21,9 +22,13 @@ const videoType = (file: Express.Multer.File) => {
   if ((VIDEO_FILE_TYPES as readonly string[]).includes(t)) return t;
   return BY_EXT[path.extname(file.originalname).toLowerCase()] ?? null;
 };
+// where the video shows in the learning paths; arrives as JSON text in a multipart upload
+const placement = z.object({ pathId: z.string().max(40), step: z.string().max(200).default("") })
+  .refine((p) => { const lp = pathById(p.pathId); return !!lp && (!p.step || lp.steps.some((s) => s.title === p.step)); }, "Unknown learning path or step.");
+const placements = z.preprocess((v) => { if (typeof v !== "string") return v; try { return JSON.parse(v); } catch { return v; } }, z.array(placement).max(40)).default([]);
 const meta = z.object({
   title: z.string().trim().min(2, "Give the video a title.").max(200), description: z.string().trim().max(2000).default(""),
-  topic: z.enum(COMPANY_VIDEO_TOPICS), lang: z.enum(VIDEO_LANGS).default("en"),
+  topic: z.enum(COMPANY_VIDEO_TOPICS), lang: z.enum(VIDEO_LANGS).default("en"), placements,
 });
 const fileOf = (key: string) => path.join(UPLOAD_DIR, path.basename(key));
 
@@ -32,9 +37,10 @@ r.get("/company-videos", h(async (_req, res) => {
     id: schema.companyVideos.id, title: schema.companyVideos.title, description: schema.companyVideos.description, topic: schema.companyVideos.topic,
     lang: schema.companyVideos.lang, source: schema.companyVideos.source, url: schema.companyVideos.url, fileName: schema.companyVideos.fileName,
     mimeType: schema.companyVideos.mimeType, size: schema.companyVideos.size, views: schema.companyVideos.views, createdAt: schema.companyVideos.createdAt,
+    placements: schema.companyVideos.placements,
     uploadedByName: schema.users.name,
   }).from(schema.companyVideos).leftJoin(schema.users, eq(schema.users.id, schema.companyVideos.uploadedBy)).orderBy(desc(schema.companyVideos.createdAt));
-  res.json({ videos: rows.map((v) => ({ ...v, uploadedByName: v.uploadedByName ?? "" })), topics: COMPANY_VIDEO_TOPICS });
+  res.json({ videos: rows.map((v) => ({ ...v, placements: v.placements ?? [], uploadedByName: v.uploadedByName ?? "" })), topics: COMPANY_VIDEO_TOPICS });
 }));
 
 // multipart: a video file, or a "link" field with a YouTube / Vimeo address
