@@ -154,7 +154,7 @@ function UserMenu({ onRole, onColours, theme, setTheme, onHide }: { onRole: () =
         {user.role === "admin" && <a href="#/admin"><Icon name="settings" size={16} />{t("Admin console")}</a>}
         <button onClick={onRole}><Icon name="target" size={16} />{t("Set my role")}</button>
         <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}><Icon name={theme === "dark" ? "sun" : "moon"} size={16} />{t(theme === "dark" ? "Light theme" : "Dark theme")}</button>
-        <button onClick={onColours}><span className="menu-swatch" aria-hidden="true" />{t("Theme colour")}</button>
+        <button onClick={onColours}><span className="menu-swatch" aria-hidden="true" />{t("Page & theme colours")}</button>
         <button onClick={async () => { await api("/auth/logout", { body: {} }).catch(() => undefined); clearUserStorage(); setUser(null); navigate("/"); }}><Icon name="logout" size={16} />{t("Sign out")}</button>
       </div>}
     </div>
@@ -472,6 +472,7 @@ export default function Shell({ route, children }: { route: string; children: Re
           <button className="icon-btn sb-show" onClick={showMenu} aria-label={t("Show sidebar")} title={t("Show sidebar")}><Icon name="panel" size={16} /></button>
           <Crumbs route={route} projects={projects} />
           <span className="pagebar-spacer" />
+          <button className="fav-btn colour-btn" onClick={() => setColours(true)} title={t("Choose the page and accent colours")}><span className="menu-swatch" aria-hidden="true" /><span className="colour-label">{t("Page colour")}</span></button>
           {pageItem && <PageGuideButton open={guide} onToggle={toggleGuide} />}
           {pageItem && <FavouriteToggle item={pageItem} />}
         </div>

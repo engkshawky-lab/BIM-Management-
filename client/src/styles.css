@@ -759,3 +759,10 @@ button.choice.wrong { border-color: var(--danger); background: color-mix(in srgb
 .swatch { inline-size: 40px; block-size: 40px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-strong); color: #fff; font-weight: 700; padding: 0; cursor: pointer; }
 .swatch.on { box-shadow: 0 0 0 3px var(--text); }
 .menu-swatch { inline-size: 16px; block-size: 16px; border-radius: 50%; background: var(--accent); display: inline-block; flex: none; }
+.colour-btn { display: inline-flex; align-items: center; gap: 6px; }
+.colour-btn .menu-swatch { inline-size: 14px; block-size: 14px; background: linear-gradient(135deg, var(--bg) 50%, var(--accent) 50%); border: 1px solid var(--border-strong); }
+.swatch.page-swatch { color: var(--text); border: 1px solid var(--border-strong); }
+.swatch.page-default { background: linear-gradient(135deg, #dfe7e8 50%, #111e28 50%); }
+.appearance-section { margin-top: 14px; }
+.appearance-section h3 { font-size: 14px; margin: 0 0 4px; }
+@media (max-width: 700px) { .colour-btn .colour-label { display: none; } }

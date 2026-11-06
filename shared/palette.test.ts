@@ -21,3 +21,22 @@ describe("theme colour", () => {
     expect(paletteVars({ color: "red", tint: false }).light["--accent"]).toBe(paletteVars({ color: "#3e5f9d", tint: false }).light["--accent"]);
   });
 });
+
+describe("page colour", () => {
+  const text = { light: ["#21313d", "#4d6070", "#46596a"], dark: ["#eff5f8", "#9fb2c0", "#b7c7d3"] };
+  it("keeps every kind of text readable on every surface, for presets and extreme colours, in light and dark", async () => {
+    const { PAGE_PRESETS } = await import("./palette");
+    for (const page of [...PAGE_PRESETS.map((p) => p.color), "#000000", "#ff0000", "#1a3a8a", "#ffff00", "#ffffff"]) for (const color of ["#3e5f9d", "#ffff00", "#000000"]) {
+      const v = paletteVars({ color, tint: false, page });
+      for (const mode of ["light", "dark"] as const) for (const k of ["--bg", "--surface", "--surface-2", "--surface-3", "--panel"]) {
+        for (const t of text[mode]) expect(contrast(t, v[mode][k]!), `${mode} ${page} ${k} text ${t}`).toBeGreaterThanOrEqual(4.5);
+        if (k !== "--surface-2" && k !== "--panel") expect(contrast(v[mode]["--accent"]!, v[mode][k]!), `${mode} ${page} accent on ${k}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  });
+  it("replaces the tint, and is part of the stylesheet even with the default accent", () => {
+    expect(paletteVars({ color: "#3e5f9d", tint: true, page: "#e2f1e8" }).light["--bg"]).toMatch(/^#/);
+    expect(paletteCss({ color: "#3e5f9d", tint: false, page: "#e2f1e8" })).toContain("--bg:");
+    expect(paletteCss({ color: "#3e5f9d", tint: false, page: null })).toBe("");
+  });
+});

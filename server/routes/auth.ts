@@ -150,7 +150,8 @@ r.put("/profile", requireUser, h(async (req, res) => {
     favourites: z.array(z.string().max(120)).max(60),
     emailPref: z.enum(["instant", "digest", "off"]),
     locale: z.enum(["en", "ar"]),
-    appearance: z.object({ color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "use a #RRGGBB colour").transform((c) => c.toLowerCase()), tint: z.boolean() }).nullable(),
+    appearance: z.object({ color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "use a #RRGGBB colour").transform((c) => c.toLowerCase()), tint: z.boolean(),
+      page: z.string().regex(/^#[0-9a-fA-F]{6}$/, "use a #RRGGBB colour").transform((c) => c.toLowerCase()).nullable().optional() }).nullable(),
   }).partial(), req.body, res); if (!body) return;
   if (!Object.keys(body).length) return res.status(400).json({ error: "Nothing to change." });
   await db.update(schema.users).set(body).where(eq(schema.users.id, req.user!.id));
