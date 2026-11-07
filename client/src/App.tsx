@@ -120,7 +120,7 @@ export default function App() {
     load();
     return () => { stop = true; };
   }, []);
-  // session expired or revoked (api() saw a 401): show the sign-in page; the address is kept, so the user returns to it
+  // session expired or revoked (api() saw a 401): show sign-in; successful sign-in always opens the home page
   useEffect(() => {
     const expired = () => { setUser((u) => (u ? null : u)); toast("Your session has ended. Sign in again to continue.", "error"); };
     window.addEventListener(SESSION_EXPIRED, expired);
@@ -144,11 +144,15 @@ export default function App() {
   const legal = /^\/legal(?:\/([a-z]+))?$/.exec(route);
   if (!user && legal) return <Suspense fallback={<div className="center muted">Loading…</div>}><Legal standalone id={legal[1]} /></Suspense>;
   // public site for visitors: home, pricing and about; sign-in at /login and /signup. Any other address shows
-  // sign-in and is kept, so the visitor lands on that page after signing in.
+  // sign-in. Always return to the home page afterward, including when the original link was admin-only.
   if (!user) {
     const pub = route === "/" ? <Landing /> : route === "/pricing" ? <Pricing /> : route === "/about" ? <About /> : null;
     if (pub) return <Suspense fallback={<div className="center muted">Loading…</div>}>{pub}</Suspense>;
-    return <Login key={route} initialMode={route === "/signup" ? "register" : "login"} onSignedIn={(u) => { if (["/login", "/signup"].includes(route)) navigate("/"); setUser(u); }} />;
+    return <Login key={route} initialMode={route === "/signup" ? "register" : "login"} onSignedIn={(u) => {
+      history.replaceState(null, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      setUser(u);
+    }} />;
   }
 
   // new accounts confirm their email address first (when email is set up and the setting is on)
