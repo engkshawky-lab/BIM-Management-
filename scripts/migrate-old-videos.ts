@@ -1,11 +1,10 @@
-// One-off: move the old ISO 19650 platform's video library into Admin › Our videos, through the portal's own upload
-// API (files land on the portal's storage volume exactly as an administrator's upload would). YouTube entries become
-// YouTube links. Uses a short-lived admin session created for this run and deleted at the end.
+// One-off: import old videos through the portal API. Files go to Our videos; public links go to Video library.
+// Uses a short-lived admin session created for this run and deleted at the end.
 //
 //   DATABASE_URL=... SESSION_SECRET=... npx tsx scripts/migrate-old-videos.ts <old-backup-dir> <portal-url> <admin-email> [--apply]
 //
 // <old-backup-dir> holds db/videos.json (old `videos` table) and bucket/ (the old storage bucket). Re-runs skip videos
-// whose title is already in Our videos.
+// whose title is already saved in either collection.
 import mysql from "mysql2/promise";
 import { randomUUID } from "node:crypto";
 import { openAsBlob, existsSync } from "node:fs";
@@ -61,7 +60,11 @@ async function main() {
         const name = path.basename(v.storage_key).replace(/^\d+_/, "");
         form.set("file", await openAsBlob(file, { type: /\.mov$/i.test(name) ? "video/quicktime" : "video/mp4" }), name);
       }
-      const res = await fetch(`${portal.replace(/\/$/, "")}/api/company-videos`, { method: "POST", headers: { cookie, "x-requested-with": "fetch" }, body: form });
+      const linked = v.storage_key === "embed";
+      const res = await fetch(`${portal.replace(/\/$/, "")}/api/${linked ? "video-library" : "company-videos"}`, {
+        method: "POST", headers: { cookie, "x-requested-with": "fetch", ...(linked ? { "Content-Type": "application/json" } : {}) },
+        body: linked ? JSON.stringify(Object.fromEntries(form)) : form,
+      });
       if (res.ok) ok++;
       else { failed++; console.log(`failed (${res.status}): ${v.title.slice(0, 60)} ${(await res.text()).slice(0, 160)}`); }
       if ((ok + failed) % 10 === 0) console.log(`${ok + failed}/${todo.length}`);

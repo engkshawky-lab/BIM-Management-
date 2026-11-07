@@ -26,6 +26,12 @@ describe("plans", () => {
 });
 
 describe("section access", () => {
+  it("keeps the public Video library free and uploaded training on paid subscriptions by default", () => {
+    expect(canOpen("s.videos", "free")).toBe(true);
+    expect(canOpen("s.ourvideos", "free")).toBe(false);
+    expect(defaultPlansFor("s.ourvideos")).toEqual(["starter", "pro", "expert"]);
+    expect(canOpen("s.ourvideos", "expert", { "s.ourvideos": ["pro"] })).toBe(false);
+  });
   it("opens the basics on Free and the advanced tools only on Expert", () => {
     expect(defaultPlansFor("s.19650.process")).toEqual(["free", "starter", "pro", "expert"]);
     expect(defaultPlansFor("s.learn")).toEqual(["starter", "pro", "expert"]);

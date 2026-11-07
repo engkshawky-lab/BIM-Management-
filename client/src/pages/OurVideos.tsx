@@ -3,13 +3,12 @@ import { useDialog } from "../components/Dialog";
 import { useSession } from "../App";
 import { t } from "../i18n";
 import { api } from "../lib/api";
-import { COMPANY_VIDEO_TOPICS, VIDEO_FILE_ACCEPT, embedFor, suggestPlacements, type CompanyVideo, type VideoPlacement } from "../../../shared/companyVideos";
+import { COMPANY_VIDEO_TOPICS, VIDEO_FILE_ACCEPT, suggestPlacements, type CompanyVideo, type VideoPlacement } from "../../../shared/companyVideos";
 import { LEARNING_PATHS } from "../../../shared/data/learningPaths";
 import { TONES } from "./HubPage";
 import "./videos.css";
 
-// Our videos (/videos/ours): the organisation's own training videos. Administrators upload a file or add a
-// YouTube / Vimeo link; everyone signed in can watch. Files stream from /api/company-videos/:id/file.
+// Our videos (/videos/ours): uploaded subscriber training. Public links belong in Video library.
 
 const fileUrl = (v: CompanyVideo) => `/api/company-videos/${v.id}/file`;
 const mb = (n: number) => (n >= 1024 ** 3 ? (n / 1024 ** 3).toFixed(1) + " GB" : Math.max(1, Math.round(n / 1024 ** 2)) + " MB");
@@ -56,7 +55,8 @@ export default function OurVideos() {
       <div className="hub-hero">
         <div className="eyebrow">{t("OUR VIDEOS")}</div>
         <h1>{t("Our training videos")}</h1>
-        <p>{t("Videos recorded by our own team: onboarding, project standards, software how-tos and lessons learned. Administrators can upload a video file or add a YouTube or Vimeo link.")}</p>
+        <p>{t("Training videos recorded by our team for subscribers: onboarding, project standards, software how-tos and lessons learned.")}</p>
+        <p className="small">{t("Free YouTube and Vimeo videos are in Video library.")} <a href="#/videos">{t("Video library")} →</a></p>
         <div className="facts">
           <span>{videos?.length ?? 0} {t("videos")}</span>
           <span>{used.length} {t("topics")}</span>
@@ -85,9 +85,7 @@ export default function OurVideos() {
             <article key={v.id} className="vid-card">
               <button type="button" className="vid-open" onClick={() => play(v)} aria-label={`${t("Play")}: ${v.title}`}>
                 <span className="vid-thumb">
-                  {v.source === "youtube" ? <img src={`https://i.ytimg.com/vi/${v.url}/hqdefault.jpg`} alt="" loading="lazy" width={480} height={360} />
-                    : v.source === "file" ? <video src={fileUrl(v) + "#t=1"} preload="metadata" muted playsInline tabIndex={-1} />
-                      : <span className="vid-thumb-label">Vimeo</span>}
+                  <video src={fileUrl(v) + "#t=1"} preload="metadata" muted playsInline tabIndex={-1} />
                   <span className="vid-play" aria-hidden="true">▶</span>
                 </span>
                 <span className="vid-body">
@@ -116,9 +114,9 @@ export default function OurVideos() {
   );
 }
 
-function VideoForm({ video, onDone }: { video: CompanyVideo | null; onDone: (saved: boolean) => void }) {
+export function VideoForm({ video, collection = "company-videos", onDone }: { video: CompanyVideo | null; collection?: "company-videos" | "video-library"; onDone: (saved: boolean) => void }) {
   const { toast } = useSession();
-  const [mode, setMode] = useState<"file" | "link">("file");
+  const library = collection === "video-library";
   const [file, setFile] = useState<File | null>(null);
   const [link, setLink] = useState("");
   const [f, setF] = useState(video ? { title: video.title, description: video.description, topic: video.topic, lang: video.lang } : blank);
@@ -128,14 +126,21 @@ function VideoForm({ video, onDone }: { video: CompanyVideo | null; onDone: (sav
 
   const save = async () => {
     if (video) {
-      try { await api(`/company-videos/${video.id}`, { method: "PUT", body: { ...f, placements } }); toast(t("Video updated")); onDone(true); } catch (e) { toast((e as Error).message, "error"); }
+      try { await api(`/${collection}/${video.id}`, { method: "PUT", body: { ...f, placements } }); toast(t("Video updated")); onDone(true); } catch (e) { toast((e as Error).message, "error"); }
+      return;
+    }
+    if (library) {
+      setProgress(0);
+      try { await api("/video-library", { body: { ...f, link, placements } }); toast(t("Video added")); onDone(true); }
+      catch (e) { toast((e as Error).message, "error"); }
+      finally { setProgress(null); }
       return;
     }
     const form = new FormData();
     const title = f.title.trim() || (file ? file.name.replace(/\.[^.]+$/, "") : "");
     Object.entries({ ...f, title }).forEach(([k, v]) => form.set(k, v));
     form.set("placements", JSON.stringify(placements));
-    if (mode === "file" && file) form.set("file", file); else form.set("link", link);
+    if (file) form.set("file", file);
     // XMLHttpRequest rather than fetch, for upload progress on large files
     setProgress(0);
     const xhr = new XMLHttpRequest();
@@ -151,31 +156,26 @@ function VideoForm({ video, onDone }: { video: CompanyVideo | null; onDone: (sav
     xhr.onerror = () => { setProgress(null); toast(t("Upload failed. Check your connection and try again."), "error"); };
     xhr.send(form);
   };
-  const ready = video ? f.title.trim().length >= 2 : mode === "file" ? !!file : !!link.trim();
+  const ready = video ? f.title.trim().length >= 2 : library ? f.title.trim().length >= 2 && !!link.trim() : !!file;
 
   return (
     <div className="card vid-form">
       <h3>{video ? t("Edit video") : t("Add a video")}</h3>
-      {!video && (
-        <div className="seg" role="group" aria-label={t("Source")}>
-          <button type="button" className={mode === "file" ? "on" : ""} onClick={() => setMode("file")}>{t("Upload a file")}</button>
-          <button type="button" className={mode === "link" ? "on" : ""} onClick={() => setMode("link")}>{t("YouTube or Vimeo link")}</button>
-        </div>)}
-      {!video && mode === "file" && <><label htmlFor="ourvideos-video-file">{t("Video file")}</label><input id="ourvideos-video-file" type="file" accept={VIDEO_FILE_ACCEPT} onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></>}
-      {!video && mode === "link" && <><label htmlFor="ourvideos-link">{t("Link")}</label><input id="ourvideos-link" type="url" placeholder="https://www.youtube.com/watch?v=…" value={link} onChange={(e) => setLink(e.target.value)} /></>}
-      <label htmlFor="ourvideos-title">{t("Title")}</label><input id="ourvideos-title" value={f.title} onChange={set("title")} maxLength={200} placeholder={mode === "file" && file ? file.name.replace(/\.[^.]+$/, "") : ""} />
+      {!video && !library && <><label htmlFor="ourvideos-video-file">{t("Video file")}</label><input id="ourvideos-video-file" type="file" accept={VIDEO_FILE_ACCEPT} onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></>}
+      {!video && library && <><label htmlFor="ourvideos-link">{t("YouTube or Vimeo link")}</label><input id="ourvideos-link" type="url" placeholder="https://www.youtube.com/watch?v=…" value={link} onChange={(e) => setLink(e.target.value)} /></>}
+      <label htmlFor="ourvideos-title">{t("Title")}</label><input id="ourvideos-title" value={f.title} onChange={set("title")} maxLength={200} placeholder={!library && file ? file.name.replace(/\.[^.]+$/, "") : ""} />
       <label htmlFor="ourvideos-description">{t("Description")}</label><textarea id="ourvideos-description" rows={3} value={f.description} onChange={set("description")} maxLength={2000} />
       <div className="row wrap">
         <div><label htmlFor="ourvideos-topic">{t("Topic")}</label><select id="ourvideos-topic" value={f.topic} onChange={set("topic")}>{COMPANY_VIDEO_TOPICS.map((tp) => <option key={tp} value={tp}>{t(tp)}</option>)}</select></div>
         <div><label htmlFor="ourvideos-language">{t("Language")}</label><select id="ourvideos-language" value={f.lang} onChange={set("lang")}><option value="en">{t("English")}</option><option value="ar">{t("Arabic")}</option></select></div>
       </div>
       <PlacementPicker value={placements} onChange={setPlacements} topic={f.topic} title={f.title + " " + f.description} />
-      {progress !== null && <div className="vid-progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><span style={{ width: progress + "%" }} />{progress}%</div>}
+      {!library && progress !== null && <div className="vid-progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><span style={{ width: progress + "%" }} />{progress}%</div>}
       <div className="row">
-        <button type="button" className="primary" disabled={!ready || progress !== null} onClick={save}>{progress !== null ? t("Uploading…") : video ? t("Save") : t("Add video")}</button>
+        <button type="button" className="primary" disabled={!ready || progress !== null} onClick={save}>{progress !== null ? t(library ? "Saving…" : "Uploading…") : video ? t("Save") : t("Add video")}</button>
         <button type="button" disabled={progress !== null} onClick={() => onDone(false)}>{t("Cancel")}</button>
       </div>
-      {!video && <p className="small muted">{t("Only upload videos you have the right to share. MP4 (H.264) plays in every browser.")}</p>}
+      {!video && <p className="small muted">{t(library ? "YouTube and Vimeo links are shared in the free Video library." : "Only upload videos you have the right to share. MP4 (H.264) plays in every browser.")}</p>}
     </div>
   );
 }
@@ -211,9 +211,7 @@ function OurPlayer({ v, onClose }: { v: CompanyVideo; onClose: () => void }) {
           <button type="button" className="small" onClick={onClose} aria-label={t("Close")}>✕</button>
         </div>
         <div className="vid-frame">
-          {v.source === "file"
-            ? <video src={fileUrl(v)} controls autoPlay playsInline />
-            : <iframe src={embedFor(v.source, v.url)} title={v.title} allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
+          <video src={fileUrl(v)} controls autoPlay playsInline />
         </div>
         {v.description && <p className="vid-summary" dir="auto">{v.description}</p>}
       </div>

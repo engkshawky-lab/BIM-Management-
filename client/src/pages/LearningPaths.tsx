@@ -1,6 +1,8 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { getLocale, t } from "../i18n";
 import { api } from "../lib/api";
+import { useSession } from "../App";
+import { useAccess } from "../lib/access";
 import { embedFor, placementsOf, type CompanyVideo } from "../../../shared/companyVideos";
 import { AutodeskNext, type Cert } from "./Certificate";
 import { LEARNING_PATHS, pathById, pathMinutes, type LearningPath, type StepKind } from "../../../shared/data/learningPaths";
@@ -29,17 +31,27 @@ function Progress({ done, total }: { done: number; total: number }) {
   );
 }
 
-// Our own videos (Admin › Our videos, placed on paths and steps), loaded once per visit.
-let oursCache: Promise<CompanyVideo[]> | null = null;
-function useOurVideos() {
-  const [v, setV] = useState<CompanyVideo[]>([]);
-  useEffect(() => { (oursCache ??= api<{ videos: CompanyVideo[] }>("/company-videos").then((r) => r.videos).catch(() => [])).then(setV); }, []);
-  return v;
+// Keep public links on their existing steps, but only label uploaded training as Our video.
+function useSavedVideos() {
+  const { toast } = useSession();
+  const { locked, state } = useAccess();
+  const canWatchOurs = !!state && !locked("s.ourvideos");
+  const [library, setLibrary] = useState<CompanyVideo[]>([]);
+  const [ours, setOurs] = useState<CompanyVideo[]>([]);
+  useEffect(() => { api<{ videos: CompanyVideo[] }>("/video-library").then((r) => setLibrary(r.videos)).catch((e: Error) => toast(e.message, "error")); }, [toast]);
+  useEffect(() => {
+    let active = true;
+    setOurs([]);
+    if (canWatchOurs) api<{ videos: CompanyVideo[] }>("/company-videos").then((r) => { if (active) setOurs(r.videos); }).catch((e: Error) => { if (active) toast(e.message, "error"); });
+    return () => { active = false; };
+  }, [canWatchOurs, toast]);
+  return [...(canWatchOurs ? ours : []), ...library];
 }
 const placedOn = (ours: CompanyVideo[], pathId: string, step: string) => ours.filter((v) => placementsOf(v).some((p) => p.pathId === pathId && p.step === step));
 
-interface Clip { key: string; ours: boolean; title: string; by: string; thumb: string; embed: string; file: string; open: string; lang: string; level: string; summary: string }
-const fromOurs = (v: CompanyVideo): Clip => ({ key: "o:" + v.id, ours: true, title: v.title, by: v.uploadedByName, lang: v.lang, level: "", summary: v.description,
+interface Clip { key: string; ours: boolean; title: string; by: string; thumb: string; embed: string; file: string; open: string; lang: string; level: string; summary: string; viewUrl: string }
+const fromSaved = (v: CompanyVideo): Clip => ({ key: "o:" + v.id, ours: v.source === "file", title: v.title, by: v.source === "file" ? v.uploadedByName : v.source === "youtube" ? "YouTube" : "Vimeo", lang: v.lang, level: "", summary: v.description,
+  viewUrl: `/${v.source === "file" ? "company-videos" : "video-library"}/${v.id}/view`,
   thumb: v.source === "youtube" ? `https://i.ytimg.com/vi/${v.url}/mqdefault.jpg` : "", embed: v.source === "file" ? "" : embedFor(v.source, v.url) + "?autoplay=1&rel=0",
   file: v.source === "file" ? `/api/company-videos/${v.id}/file` : "", open: v.source === "youtube" ? `https://www.youtube.com/watch?v=${v.url}` : v.source === "vimeo" ? `https://vimeo.com/${v.url}` : "" });
 
@@ -47,16 +59,16 @@ const fromOurs = (v: CompanyVideo): Clip => ({ key: "o:" + v.id, ours: true, tit
 function StepVideos({ pathId, title, ours }: { pathId: string; title: string; ours: CompanyVideo[] }) {
   const lang = getLocale() === "ar" ? "ar" : "en";
   const lib: Clip[] = title ? stepVideos(pathId, title, lang).map((v) => ({ key: "l:" + v.id, ours: false, title: v.title, by: v.channel, lang: v.lang, level: v.level, summary: lang === "ar" ? v.summaryAr : v.summary,
-    thumb: `https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`, embed: `https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0`, file: "", open: `https://www.youtube.com/watch?v=${v.id}` })) : [];
-  const mine = placedOn(ours, pathId, title).map(fromOurs);
+    thumb: `https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`, embed: `https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0`, file: "", open: `https://www.youtube.com/watch?v=${v.id}`, viewUrl: "" })) : [];
+  const mine = placedOn(ours, pathId, title).map(fromSaved);
   const clips = [...mine.filter((c) => c.lang === lang), ...mine.filter((c) => c.lang !== lang), ...lib.filter((c) => !mine.some((m) => m.open && m.open === c.open))];
   const [playing, setPlaying] = useState<string | null>(null);
   if (!clips.length) return null;
   const current = clips.find((v) => v.key === playing);
-  const play = (c: Clip) => { setPlaying(c.key === playing ? null : c.key); if (c.ours && c.key !== playing) api(`/company-videos/${c.key.slice(2)}/view`, { method: "POST" }).catch(() => {}); };
+  const play = (c: Clip) => { setPlaying(c.key === playing ? null : c.key); if (c.viewUrl && c.key !== playing) api(c.viewUrl, { method: "POST" }).catch((e: Error) => console.error("Could not count video view", e)); };
   return (
     <div className="lp-videos">
-      <div className="tiny muted lp-videos-label">▶ {title ? t("Videos for this step") : t("Our videos for this path")} ({clips.length}){mine.length > 0 && title && <> · <b>{mine.length} {t("from our team")}</b></>}</div>
+      <div className="tiny muted lp-videos-label">▶ {title ? t("Videos for this step") : t("Videos for this path")} ({clips.length}){mine.some((v) => v.ours) && title && <> · <b>{mine.filter((v) => v.ours).length} {t("from our team")}</b></>}</div>
       {current && (
         <div className="lp-player">
           <div className="lp-frame">
@@ -66,7 +78,7 @@ function StepVideos({ pathId, title, ours }: { pathId: string; title: string; ou
           <div className="row spread lp-player-bar">
             <span className="small"><b className="no-i18n" dir="auto">{current.title}</b> <span className="muted">· {current.by}</span></span>
             <span className="row" style={{ gap: 8 }}>
-              {current.open && <a className="small" href={current.open} target="_blank" rel="noreferrer">{t("Open on YouTube")} ↗</a>}
+              {current.open && <a className="small" href={current.open} target="_blank" rel="noreferrer">{t(current.open.startsWith("https://vimeo.com/") ? "Open on Vimeo" : "Open on YouTube")} ↗</a>}
               <button className="ghost small" onClick={() => setPlaying(null)}>{t("Close video")}</button>
             </span>
           </div>
@@ -216,7 +228,7 @@ function Index() {
 }
 
 function PathView({ p }: { p: LearningPath }) {
-  const ours = useOurVideos();
+  const ours = useSavedVideos();
   const [done, setDone] = useState<number[]>(() => loadDone(p.id));
   const toggle = (i: number) => { const next = done.includes(i) ? done.filter((x) => x !== i) : [...done, i].sort((a, b) => a - b); setDone(next); saveDone(p.id, next); };
   const reset = () => { setDone([]); saveDone(p.id, []); };

@@ -111,8 +111,8 @@ export const MODEL_PAGES: NavItem[] = [
 export const LEARN_PAGES: NavItem[] = [
   g("s.guides", "Best-practice guides", "/learn/guides", "book", "Start here", "Practical guidance for modellers, coordinators and managers"),
   g("s.paths", "Learning paths by role", "/learning-paths", "flow", "Start here", "Step-by-step routes for modellers, coordinators and managers"),
-  g("s.videos", "Video library", "/videos", "activity", "Start here", "Free, verified videos by topic and level"),
-  g("s.ourvideos", "Our videos", "/videos/ours", "activity", "Start here", "Our own training videos; administrators upload files or add links"),
+  g("s.videos", "Video library", "/videos", "activity", "Start here", "Free public YouTube and Vimeo videos by topic"),
+  g("s.ourvideos", "Our videos", "/videos/ours", "activity", "Start here", "Our own uploaded training videos for subscribers"),
   g("s.adoption", "ISO 19650 adoption roadmap", "/learn/adoption", "flow", "Start here", "Adopt ISO 19650 across your organisation, step by step"),
   g("s.learn", "Quizzes, mock exam, scenarios", "/learn", "sparkles", "Start here", "Practice questions, timed exam, skill profile"),
   g("s.19650.parts", "All parts (1–6): learning hub", "/parts", "book", "ISO 19650 parts", "Beginner to expert, clause deep dives, checklists, Ask AI"),

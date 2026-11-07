@@ -23,7 +23,7 @@ const MIN: Record<string, PlanId> = {
   // models and coordination
   "ai.cobie": "pro", "b.ids": "expert", "b.bcf": "expert", "c.acc": "expert", "c.speckle": "expert",
   // learning
-  "s.guides": "starter", "s.paths": "starter", "s.adoption": "starter", "s.learn": "starter", "s.19650.revision": "starter",
+  "s.guides": "starter", "s.paths": "starter", "s.adoption": "starter", "s.learn": "starter", "s.19650.revision": "starter", "s.ourvideos": "starter",
   "s.glossary": "starter", "s.uses": "starter", "s.hub.loin": "expert",
   // resources
   "r.fee": "pro", "r.carbon": "pro", "r.maturity": "pro", "r.dt": "pro", "r.scan": "pro", "r.talentme": "starter", "r.talent": "expert",
@@ -33,7 +33,7 @@ const MIN: Record<string, PlanId> = {
 };
 // sections every plan keeps, whatever the prefix rules say
 const FREE = new Set(["s.hubs", "s.hub.timeline", "s.19650.parts", "s.19650.summary", "s.19650.process", "s.19650.cde", "s.19650.glossary",
-  "s.videos", "s.ourvideos", "r.19650", "r.42001", "r.news", "s.naming", "r.wizard", "w.project"]);
+  "s.videos", "r.19650", "r.42001", "r.news", "s.naming", "r.wizard", "w.project"]);
 
 export function defaultPlansFor(key: string): PlanId[] {
   if (MIN[key]) return from(MIN[key]);
