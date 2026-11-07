@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import fs from "fs";
 import path from "path";
@@ -9,9 +9,10 @@ import { UPLOAD_DIR, diskUpload } from "../storage";
 import { setting } from "../appSettings";
 import { pathById } from "../../shared/data/learningPaths";
 import { h, parse } from "./auth";
+import { allowKey } from "../billing";
 
-// Our videos: administrators upload the organisation's own training videos (or add a YouTube / Vimeo link);
-// every signed-in user can watch them. Uploaded files are streamed with HTTP range support so players can seek.
+// Source determines the collection, including existing records: uploaded training belongs to Our videos;
+// public YouTube / Vimeo links belong to the free Video library. No records or placements need moving.
 
 const r = Router();
 const upload = diskUpload(() => setting<number>("videoMaxMb"));
@@ -32,53 +33,67 @@ const meta = z.object({
 });
 const fileOf = (key: string) => path.join(UPLOAD_DIR, path.basename(key));
 
-r.get("/company-videos", h(async (_req, res) => {
-  const rows = await db.select({
-    id: schema.companyVideos.id, title: schema.companyVideos.title, description: schema.companyVideos.description, topic: schema.companyVideos.topic,
-    lang: schema.companyVideos.lang, source: schema.companyVideos.source, url: schema.companyVideos.url, fileName: schema.companyVideos.fileName,
-    mimeType: schema.companyVideos.mimeType, size: schema.companyVideos.size, views: schema.companyVideos.views, createdAt: schema.companyVideos.createdAt,
-    placements: schema.companyVideos.placements,
-    uploadedByName: schema.users.name,
-  }).from(schema.companyVideos).leftJoin(schema.users, eq(schema.users.id, schema.companyVideos.uploadedBy)).orderBy(desc(schema.companyVideos.createdAt));
-  res.json({ videos: rows.map((v) => ({ ...v, placements: v.placements ?? [], uploadedByName: v.uploadedByName ?? "" })), topics: COMPANY_VIDEO_TOPICS });
-}));
+// Unlike the general section gate, this also protects GETs, including range requests for paid files.
+r.use("/company-videos", (req, res, next) => {
+  allowKey(req, res, "s.ourvideos").then((allowed) => { if (allowed) next(); }, next);
+});
 
-// multipart: a video file, or a "link" field with a YouTube / Vimeo address
-r.post("/company-videos", requireAdmin, upload.single("file"), h(async (req, res) => {
-  const drop = () => req.file && fs.promises.unlink(req.file.path).catch(() => {});
-  const body = parse(meta, req.body, res); if (!body) { drop(); return; }
-  const base = { id: newId(), ...body, uploadedBy: req.user!.id, createdAt: new Date() };
-  if (req.file) {
-    const type = videoType(req.file);
-    if (!type) { drop(); return res.status(400).json({ error: "Upload an MP4, WebM, OGG or MOV video. MP4 (H.264) plays in every browser." }); }
-    await db.insert(schema.companyVideos).values({ ...base, source: "file", fileName: req.file.originalname.slice(0, 255), mimeType: type, size: req.file.size, storageKey: req.file.filename });
-  } else {
-    const link = parseVideoLink(String(req.body.link ?? ""));
-    if (!link) return res.status(400).json({ error: "Choose a video file, or paste a YouTube or Vimeo link." });
-    await db.insert(schema.companyVideos).values({ ...base, source: link.source, url: link.id });
-  }
-  res.status(201).json({ id: base.id });
-}));
+for (const collection of ["company-videos", "video-library"] as const) {
+  const library = collection === "video-library";
+  const sourceFilter = library ? inArray(schema.companyVideos.source, ["youtube", "vimeo"]) : eq(schema.companyVideos.source, "file");
+  const recordFilter = (id: string) => and(eq(schema.companyVideos.id, id), sourceFilter);
 
-r.put("/company-videos/:id", requireAdmin, h(async (req, res) => {
-  const body = parse(meta, req.body, res); if (!body) return;
-  await db.update(schema.companyVideos).set(body).where(eq(schema.companyVideos.id, req.params.id));
-  res.json({ ok: true });
-}));
+  r.get(`/${collection}`, h(async (_req, res) => {
+    const rows = await db.select({
+      id: schema.companyVideos.id, title: schema.companyVideos.title, description: schema.companyVideos.description, topic: schema.companyVideos.topic,
+      lang: schema.companyVideos.lang, source: schema.companyVideos.source, url: schema.companyVideos.url, fileName: schema.companyVideos.fileName,
+      mimeType: schema.companyVideos.mimeType, size: schema.companyVideos.size, views: schema.companyVideos.views, createdAt: schema.companyVideos.createdAt,
+      placements: schema.companyVideos.placements,
+      uploadedByName: schema.users.name,
+    }).from(schema.companyVideos).leftJoin(schema.users, eq(schema.users.id, schema.companyVideos.uploadedBy)).where(sourceFilter).orderBy(desc(schema.companyVideos.createdAt));
+    res.json({ videos: rows.map((v) => ({ ...v, placements: v.placements ?? [], uploadedByName: v.uploadedByName ?? "" })), topics: COMPANY_VIDEO_TOPICS });
+  }));
 
-r.delete("/company-videos/:id", requireAdmin, h(async (req, res) => {
-  const [row] = await db.select().from(schema.companyVideos).where(eq(schema.companyVideos.id, req.params.id));
-  if (!row) return res.status(404).json({ error: "Not found." });
-  await db.delete(schema.companyVideos).where(eq(schema.companyVideos.id, row.id));
-  if (row.storageKey) fs.promises.unlink(fileOf(row.storageKey)).catch(() => {});
-  res.json({ ok: true });
-}));
+  // File uploads stay in Our videos; new public links can only be added through Video library.
+  r.post(`/${collection}`, requireAdmin, ...(library ? [] : [upload.single("file")]), h(async (req, res) => {
+    const drop = () => req.file && fs.promises.unlink(req.file.path).catch(() => {});
+    const body = parse(meta, req.body, res); if (!body) { drop(); return; }
+    const base = { id: newId(), ...body, uploadedBy: req.user!.id, createdAt: new Date() };
+    if (!library) {
+      if (!req.file) return res.status(400).json({ error: "Upload a video file to Our videos. Add YouTube or Vimeo links in Video library." });
+      const type = videoType(req.file);
+      if (!type) { drop(); return res.status(400).json({ error: "Upload an MP4, WebM, OGG or MOV video. MP4 (H.264) plays in every browser." }); }
+      await db.insert(schema.companyVideos).values({ ...base, source: "file", fileName: req.file.originalname.slice(0, 255), mimeType: type, size: req.file.size, storageKey: req.file.filename });
+    } else {
+      const link = parseVideoLink(String(req.body.link ?? ""));
+      if (!link) return res.status(400).json({ error: "Paste a YouTube or Vimeo link." });
+      await db.insert(schema.companyVideos).values({ ...base, source: link.source, url: link.id });
+    }
+    res.status(201).json({ id: base.id });
+  }));
 
-// counted once per play from the client, not per range request
-r.post("/company-videos/:id/view", h(async (req, res) => {
-  await db.update(schema.companyVideos).set({ views: sql`${schema.companyVideos.views} + 1` }).where(eq(schema.companyVideos.id, req.params.id));
-  res.json({ ok: true });
-}));
+  r.put(`/${collection}/:id`, requireAdmin, h(async (req, res) => {
+    const body = parse(meta, req.body, res); if (!body) return;
+    const [row] = await db.select({ id: schema.companyVideos.id }).from(schema.companyVideos).where(recordFilter(req.params.id));
+    if (!row) return res.status(404).json({ error: "Not found." });
+    await db.update(schema.companyVideos).set(body).where(recordFilter(req.params.id));
+    res.json({ ok: true });
+  }));
+
+  r.delete(`/${collection}/:id`, requireAdmin, h(async (req, res) => {
+    const [row] = await db.select().from(schema.companyVideos).where(recordFilter(req.params.id));
+    if (!row) return res.status(404).json({ error: "Not found." });
+    await db.delete(schema.companyVideos).where(recordFilter(row.id));
+    if (row.storageKey) fs.promises.unlink(fileOf(row.storageKey)).catch(() => {});
+    res.json({ ok: true });
+  }));
+
+  // counted once per play from the client, not per range request
+  r.post(`/${collection}/:id/view`, h(async (req, res) => {
+    await db.update(schema.companyVideos).set({ views: sql`${schema.companyVideos.views} + 1` }).where(recordFilter(req.params.id));
+    res.json({ ok: true });
+  }));
+}
 
 r.get("/company-videos/:id/file", h(async (req, res) => {
   const [row] = await db.select().from(schema.companyVideos).where(eq(schema.companyVideos.id, req.params.id));

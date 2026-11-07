@@ -26,7 +26,7 @@ export const DEFAULT_PLANS: Plan[] = [
     id: "starter", name: "Starter", color: "#3b82f6", tagline: "Learn the standard properly, with practice and progress tracking.", audience: "Individuals building ISO 19650 knowledge",
     price: { amount: 75, currency: "USD", period: "year", note: "Billed yearly" },
     projects: 5, members: 10, storageGb: 10, aiPerMonth: 100,
-    features: ["Video library", "Interactive quiz", "Glossary & games", "COBie guide", "Leaderboard"],
+    features: ["Our training videos", "Interactive quiz", "Glossary & games", "COBie guide", "Leaderboard"],
   },
   {
     id: "pro", name: "Professional", color: "#a855f7", tagline: "Write the documents and run projects with your team.", audience: "BIM managers, coordinators and consultants",

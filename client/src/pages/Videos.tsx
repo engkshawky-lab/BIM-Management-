@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useDialog } from "../components/Dialog";
 import { getLocale, t } from "../i18n";
-import { VIDEOS, VIDEO_LEVELS, VIDEO_TOPICS, type Video } from "../../../shared/data/videos";
+import { VIDEO_LEVELS, VIDEO_TOPICS } from "../../../shared/data/videos";
+import { embedFor, type CompanyVideo } from "../../../shared/companyVideos";
+import { libraryVideos, type LibraryVideo } from "../../../shared/libraryVideos";
+import { api } from "../lib/api";
+import { useSession } from "../App";
 import { TONES } from "./HubPage";
-import { VideoTabs } from "./OurVideos";
+import { VideoForm, VideoTabs } from "./OurVideos";
 import "./videos.css";
 
-// Video library: curated free, public YouTube videos on ISO 19650 and BIM information management. /videos and /videos/:topic
+// Free public videos: curated catalog plus saved YouTube / Vimeo links, including former Our videos links.
 
 const WATCHED_KEY = "bim:videos:watched";
 const loadWatched = (): string[] => {
@@ -22,21 +26,40 @@ const isArabicUi = () => {
 };
 
 const thumb = (id: string) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-const watchUrl = (id: string) => `https://www.youtube.com/watch?v=${id}`;
-const embedUrl = (id: string) => `https://www.youtube-nocookie.com/embed/${id}`;
+const watchUrl = (v: LibraryVideo) => v.source === "youtube" ? `https://www.youtube.com/watch?v=${v.videoId}` : `https://vimeo.com/${v.videoId}`;
 
 type Lang = "all" | "en" | "ar";
 
 export default function Videos({ topic }: { topic?: string }) {
-  const initialTopic = VIDEO_TOPICS.find((x) => x === topic || slug(x) === topic) ?? "";
+  const { user, toast } = useSession();
+  const admin = user.role === "admin";
+  const [saved, setSaved] = useState<CompanyVideo[]>([]);
+  const [loadError, setLoadError] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<CompanyVideo | null>(null);
+  const videos = useMemo(() => libraryVideos(saved), [saved]);
+  const topics = useMemo(() => [...new Set<string>([...VIDEO_TOPICS, ...videos.map((v) => v.topic)])], [videos]);
+  const initialTopic = topics.find((x) => x === topic || slug(x) === topic) ?? "";
   const [active, setActive] = useState<string>(initialTopic);
   const [level, setLevel] = useState<string>("");
   const [lang, setLang] = useState<Lang>("all");
   const [q, setQ] = useState("");
-  const [open, setOpen] = useState<Video | null>(null);
+  const [open, setOpen] = useState<LibraryVideo | null>(null);
   const [watched, setWatched] = useState<string[]>(loadWatched);
   const arUi = isArabicUi();
   const [arSummary, setArSummary] = useState(arUi);
+
+  const load = () => api<{ videos: CompanyVideo[] }>("/video-library").then((r) => { setSaved(r.videos); setLoadError(""); }).catch((e: Error) => setLoadError(e.message));
+  useEffect(() => { load(); }, []);
+  const remove = async (v: CompanyVideo) => {
+    if (!confirm(`${t("Delete this video?")}\n${v.title}`)) return;
+    try { await api(`/video-library/${v.id}`, { method: "DELETE" }); toast(t("Video deleted")); load(); }
+    catch (e) { toast((e as Error).message, "error"); }
+  };
+  const play = (v: LibraryVideo) => {
+    setOpen(v);
+    if (v.record) api(`/video-library/${v.record.id}/view`, { method: "POST" }).catch((e: Error) => console.error("Could not count video view", e));
+  };
 
   useEffect(() => { setActive(initialTopic); }, [initialTopic]);
   useEffect(() => { setArSummary(arUi); }, [arUi]);
@@ -49,13 +72,13 @@ export default function Videos({ topic }: { topic?: string }) {
   // filters other than topic, so the topic chips can show how many match
   const base = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return VIDEOS.filter((v) => (!level || v.level === level) && (lang === "all" || v.lang === lang)
+    return videos.filter((v) => (!level || v.level === level) && (lang === "all" || v.lang === lang)
       && (!s || [v.title, v.channel, v.summary, v.summaryAr, v.topic, t(v.topic)].join(" ").toLowerCase().includes(s)));
-  }, [q, level, lang]);
+  }, [videos, q, level, lang]);
   const list = active ? base.filter((v) => v.topic === active) : base;
   const countIn = (tp: string) => base.filter((v) => v.topic === tp).length;
-  const watchedCount = VIDEOS.filter((v) => watched.includes(v.id)).length;
-  const arCount = VIDEOS.filter((v) => v.lang === "ar").length;
+  const watchedCount = videos.filter((v) => watched.includes(v.id)).length;
+  const arCount = videos.filter((v) => v.lang === "ar").length;
 
   return (
     <div className="hub" style={{ "--hub": TONES.red } as CSSProperties}>
@@ -65,12 +88,17 @@ export default function Videos({ topic }: { topic?: string }) {
         <h1>{t("Learn ISO 19650 and BIM by watching")}</h1>
         <p>{t("Free, public videos picked for BIM managers, coordinators and modellers: from the basics of ISO 19650 to information requirements, CDEs, coordination, openBIM, handover and AI.")}</p>
         <div className="facts">
-          <span>{VIDEOS.length} {t("videos")}</span>
-          <span>{VIDEO_TOPICS.length} {t("topics")}</span>
+          <span>{videos.length} {t("videos")}</span>
+          <span>{topics.length} {t("topics")}</span>
           <span>{arCount} {t("in Arabic")}</span>
-          <span>{watchedCount} / {VIDEOS.length} {t("watched")}</span>
+          <span>{watchedCount} / {videos.length} {t("watched")}</span>
         </div>
       </div>
+
+      {admin && (adding || editing
+        ? <VideoForm key={editing?.id ?? "new"} video={editing} collection="video-library" onDone={(changed) => { setAdding(false); setEditing(null); if (changed) load(); }} />
+        : <div className="row"><button type="button" className="primary" onClick={() => setAdding(true)}>+ {t("Add a video")}</button></div>)}
+      {loadError && <p role="alert">{loadError} <button type="button" className="small" onClick={load}>{t("Retry")}</button></p>}
 
       <div className="vid-filters">
         <input type="search" placeholder={t("Search videos…")} value={q} onChange={(e) => setQ(e.target.value)} aria-label={t("Search videos…")} />
@@ -90,7 +118,7 @@ export default function Videos({ topic }: { topic?: string }) {
 
       <div className="vid-chips" role="group" aria-label={t("Topics")}>
         <button type="button" className={"chip" + (active === "" ? " on" : "")} onClick={() => setActive("")}>{t("All topics")} <b>{base.length}</b></button>
-        {VIDEO_TOPICS.map((tp) => (
+        {topics.map((tp) => (
           <button type="button" key={tp} className={"chip" + (active === tp ? " on" : "")} onClick={() => setActive(active === tp ? "" : tp)}>
             {t(tp)} <b>{countIn(tp)}</b>
           </button>))}
@@ -101,9 +129,9 @@ export default function Videos({ topic }: { topic?: string }) {
           const seen = watched.includes(v.id);
           return (
             <article key={v.id} className={"vid-card" + (seen ? " seen" : "")}>
-              <button type="button" className="vid-open" onClick={() => setOpen(v)} aria-label={`${t("Play")}: ${v.title}`}>
+              <button type="button" className="vid-open" onClick={() => play(v)} aria-label={`${t("Play")}: ${v.title}`}>
                 <span className="vid-thumb">
-                  <img src={thumb(v.id)} alt="" loading="lazy" width={480} height={360} />
+                  {v.source === "youtube" ? <img src={thumb(v.videoId)} alt="" loading="lazy" width={480} height={360} /> : <span className="vid-thumb-label">Vimeo</span>}
                   <span className="vid-play" aria-hidden="true">▶</span>
                   {seen && <span className="vid-seen-badge">✓ {t("Watched")}</span>}
                 </span>
@@ -111,33 +139,37 @@ export default function Videos({ topic }: { topic?: string }) {
                   <b className="vid-title" dir="auto">{v.title}</b>
                   <small className="vid-channel" dir="auto">{v.channel}</small>
                   <span className="vid-meta">
-                    <span className={"badge vid-level " + v.level.toLowerCase()}>{t(v.level)}</span>
+                    {v.level && <span className={"badge vid-level " + v.level.toLowerCase()}>{t(v.level)}</span>}
                     <span className="badge">{t(v.topic)}</span>
                     {v.lang === "ar" && <span className="badge">{t("Arabic")}</span>}
                   </span>
-                  {arSummary
+                  {arSummary && v.summaryAr
                     ? <span className="vid-summary" lang="ar" dir="rtl">{v.summaryAr}</span>
-                    : <span className="vid-summary" lang="en" dir="ltr">{v.summary}</span>}
+                    : <span className="vid-summary" lang={v.lang} dir="auto">{v.summary}</span>}
                 </span>
               </button>
               <div className="vid-actions">
                 <button type="button" className={"small" + (seen ? " vid-on" : "")} aria-pressed={seen} onClick={() => toggleWatched(v.id)}>
                   {seen ? "✓ " + t("Watched") : t("Mark as watched")}
                 </button>
+                {admin && v.record && <>
+                  <button type="button" className="small" onClick={() => { setAdding(false); setEditing(v.record!); window.scrollTo(0, 0); }}>{t("Edit")}</button>
+                  <button type="button" className="small danger" onClick={() => remove(v.record!)}>{t("Delete")}</button>
+                </>}
               </div>
             </article>);
         })}
       </div>
       {!list.length && <p className="muted">{t("No videos match these filters.")}</p>}
 
-      <p className="small muted vid-note">{t("Videos are hosted by their owners on YouTube; the platform only links to them.")}</p>
+      <p className="small muted vid-note">{t("Videos are hosted by their owners on YouTube or Vimeo; the platform only links to them.")}</p>
 
       {open && <Player v={open} arSummary={arSummary} seen={watched.includes(open.id)} onToggle={() => toggleWatched(open.id)} onClose={() => setOpen(null)} />}
     </div>
   );
 }
 
-function Player({ v, arSummary, seen, onToggle, onClose }: { v: Video; arSummary: boolean; seen: boolean; onToggle: () => void; onClose: () => void }) {
+function Player({ v, arSummary, seen, onToggle, onClose }: { v: LibraryVideo; arSummary: boolean; seen: boolean; onToggle: () => void; onClose: () => void }) {
   const dlg = useDialog(onClose);
   return (
     <div className="modal-bg" onClick={onClose}>
@@ -147,16 +179,16 @@ function Player({ v, arSummary, seen, onToggle, onClose }: { v: Video; arSummary
           <button type="button" className="small" onClick={onClose} aria-label={t("Close")}>✕</button>
         </div>
         <div className="vid-frame">
-          <iframe src={embedUrl(v.id)} title={v.title} allow="accelerometer; encrypted-media; picture-in-picture" allowFullScreen loading="lazy" referrerPolicy="strict-origin-when-cross-origin" />
+          <iframe src={embedFor(v.source, v.videoId)} title={v.title} allow="accelerometer; encrypted-media; picture-in-picture" allowFullScreen loading="lazy" referrerPolicy="strict-origin-when-cross-origin" />
         </div>
-        {arSummary
+        {arSummary && v.summaryAr
           ? <p className="vid-summary" lang="ar" dir="rtl">{v.summaryAr}</p>
-          : <p className="vid-summary" lang="en" dir="ltr">{v.summary}</p>}
+          : <p className="vid-summary" lang={v.lang} dir="auto">{v.summary}</p>}
         <div className="row vid-modal-actions">
           <button type="button" className={seen ? "vid-on" : ""} aria-pressed={seen} onClick={onToggle}>{seen ? "✓ " + t("Watched") : t("Mark as watched")}</button>
-          <a className="btn" href={watchUrl(v.id)} target="_blank" rel="noopener noreferrer">{t("Watch on YouTube")} ↗</a>
+          <a className="btn" href={watchUrl(v)} target="_blank" rel="noopener noreferrer">{t(v.source === "youtube" ? "Watch on YouTube" : "Watch on Vimeo")} ↗</a>
         </div>
-        <p className="small muted">{t("Videos are hosted by their owners on YouTube; the platform only links to them.")}</p>
+        <p className="small muted">{t("Videos are hosted by their owners on YouTube or Vimeo; the platform only links to them.")}</p>
       </div>
     </div>
   );

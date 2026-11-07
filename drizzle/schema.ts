@@ -687,7 +687,7 @@ export const resources = mysqlTable("resources", {
   createdAt: created(),
 }, (t) => [index("resources_category").on(t.category)]);
 
-// The organisation's own training videos: an uploaded file streamed from storage, or a YouTube / Vimeo link.
+// Uploaded training (Our videos) and public YouTube / Vimeo links (Video library), classified by source.
 export const companyVideos = mysqlTable("company_videos", {
   id: id(),
   title: varchar("title", { length: 200 }).notNull(),
