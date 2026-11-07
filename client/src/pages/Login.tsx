@@ -14,15 +14,27 @@ export function LangSwitch({ onChange }: { onChange: () => void }) {
 
 /** Set a new password from a one-time reset link (#/reset/<token>). */
 export function ResetPassword({ token }: { token: string }) {
-  const [pw, setPw] = useState(""); const [done, setDone] = useState(false); const [error, setError] = useState("");
+  const [pw, setPw] = useState(""); const [confirm, setConfirm] = useState("");
+  const [done, setDone] = useState(false); const [error, setError] = useState(""); const [busy, setBusy] = useState(false);
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    setError("");
+    if (pw !== confirm) { setError(t("New passwords do not match")); return; }
+    setBusy(true);
+    try { await api("/auth/reset", { body: { token, password: pw } }); setPw(""); setConfirm(""); setDone(true); }
+    catch (err) { setError((err as Error).message); }
+    finally { setBusy(false); }
+  };
   return (
     <div className="auth-wrap">
-      <form className="card auth" onSubmit={async (e) => { e.preventDefault(); setError(""); try { await api("/auth/reset", { body: { token, password: pw } }); setDone(true); } catch (err) { setError((err as Error).message); } }}>
-        <h1>Set a new password</h1>
-        {done ? <><p>Your password has been changed. Sign in with the new password.</p><a className="btn primary" href="#/login">Sign in</a></> : <>
-          <label htmlFor="login-new-password">New password</label><input id="login-new-password" required type="password" minLength={8} value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
-          {error && <p className="error">{error}</p>}
-          <button className="primary" style={{ width: "100%", justifyContent: "center", marginTop: 12 }}>Change password</button></>}
+      <form className="card auth" onSubmit={submit}>
+        <h1>{t("Set a new password")}</h1>
+        {done ? <><p>{t("Your password has been changed. Sign in with the new password.")}</p><a className="btn primary" href="#/login">{t("Sign in")}</a></> : <>
+          <label htmlFor="login-new-password">{t("New password")}</label><input id="login-new-password" required type="password" minLength={8} maxLength={200} value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" disabled={busy} />
+          <label htmlFor="login-confirm-new-password">{t("Confirm new password")}</label><input id="login-confirm-new-password" required type="password" minLength={8} maxLength={200} value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" aria-describedby={error ? "reset-password-error" : undefined} disabled={busy} />
+          {error && <p id="reset-password-error" className="error" role="alert">{error}</p>}
+          <button className="primary" disabled={busy} style={{ width: "100%", justifyContent: "center", marginTop: 12 }}>{t(busy ? "Please wait…" : "Change password")}</button></>}
       </form>
     </div>
   );
