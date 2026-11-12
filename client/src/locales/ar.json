@@ -25298,5 +25298,9 @@
 "Open on Vimeo": "افتح على Vimeo",
 "Videos for this path": "فيديوهات لهذا المسار",
 "Our own uploaded training videos for subscribers": "فيديوهاتنا التدريبية المرفوعة للمشتركين",
-"Free public YouTube and Vimeo videos by topic": "فيديوهات YouTube وVimeo عامة ومجانية حسب الموضوع"
+"Free public YouTube and Vimeo videos by topic": "فيديوهات YouTube وVimeo عامة ومجانية حسب الموضوع",
+"Enter the email you signed up with. We'll send a one-time link to choose a new password (valid 1 hour). If it doesn't arrive within a few minutes, check your spam folder or ask your portal administrator for a reset link.": "أدخل البريد الإلكتروني الذي سجّلت به. سنرسل رابطًا لمرة واحدة لاختيار كلمة مرور جديدة (صالح لمدة ساعة). إذا لم يصل خلال دقائق، فتحقق من مجلد الرسائل غير المرغوب فيها أو اطلب رابط إعادة التعيين من مسؤول البوابة.",
+"Check that this is the email you signed up with, and tap Show to check the password. Passwords are case-sensitive.": "تأكد أن هذا هو البريد الذي سجّلت به، واضغط «إظهار» للتحقق من كلمة المرور. كلمات المرور تميّز بين الأحرف الكبيرة والصغيرة.",
+"Reset my password": "إعادة تعيين كلمة المرور",
+"I don't have an account": "ليس لدي حساب"
 }
